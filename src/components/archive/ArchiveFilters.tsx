@@ -3,19 +3,21 @@
 import React from "react";
 
 interface ArchiveFiltersProps {
-  categories: string[];
-  selectedCategory: string;
-  onSelectCategory: (category: string) => void;
-  selectedYear: string;
-  onSelectYear: (year: string) => void;
+  categories?: string[];
+  selectedCategory?: string;
+  onSelectCategory?: (category: string) => void;
+  selectedYear?: string;
+  onSelectYear?: (year: string) => void;
+  initialArticles?: any[];
+  articles?: any[];
 }
 
 export default function ArchiveFilters({
-  categories,
-  selectedCategory,
-  onSelectCategory,
-  selectedYear,
-  onSelectYear,
+  categories = [],
+  selectedCategory = "All",
+  onSelectCategory = () => {},
+  selectedYear = "All",
+  onSelectYear = () => {},
 }: ArchiveFiltersProps) {
   const years = ["All", "2026", "2025", "2024", "2023"];
 

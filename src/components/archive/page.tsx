@@ -1,7 +1,6 @@
-import { client } from "@/sanity/lib/client";
-import ArchiveClientWrapper from "./ArchiveClientWrapper";
+import { client } from "../../sanity/client";
+import ArchiveClientWrapper from "./ArchiveFilters";
 
-// GROQ Query to fetch archived articles from Sanity
 async function getArchiveArticles() {
   const query = `*[_type == "post"] | order(publishedAt desc) {
     "id": _id,
