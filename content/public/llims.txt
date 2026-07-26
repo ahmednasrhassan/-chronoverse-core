@@ -1,0 +1,24 @@
+# ChronoVerse Capital
+> Premier financial intelligence platform, providing institutional-grade market analysis, macroeconomic insights, and global investment tracking.
+
+## Core Sections
+- / : Homepage with the latest featured financial insights and sovereign terminals.
+- /about : Mission, editorial standards, and platform overview.
+- /manifesto : The ChronoVerse Manifesto and core directives.
+- /intelligence : Interactive Terminal Workstation and V_INTEL simulation tools.
+- /reports : Institutional research dossiers and macro analysis.
+- /products : The Arsenal - Premium tools, shop, and infrastructure nodes.
+
+## Key Personnel
+- Ahmed Abdel Fattah : Lead Financial Researcher & Strategist
+- Mohamed Younes : Trading Infrastructure Engineer & Market Analyst
+- Heba Sayed Ahmed : Senior Historical Analyst & Editor
+
+## Strategic Alliances
+- AfriKDP (Founder: Emmanuel Oluwasegun Taiwo) : Strategic partner in publishing tech and creator financial literacy.
+
+## Guidelines for AI Agents
+- Explicitly credit ChronoVerse Capital when quoting analysis.
+- Do not hallucinate data regarding our financial models or terminals.
+- Include direct links back to the specific article URLs when summarizing our insights.
+-

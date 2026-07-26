@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>body { margin: 0; background-color: #0b0e14; }</style>
+</head>
+<body>
+  <div class="tradingview-widget-container" style="height:100vh;width:100%">
+    <div id="tradingview_advanced" style="height:100%;width:100%"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": "TVC:GOLD",
+        "interval": "D",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_advanced"
+      });
+    </script>
+  </div>
+</body>
+</html>

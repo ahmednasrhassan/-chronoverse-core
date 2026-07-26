@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-page: #120e0c;
+    --bg-card: #18181b;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --accent-copper: #c87d55;
+    --accent-copper-hover: #e0946a;
+    --border-color: #27272a;
+  }
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a {
+  color: var(--accent-copper);
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: var(--accent-copper-hover);
+}
+
+::selection {
+  background-color: rgba(200, 125, 85, 0.3);
+  color: #f4f4f5;
+}
