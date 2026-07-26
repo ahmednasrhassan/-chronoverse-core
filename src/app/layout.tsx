@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "ChronoVerse Capital Team" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.jpeg",
   },
 };
 
