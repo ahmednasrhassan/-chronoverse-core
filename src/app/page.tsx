@@ -59,8 +59,8 @@ export default function HomePage() {
 
         {/* ================= SECTION 3: AMAZON SES NEWSLETTER (1 Large Card) ================= */}
         <section>
-          <div className="bg-gradient-to-br from-[#18181b] to-[#0a0a0a] border border-zinc-800 rounded-xl p-8 lg:p-14 shadow-2xl shadow-black/50 relative overflow-hidden flex flex-col items-center text-center">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#c87d55] to-transparent opacity-40"></div>
+          <div className="bg-linear-to-br from-[#18181b] to-[#0a0a0a] border border-zinc-800 rounded-xl p-8 lg:p-14 shadow-2xl shadow-black/50 relative overflow-hidden flex flex-col items-center text-center">
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-br from-transparent via-[#c87d55] to-transparent opacity-40"></div>
             <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight">Institutional Briefing</h2>
             <p className="text-zinc-400 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
               Subscribe to our Amazon-powered SES newsletter. Receive exclusive macroeconomic data, asset allocation strategies, and direct institutional insights delivered securely to your corporate inbox.
