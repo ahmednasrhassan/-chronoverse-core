@@ -138,7 +138,7 @@ export default function Header() {
               <Link
                 href="/studio"
                 onClick={() => setIsMenuOpen(false)}
-                className="w-full text-center text-xs font-extrabold uppercase tracking-wider px-4 py-3 rounded-lg bg-[#c87d55] hover:bg-[#b06a43] text-[#0d0a08] transition-all"
+                className="w-full text-center text-xs font-extrabold uppercase tracking-wider px-4 py-3 rounded-lg bg-[#4b1f04] hover:bg-[#0a0401] text-white transition-all"
               >
                 Access Studio
               </Link>
