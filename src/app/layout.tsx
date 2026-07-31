@@ -16,12 +16,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.chronoversecapital.com"),
+  alternates: {
+    canonical: "./",
+  },
   title: {
     default: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
     template: "%s | ChronoVerse Capital",
   },
-  description:
-    "Premier macroeconomic research, asset allocation intelligence, and institutional financial insights.",
+  description: "Premier macroeconomic research, asset allocation intelligence, and institutional financial analysis.",
   keywords: [
     "Macroeconomics",
     "Finance",

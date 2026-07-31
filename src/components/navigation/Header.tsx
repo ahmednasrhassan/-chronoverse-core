@@ -135,13 +135,13 @@ export default function Header() {
 
             {/* Mobile Action Button (Studio) - Mobile */}
             <div className="pt-4 border-t border-zinc-800 flex items-center justify-between">
-              <Link
-                href="/studio"
-                onClick={() => setIsMenuOpen(false)}
-                className="w-full text-center text-xs font-extrabold uppercase tracking-wider px-4 py-3 rounded-lg bg-[#4b1f04] hover:bg-[#0a0401] text-white transition-all"
-              >
-                Access Studio
-              </Link>
+             <Link
+          href="/studio"
+          onClick={() => setIsMenuOpen(false)}
+          className="w-full text-center text-xs font-extrabold uppercase tracking-wider px-4 py-3 rounded-lg bg-[#c87d55] text-[#0d0a08] hover:bg-[#b56c44] transition-colors"
+        >
+          Access Studio
+        </Link>
             </div>
           </div>
         )}
