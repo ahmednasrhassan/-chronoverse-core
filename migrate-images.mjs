@@ -10,75 +10,82 @@ const client = createClient({
   useCdn: false,
 });
 
-// Helper function to download an image and upload to Sanity CDN
+// دالة تنزيل الصورة مع حد أقصى 3 ثواني للرد
 async function uploadImageToSanity(imageUrl) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 ثواني فقط
+
   try {
-    const response = await fetch(imageUrl);
+    const response = await fetch(imageUrl, { 
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+    });
+    clearTimeout(timeoutId);
+
     if (!response.ok) return null;
     
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload image to Sanity Asset pipeline
     const asset = await client.assets.upload('image', buffer, {
       filename: imageUrl.split('/').pop().split('?')[0] || 'blogger-image.jpg',
     });
 
-    // Appending `?auto=format` forces Sanity CDN to automatically deliver AVIF/WebP depending on user's browser support
     return `${asset.url}?auto=format`;
   } catch (err) {
-    console.error(`⚠️ Failed to upload image (${imageUrl}):`, err.message);
+    clearTimeout(timeoutId);
+    console.log(`   ⏩ Skipped slow image: ${imageUrl.slice(0, 40)}...`);
     return null;
   }
 }
 
-async function migrateAllImages() {
-  console.log('🚀 Fetching all posts and drafts to migrate images to Sanity CDN with WebP/AVIF support...');
+// دالة انتظار بسيط بين الصور عشان سيرفر جوجل ما يعلقش
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Fetch all posts and drafts
-  const posts = await client.fetch(`*[_type == "post"]{ _id, title, bodyRaw }`);
-  console.log(`📄 Found ${posts.length} posts.`);
+async function migrateAllImages() {
+  console.log('🚀 Starting Smart Image Migration (Safe Mode)...');
+
+  const posts = await client.fetch(`*[_type in ["post", "page"]]{ _id, title, bodyRaw }`);
+  console.log(`📄 Total documents: ${posts.length}`);
 
   let updatedCount = 0;
 
   for (const post of posts) {
     if (!post.bodyRaw) continue;
 
-    // Regex to detect Blogger and Google Hosted image links
     const imgRegex = /https?:\/\/(?:[a-z0-9-]+\.)*(?:blogspot\.com|googleusercontent\.com)[^\s"'>]+/gi;
     const imageUrls = post.bodyRaw.match(imgRegex);
 
     if (!imageUrls || imageUrls.length === 0) continue;
 
-    console.log(`📸 Processing ${imageUrls.length} image(s) in post: "${post.title}"`);
+    console.log(`\n📸 Processing ${imageUrls.length} image(s) for: "${post.title || post._id}"`);
 
     let updatedBody = post.bodyRaw;
     let hasChanges = false;
-
-    // Remove duplicates within the same post
     const uniqueUrls = [...new Set(imageUrls)];
 
     for (const oldUrl of uniqueUrls) {
-      console.log(`   ⬇️ Downloading & Converting: ${oldUrl.slice(0, 50)}...`);
+      if (oldUrl.includes('cdn.sanity.io')) continue;
+
+      console.log(`   ⬇️ Downloading: ${oldUrl.slice(0, 45)}...`);
       const newSanityUrl = await uploadImageToSanity(oldUrl);
 
       if (newSanityUrl) {
-        // Replace old Blogger URL with Optimized Sanity CDN WebP/AVIF URL
         updatedBody = updatedBody.replaceAll(oldUrl, newSanityUrl);
         hasChanges = true;
       }
+      
+      await sleep(200); // انتظار 200 ملي ثانية بين كل صورة وصورة لعدم الحظر
     }
 
     if (hasChanges) {
-      // Save changes back to Sanity
       await client.patch(post._id).set({ bodyRaw: updatedBody }).commit();
       updatedCount++;
-      console.log(`✅ Successfully updated & optimized images for post: "${post.title}"`);
+      console.log(`✅ Saved & updated: "${post.title || post._id}"`);
     }
   }
 
-  console.log(`🎉 Done! Images for ${updatedCount} posts have been uploaded to Sanity CDN with WebP/AVIF optimization.`);
-  console.log('🔒 You can now safely close or delete your Blogger blog without losing images!');
+  console.log(`\n🎉 Done! ${updatedCount} posts updated successfully.`);
 }
 
 migrateAllImages();
