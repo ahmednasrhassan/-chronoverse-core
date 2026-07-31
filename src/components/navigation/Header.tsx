@@ -74,11 +74,11 @@ export default function Header() {
           {/* Right Action Button (Studio) - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link
-              href="/studio"
-              className="text-xs font-extrabold uppercase tracking-wider px-5 py-2.5 rounded-lg bg-[#c87d55] hover:bg-[#b06a43] text-[#0d0a08] transition-all shadow-md shadow-[#c87d55]/20"
-            >
-              Access Studio
-            </Link>
+      href="/studio"
+      className="text-xs font-extrabold uppercase tracking-wider px-5 py-2.5 rounded-lg bg-[#c87d55] text-[#0d0a08] hover:bg-[#b06a43] transition-colors"
+    >
+      Access Studio
+    </Link>
           </div>
 
           {/* Mobile Hamburger */}
