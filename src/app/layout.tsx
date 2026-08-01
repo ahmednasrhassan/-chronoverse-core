@@ -4,7 +4,7 @@ import Header from "@/components/navigation/Header";
 import Footer from "@/components/navigation/Footer";
 import CookieConsent from "@/components/cookiesconsent";
 import "./globals.css";
-
+import { GoogleAnalytics } from "@next/third-parties/google";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -53,6 +53,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <CookieConsent />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W"} />
       </body>
     </html>
   );

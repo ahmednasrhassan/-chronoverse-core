@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1095.0",
+    "@next/third-parties": "^16.2.12",
     "@sanity/client": "^7.25.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/structure": "^2.36.2",
