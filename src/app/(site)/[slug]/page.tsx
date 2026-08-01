@@ -108,6 +108,16 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       <article className="prose prose-invert mt-8 max-w-none text-zinc-300 leading-relaxed">
         <p>{currentPost.content}</p>
       </article>
+
+      {/* Article Discussion & Comments Section */}
+      <section className="mt-16 pt-8 border-t border-zinc-800">
+        <h2 className="text-xl font-semibold text-zinc-100 mb-6 flex items-center gap-2">
+          <span className="text-[#c87d55]">💬</span> Discussion & Comments
+        </h2>
+        <div className="p-6 rounded-xl border border-zinc-800 bg-[#181310] text-center text-zinc-400 text-sm">
+          Comments section loaded for: <span className="text-[#c87d55]">{currentPost.slug}</span>
+        </div>
+      </section>
     </main>
   );
 }
