@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AutoTOC from "@/components/autotoc";
 import RelatedDropdown from "@/components/relateddropdown";
+import PrintButton from "@/components/printbutton"; // 1. Added import for the PrintButton component
 import { notFound } from "next/navigation";
 
 interface ArticleItem {
@@ -101,70 +102,78 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   }));
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-12">
+    <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4">
       
       {/* Article Header & Admin Controls */}
-      <div className="mb-8 border-b border-zinc-800 pb-6">
+      <div className="mb-8 border-b border-zinc-800 pb-6 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-semibold uppercase text-[#c87d55] tracking-wider bg-[#c87d55]/10 px-2 py-1 rounded">
+          <span className="text-xs font-semibold uppercase text-[#c87d55] tracking-wider bg-[#c87d55]/10 px-2 py-1 rounded print:bg-transparent print:px-0">
             {currentPost.category}
           </span>
           
-          {/* Admin Edit Button (Navigates to Sanity Studio) */}
-          <Link
-            href={`/studio/structure/intent/edit/id=${currentPost.slug}`}
-            target="_blank"
-            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-md transition-colors border border-zinc-700"
-            title="Edit this article in Sanity CMS"
-          >
-            <span>✏️</span> Edit Article
-          </Link>
+          {/* Action Buttons (Hidden when printing) */}
+          <div className="flex items-center gap-2 print:hidden">
+            {/* 2. Added the Print/PDF Button */}
+            <PrintButton />
+
+            {/* Admin Edit Button (Navigates to Sanity Studio) */}
+            <Link
+              href={`/studio/structure/intent/edit/id=${currentPost.slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-md transition-colors border border-zinc-700"
+              title="Edit this article in Sanity CMS"
+            >
+              <span>✏️</span> Edit Article
+            </Link>
+          </div>
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mt-2 mb-4 leading-tight">
+        <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mt-2 mb-4 leading-tight print:text-black">
           {currentPost.title}
         </h1>
         
         {/* Auto-Generated Summary Block */}
-        <p className="text-lg text-zinc-400 font-medium italic border-l-2 border-[#c87d55] pl-4 py-1 mb-4">
+        <p className="text-lg text-zinc-400 font-medium italic border-l-2 border-[#c87d55] pl-4 py-1 mb-4 print:text-gray-700 print:border-gray-400">
           {autoSummary}
         </p>
         
-        <p className="text-xs text-zinc-500">{currentPost.date}</p>
+        <p className="text-xs text-zinc-500 print:text-gray-500">{currentPost.date}</p>
       </div>
 
       {/* Dynamic Hero Image Section with Auto-Alt and Auto-Caption */}
       {currentPost.imageUrl && (
-        <figure className="mb-10 w-full">
-          <div className="relative w-full h-96 rounded-xl overflow-hidden border border-zinc-800">
+        <figure className="mb-10 w-full print:mb-6">
+          <div className="relative w-full h-96 rounded-xl overflow-hidden border border-zinc-800 print:border-none print:h-auto print:max-h-80">
             <img 
               src={currentPost.imageUrl} 
               alt={autoAltText} 
               title={currentPost.title}
-              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 print:object-contain print:scale-100"
             />
           </div>
-          <figcaption className="text-center text-xs text-zinc-500 mt-3 italic">
+          <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
             {autoCaption}
           </figcaption>
         </figure>
       )}
 
-      {/* Automatic Table of Contents */}
-      <AutoTOC />
+      {/* Automatic Table of Contents (3. Hidden in Print via print:hidden) */}
+      <div className="print:hidden">
+        <AutoTOC />
+      </div>
 
-      {/* Automatic Related Content Dropdown (Top Context) */}
-      <div className="my-8">
+      {/* Automatic Related Content Dropdown (Top Context) (4. Hidden in Print via print:hidden) */}
+      <div className="my-8 print:hidden">
         <RelatedDropdown articles={formattedRelated} />
       </div>
 
       {/* Article Content Area */}
-      <article className="prose prose-invert mt-8 max-w-none text-zinc-300 leading-relaxed prose-a:text-[#c87d55] hover:prose-a:text-[#e09870]">
+      <article className="prose prose-invert mt-8 max-w-none text-zinc-300 leading-relaxed prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] print:prose-stone print:text-black print:prose-a:text-black">
         <p>{currentPost.content}</p>
       </article>
 
-      {/* Deep Dive / Further Reading Grid (Auto-Generated Internal Links) */}
-      <section className="mt-16 pt-10 border-t border-zinc-800">
+      {/* Deep Dive / Further Reading Grid (Auto-Generated Internal Links) (5. Hidden in Print via print:hidden) */}
+      <section className="mt-16 pt-10 border-t border-zinc-800 print:hidden">
         <h2 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2">
           <span className="text-[#c87d55]">🔗</span> Further Reading & Context
         </h2>
@@ -193,8 +202,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* Article Discussion & Comments Section */}
-      <section className="mt-12 pt-8 border-t border-zinc-800">
+      {/* Article Discussion & Comments Section (6. Hidden in Print via print:hidden) */}
+      <section className="mt-12 pt-8 border-t border-zinc-800 print:hidden">
         <h2 className="text-xl font-semibold text-zinc-100 mb-6 flex items-center gap-2">
           <span className="text-[#c87d55]">💬</span> Discussion & Comments
         </h2>
