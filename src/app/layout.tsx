@@ -4,6 +4,7 @@ import Header from "@/components/navigation/Header";
 import Footer from "@/components/navigation/Footer";
 import CookieConsent from "@/components/cookiesconsent";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://www.chronoversecapital.com";
+const SITE_NAME = "ChronoVerse Capital";
+const DEFAULT_DESCRIPTION =
+  "Premier macroeconomic research, asset allocation intelligence, and institutional financial analysis.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.chronoversecapital.com"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "./",
   },
@@ -24,7 +30,7 @@ export const metadata: Metadata = {
     default: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
     template: "%s | ChronoVerse Capital",
   },
-  description: "Premier macroeconomic research, asset allocation intelligence, and institutional financial analysis.",
+  description: DEFAULT_DESCRIPTION,
   keywords: [
     "Macroeconomics",
     "Finance",
@@ -36,7 +42,40 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.jpeg",
   },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
+    description: DEFAULT_DESCRIPTION,
+    locale: "en_US",
+    images: [
+      {
+        url: "/favicon.jpeg",
+        width: 512,
+        height: 512,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
+    description: DEFAULT_DESCRIPTION,
+    site: "@ChronoVerseCap",
+    creator: "@ChronoVerseCap",
+    images: ["/favicon.jpeg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
 };
+
 
 export default function RootLayout({
   children,

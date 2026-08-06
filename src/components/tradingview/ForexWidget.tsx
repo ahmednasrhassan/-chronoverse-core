@@ -18,7 +18,9 @@ function ForexWidgetComponent() {
       isTransparent: true,
       colorTheme: "dark",
       locale: "en",
+      disabled_features: ["show_watermark"],
     });
+
 
     containerRef.current.appendChild(script);
   }, []);

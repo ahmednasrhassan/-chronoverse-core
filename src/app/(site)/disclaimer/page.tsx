@@ -1,7 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function DisclaimerPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 font-sans">
       
@@ -76,7 +78,16 @@ export default function DisclaimerPage() {
           </p>
         </section>
 
+        {/* Section 5 */}
+        <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
+          <h2 className="text-xl font-bold text-[#f4f4f5]">5. Registered Mailing Address</h2>
+          <p className="text-xs font-mono text-[#a1a1aa]">
+            {siteConfig.postalAddress.full}
+          </p>
+        </section>
+
       </div>
+
 
       {/* Confirmation & Terminal Access Box */}
       <div className="bg-[#0a0a0a] border border-[#c87d55] p-6 rounded-xl text-center space-y-3 font-mono">

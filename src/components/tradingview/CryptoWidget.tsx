@@ -20,7 +20,9 @@ function CryptoWidgetComponent() {
       colorTheme: "dark",
       locale: "en",
       isTransparent: true,
+      disabled_features: ["show_watermark"],
     });
+
 
     containerRef.current.appendChild(script);
   }, []);

@@ -32,7 +32,9 @@ function MiniChartComponent({ symbol }: MiniChartProps) {
       largeChartUrl: "",
       chartOnly: false,
       noTimeScale: false,
+      disabled_features: ["show_watermark"],
     });
+
 
     container.appendChild(script);
 

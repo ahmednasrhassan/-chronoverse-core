@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import "katex/dist/katex.min.css";
 
 interface HeadingItem {
   id: string;
@@ -41,24 +42,33 @@ export default function AutoTOC() {
   if (headings.length === 0) return null;
 
   return (
-    <nav className="my-6 p-5 bg-[#181310] border border-zinc-800 rounded-xl">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-[#c87d55] mb-3 flex items-center gap-2">
-        Table of Contents
+<nav className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md">
+        <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-[#c87d55] mb-4 flex items-center gap-2">
+        <span>::</span> SECTION INDEX <span>::</span>
       </h3>
-      <ul className="space-y-2 text-sm">
-        {headings.map((item) => (
-          <li
-            key={item.id}
-            className={item.level === 3 ? "ml-4 text-xs" : "font-medium"}
-          >
-            <a
-              href={`#${item.id}`}
-              className="text-zinc-400 hover:text-[#c87d55] transition-colors block py-0.5"
+      <ul className="space-y-2 text-sm font-sans">
+        {headings.map((item, idx) => {
+          const serialNum = String(idx + 1).padStart(2, "0");
+          return (
+            <li
+              key={item.id}
+              className={item.level === 3 ? "pl-8 text-xs" : "font-semibold"}
             >
-              {item.text}
-            </a>
-          </li>
-        ))}
+              <a
+                href={`#${item.id}`}
+                className="group flex items-baseline gap-3 text-zinc-400 hover:text-[#c87d55] transition-colors py-1"
+              >
+                <span className="font-mono text-xs text-zinc-600 group-hover:text-[#c87d55]/70">
+                  {serialNum}.
+                </span>
+                <span className="border-b border-dotted border-zinc-850 flex-1 group-hover:border-[#c87d55]/30 order-2 h-3" />
+                <span className="order-1 group-hover:underline decoration-1 decoration-dotted underline-offset-4">
+                  {item.text}
+                </span>
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

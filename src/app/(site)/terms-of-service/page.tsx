@@ -1,7 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function TermsOfServicePage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 font-sans">
       
@@ -96,12 +98,16 @@ export default function TermsOfServicePage() {
       <div className="bg-[#0a0a0a] border border-[#27272a] p-6 rounded-xl text-center space-y-1 font-mono">
         <h3 className="text-[#f4f4f5] font-bold text-sm">Strategic Inquiries</h3>
         <a 
-          href="mailto:info@chronoversecapital.com" 
+          href={`mailto:${siteConfig.contactEmail}`}
           className="text-[#c87d55] text-xs hover:underline"
         >
-          info@chronoversecapital.com
+          {siteConfig.contactEmail}
         </a>
+        <p className="text-[#71717a] text-[11px] pt-2 leading-relaxed">
+          {siteConfig.postalAddress.full}
+        </p>
       </div>
+
 
       {/* Compliance Hub Nav */}
       <section className="border-t border-[#27272a] pt-8 text-center space-y-4">

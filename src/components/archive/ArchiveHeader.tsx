@@ -12,17 +12,17 @@ export default function ArchiveHeader({
   totalArticles,
 }: ArchiveHeaderProps) {
   return (
-    <div className="py-8 mb-6 border-b border-[var(--border-color)]">
+    <div className="py-8 mb-6 border-b border-border">
       <div className="max-w-3xl">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-copper)]/10 text-[var(--accent-copper)] text-xs font-semibold mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-copper/10 text-copper text-xs font-semibold mb-4">
           <span>Historical Research</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-copper)]"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-copper"></span>
           <span>{totalArticles} Reports Available</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary mb-3">
           ChronoVerse Capital Archive
         </h1>
-        <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed mb-6">
+        <p className="text-sm sm:text-base text-secondary leading-relaxed mb-6">
           Explore historical macroeconomic analysis, asset allocation intelligence, and market reports saved over time.
         </p>
 
@@ -33,10 +33,10 @@ export default function ArchiveHeader({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search reports by keyword, topic, or ticker..."
-            className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-[var(--accent-copper)] transition-all shadow-inner"
+            className="w-full bg-card border border-border text-sm text-primary placeholder-secondary rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-copper transition-all shadow-inner"
           />
           <svg
-            className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
+            className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

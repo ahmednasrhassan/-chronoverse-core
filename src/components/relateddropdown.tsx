@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface ArticleItem {
   _id: string;
@@ -41,12 +42,12 @@ export default function RelatedDropdown({ articles }: RelatedDropdownProps) {
         <ul className="border-t border-zinc-800 divide-y divide-zinc-800/60 bg-black/20">
           {articles.map((item) => (
             <li key={item._id}>
-              <a
-             href={`/${item.slug?.current ?? item._id}`}
+              <Link
+                href={`/${item.slug?.current ?? item._id}`}
                 className="block px-5 py-3 text-xs text-zinc-400 hover:text-[#c87d55] hover:bg-zinc-900/40 transition-colors"
               >
                 {item.title}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

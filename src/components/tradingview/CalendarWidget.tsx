@@ -19,7 +19,9 @@ function CalendarWidgetComponent() {
       locale: "en",
       importanceFilter: "-1,0,1",
       currencyFilter: "USD,EUR,GBP,JPY",
+      disabled_features: ["show_watermark"],
     });
+
 
     containerRef.current.appendChild(script);
   }, []);

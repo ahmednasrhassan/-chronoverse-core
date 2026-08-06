@@ -29,7 +29,9 @@ function AdvancedChartComponent({ symbol = "BINANCE:BTCUSDT", theme = "dark" }: 
           enable_publishing: false,
           allow_symbol_change: true,
           container_id: containerRef.current?.id,
+          disabled_features: ["show_watermark"],
         });
+
       }
     };
 

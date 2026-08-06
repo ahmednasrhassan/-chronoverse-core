@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import SocialGroup from '../socialicons';
+import { siteConfig } from '@/config/siteConfig';
 export default function Footer() {
+
   // Exact 14 Administrative & Site Routes matching your folder structure in src/app/(site)
   const adminLinks = [
     { title: 'About Us', href: '/about' },
@@ -39,6 +41,12 @@ export default function Footer() {
             <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-xs md:max-w-sm">
               Providing deep-dive macroeconomic research, financial historical perspectives, and data-driven market insights designed for institutional-level understanding.
             </p>
+
+            {/* Registered Mailing Address */}
+            <p className="text-[11px] text-zinc-500 leading-relaxed max-w-xs md:max-w-sm font-mono">
+              {siteConfig.postalAddress.full}
+            </p>
+
 
             {/* Social Icons Embedded Directly (LinkedIn, X, Reddit, Pinterest) */}
             <div className="flex items-center gap-4 pt-2">

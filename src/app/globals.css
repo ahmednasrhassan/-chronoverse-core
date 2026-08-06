@@ -11,6 +11,22 @@
     --border-color: #27272a;
   }
 }
+
+/*
+ * Register the design-system tokens as Tailwind theme colors so components
+ * can use standard utility classes (e.g. bg-card, border-border, text-copper)
+ * instead of arbitrary CSS-variable values like bg-[var(--bg-card)].
+ */
+@theme inline {
+  --color-page: var(--bg-page);
+  --color-card: var(--bg-card);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-copper: var(--accent-copper);
+  --color-copper-hover: var(--accent-copper-hover);
+  --color-border: var(--border-color);
+}
+
 html {
   scroll-behavior: smooth;
 }

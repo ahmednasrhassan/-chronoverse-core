@@ -1,7 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function ContactPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
       
@@ -76,7 +78,25 @@ export default function ContactPage() {
             </p>
           </div>
 
+          {/* Registered Mailing Address */}
+          <div className="bg-[#0a0a0a] border border-[#27272a] p-6 rounded-xl space-y-2 font-mono">
+            <h2 className="text-sm font-bold text-[#c87d55] tracking-wider uppercase">
+              📍 Registered Mailing Address
+            </h2>
+            <p className="text-[#f4f4f5] text-sm leading-relaxed">
+              {siteConfig.postalAddress.line1}
+              <br />
+              {siteConfig.postalAddress.line2}
+              <br />
+              {siteConfig.postalAddress.city}, {siteConfig.postalAddress.state}{" "}
+              {siteConfig.postalAddress.zip}
+              <br />
+              {siteConfig.postalAddress.country}
+            </p>
+          </div>
+
         </div>
+
 
         {/* Right Column: Institutional Contact Form */}
         <div className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-4">

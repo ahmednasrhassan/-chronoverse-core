@@ -1,7 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function PrivacyPolicyPage() {
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 font-sans">
       
@@ -140,12 +142,16 @@ export default function PrivacyPolicyPage() {
         <h3 className="text-[#f4f4f5] font-bold text-sm">10. Contact Information</h3>
         <p className="text-[#a1a1aa] text-xs">If you have questions regarding our Privacy Policy, contact our editorial team:</p>
         <a 
-          href="mailto:info@chronoversecapital.com" 
+          href={`mailto:${siteConfig.contactEmail}`}
           className="text-[#c87d55] text-xs font-bold hover:underline block pt-1"
         >
-          info@chronoversecapital.com
+          {siteConfig.contactEmail}
         </a>
+        <p className="text-[#71717a] text-[11px] pt-2 leading-relaxed">
+          {siteConfig.postalAddress.full}
+        </p>
       </div>
+
 
       {/* Compliance Hub Nav */}
       <section className="border-t border-[#27272a] pt-8 text-center space-y-4">

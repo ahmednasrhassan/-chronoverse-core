@@ -3,6 +3,14 @@
 import { NextStudio } from 'next-sanity/studio'
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
+import { dashboardTool } from '@sanity/dashboard'
+import { Icon } from '@sanity/icons'
+
+import { generateSeoAction } from '@/sanity/actions/generateSeoAction'
+import { QuickDraftsWidget } from '@/sanity/dashboard/QuickDraftsWidget'
+import { RecentContentWidget } from '@/sanity/dashboard/RecentContentWidget'
+import { ImageAssetsWidget } from '@/sanity/dashboard/ImageAssetsWidget'
+import { ContentStatsWidget } from '@/sanity/dashboard/ContentStatsWidget'
 
 // ==========================================
 // 1. Author Schema (المؤلفين)
@@ -27,10 +35,19 @@ const categorySchema = {
   title: 'Category',
   type: 'document',
   fields: [
-    { name: 'title', title: 'Title', type: 'string' },
+    { name: 'title', title: 'Title', type: 'string', validation: (Rule: any) => Rule.required() },
+    {
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'title', maxLength: 96 },
+      description: 'Used to build the /category/[slug] URL. Should match the imported Blogger label (kebab-case).',
+      validation: (Rule: any) => Rule.required(),
+    },
     { name: 'description', title: 'Description', type: 'text' },
   ],
 }
+
 
 // ==========================================
 // 3. Post Schema (المقالات - شامل وكامل)
@@ -49,11 +66,15 @@ const postSchema = {
     
     // العلاقات
     { name: 'author', title: 'Author', type: 'reference', to: { type: 'author' } },
-    { name: 'categories', title: 'Categories', type: 'array', of: [{ type: 'reference', to: { type: 'category' } }] },
+    // NOTE: Singular reference (not an array) so that GROQ `category->title` /
+    // `category->slug.current` projections used throughout the site resolve correctly.
+    { name: 'category', title: 'Category', type: 'reference', to: { type: 'category' } },
+
     
     // الميديا والملخص
     { name: 'mainImage', title: 'Main Image', type: 'image', options: { hotspot: true } },
-    { name: 'excerpt', title: 'Excerpt / SEO Description', type: 'text', rows: 3, description: 'Short summary for SEO and previews.' },
+    { name: 'excerpt', title: 'Excerpt / Rich Summary', type: 'text', rows: 3, description: 'Short summary for previews. Can be auto-generated via "Generate SEO & Excerpt (AI)".' },
+    { name: 'seoDescription', title: 'SEO Meta Description', type: 'text', rows: 2, description: 'Search-engine meta description (max ~160 chars). Can be auto-generated via "Generate SEO & Excerpt (AI)".' },
     
     // المحتوى (المحرر القوي)
     { 
@@ -104,9 +125,30 @@ const config = defineConfig({
   dataset: 'production',
   title: 'Chronoverse Capital Admin',
   basePath: '/studio',
-  plugins: [structureTool()],
+  plugins: [
+    structureTool(),
+    dashboardTool({
+      name: 'dashboard',
+      title: 'Dashboard',
+      icon: () => <Icon symbol="dashboard" />,
+      widgets: [
+        { name: 'quick-drafts', component: QuickDraftsWidget, layout: { width: 'medium' } },
+        { name: 'recent-content', component: RecentContentWidget, layout: { width: 'medium' } },
+        { name: 'image-assets', component: ImageAssetsWidget, layout: { width: 'medium' } },
+        { name: 'content-stats', component: ContentStatsWidget, layout: { width: 'full' } },
+      ],
+    }),
+  ],
   schema: {
     types: [postSchema, authorSchema, categorySchema, pageSchema],
+  },
+  document: {
+    actions: (prev, context) => {
+      if (context.schemaType === 'post') {
+        return [generateSeoAction, ...prev]
+      }
+      return prev
+    },
   },
 })
 

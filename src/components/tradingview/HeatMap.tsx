@@ -27,7 +27,9 @@ function HeatMapComponent() {
       isTransparent: true,
       width: "100%",
       height: "100%",
+      disabled_features: ["show_watermark"],
     });
+
 
     containerRef.current.appendChild(script);
   }, []);

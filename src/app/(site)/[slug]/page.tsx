@@ -1,105 +1,108 @@
 import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
 import AutoTOC from "@/components/autotoc";
 import RelatedDropdown from "@/components/relateddropdown";
 import PrintButton from "@/components/printbutton";
+import AuthorCard from "@/components/authorcard";
+import { 
+  getSanityArticleBySlug, 
+  getSanityArticles, 
+  stripHtml, 
+  sanitizeHtml, 
+  calculateReadTime, 
+  ContentItem 
+} from "@/lib/content";
 import { notFound } from "next/navigation";
-
-interface ArticleItem {
-  slug: string;
-  title: string;
-  date: string;
-  category: string;
-  keywords: string[];
-  content: string;
-  imageUrl?: string;
-}
-
-// Global content registry
-const allArticles: ArticleItem[] = [
-  {
-    slug: "deglobalization-impact",
-    title: "The Structural Shift: Deglobalization Impact on Global Capital",
-    date: "2026-08-01",
-    category: "Articles",
-    keywords: ["deglobalization", "macro", "trade", "capital"],
-    content: "Detailed structural analysis on global trade flows and capital redirection. As supply chains decouple globally, institutions are reallocating massive pools of liquidity into sovereign resilience and local technology infrastructure...",
-    imageUrl: "https://via.placeholder.com/800x400/181310/c87d55?text=Deglobalization",
-  },
-  {
-    slug: "macro-liquidity-cycles-2026",
-    title: "Global Liquidity Cycles & Historical Macro Pivots 2026",
-    date: "2026-07-15",
-    category: "Reports",
-    keywords: ["liquidity", "macro", "central-banks", "finance"],
-    content: "Comprehensive report on central bank balance sheets and interest rate expectations...",
-    imageUrl: "https://via.placeholder.com/800x400/181310/c87d55?text=Macro+Liquidity",
-  },
-  {
-    slug: "bitcoin-halving-fractal-analysis",
-    title: "Bitcoin Halving Cycle Fractals & On-Chain Supply Metrics",
-    date: "2026-06-28",
-    category: "Reports",
-    keywords: ["crypto", "bitcoin", "fractals", "on-chain"],
-    content: "Evaluating post-halving structural price models and long-term holder behavior...",
-    imageUrl: "https://via.placeholder.com/800x400/181310/c87d55?text=Bitcoin+Halving",
-  },
-  {
-    slug: "gold-vs-tech-rotation-report",
-    title: "The Great Asset Rotation: Gold vs. Mega-Cap Tech",
-    date: "2026-05-10",
-    category: "Research",
-    keywords: ["gold", "tech", "asset-allocation", "macro"],
-    content: "Comparative study analyzing institutional capital flows between hard assets and technology equities...",
-  },
-];
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateStaticParams() {
+  const articles = await getSanityArticles();
+  return articles.map((article) => ({
+    slug: article.slug,
+  }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const currentPost = await getSanityArticleBySlug(slug);
+
+  if (!currentPost) {
+    return {};
+  }
+
+  const rawText = stripHtml(currentPost.legacyBody || currentPost.content || "");
+  const autoSummary = rawText.length > 140 
+    ? rawText.substring(0, 140) + "..." 
+    : rawText;
+
+  return {
+    title: `${currentPost.title} | Chronoverse Intelligence`,
+    description: autoSummary,
+    openGraph: {
+      title: currentPost.title,
+      description: autoSummary,
+      images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
+    },
+  };
+}
+
 export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
 
-  // 1. Fetch current article by slug
-  const currentPost = allArticles.find((item) => item.slug === slug);
+  // Retrieve the current article directly matching the URL slug
+  const currentPost = await getSanityArticleBySlug(slug);
 
   if (!currentPost) {
     notFound();
   }
 
-  // Calculate estimated read time dynamically (average 200 words per minute)
-  const wordCount = currentPost.content.split(/\s+/).length;
-  const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+  // Retrieve articles for generating related posts recommendations
+  const allArticles = await getSanityArticles();
 
-  // Auto-generate Smart Image SEO Data (Alt Text & Caption)
+  // Extract raw text for clean processing
+  const rawText = stripHtml(currentPost.legacyBody || currentPost.content || "");
+
+  // Calculate estimated read time dynamically (approx. 200 words per minute)
+  const readTimeMinutes = calculateReadTime(rawText);
+
+  // Auto-generate Smart Image SEO Data
   const autoAltText = `Illustration for ${currentPost.category} covering ${currentPost.title}`;
-  const autoCaption = `Figure 1: Visual representation of ${currentPost.title.toLowerCase()} concepts.`;
+  const autoCaption = `Figure 1: Visual representation of ${currentPost.title?.toLowerCase()} concepts.`;
 
-  // Auto-generate a meta summary snippet from the content (First 140 characters)
-  const autoSummary = currentPost.content.length > 140 
-    ? currentPost.content.substring(0, 140) + "..." 
-    : currentPost.content;
+  // Auto-generate a clean meta summary snippet (First 140 chars of pure text)
+  const autoSummary = rawText.length > 140 
+    ? rawText.substring(0, 140) + "..." 
+    : rawText;
 
-  // 2. Filter related posts across all categories by shared keywords or category
+  // Sanitize HTML body to prevent any XSS vulnerabilities
+  const sanitizedLegacyBody = currentPost.legacyBody ? sanitizeHtml(currentPost.legacyBody) : "";
+
+  // --- Automatic Internal Links & Related Articles Engine ---
+  // Filter related posts based on shared keywords or identical categories
   let relatedPosts = allArticles
-    .filter((item) => item.slug !== currentPost.slug)
-    .filter((item) => {
+    .filter((item: ContentItem) => item.slug !== currentPost.slug)
+    .filter((item: ContentItem) => {
       const sameCategory = item.category === currentPost.category;
-      const sharedKeywords = item.keywords?.some((kw) =>
+      const sharedKeywords = item.keywords?.some((kw: string) =>
         currentPost.keywords?.includes(kw)
       );
       return sameCategory || sharedKeywords;
     });
 
-  // 3. Fallback: Return latest posts if no keyword match is found
+  // Fallback: Return the latest published posts if no exact match is found
   if (relatedPosts.length === 0) {
-    relatedPosts = allArticles.filter((item) => item.slug !== currentPost.slug);
+    relatedPosts = allArticles.filter((item: ContentItem) => item.slug !== currentPost.slug);
   }
 
+  // Limit the output to 8 related articles for optimal UI layout
   const finalRelatedPosts = relatedPosts.slice(0, 8);
 
-  // Format array for RelatedDropdown component (Limit to 8 posts)
-  const formattedRelated = finalRelatedPosts.map((post) => ({
+  // Format the data structure for the automatic internal links dropdown
+  const formattedRelated = finalRelatedPosts.map((post: ContentItem) => ({
     _id: post.slug,
     title: post.title,
     slug: { current: post.slug },
@@ -109,13 +112,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
     <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
       
       {/* Premium Top Reading Indicator Line */}
-      <div className="fixed top-0 left-0 w-full h-1bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] z-50 opacity-80 print:hidden" />
+      <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] z-50 opacity-80 print:hidden" />
 
       {/* Article Header & Admin Controls */}
       <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[#c87d55] bg-[#c87d55]/10 px-3 py-1.5 rounded-full border border-[#c87d55]/20 print:bg-transparent print:border-none print:px-0">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#c87d55] bg-[#c87d55]/10 px-3 py-1.5 rounded-full border border-[#c87d55]/20 print:bg-transparent print:border-none print:px-0">
               {currentPost.category}
             </span>
             <span className="text-zinc-600 text-xs print:hidden">•</span>
@@ -125,7 +128,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             </span>
           </div>
           
-          {/* Action Buttons (Hidden when printing) */}
+          {/* Action Buttons */}
           <div className="flex items-center gap-2 print:hidden">
             <PrintButton />
 
@@ -144,7 +147,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           {currentPost.title}
         </h1>
         
-        {/* Auto-Generated Summary Block (Premium Styled) */}
+        {/* Auto-Generated Summary Block */}
         <div className="relative p-5 rounded-xl bg-zinc-900/40 border-l-4 border-[#c87d55] my-6 shadow-md print:border-gray-400 print:bg-transparent">
           <p className="text-base md:text-lg text-zinc-300 font-normal italic leading-relaxed">
             "{autoSummary}"
@@ -157,14 +160,17 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Dynamic Hero Image Section */}
+      {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
       {currentPost.imageUrl && (
         <figure className="mb-12 w-full print:mb-6">
           <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
-            <img 
+            <Image 
               src={currentPost.imageUrl} 
               alt={autoAltText} 
               title={currentPost.title}
+              fill
+              sizes="(max-w-768px) 100vw, 768px"
+              priority
               className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain print:scale-100"
             />
           </div>
@@ -179,24 +185,31 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         <AutoTOC />
       </div>
 
-      {/* Automatic Related Content Dropdown */}
+      {/* Automatic Internal Links Dropdown (Generated from Keywords/Category) */}
       <div className="my-8 print:hidden">
         <RelatedDropdown articles={formattedRelated} />
       </div>
 
-      {/* Enhanced Article Content Area (Prose with Drop Cap) */}
-      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black">
-        <p>{currentPost.content}</p>
+      {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Markdown */}
+      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+        {sanitizedLegacyBody ? (
+          <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />
+        ) : (
+          <p>{currentPost.content}</p>
+        )}
       </article>
 
-      {/* Deep Dive / Further Reading Grid (Premium Styled) */}
+      {/* Author Card Component */}
+      <AuthorCard authorName={currentPost.author} />
+
+      {/* Deep Dive / Further Reading Grid */}
       <section className="mt-16 pt-10 border-t border-zinc-800 print:hidden">
         <h2 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2 tracking-tight">
           <span className="text-[#c87d55]">🔗</span> Further Reading & Context
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {finalRelatedPosts.map((related) => (
+         {finalRelatedPosts.map((related: ContentItem) => (
             <Link 
               key={related.slug} 
               href={`/${related.slug}`}
@@ -211,7 +224,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
                 </h3>
               </div>
               <p className="text-xs text-zinc-500 line-clamp-2 mt-4 pt-3 border-t border-zinc-800/50">
-                 {related.content.substring(0, 90)}...
+                 {/* Safeguard: Strip HTML logic prevents raw code rendering in cards */}
+                 {stripHtml(related.legacyBody || related.content || '').substring(0, 90)}...
               </p>
             </Link>
           ))}

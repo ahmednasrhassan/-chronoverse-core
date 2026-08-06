@@ -25,7 +25,9 @@ function MarketTickerComponent() {
       isTransparent: true,
       displayMode: "adaptive",
       locale: "en",
+      disabled_features: ["show_watermark"],
     });
+
 
     containerRef.current.appendChild(script);
   }, []);
