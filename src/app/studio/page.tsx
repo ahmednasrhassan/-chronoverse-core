@@ -3,6 +3,7 @@
 import { NextStudio } from 'next-sanity/studio'
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
+import type { StructureBuilder } from 'sanity/structure'
 import { dashboardTool } from '@sanity/dashboard'
 import { Icon } from '@sanity/icons'
 
@@ -12,113 +13,58 @@ import { RecentContentWidget } from '@/sanity/dashboard/RecentContentWidget'
 import { ImageAssetsWidget } from '@/sanity/dashboard/ImageAssetsWidget'
 import { ContentStatsWidget } from '@/sanity/dashboard/ContentStatsWidget'
 
-// ==========================================
-// 1. Author Schema (المؤلفين)
-// ==========================================
-const authorSchema = {
-  name: 'author',
-  title: 'Author',
-  type: 'document',
-  fields: [
-    { name: 'name', title: 'Name', type: 'string' },
-    { name: 'slug', title: 'Slug', type: 'slug', options: { source: 'name' } },
-    { name: 'image', title: 'Image', type: 'image', options: { hotspot: true } },
-    { name: 'bio', title: 'Bio', type: 'array', of: [{ type: 'block' }] },
-  ],
-}
+// Editorial (post) vs. Administrative (page) content types now live in
+// dedicated schema files under `src/sanity/schemaTypes/` so they can be
+// grouped separately in the Studio sidebar and queried independently via
+// `_type == "post"` / `_type == "page"` in GROQ across the Next.js routes.
+import postSchema from '@/sanity/schemaTypes/post'
+import pageSchema from '@/sanity/schemaTypes/page'
+import authorSchema from '@/sanity/schemaTypes/author'
+import categorySchema from '@/sanity/schemaTypes/category'
 
 // ==========================================
-// 2. Category Schema (التصنيفات)
+// Desk Structure — explicit "Posts" vs "Pages" sidebar sections.
+//
+// This deliberately does NOT use S.documentTypeListItems() (which would
+// render every schema type as one flat list). Instead we build two named
+// list items — "Posts" (blog/editorial content) and "Pages" (administrative
+// content, e.g. About, Privacy Policy) — followed by the supporting
+// reference types (Authors, Categories), so editors can never confuse the
+// two content models.
 // ==========================================
-const categorySchema = {
-  name: 'category',
-  title: 'Category',
-  type: 'document',
-  fields: [
-    { name: 'title', title: 'Title', type: 'string', validation: (Rule: any) => Rule.required() },
-    {
-      name: 'slug',
-      title: 'Slug',
-      type: 'slug',
-      options: { source: 'title', maxLength: 96 },
-      description: 'Used to build the /category/[slug] URL. Should match the imported Blogger label (kebab-case).',
-      validation: (Rule: any) => Rule.required(),
-    },
-    { name: 'description', title: 'Description', type: 'text' },
-  ],
-}
-
-
-// ==========================================
-// 3. Post Schema (المقالات - شامل وكامل)
-// ==========================================
-const postSchema = {
-  name: 'post',
-  title: 'Post',
-  type: 'document',
-  fields: [
-    // البيانات الأساسية
-    { name: 'title', title: 'Title', type: 'string', validation: (Rule: any) => Rule.required() },
-    { name: 'slug', title: 'Slug', type: 'slug', options: { source: 'title', maxLength: 96 }, validation: (Rule: any) => Rule.required() },
-    
-    // النشر والجدولة
-    { name: 'publishedAt', title: 'Published At (Schedule)', type: 'datetime', description: 'Set a future date to schedule publishing.' },
-    
-    // العلاقات
-    { name: 'author', title: 'Author', type: 'reference', to: { type: 'author' } },
-    // NOTE: Singular reference (not an array) so that GROQ `category->title` /
-    // `category->slug.current` projections used throughout the site resolve correctly.
-    { name: 'category', title: 'Category', type: 'reference', to: { type: 'category' } },
-
-    
-    // الميديا والملخص
-    { name: 'mainImage', title: 'Main Image', type: 'image', options: { hotspot: true } },
-    { name: 'excerpt', title: 'Excerpt / Rich Summary', type: 'text', rows: 3, description: 'Short summary for previews. Can be auto-generated via "Generate SEO & Excerpt (AI)".' },
-    { name: 'seoDescription', title: 'SEO Meta Description', type: 'text', rows: 2, description: 'Search-engine meta description (max ~160 chars). Can be auto-generated via "Generate SEO & Excerpt (AI)".' },
-    
-    // المحتوى (المحرر القوي)
-    { 
-      name: 'body', 
-      title: 'Body Content', 
-      type: 'array', 
-      of: [
-        { type: 'block' }, // النصوص والتنسيقات
-        { type: 'image', options: { hotspot: true } }, // إدراج صور داخل النص
-      ] 
-    },
-
-    // الحقل القديم (للحفاظ على البيانات المهاجرة من بلوجر)
-    { name: 'bodyRaw', title: 'Legacy Body (HTML)', type: 'text', description: 'Raw HTML from Blogger migration.', readOnly: false },
-  ],
-  preview: {
-    select: {
-      title: 'title',
-      author: 'author.name',
-      media: 'mainImage',
-    },
-    prepare(selection: any) {
-      const { author } = selection
-      return { ...selection, subtitle: author && `by ${author}` }
-    },
-  },
-}
+const deskStructure = (S: StructureBuilder) =>
+  S.list()
+    .title('Content')
+    .items([
+      S.listItem()
+        .title('Posts')
+        .icon(() => <Icon symbol="document" />)
+        .child(
+          S.documentTypeList('post')
+            .title('Posts')
+            .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
+        ),
+      S.listItem()
+        .title('Pages')
+        .icon(() => <Icon symbol="folder" />)
+        .child(
+          S.documentTypeList('page')
+            .title('Administrative Pages')
+            .defaultOrdering([{ field: 'title', direction: 'asc' }])
+        ),
+      S.divider(),
+      S.listItem()
+        .title('Authors')
+        .icon(() => <Icon symbol="user" />)
+        .child(S.documentTypeList('author').title('Authors')),
+      S.listItem()
+        .title('Categories')
+        .icon(() => <Icon symbol="tag" />)
+        .child(S.documentTypeList('category').title('Categories')),
+    ])
 
 // ==========================================
-// 4. Page Schema (الصفحات الثابتة مثل من نحن، الخ)
-// ==========================================
-const pageSchema = {
-  name: 'page',
-  title: 'Page',
-  type: 'document',
-  fields: [
-    { name: 'title', title: 'Title', type: 'string' },
-    { name: 'slug', title: 'Slug', type: 'slug', options: { source: 'title' } },
-    { name: 'body', title: 'Body', type: 'array', of: [{ type: 'block' }, { type: 'image' }] },
-  ],
-}
-
-// ==========================================
-// 5. Configuration & Initialization
+// Configuration & Initialization
 // ==========================================
 const config = defineConfig({
   projectId: 'xfs4j01p',
@@ -126,7 +72,9 @@ const config = defineConfig({
   title: 'Chronoverse Capital Admin',
   basePath: '/studio',
   plugins: [
-    structureTool(),
+    structureTool({
+      structure: deskStructure,
+    }),
     dashboardTool({
       name: 'dashboard',
       title: 'Dashboard',
@@ -140,7 +88,7 @@ const config = defineConfig({
     }),
   ],
   schema: {
-    types: [postSchema, authorSchema, categorySchema, pageSchema],
+    types: [postSchema, pageSchema, authorSchema, categorySchema],
   },
   document: {
     actions: (prev, context) => {

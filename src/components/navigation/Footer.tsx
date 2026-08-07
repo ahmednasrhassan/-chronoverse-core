@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import SocialGroup from '../socialicons';
 import { siteConfig } from '@/config/siteConfig';
 export default function Footer() {
@@ -30,12 +31,21 @@ export default function Footer() {
           
           {/* Column 1: Brand Info & Social Icons (Takes 4 cols on desktop) */}
           <div className="md:col-span-4 flex flex-col space-y-4">
-            <Link href="/" className="inline-block">
-              <span className="text-lg md:text-xl font-extrabold tracking-wider text-zinc-100">
-                CHRONOVERSE <span className="text-[#c87d55]">CAPITAL</span>
-              </span>
-              <div className="text-[10px] text-zinc-500 font-mono tracking-widest mt-0.5">
-                www.chronoversecapital.com
+            <Link href="/" className="inline-flex items-center gap-3">
+              <Image
+                src="/logo.svg"
+                alt="ChronoVerse Capital logo"
+                width={36}
+                height={36}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0"
+              />
+              <div className="flex flex-col">
+                <span className="text-lg md:text-xl font-extrabold tracking-wider text-zinc-100">
+                  CHRONOVERSE <span className="text-[#c87d55]">CAPITAL</span>
+                </span>
+                <div className="text-[10px] text-zinc-500 font-mono tracking-widest mt-0.5">
+                  www.chronoversecapital.com
+                </div>
               </div>
             </Link>
             <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-xs md:max-w-sm">

@@ -5,15 +5,18 @@ import AutoTOC from "@/components/autotoc";
 import RelatedDropdown from "@/components/relateddropdown";
 import PrintButton from "@/components/printbutton";
 import AuthorCard from "@/components/authorcard";
+import InternalLinksBox from "@/components/InternalLinksBox";
 import { 
   getSanityArticleBySlug, 
   getSanityArticles, 
+  getRelatedArticles,
   stripHtml, 
   sanitizeHtml, 
   calculateReadTime, 
   ContentItem 
 } from "@/lib/content";
 import { notFound } from "next/navigation";
+
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -34,21 +37,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {};
   }
 
-  const rawText = stripHtml(currentPost.legacyBody || currentPost.content || "");
-  const autoSummary = rawText.length > 140 
-    ? rawText.substring(0, 140) + "..." 
-    : rawText;
+  // Automated Metadata: prefer the editor-provided `seoDescription`. If it's
+  // empty, dynamically fall back to the first 160 characters extracted from
+  // the article's body text (`bodyContent`), so no post ever ships without
+  // a meta description.
+  const rawText = stripHtml(
+    currentPost.legacyBody || currentPost.bodyContent || currentPost.content || ""
+  );
+  const metaDescription =
+    currentPost.seoDescription && currentPost.seoDescription.trim().length > 0
+      ? currentPost.seoDescription.trim()
+      : rawText.length > 160
+        ? `${rawText.substring(0, 160).trim()}...`
+        : rawText;
 
   return {
     title: `${currentPost.title} | Chronoverse Intelligence`,
-    description: autoSummary,
+    description: metaDescription,
     openGraph: {
       title: currentPost.title,
-      description: autoSummary,
+      description: metaDescription,
       images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
     },
   };
 }
+
 
 export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
@@ -63,8 +76,18 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Retrieve articles for generating related posts recommendations
   const allArticles = await getSanityArticles();
 
+  // Automated Internal Linking Block: fetch 6-8 related articles matching
+  // the current post's category or tags/keywords directly via GROQ.
+  const relatedArticles = await getRelatedArticles(
+    currentPost.slug,
+    currentPost.categorySlug,
+    currentPost.keywords,
+    8
+  );
+
   // Extract raw text for clean processing
   const rawText = stripHtml(currentPost.legacyBody || currentPost.content || "");
+
 
   // Calculate estimated read time dynamically (approx. 200 words per minute)
   const readTimeMinutes = calculateReadTime(rawText);
@@ -202,35 +225,10 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Author Card Component */}
       <AuthorCard authorName={currentPost.author} />
 
-      {/* Deep Dive / Further Reading Grid */}
-      <section className="mt-16 pt-10 border-t border-zinc-800 print:hidden">
-        <h2 className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2 tracking-tight">
-          <span className="text-[#c87d55]">🔗</span> Further Reading & Context
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-         {finalRelatedPosts.map((related: ContentItem) => (
-            <Link 
-              key={related.slug} 
-              href={`/${related.slug}`}
-              className="group flex flex-col justify-between p-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              <div>
-                <span className="text-[10px] uppercase font-bold text-[#c87d55] tracking-widest mb-3 block">
-                  {related.category}
-                </span>
-                <h3 className="text-base font-semibold text-zinc-200 group-hover:text-white mb-2 line-clamp-2 leading-snug">
-                  {related.title}
-                </h3>
-              </div>
-              <p className="text-xs text-zinc-500 line-clamp-2 mt-4 pt-3 border-t border-zinc-800/50">
-                 {/* Safeguard: Strip HTML logic prevents raw code rendering in cards */}
-                 {stripHtml(related.legacyBody || related.content || '').substring(0, 90)}...
-              </p>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Automated Internal Linking Block: 6-8 related articles matching
+          category/tags, fetched via GROQ (getRelatedArticles). */}
+      <InternalLinksBox articles={relatedArticles} title="Further Reading & Context" />
+
 
       {/* Article Discussion & Comments Section */}
       <section className="mt-14 pt-8 border-t border-zinc-800 print:hidden">

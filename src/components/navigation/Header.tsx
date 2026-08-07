@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,13 +48,23 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Logo & Domain */}
-          <Link href="/" className="flex flex-col justify-center group">
-            <span className="text-xl font-extrabold tracking-wider text-zinc-100 transition-colors group-hover:text-white">
-              CHRONOVERSE <span className="text-[#c87d55]">CAPITAL</span>
-            </span>
-            <span className="text-[10px] text-zinc-500 font-mono tracking-widest group-hover:text-[#c87d55]/80 transition-colors">
-              www.chronoversecapital.com
-            </span>
+          <Link href="/" className="flex items-center gap-3 group">
+            <Image
+              src="/logo.svg"
+              alt="ChronoVerse Capital logo"
+              width={40}
+              height={40}
+              priority
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full shrink-0"
+            />
+            <div className="flex flex-col justify-center">
+              <span className="text-xl font-extrabold tracking-wider text-zinc-100 transition-colors group-hover:text-white">
+                CHRONOVERSE <span className="text-[#c87d55]">CAPITAL</span>
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono tracking-widest group-hover:text-[#c87d55]/80 transition-colors">
+                www.chronoversecapital.com
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Links */}

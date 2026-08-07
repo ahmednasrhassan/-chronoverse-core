@@ -77,8 +77,34 @@ async function getSanityPages(): Promise<SanitySlugDoc[]> {
   }
 }
 
+interface SanityCategoryDoc {
+  slug: string;
+}
+
+/**
+ * Fetches all `category` documents so their dynamically-generated
+ * `/category/[slug]` feed pages are included in the sitemap automatically.
+ */
+async function getSanityCategories(): Promise<SanityCategoryDoc[]> {
+  try {
+    const categories = await client.fetch<SanityCategoryDoc[]>(
+      `*[_type == "category" && defined(slug.current)] {
+        "slug": slug.current
+      }`
+    );
+    return categories || [];
+  } catch (error) {
+    console.warn("[sitemap] Failed to fetch Sanity categories:", error);
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, pages] = await Promise.all([getSanityPosts(), getSanityPages()]);
+  const [posts, pages, categories] = await Promise.all([
+    getSanityPosts(),
+    getSanityPages(),
+    getSanityCategories(),
+  ]);
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
     url: `${BASE_URL}${route.path}`,
@@ -105,11 +131,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
+  const categoryEntries: MetadataRoute.Sitemap = categories
+    .filter((category) => !!category.slug)
+    .map((category) => ({
+      url: `${BASE_URL}/category/${category.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.6,
+    }));
+
   // De-duplicate by URL (static routes take precedence over dynamic ones).
   const seen = new Set<string>();
   const merged: MetadataRoute.Sitemap = [];
 
-  for (const entry of [...staticEntries, ...postEntries, ...pageEntries]) {
+  for (const entry of [...staticEntries, ...postEntries, ...pageEntries, ...categoryEntries]) {
     if (!seen.has(entry.url)) {
       seen.add(entry.url);
       merged.push(entry);

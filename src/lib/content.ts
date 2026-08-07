@@ -11,6 +11,12 @@ declare const process: {
   cwd(): string;
 };
 
+// Default/fallback category applied whenever a post has no category
+// assigned in Sanity. This prevents "uncategorized" posts from breaking
+// /category/[slug] links, SEO breadcrumbs, or UI badges.
+export const DEFAULT_CATEGORY = "General";
+export const DEFAULT_CATEGORY_SLUG = "general";
+
 export interface ContentItem {
   slug: string;
   title: string;
@@ -22,6 +28,8 @@ export interface ContentItem {
   legacyBody?: string;
   imageUrl?: string;
   author?: string;
+  seoDescription?: string;
+  bodyContent?: string;
 }
 
 interface SanityRawPost {
@@ -35,7 +43,10 @@ interface SanityRawPost {
   legacyBody: string | null;
   imageUrl: string | null;
   author: string | null;
+  seoDescription?: string | null;
+  bodyPlainText?: string | null;
 }
+
 
 
 /**
@@ -77,9 +88,11 @@ export function calculateReadTime(text: string): number {
 }
 
 
-// 1. Fetch a single article by its slug with fallback to local content
-export async function getSanityArticleBySlug(slug: string): Promise<ContentItem | null> {
-  const query = `*[_type == "post" && slug.current == $slug][0] {
+// Shared GROQ projection for post -> ContentItem mapping. Includes
+// `seoDescription` and a flattened `bodyPlainText` (via Sanity's `pt::text`)
+// so the front-end can build automated meta descriptions and internal-link
+// queries without re-fetching full Portable Text blocks.
+const POST_PROJECTION = `{
     "slug": slug.current,
     title,
     "date": publishedAt,
@@ -89,24 +102,42 @@ export async function getSanityArticleBySlug(slug: string): Promise<ContentItem 
     "content": body,
     legacyBody,
     "imageUrl": mainImage.asset->url,
-    "author": author->name
+    "author": author->name,
+    seoDescription,
+    "bodyPlainText": pt::text(body)
   }`;
+
+function mapSanityPost(post: SanityRawPost): ContentItem {
+  const bodyContent =
+    post.bodyPlainText || stripHtml(post.legacyBody || "") || "";
+
+  return {
+    slug: post.slug || "",
+    title: post.title || "Untitled",
+    date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
+    // Fallback/default category handling: never let a post render as
+    // "uncategorized" — fall back to the shared DEFAULT_CATEGORY so SEO
+    // breadcrumbs, category badges, and /category/[slug] links stay intact.
+    category: post.category || DEFAULT_CATEGORY,
+    categorySlug: post.categorySlug || DEFAULT_CATEGORY_SLUG,
+    keywords: post.keywords || ["macro", "finance"],
+    content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
+    legacyBody: post.legacyBody || "",
+    imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
+    author: post.author || "Ahmed Abdel-Fattah",
+    seoDescription: post.seoDescription || undefined,
+    bodyContent,
+  };
+}
+
+// 1. Fetch a single article by its slug with fallback to local content
+export async function getSanityArticleBySlug(slug: string): Promise<ContentItem | null> {
+  const query = `*[_type == "post" && slug.current == $slug][0] ${POST_PROJECTION}`;
 
   try {
     const post = await client.fetch<SanityRawPost | null>(query, { slug });
     if (post) {
-      return {
-        slug: post.slug || "",
-        title: post.title || "Untitled",
-        date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
-        category: post.category || "Articles",
-        categorySlug: post.categorySlug || undefined,
-        keywords: post.keywords || ["macro", "finance"],
-        content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
-        legacyBody: post.legacyBody || "",
-        imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
-        author: post.author || "Ahmed Abdel-Fattah",
-      };
+      return mapSanityPost(post);
     }
   } catch (error) {
     console.warn(`Sanity fetch for slug "${slug}" failed, falling back to local content:`, error);
@@ -120,34 +151,12 @@ export async function getSanityArticleBySlug(slug: string): Promise<ContentItem 
 
 // 2. Fetch articles directly from Sanity CMS
 export async function getSanityArticles(): Promise<ContentItem[]> {
-  const query = `*[_type == "post"] | order(publishedAt desc) {
-    "slug": slug.current,
-    title,
-    "date": publishedAt,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    keywords,
-    "content": body,
-    legacyBody,
-    "imageUrl": mainImage.asset->url,
-    "author": author->name
-  }`;
+  const query = `*[_type == "post"] | order(publishedAt desc) ${POST_PROJECTION}`;
 
   try {
     const posts = await client.fetch<SanityRawPost[]>(query);
     if (posts && posts.length > 0) {
-      return posts.map((post) => ({
-        slug: post.slug || "",
-        title: post.title || "Untitled",
-        date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
-        category: post.category || "Articles",
-        categorySlug: post.categorySlug || undefined,
-        keywords: post.keywords || ["macro", "finance"],
-        content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
-        legacyBody: post.legacyBody || "",
-        imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
-        author: post.author || "Ahmed Abdel-Fattah",
-      }));
+      return posts.map(mapSanityPost);
     }
   } catch (error) {
     console.warn("Sanity fetch failed, falling back to local content:", error);
@@ -163,34 +172,12 @@ export async function getSanityArticles(): Promise<ContentItem[]> {
  * Sanity query fails or returns nothing.
  */
 export async function getSanityArticlesByCategorySlug(categorySlug: string): Promise<ContentItem[]> {
-  const query = `*[_type == "post" && category->slug.current == $categorySlug] | order(publishedAt desc) {
-    "slug": slug.current,
-    title,
-    "date": publishedAt,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    keywords,
-    "content": body,
-    legacyBody,
-    "imageUrl": mainImage.asset->url,
-    "author": author->name
-  }`;
+  const query = `*[_type == "post" && category->slug.current == $categorySlug] | order(publishedAt desc) ${POST_PROJECTION}`;
 
   try {
     const posts = await client.fetch<SanityRawPost[]>(query, { categorySlug });
     if (posts && posts.length > 0) {
-      return posts.map((post) => ({
-        slug: post.slug || "",
-        title: post.title || "Untitled",
-        date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
-        category: post.category || "Articles",
-        categorySlug: post.categorySlug || undefined,
-        keywords: post.keywords || ["macro", "finance"],
-        content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
-        legacyBody: post.legacyBody || "",
-        imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
-        author: post.author || "Ahmed Abdel-Fattah",
-      }));
+      return posts.map(mapSanityPost);
     }
   } catch (error) {
     console.warn(`Sanity fetch for category "${categorySlug}" failed, falling back to local content:`, error);
@@ -203,7 +190,116 @@ export async function getSanityArticlesByCategorySlug(categorySlug: string): Pro
 }
 
 /**
+ * Automated Internal Linking Engine.
+ *
+ * Fetches 6–8 related `post` documents that share either the current
+ * post's category or at least one overlapping keyword/tag. Excludes the
+ * current post itself. Falls back to the most recent posts (excluding the
+ * current one) if no category/keyword overlap is found, so the
+ * InternalLinksBox component always has content to render.
+ */
+export async function getRelatedArticles(
+  currentSlug: string,
+  categorySlug?: string,
+  keywords: string[] = [],
+  limit: number = 8
+): Promise<ContentItem[]> {
+  const query = `*[
+      _type == "post" &&
+      slug.current != $currentSlug &&
+      (
+        ($categorySlug != null && category->slug.current == $categorySlug) ||
+        count((keywords[])[@ in $keywords]) > 0
+      )
+    ] | order(publishedAt desc) [0...$limit] ${POST_PROJECTION}`;
+
+  try {
+    const posts = await client.fetch<SanityRawPost[]>(query, {
+      currentSlug,
+      categorySlug: categorySlug || null,
+      keywords,
+      limit,
+    });
+
+    if (posts && posts.length > 0) {
+      return posts.map(mapSanityPost);
+    }
+  } catch (error) {
+    console.warn(`Sanity fetch for related articles to "${currentSlug}" failed:`, error);
+  }
+
+  // Fallback: most recent posts excluding the current slug, capped to a
+  // minimum of 6 items where possible.
+  try {
+    const fallbackQuery = `*[_type == "post" && slug.current != $currentSlug] | order(publishedAt desc) [0...$limit] ${POST_PROJECTION}`;
+    const fallbackPosts = await client.fetch<SanityRawPost[]>(fallbackQuery, {
+      currentSlug,
+      limit,
+    });
+    return (fallbackPosts || []).map(mapSanityPost);
+  } catch (error) {
+    console.warn("Sanity fallback fetch for related articles failed:", error);
+    return [];
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Administrative Pages (`_type == "page"`) — kept intentionally separate
+// from the `post` fetchers above. These are static/administrative documents
+// (About, Privacy Policy, etc.) authored under the "Pages" section of the
+// Studio sidebar, and never appear in `getSanityArticles` /
+// `getRelatedArticles` / the InternalLinksBox.
+// ---------------------------------------------------------------------------
+export interface PageContentItem {
+  slug: string;
+  title: string;
+  seoDescription?: string;
+  bodyContent?: string;
+  imageUrl?: string;
+}
+
+interface SanityRawPage {
+  slug: string | null;
+  title: string | null;
+  seoDescription?: string | null;
+  bodyPlainText?: string | null;
+  imageUrl?: string | null;
+}
+
+/**
+ * Fetch a single administrative `page` document by slug. Returns `null` if
+ * no matching page exists (callers should then 404, distinct from the
+ * `post` 404/fallback flow).
+ */
+export async function getSanityPageBySlug(slug: string): Promise<PageContentItem | null> {
+  const query = `*[_type == "page" && slug.current == $slug][0] {
+    "slug": slug.current,
+    title,
+    seoDescription,
+    "bodyPlainText": pt::text(content),
+    "imageUrl": mainImage.asset->url
+  }`;
+
+  try {
+    const page = await client.fetch<SanityRawPage | null>(query, { slug });
+    if (!page) return null;
+    return {
+      slug: page.slug || "",
+      title: page.title || "Untitled Page",
+      seoDescription: page.seoDescription || undefined,
+      bodyContent: page.bodyPlainText || undefined,
+      imageUrl: page.imageUrl || undefined,
+    };
+  } catch (error) {
+    console.warn(`Sanity fetch for page "${slug}" failed:`, error);
+    return null;
+  }
+}
+
+/**
  * Fetch all distinct categories (title + slug) currently defined in Sanity.
+
  * Used to build static params for the /category/[slug] route and to
  * populate category filter UI.
  */
