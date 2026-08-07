@@ -3,6 +3,13 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { getReadingTime } from "./readingTime";
+import {
+  generateExcerpt,
+  generateFallbackTags,
+  resolveFallbackCategory,
+  slugifyCategory,
+} from "./metadataFallback";
+
 
 
 
@@ -132,24 +139,55 @@ const POST_PROJECTION = `{
   }`;
 
 function mapSanityPost(post: SanityRawPost): ContentItem {
+  // Extract plain text from the structured `body` (via `pt::text`) or the
+  // raw `legacyBody` HTML (Blogger imports) — stripping all HTML tags so
+  // every downstream fallback (description, tags, category) operates on
+  // clean text only.
   const bodyContent =
     post.bodyPlainText || stripHtml(post.legacyBody || "") || "";
 
+  const title = post.title || "Untitled";
+
+  // --- Automated SEO Description / Excerpt Fallback ---
+  // If no `seoDescription` was authored in Sanity, dynamically generate a
+  // clean 150–160 character excerpt from the first paragraph of the plain
+  // text so no post ever ships without a meta description.
+  const resolvedSeoDescription =
+    post.seoDescription && post.seoDescription.trim().length > 0
+      ? post.seoDescription.trim()
+      : generateExcerpt(bodyContent);
+
+  // --- Automated Tags Fallback ---
+  // If no tags/keywords were defined in Sanity, dynamically extract the top
+  // key terms/phrases from the title and content body to serve as fallback
+  // tags for internal-linking relevance scoring and UI display.
+  const resolvedKeywords =
+    post.keywords && post.keywords.length > 0
+      ? post.keywords
+      : generateFallbackTags(title, bodyContent);
+
+  // --- Automated Category Fallback ---
+  // If no category was assigned in Sanity, dynamically assign a default
+  // category based on keyword matching against the title + body text
+  // (e.g. "macro"/"fed"/"inflation" -> Macroeconomics), otherwise defaulting
+  // to "General Analysis".
+  const resolvedCategory =
+    post.category || resolveFallbackCategory(`${title} ${bodyContent}`);
+  const resolvedCategorySlug =
+    post.categorySlug || slugifyCategory(resolvedCategory);
+
   return {
     slug: post.slug || "",
-    title: post.title || "Untitled",
+    title,
     date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
-    // Fallback/default category handling: never let a post render as
-    // "uncategorized" — fall back to the shared DEFAULT_CATEGORY so SEO
-    // breadcrumbs, category badges, and /category/[slug] links stay intact.
-    category: post.category || DEFAULT_CATEGORY,
-    categorySlug: post.categorySlug || DEFAULT_CATEGORY_SLUG,
-    keywords: post.keywords || ["macro", "finance"],
+    category: resolvedCategory,
+    categorySlug: resolvedCategorySlug,
+    keywords: resolvedKeywords,
     content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
     legacyBody: post.legacyBody || "",
     imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
     author: post.author || "Ahmed Abdel-Fattah",
-    seoDescription: post.seoDescription || undefined,
+    seoDescription: resolvedSeoDescription || undefined,
     bodyContent,
     manualRelatedLinks:
       post.manualRelatedLinks && post.manualRelatedLinks.length > 0
@@ -157,6 +195,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
         : undefined,
   };
 }
+
 
 
 // 1. Fetch a single article by its slug with fallback to local content

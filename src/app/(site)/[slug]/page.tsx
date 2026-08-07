@@ -37,30 +37,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const currentPost = await getSanityArticleBySlug(slug);
 
   if (currentPost) {
-    // Automated Metadata: prefer the editor-provided `seoDescription`. If it's
-    // empty, dynamically fall back to the first 160 characters extracted from
-    // the article's body text (`bodyContent`), so no post ever ships without
-    // a meta description.
-    const rawText = stripHtml(
-      currentPost.legacyBody || currentPost.bodyContent || currentPost.content || ""
-    );
-    const metaDescription =
-      currentPost.seoDescription && currentPost.seoDescription.trim().length > 0
-        ? currentPost.seoDescription.trim()
-        : rawText.length > 160
-          ? `${rawText.substring(0, 160).trim()}...`
-          : rawText;
+    // Automated Metadata: `getSanityArticleBySlug` (via `mapSanityPost` in
+    // src/lib/content.ts) already guarantees `seoDescription`, `keywords`,
+    // and `category` are populated — either from Sanity or dynamically
+    // generated fallbacks (150–160 char excerpt, extracted key terms, and
+    // keyword-matched category) — so they can be passed directly here for
+    // SEO (OpenGraph, meta description, meta keywords).
+    const metaDescription = currentPost.seoDescription || "";
 
     return {
       title: `${currentPost.title} | Chronoverse Intelligence`,
       description: metaDescription,
+      keywords: currentPost.keywords,
       openGraph: {
         title: currentPost.title,
         description: metaDescription,
         images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
       },
+      category: currentPost.category,
     };
   }
+
 
   // Fallback: administrative `page` document (About, Privacy Policy, etc.)
   const currentPage = await getSanityPageBySlug(slug);
@@ -190,10 +187,17 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   const autoAltText = `Illustration for ${currentPost.category} covering ${currentPost.title}`;
   const autoCaption = `Figure 1: Visual representation of ${currentPost.title?.toLowerCase()} concepts.`;
 
-  // Auto-generate a clean meta summary snippet (First 140 chars of pure text)
-  const autoSummary = rawText.length > 140 
-    ? rawText.substring(0, 140) + "..." 
-    : rawText;
+  // Auto-generated summary snippet displayed in the UI — reuses the same
+  // dynamically-generated 150-160 character excerpt/SEO description that
+  // was resolved in `mapSanityPost` (src/lib/content.ts), keeping the
+  // on-page summary and the SEO meta description perfectly in sync.
+  const autoSummary = currentPost.seoDescription || rawText.substring(0, 140);
+
+  // Tags rendered in the UI — either editor-authored in Sanity or the
+  // dynamically extracted fallback key terms (see `generateFallbackTags`
+  // in src/lib/metadataFallback.ts), both surfaced via `currentPost.keywords`.
+  const displayTags = (currentPost.keywords || []).slice(0, 8);
+
 
   // Sanitize HTML body to prevent any XSS vulnerabilities
   const sanitizedLegacyBody = currentPost.legacyBody ? sanitizeHtml(currentPost.legacyBody) : "";
@@ -275,7 +279,22 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           <span>Published on {currentPost.date}</span>
           <span className="uppercase tracking-wider font-semibold text-zinc-600 print:hidden">Chronoverse Intelligence</span>
         </div>
+
+        {/* Auto-Generated / Editor-Curated Tags */}
+        {displayTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-5 print:hidden">
+            {displayTags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[11px] font-medium text-zinc-400 bg-zinc-900/60 border border-zinc-800 px-2.5 py-1 rounded-full"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
+
 
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
       {currentPost.imageUrl && (
