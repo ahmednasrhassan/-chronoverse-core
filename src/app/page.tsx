@@ -1,14 +1,23 @@
 import React from "react";
 import MiniChart from "@/components/tradingview/MiniChart";
 import Link from "next/link";
+import { getSanityArticles, calculateReadTime } from "@/lib/content";
 
-export default function HomePage() {
+// Ensure the homepage always reflects the latest published Sanity content
+// (no stale cached article cards).
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
   const tradingViewSymbols = [
     "FOREXCOM:SPXUSD",
     "TVC:GOLD",
     "TVC:USOIL",
     "BINANCE:BTCUSDT",
   ];
+
+  const allArticles = await getSanityArticles();
+  const featuredArticles = allArticles.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-[#120e0c] p-6 md:p-10">
@@ -34,27 +43,34 @@ export default function HomePage() {
               View All Reports &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { title: "Global Liquidity Cycles & Impact", category: "Macro", time: "8 min read" },
-              { title: "Bitcoin Halving Historical Fractals", category: "Crypto", time: "10 min read" },
-              { title: "FED Interest Rate Projections 2024", category: "Policy", time: "5 min read" },
-              { title: "Commodity Supercycle Analysis", category: "Commodities", time: "12 min read" },
-            ].map((article, idx) => (
-              <div key={idx} className="bg-[#18181b] border border-zinc-800 p-6 rounded-xl shadow-lg shadow-black/40 hover:border-[#c87d55] transition-all cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-[#c87d55] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                <div>
-                  <span className="text-[10px] font-bold text-[#c87d55] bg-[#c87d55]/10 px-2 py-1 rounded tracking-wider uppercase">
-                    {article.category}
+          {featuredArticles.length === 0 ? (
+            <div className="bg-[#18181b] border border-zinc-800 rounded-xl p-10 text-center text-zinc-500">
+              No published research available yet. Check back soon.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredArticles.map((article) => (
+                <Link
+                  key={article.slug}
+                  href={`/${article.slug}`}
+                  className="bg-[#18181b] border border-zinc-800 p-6 rounded-xl shadow-lg shadow-black/40 hover:border-[#c87d55] transition-all cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#c87d55] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                  <div>
+                    <span className="text-[10px] font-bold text-[#c87d55] bg-[#c87d55]/10 px-2 py-1 rounded tracking-wider uppercase">
+                      {article.category}
+                    </span>
+                    <h3 className="mt-4 text-zinc-100 font-bold text-lg leading-snug group-hover:text-white transition-colors line-clamp-3">
+                      {article.title}
+                    </h3>
+                  </div>
+                  <span className="text-xs text-zinc-500 font-mono">
+                    {calculateReadTime(article.bodyContent || article.content || "")} min read
                   </span>
-                  <h3 className="mt-4 text-zinc-100 font-bold text-lg leading-snug group-hover:text-white transition-colors">
-                    {article.title}
-                  </h3>
-                </div>
-                <span className="text-xs text-zinc-500 font-mono">{article.time}</span>
-              </div>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ================= SECTION 3: AMAZON SES NEWSLETTER (1 Large Card) ================= */}

@@ -1,29 +1,72 @@
 import React from "react";
 import Link from "next/link";
-import { getAllCategories, getSanityArticlesByCategorySlug } from "@/lib/content";
+import { client } from "@/sanity/client";
+import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 
 /**
  * Intelligence Archive Index
  * ----------------------------
- * Fully dynamic: pulls the live list of categories from Sanity via
- * `getAllCategories()`, then fetches each category's articles via GROQ
- * using `getSanityArticlesByCategorySlug(slug)` (see `src/lib/content.ts`).
- * Categories with zero published posts are skipped automatically — no
- * hardcoded section/post data is used anywhere on this page.
+ * Fully dynamic: pulls every published `post` document directly from
+ * Sanity via a single GROQ query (no caching, no ISR) so newly published
+ * articles appear on this page immediately after being published in the
+ * Studio. Posts are then grouped client-side (in this server component) by
+ * their category for display — no hardcoded section/post data is used
+ * anywhere on this page.
  */
-export const revalidate = 60;
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
+interface ArchivePost {
+  slug: string;
+  title: string;
+  date: string | null;
+  category: string | null;
+  categorySlug: string | null;
+}
+
+async function getAllPublishedPosts(): Promise<ArchivePost[]> {
+  const query = `*[_type == "post" && defined(slug.current) && publishedAt <= now()] | order(publishedAt desc) {
+    "slug": slug.current,
+    title,
+    "date": publishedAt,
+    "category": category->title,
+    "categorySlug": category->slug.current
+  }`;
+
+  try {
+    const posts = await client.fetch<ArchivePost[]>(query);
+    return posts || [];
+  } catch (error) {
+    console.warn("Sanity fetch for archive posts failed:", error);
+    return [];
+  }
+}
 
 export default async function ArchiveIndexPage() {
-  const categories = await getAllCategories();
+  const posts = await getAllPublishedPosts();
 
-  const sections = await Promise.all(
-    categories.map(async (category) => {
-      const posts = await getSanityArticlesByCategorySlug(category.slug);
-      return { category, posts };
-    })
-  );
+  // Group the flat list of posts into per-category sections, preserving
+  // first-seen order (which mirrors the `publishedAt desc` sort already
+  // applied by the GROQ query above).
+  const sectionsMap = new Map<
+    string,
+    { category: { title: string; slug: string }; posts: ArchivePost[] }
+  >();
 
-  const populatedSections = sections.filter((section) => section.posts.length > 0);
+  for (const post of posts) {
+    const categoryTitle = post.category || DEFAULT_CATEGORY;
+    const categorySlug = post.categorySlug || DEFAULT_CATEGORY_SLUG;
+
+    if (!sectionsMap.has(categorySlug)) {
+      sectionsMap.set(categorySlug, {
+        category: { title: categoryTitle, slug: categorySlug },
+        posts: [],
+      });
+    }
+    sectionsMap.get(categorySlug)!.posts.push(post);
+  }
+
+  const populatedSections = Array.from(sectionsMap.values());
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 space-y-10 font-mono">
@@ -75,7 +118,7 @@ export default async function ArchiveIndexPage() {
                       {post.title}
                     </Link>
                     <time className="text-xs text-[#a1a1aa] font-mono whitespace-nowrap">
-                      [{post.date}]
+                      [{post.date ? new Date(post.date).toISOString().split("T")[0] : "—"}]
                     </time>
                   </li>
                 ))}
