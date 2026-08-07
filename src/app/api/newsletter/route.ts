@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { sanityWriteClient } from "@/lib/sanity/writeClient";
+
 
 /**
  * Newsletter Subdomain Alignment (API layer)
@@ -34,6 +36,30 @@ export async function POST(request: Request) {
     }
 
     const officialEmail = process.env.OFFICIAL_EMAIL || "info@chronoversecapital.com";
+
+    // Persist the subscriber to Sanity (best-effort — a failure here should
+    // never block the confirmation email/response) so the daily
+    // `/api/cron/send-newsletter` job has a distribution list to read from.
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const existing = await sanityWriteClient.fetch(
+        `*[_type == "subscriber" && email == $email][0]{_id}`,
+        { email: normalizedEmail }
+      );
+
+      if (!existing) {
+        await sanityWriteClient.create({
+          _type: "subscriber",
+          email: normalizedEmail,
+          subscribedAt: new Date().toISOString(),
+          active: true,
+          source: "newsletter.chronoversecapital.com",
+        });
+      }
+    } catch (subscriberError) {
+      console.warn("Failed to persist subscriber to Sanity:", subscriberError);
+    }
+
 
     const sendEmailCommand = new SendEmailCommand({
       Source: officialEmail,
