@@ -14,7 +14,7 @@ export default function ContactPage() {
         </span>
         <h1 className="text-4xl font-bold text-[#f4f4f5]">Get in Touch</h1>
         <p className="text-[#a1a1aa] text-lg italic">
-          Connect with the ChronoVerse Research Team.
+          Connect with the Chronoverse Research Team.
         </p>
         <p className="text-[#a1a1aa] text-sm max-w-2xl mx-auto pt-2 leading-relaxed">
           Whether you have a query about a specific <strong className="text-[#f4f4f5]">Dossier</strong>, a partnership proposal, or historical data verification, our team is ready to assist.

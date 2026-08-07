@@ -73,7 +73,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: "active",
-      system: "ChronoVerse Capital Blogger Image Migration & Sync",
+      system: "Chronoverse Capital Blogger Image Migration & Sync",
       usage: "POST {} to migrate all documents, or { documentId: string } for a single document",
     },
     { status: 200 }

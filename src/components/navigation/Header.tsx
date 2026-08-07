@@ -51,7 +51,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <Image
               src="/logo.svg"
-              alt="ChronoVerse Capital logo"
+              alt="Chronoverse Capital logo"
               width={40}
               height={40}
               priority

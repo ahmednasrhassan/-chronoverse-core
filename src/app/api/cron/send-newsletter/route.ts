@@ -99,7 +99,7 @@ function resolveDescription(post: RecentPost): string {
     (post.seoDescription && post.seoDescription.trim()) ||
     (post.excerpt && post.excerpt.trim()) ||
     (post.bodyPlainText && post.bodyPlainText.trim().slice(0, 220) + "…") ||
-    "Read the full analysis on ChronoVerse Capital."
+    "Read the full analysis on Chronoverse Capital."
   );
 }
 
@@ -141,20 +141,20 @@ function buildEmailHtml(posts: RecentPost[]): string {
       <tr>
         <td style="padding-bottom:24px;border-bottom:1px solid #27272a;">
           <span style="color:#c87d55;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// Daily Dispatch</span>
-          <h1 style="font-size:24px;font-weight:bold;margin:8px 0 0 0;color:#ffffff;">ChronoVerse Capital Newsletter</h1>
+          <h1 style="font-size:24px;font-weight:bold;margin:8px 0 0 0;color:#ffffff;">Chronoverse Capital Newsletter</h1>
           <p style="color:#71717a;font-size:13px;margin:8px 0 0 0;">${today}</p>
         </td>
       </tr>
       <tr>
         <td style="padding:20px 0 0 0;color:#a1a1aa;font-size:14px;line-height:1.6;">
-          The latest institutional market intelligence from ChronoVerse Capital, delivered straight to your inbox.
+          The latest institutional market intelligence from Chronoverse Capital, delivered straight to your inbox.
         </td>
       </tr>
       ${articlesHtml}
       <tr>
         <td style="padding-top:32px;text-align:center;color:#71717a;font-size:12px;">
-          You are receiving this email because you subscribed to ChronoVerse Capital's newsletter.<br/>
-          ChronoVerse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States
+          You are receiving this email because you subscribed to Chronoverse Capital's newsletter.<br/>
+          Chronoverse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States
         </td>
       </tr>
     </table>
@@ -167,7 +167,7 @@ async function sendNewsletterToSubscriber(email: string, htmlBody: string): Prom
     Destination: { ToAddresses: [email] },
     Message: {
       Subject: {
-        Data: "ChronoVerse Capital — Daily Market Intelligence Dispatch",
+        Data: "Chronoverse Capital — Daily Market Intelligence Dispatch",
         Charset: "UTF-8",
       },
       Body: {

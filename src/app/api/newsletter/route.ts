@@ -68,18 +68,18 @@ export async function POST(request: Request) {
       },
       Message: {
         Subject: {
-          Data: "[Newsletter] New Subscription — ChronoVerse Dispatch",
+          Data: "[Newsletter] New Subscription — Chronoverse Dispatch",
           Charset: "UTF-8",
         },
         Body: {
           Html: {
             Data: `
               <div style="font-family: monospace; background-color: #0a0a0a; color: #f4f4f5; padding: 24px; border: 1px solid #c87d55; border-radius: 8px;">
-                <h2 style="color: #c87d55; margin-top: 0;">[ChronoVerse Newsletter Subscription]</h2>
+                <h2 style="color: #c87d55; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
                 <p><strong>Subscriber Email:</strong> ${email}</p>
                 <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
                 <hr style="border-color: #27272a; margin-top: 20px;" />
-                <span style="font-size: 10px; color: #71717a;">Engineered by ChronoVerse Capital Infrastructure</span>
+                <span style="font-size: 10px; color: #71717a;">Engineered by Chronoverse Capital Infrastructure</span>
               </div>
             `,
             Charset: "UTF-8",

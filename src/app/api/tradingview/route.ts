@@ -4,8 +4,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    console.log("=== TradingView Live Webhook Received ===", body);
-
     const { ticker, price, action, message } = body;
 
     return NextResponse.json(
@@ -37,7 +35,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: "active",
-      system: "ChronoVerse Capital TradingView Webhook Relay",
+      system: "Chronoverse Capital TradingView Webhook Relay",
       endpoint: "https://www.chronoversecapital.com/api/tradingview",
     },
     { status: 200 }

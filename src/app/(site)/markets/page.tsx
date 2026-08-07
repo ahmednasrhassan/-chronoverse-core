@@ -11,7 +11,7 @@ export default function MarketsShopPage() {
           MARKET DOSSIERS &amp; RESEARCH
         </span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-[#f4f4f5]">
-          ChronoVerse <span className="text-[#c87d55]">Shop</span>
+          Chronoverse <span className="text-[#c87d55]">Shop</span>
         </h1>
         <p className="text-[#a1a1aa] text-sm font-sans max-w-2xl mx-auto">
           Tactical field reports, economic case studies, and single-purchase wealth preservation frameworks.

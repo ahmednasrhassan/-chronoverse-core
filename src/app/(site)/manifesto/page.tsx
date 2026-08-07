@@ -11,7 +11,7 @@ export default function ManifestoPage() {
           CORE DIRECTIVE
         </span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-[#f4f4f5] tracking-tight">
-          The ChronoVerse <span className="text-[#c87d55]">Manifesto</span>
+          The Chronoverse <span className="text-[#c87d55]">Manifesto</span>
         </h1>
         <p className="text-[#00cc66] text-xs font-bold">
           Document Clearance: Public // Status: Active
@@ -56,7 +56,7 @@ export default function ManifestoPage() {
               04. THE MISSION
             </h2>
             <p className="text-[#f4f4f5]">
-              ChronoVerse Capital is not a news outlet. It is an Intelligence Hub. Our objective is to arm individuals with the historical context and quantitative tools necessary to survive the coming monetary reset. We build the fortresses; you hold the keys.
+              Chronoverse Capital is not a news outlet. It is an Intelligence Hub. Our objective is to arm individuals with the historical context and quantitative tools necessary to survive the coming monetary reset. We build the fortresses; you hold the keys.
             </p>
           </div>
 
@@ -65,7 +65,7 @@ export default function ManifestoPage() {
         <div className="border-t border-[#27272a] pt-8 text-center space-y-2">
           <h3 className="text-[#c87d55] font-extrabold text-2xl tracking-widest">&gt;_ STAY SOVEREIGN.</h3>
           <p className="text-[#a1a1aa] text-xs italic">
-            // ChronoVerse Intelligence Network | Established 2026 //
+            // Chronoverse Intelligence Network | Established 2026 //
           </p>
         </div>
       </div>
@@ -76,7 +76,7 @@ export default function ManifestoPage() {
           href="/about" 
           className="text-xs text-[#a1a1aa] hover:text-[#c87d55] transition-colors underline"
         >
-          ← Return to About ChronoVerse
+          ← Return to About Chronoverse
         </Link>
       </div>
 

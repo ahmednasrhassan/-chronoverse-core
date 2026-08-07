@@ -4,8 +4,8 @@ import { Metadata } from "next";
 
 // Prevent search engine bots from indexing this affiliate/sponsor page to preserve SEO crawl budget
 export const metadata: Metadata = {
-  title: "Sponsors & Strategic Partners | ChronoVerse Capital",
-  description: "Official strategic partners and execution platforms for ChronoVerse Capital.",
+  title: "Sponsors & Strategic Partners | Chronoverse Capital",
+  description: "Official strategic partners and execution platforms for Chronoverse Capital.",
   robots: {
     index: false,
     follow: false,
@@ -113,7 +113,7 @@ export default function SponsorsPage() {
                 Why We Partnered
               </h2>
               <div className="bg-[#18181b] border-l-4 border-l-[#c87d55] border border-[#27272a] p-6 rounded-r-xl italic text-[#a1a1aa] leading-relaxed text-base">
-                &quot;ChronoVerse Capital shares AfriKDP&apos;s vision of empowering creators and entrepreneurs. This strategic alliance bridges the gap between digital content creation and institutional-grade financial intelligence. By joining forces, we aim to provide global digital builders with both the infrastructure to scale and the macroeconomic insights needed to protect and grow their wealth.&quot;
+                &quot;Chronoverse Capital shares AfriKDP&apos;s vision of empowering creators and entrepreneurs. This strategic alliance bridges the gap between digital content creation and institutional-grade financial intelligence. By joining forces, we aim to provide global digital builders with both the infrastructure to scale and the macroeconomic insights needed to protect and grow their wealth.&quot;
               </div>
             </section>
 
@@ -237,7 +237,7 @@ export default function SponsorsPage() {
           <div className="space-y-3">
             <h3 className="text-xl font-bold text-[#f4f4f5]">&gt; Primary Brokerage Infrastructure</h3>
             <p className="text-xs text-[#a1a1aa] font-sans leading-relaxed">
-              ChronoVerse Capital utilizes XM Global infrastructure for identifying market arbitrage gaps and executing real-time liquidity strategies.
+              Chronoverse Capital utilizes XM Global infrastructure for identifying market arbitrage gaps and executing real-time liquidity strategies.
             </p>
           </div>
 
@@ -271,7 +271,7 @@ export default function SponsorsPage() {
             ⚖️ Strategic Affiliate &amp; Risk Disclosure:
           </strong>
           <p>
-            ChronoVerse Capital is a research platform and does not manage client funds. Links on this page include partner links which support our analytical operations at no additional cost to your capital.
+            Chronoverse Capital is a research platform and does not manage client funds. Links on this page include partner links which support our analytical operations at no additional cost to your capital.
           </p>
         </div>
       </section>

@@ -95,7 +95,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: "active",
-      system: "ChronoVerse Capital Auto SEO & Excerpt Generator",
+      system: "Chronoverse Capital Auto SEO & Excerpt Generator",
       usage: "POST { documentId: string, dryRun?: boolean }",
     },
     { status: 200 }

@@ -5,7 +5,7 @@ export async function GET() {
     // Dashboard statistics and system overview data
     const dashboardData = {
       systemStatus: "Operational",
-      platform: "ChronoVerse Capital Core",
+      platform: "Chronoverse Capital Core",
       version: "2.0.1",
       activeServices: {
         awsSES: "Connected",

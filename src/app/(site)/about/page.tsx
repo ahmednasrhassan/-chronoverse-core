@@ -11,7 +11,7 @@ export default function AboutPage() {
         <div className="flex justify-center mb-4">
           <Image
             src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbHD__CKK5C-koSiCnbEuvdBo3AxXHepTEoBs5XK3O6onIGwTMVueayOP3x5IfAYHxeoGwNe49SEKkI8zSdCeH1JCeJXPk4ETx0EvIZFgfzoqmzB1hVJ-CodZnjJtfOeQGY7ShnwQSZNZeXZurRvEZSa-fFDFQawRCreks_8rcL3EdtDeEkEkWIKtRyLc/s16000/1000152013.png"
-            alt="ChronoVerse Capital"
+            alt="Chronoverse Capital"
             width={380}
             height={100}
             className="h-auto max-w-full object-contain"
@@ -28,7 +28,7 @@ export default function AboutPage() {
         <h2 className="text-3xl font-bold text-[#f4f4f5]">Institutional Profile</h2>
         <div className="text-[#a1a1aa] leading-relaxed space-y-4 text-base">
           <p>
-            <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong> is an independent research firm situated at the intersection of <strong className="text-[#c87d55]">Financial History, Macro-Economic Strategy, and Digital Asset Dynamics</strong>.
+            <strong className="text-[#f4f4f5]">Chronoverse Capital</strong> is an independent research firm situated at the intersection of <strong className="text-[#c87d55]">Financial History, Macro-Economic Strategy, and Digital Asset Dynamics</strong>.
           </p>
           <p>
             We do not follow the news cycle. Instead, we analyze the structural DNA of markets. By moving beyond traditional historical narratives, we provide professional-grade analysis on how centuries-old liquidity cycles dictate the movements of today&apos;s digital frontier.
@@ -78,7 +78,7 @@ export default function AboutPage() {
               <p className="text-[#c87d55] text-xs font-mono font-medium mt-1">Lead Financial Researcher &amp; Strategist</p>
             </div>
             <p className="text-[#a1a1aa] text-xs leading-relaxed">
-              Responsible for macro-strategy, asset correlation modeling, and the architectural vision of ChronoVerse research dossiers.
+              Responsible for macro-strategy, asset correlation modeling, and the architectural vision of Chronoverse research dossiers.
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function AboutPage() {
             | Elite Economic Contributor
           </p>
           <p className="text-[#a1a1aa] text-sm leading-relaxed pt-2">
-            A visionary in the global creator economy, Emmanuel partners with ChronoVerse Capital to deliver premium, uncompromised insights on AI infrastructure, automated finance, and digital sovereignty.
+            A visionary in the global creator economy, Emmanuel partners with Chronoverse Capital to deliver premium, uncompromised insights on AI infrastructure, automated finance, and digital sovereignty.
           </p>
         </div>
       </section>
@@ -159,7 +159,7 @@ export default function AboutPage() {
           <div>
             <h3 className="text-xl font-bold text-[#c87d55] mb-2">The Core Directive</h3>
             <p className="text-[#a1a1aa] text-sm leading-relaxed">
-              We exist to dismantle the illusions of the modern fiat system. ChronoVerse Capital is engineered to provide a sanctuary of absolute wealth preservation, utilizing historical decryption to navigate impending financial shifts.
+              We exist to dismantle the illusions of the modern fiat system. Chronoverse Capital is engineered to provide a sanctuary of absolute wealth preservation, utilizing historical decryption to navigate impending financial shifts.
             </p>
           </div>
 

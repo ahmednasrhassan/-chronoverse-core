@@ -32,21 +32,21 @@ export async function POST(request: Request) {
       },
       Message: {
         Subject: {
-          Data: subject || "ChronoVerse Capital System Notification / Ping",
+          Data: subject || "Chronoverse Capital System Notification / Ping",
           Charset: "UTF-8",
         },
         Body: {
           Html: {
             Data: `
               <div style="font-family: monospace; background-color: #0a0a0a; color: #f4f4f5; padding: 24px; border: 1px solid #c87d55; border-radius: 8px;">
-                <h2 style="color: #c87d55; margin-top: 0;">[ChronoVerse AWS SES Relay Dispatch]</h2>
+                <h2 style="color: #c87d55; margin-top: 0;">[Chronoverse AWS SES Relay Dispatch]</h2>
                 <p><strong>Sender:</strong> ${email}</p>
                 <p><strong>Payload:</strong></p>
                 <blockquote style="background-color: #18181b; padding: 12px; border-left: 4px solid #c87d55; font-size: 14px; color: #a1a1aa;">
                   ${message || "New newsletter subscription / system ping."}
                 </blockquote>
                 <hr style="border-color: #27272a; margin-top: 20px;" />
-                <span style="font-size: 10px; color: #71717a;">Engineered by ChronoVerse Capital Infrastructure</span>
+                <span style="font-size: 10px; color: #71717a;">Engineered by Chronoverse Capital Infrastructure</span>
               </div>
             `,
             Charset: "UTF-8",

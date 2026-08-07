@@ -39,7 +39,7 @@ async function generateWithOpenAI(
 ): Promise<SeoGenerationResult | null> {
   const truncated = sourceText.slice(0, 6000);
 
-  const prompt = `You are an expert financial/macro editor writing for "ChronoVerse Capital".
+  const prompt = `You are an expert financial/macro editor writing for "Chronoverse Capital".
 Given the article title and content below, produce:
 1. "excerpt": a compelling 2-3 sentence summary (max ~320 characters) suitable as an article preview.
 2. "seoDescription": a concise, professional SEO meta description (max 160 characters) optimized for search engines.

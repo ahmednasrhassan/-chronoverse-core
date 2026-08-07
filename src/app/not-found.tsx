@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "404 — Signal Lost",
   description:
-    "The intelligence dossier or page you requested could not be located in the ChronoVerse Capital archive.",
+    "The intelligence dossier or page you requested could not be located in the Chronoverse Capital archive.",
 };
 
 export default function NotFound() {

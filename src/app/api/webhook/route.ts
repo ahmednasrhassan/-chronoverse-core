@@ -4,8 +4,6 @@ export async function POST(request: Request) {
   try {
     const payload = await request.json();
 
-    console.log("=== General Webhook Received ===", payload);
-
     // General processing logic for external webhooks
     return NextResponse.json(
       {
@@ -31,7 +29,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: "active",
-      system: "ChronoVerse Capital General Webhook Dispatcher",
+      system: "Chronoverse Capital General Webhook Dispatcher",
       endpoint: "https://www.chronoversecapital.com/api/webhook",
     },
     { status: 200 }

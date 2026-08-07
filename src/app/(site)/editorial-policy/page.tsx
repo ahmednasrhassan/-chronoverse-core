@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Editorial Policy",
   description:
-    "ChronoVerse Capital's editorial standards for accuracy, independence, and the use of AI-assisted research and visual content.",
+    "Chronoverse Capital's editorial standards for accuracy, independence, and the use of AI-assisted research and visual content.",
 };
 
 export default function EditorialPolicyPage() {
@@ -25,7 +25,7 @@ export default function EditorialPolicyPage() {
 
       {/* Intro */}
       <p className="text-[#a1a1aa] text-base leading-relaxed">
-        At <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong>, our commitment to our readers is built on accuracy, integrity, and analytical depth. This Editorial Policy outlines the standards we follow to ensure that every piece of content—from historical deep dives to modern economic modeling—meets the highest quality benchmarks.
+        At <strong className="text-[#f4f4f5]">Chronoverse Capital</strong>, our commitment to our readers is built on accuracy, integrity, and analytical depth. This Editorial Policy outlines the standards we follow to ensure that every piece of content—from historical deep dives to modern economic modeling—meets the highest quality benchmarks.
       </p>
 
       {/* Sections */}
@@ -43,7 +43,7 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#f4f4f5]">2. Use of Advanced Technology &amp; AI</h2>
           <p>
-            In line with the digital evolution, ChronoVerse Capital utilizes advanced technological tools, including AI-assisted language models and data analysis software.
+            In line with the digital evolution, Chronoverse Capital utilizes advanced technological tools, including AI-assisted language models and data analysis software.
           </p>
           <div className="bg-[#0a0a0a] border-l-4 border-l-[#c87d55] p-4 rounded-r-lg text-xs space-y-1">
             <strong className="text-[#f4f4f5] uppercase font-mono block">Our Stance:</strong>
@@ -57,7 +57,7 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">3. Independence and Objectivity</h2>
           <p>
-            Our analysis is independent and unbiased. ChronoVerse Capital does not accept payments to promote specific financial assets or distort historical facts. Our goal is to provide a neutral &quot;what-if&quot; lens that helps our readers understand the mechanics of wealth and power through time.
+            Our analysis is independent and unbiased. Chronoverse Capital does not accept payments to promote specific financial assets or distort historical facts. Our goal is to provide a neutral &quot;what-if&quot; lens that helps our readers understand the mechanics of wealth and power through time.
           </p>
         </section>
 
@@ -85,7 +85,7 @@ export default function EditorialPolicyPage() {
 
       {/* Editorial Board Sign-off */}
       <div className="text-center pt-4 border-t border-[#27272a] space-y-1">
-        <p className="text-[#f4f4f5] font-bold text-base">ChronoVerse Capital Editorial Board</p>
+        <p className="text-[#f4f4f5] font-bold text-base">Chronoverse Capital Editorial Board</p>
         <p className="text-[#a1a1aa] text-xs font-mono">Last Updated: January 2026</p>
       </div>
 

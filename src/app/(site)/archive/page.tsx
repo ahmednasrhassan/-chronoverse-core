@@ -87,7 +87,7 @@ export default async function ArchiveIndexPage() {
 
       {/* Footer Info */}
       <footer className="border-t border-[#27272a] pt-8 text-center text-xs text-[#52525b]">
-        // ChronoVerse Intelligence Ledger | Automated Directory Node //
+        // Chronoverse Intelligence Ledger | Automated Directory Node //
       </footer>
 
     </div>

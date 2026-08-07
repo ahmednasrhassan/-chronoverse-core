@@ -52,7 +52,7 @@ export async function downloadImageBuffer(url: string, timeoutMs = 8000): Promis
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ChronoVerseImageBot/1.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ChronoverseImageBot/1.0",
       },
     });
 

@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const BASE_URL = "https://www.chronoversecapital.com";
-const SITE_TITLE = "ChronoVerse Capital";
+const SITE_TITLE = "Chronoverse Capital";
 const SITE_DESCRIPTION =
-  "Decoding Future Markets Through Historical Intelligence — real-time market insights, global financial intelligence, and institutional updates from ChronoVerse Capital.";
+  "Decoding Future Markets Through Historical Intelligence — real-time market insights, global financial intelligence, and institutional updates from Chronoverse Capital.";
 
 interface SanityRssPost {
   slug: string | null;

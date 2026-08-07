@@ -1,18 +1,18 @@
 export const siteConfig = {
-  name: "ChronoVerse Capital",
+  name: "Chronoverse Capital",
   description: "Decoding Future Markets Through Historical Intelligence",
-  url: "https://chronoverse.capital",
+  url: "https://www.chronoversecapital.com",
   // Official contact email used across Contact page, Footer, and all Policy pages
   contactEmail: "info@chronoversecapital.com",
   // Standard placeholder mailing/postal address (Amazon SES compliant physical address requirement)
   postalAddress: {
-    line1: "ChronoVerse Capital LLC",
+    line1: "Chronoverse Capital LLC",
     line2: "1207 Delaware Ave #1234",
     city: "Wilmington",
     state: "DE",
     zip: "19806",
     country: "United States",
-    full: "ChronoVerse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States",
+    full: "Chronoverse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States",
   },
   socialLinks: {
     x: "https://x.com/ChronoVerseCap",

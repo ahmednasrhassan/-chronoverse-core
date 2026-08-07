@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
 
       {/* Welcome Intro */}
       <p className="text-[#a1a1aa] text-base leading-relaxed">
-        Welcome to <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong> (accessible at ChronoVerseCapital.com). By accessing this website, you agree to comply with and be bound by the following terms and conditions. If you disagree with any part of these terms, please refrain from using our platform.
+        Welcome to <strong className="text-[#f4f4f5]">Chronoverse Capital</strong> (accessible at ChronoverseCapital.com). By accessing this website, you agree to comply with and be bound by the following terms and conditions. If you disagree with any part of these terms, please refrain from using our platform.
       </p>
 
       {/* Terms Sections */}
@@ -30,7 +30,7 @@ export default function TermsOfServicePage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#f4f4f5]">1. Intellectual Property Rights</h2>
           <p>
-            Unless otherwise stated, ChronoVerse Capital owns the intellectual property rights for all original research, alternate history models, financial analyses, and custom graphics published on this site. You may access this material for personal use, but you must not:
+            Unless otherwise stated, Chronoverse Capital owns the intellectual property rights for all original research, alternate history models, financial analyses, and custom graphics published on this site. You may access this material for personal use, but you must not:
           </p>
           <ul className="list-disc list-inside space-y-1 text-xs text-[#a1a1aa] pt-1">
             <li><strong className="text-[#f4f4f5]">Republish</strong> or redistribute our material without clear attribution.</li>
@@ -44,7 +44,7 @@ export default function TermsOfServicePage() {
           <h2 className="text-xl font-bold text-[#f4f4f5]">2. Important Disclaimer (No Financial Advice)</h2>
           <div className="bg-[#0a0a0a] border-l-4 border-l-[#c87d55] p-4 rounded-r-lg text-xs space-y-2">
             <p>
-              <strong className="text-[#f4f4f5]">Educational Purpose Only:</strong> The content on ChronoVerse Capital, including analyses of DeFi, Cryptocurrency, and Economic history, is for informational and educational purposes only.
+              <strong className="text-[#f4f4f5]">Educational Purpose Only:</strong> The content on Chronoverse Capital, including analyses of DeFi, Cryptocurrency, and Economic history, is for informational and educational purposes only.
             </p>
             <p>
               <strong className="text-[#f4f4f5]">Not Financial Advice:</strong> We are research analysts and historians, not licensed financial advisors. Nothing on this website constitutes investment, legal, or tax advice.
@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">3. Accuracy of Information</h2>
           <p>
-            While we strive for institutional-grade accuracy in our research, ChronoVerse Capital makes no warranties regarding the completeness or reliability of the information provided.
+            While we strive for institutional-grade accuracy in our research, Chronoverse Capital makes no warranties regarding the completeness or reliability of the information provided.
           </p>
         </section>
 
@@ -72,7 +72,7 @@ export default function TermsOfServicePage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">5. Limitation of Liability</h2>
           <p>
-            In no event shall ChronoVerse Capital or its leadership team be held liable for any financial losses or damages arising out of or in connection with your use of the insights provided on this website.
+            In no event shall Chronoverse Capital or its leadership team be held liable for any financial losses or damages arising out of or in connection with your use of the insights provided on this website.
           </p>
         </section>
 

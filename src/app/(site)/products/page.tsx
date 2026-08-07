@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function ArsenalProductsPage() {
   const arsenalItems = [
     {
-      title: "ChronoVerse Vault",
+      title: "Chronoverse Vault",
       badge: "PREMIUM ASSETS",
       badgeColor: "text-[#c87d55] bg-[#c87d55]/15 border-[#c87d55]/30",
       description: "Access encrypted dossiers, specialized trading scripts, and high-value digital blueprints.",
@@ -13,7 +13,7 @@ export default function ArsenalProductsPage() {
       sponsored: false,
     },
     {
-      title: "ChronoVerse Shop",
+      title: "Chronoverse Shop",
       badge: "INTEL REPORTS",
       badgeColor: "text-[#a1a1aa] bg-[#27272a] border-[#3f3f46]",
       description: "Tactical field reports, economic case studies, and wealth preservation frameworks.",
@@ -68,7 +68,7 @@ export default function ArsenalProductsPage() {
         <strong className="text-[#c87d55] font-bold uppercase tracking-wider block mb-1">
           Intel Disclosure:
         </strong>
-        Our operations are powered by transparency. Some links below are partner links, supporting ChronoVerse intelligence at no additional cost to your capital.
+        Our operations are powered by transparency. Some links below are partner links, supporting Chronoverse intelligence at no additional cost to your capital.
       </div>
 
       {/* Arsenal Tools Grid */}
@@ -106,7 +106,7 @@ export default function ArsenalProductsPage() {
 
       {/* Footer Disclaimer */}
       <footer className="border-t border-[#27272a] pt-8 text-center text-xs text-[#52525b]">
-        © 2026 ChronoVerse Capital | Declassified Archive | Authorized Use Only
+        © 2026 Chronoverse Capital | Declassified Archive | Authorized Use Only
       </footer>
 
     </div>

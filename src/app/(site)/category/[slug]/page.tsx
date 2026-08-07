@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${title} | Chronoverse Intelligence`,
-    description: `Latest ${title} articles, research, and intelligence briefings from ChronoVerse Capital.`,
+    description: `Latest ${title} articles, research, and intelligence briefings from Chronoverse Capital.`,
   };
 }
 

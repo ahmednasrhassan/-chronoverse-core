@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://www.chronoversecapital.com";
-const SITE_NAME = "ChronoVerse Capital";
+const SITE_NAME = "Chronoverse Capital";
 const DEFAULT_DESCRIPTION =
   "Premier macroeconomic research, asset allocation intelligence, and institutional financial analysis.";
 
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     canonical: "./",
   },
   title: {
-    default: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
-    template: "%s | ChronoVerse Capital",
+    default: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+    template: "%s | Chronoverse Capital",
   },
   description: DEFAULT_DESCRIPTION,
   keywords: [
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     "Finance",
     "Asset Allocation",
     "Research",
-    "ChronoVerse Capital",
+    "Chronoverse Capital",
   ],
-  authors: [{ name: "ChronoVerse Capital Team" }],
+  authors: [{ name: "Chronoverse Capital Team" }],
   icons: {
     icon: "/favicon.jpeg",
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
+    title: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     description: DEFAULT_DESCRIPTION,
     locale: "en_US",
     images: [
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ChronoVerse Capital | Institutional Macroeconomic Intelligence",
+    title: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     description: DEFAULT_DESCRIPTION,
     site: "@ChronoVerseCap",
     creator: "@ChronoVerseCap",

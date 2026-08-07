@@ -34,7 +34,7 @@ export default function Footer() {
             <Link href="/" className="inline-flex items-center gap-3">
               <Image
                 src="/logo.svg"
-                alt="ChronoVerse Capital logo"
+                alt="Chronoverse Capital logo"
                 width={36}
                 height={36}
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0"
@@ -190,12 +190,12 @@ export default function Footer() {
         {/* Disclaimer Notice */}
         <div className="py-6 border-b border-zinc-800/50 text-[11px] md:text-xs text-zinc-500 leading-relaxed max-w-6xl">
           <span className="font-semibold text-zinc-400 mr-1">Financial Disclaimer:</span>
-          The content provided on ChronoVerse Capital is for informational and educational purposes only and should not be construed as financial, investment, or legal advice. Trading and investing in financial markets carry a high level of risk. Always consult with a licensed financial professional before making investment decisions.
+          The content provided on Chronoverse Capital is for informational and educational purposes only and should not be construed as financial, investment, or legal advice. Trading and investing in financial markets carry a high level of risk. Always consult with a licensed financial professional before making investment decisions.
         </div>
 
         {/* Copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-y-3">
-          <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} ChronoVerse Capital. All rights reserved.</p>
+          <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Chronoverse Capital. All rights reserved.</p>
           <p className="text-[10px] md:text-[11px] font-mono text-zinc-600 tracking-wider">
             Powered by Next.js & Sanity CDN
           </p>

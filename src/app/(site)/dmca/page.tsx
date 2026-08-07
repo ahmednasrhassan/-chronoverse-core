@@ -20,7 +20,7 @@ export default function DmcaPage() {
 
       {/* Intro */}
       <p className="text-[#a1a1aa] text-base leading-relaxed">
-        <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong> respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (&quot;DMCA&quot;), we will respond expeditiously to claims of copyright infringement reported to our designated agent.
+        <strong className="text-[#f4f4f5]">Chronoverse Capital</strong> respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (&quot;DMCA&quot;), we will respond expeditiously to claims of copyright infringement reported to our designated agent.
       </p>
 
       {/* Sections */}
@@ -51,9 +51,9 @@ export default function DmcaPage() {
 
         {/* Section 3 */}
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
-          <h2 className="text-xl font-bold text-[#f4f4f5]">3. Intellectual Property of ChronoVerse Capital</h2>
+          <h2 className="text-xl font-bold text-[#f4f4f5]">3. Intellectual Property of Chronoverse Capital</h2>
           <p>
-            All content published on <strong className="text-[#f4f4f5]">ChronoVerseCapital.com</strong>, including text, original historical models, analytical graphics, and logos, is the <strong className="text-[#c87d55]">exclusive property</strong> of ChronoVerse Capital. Unauthorized copying, reproduction, or redistribution of this material is strictly prohibited and will result in immediate legal action.
+            All content published on <strong className="text-[#f4f4f5]">ChronoverseCapital.com</strong>, including text, original historical models, analytical graphics, and logos, is the <strong className="text-[#c87d55]">exclusive property</strong> of Chronoverse Capital. Unauthorized copying, reproduction, or redistribution of this material is strictly prohibited and will result in immediate legal action.
           </p>
         </section>
 

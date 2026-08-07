@@ -61,8 +61,8 @@ export function generateFallbackSeo(plainText: string, title: string): FallbackS
   const cleaned = (plainText || "").trim();
 
   if (!cleaned) {
-    const genericExcerpt = `${title} — an in-depth analysis from ChronoVerse Capital covering key macroeconomic and financial market developments.`;
-    const genericDescription = `${title} | Analysis from ChronoVerse Capital`.slice(0, 160);
+    const genericExcerpt = `${title} — an in-depth analysis from Chronoverse Capital covering key macroeconomic and financial market developments.`;
+    const genericDescription = `${title} | Analysis from Chronoverse Capital`.slice(0, 160);
     return { excerpt: genericExcerpt, seoDescription: genericDescription };
   }
 

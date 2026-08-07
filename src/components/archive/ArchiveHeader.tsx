@@ -20,7 +20,7 @@ export default function ArchiveHeader({
           <span>{totalArticles} Reports Available</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary mb-3">
-          ChronoVerse Capital Archive
+          Chronoverse Capital Archive
         </h1>
         <p className="text-sm sm:text-base text-secondary leading-relaxed mb-6">
           Explore historical macroeconomic analysis, asset allocation intelligence, and market reports saved over time.

@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
 
       {/* Intro */}
       <p className="text-[#a1a1aa] text-base leading-relaxed">
-        At <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong> (accessible from chronoversecapital.com), the privacy of our visitors is one of our top priorities. This document outlines the types of information we collect and how we utilize it to enhance your experience.
+        At <strong className="text-[#f4f4f5]">Chronoverse Capital</strong> (accessible from chronoversecapital.com), the privacy of our visitors is one of our top priorities. This document outlines the types of information we collect and how we utilize it to enhance your experience.
       </p>
 
       {/* Sections */}
@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#f4f4f5]">2. Information We Collect</h2>
           <p>
-            When you visit ChronoVerse Capital, we may collect information in the following ways:
+            When you visit Chronoverse Capital, we may collect information in the following ways:
           </p>
           <ul className="list-disc list-inside space-y-2 text-xs text-[#a1a1aa] pt-1">
             <li>
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">4. Third-Party Privacy Policies</h2>
           <p>
-            ChronoVerse Capital&apos;s Privacy Policy does not apply to other advertisers or websites. We advise you to consult the respective Privacy Policies of these third-party ad servers for more detailed information.
+            Chronoverse Capital&apos;s Privacy Policy does not apply to other advertisers or websites. We advise you to consult the respective Privacy Policies of these third-party ad servers for more detailed information.
           </p>
         </section>
 
@@ -99,7 +99,7 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#f4f4f5]">7. Financial Transactions &amp; Digital Products</h2>
           <p>
-            Please note that ChronoVerse Capital does not process payments directly. All digital asset sales and subscriptions are securely processed through our authorized merchants of record:
+            Please note that Chronoverse Capital does not process payments directly. All digital asset sales and subscriptions are securely processed through our authorized merchants of record:
           </p>
           <ul className="list-disc list-inside space-y-2 text-xs text-[#a1a1aa] pt-1">
             <li>
@@ -115,7 +115,7 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#f4f4f5]">8. Strategic Partners &amp; Affiliates</h2>
           <p>
-            To maintain our operational infrastructure, ChronoVerse Capital partners with select global entities. Some links provided may be affiliate links, meaning we may earn a commission at no additional cost to you.
+            To maintain our operational infrastructure, Chronoverse Capital partners with select global entities. Some links provided may be affiliate links, meaning we may earn a commission at no additional cost to you.
           </p>
           <ul className="list-disc list-inside space-y-2 text-xs text-[#a1a1aa] pt-1">
             <li>

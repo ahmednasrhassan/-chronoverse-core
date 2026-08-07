@@ -35,7 +35,7 @@ export default function NewsletterPage() {
 
       if (res.ok && data.status === "success") {
         setStatus("success");
-        setFeedback("You're subscribed. Welcome to the ChronoVerse dispatch list.");
+        setFeedback("You're subscribed. Welcome to the Chronoverse dispatch list.");
         setEmail("");
       } else {
         setStatus("error");
@@ -51,7 +51,7 @@ export default function NewsletterPage() {
     <main className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-[#120e0c]">
       <div className="max-w-lg w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/40">
         <span className="text-[10px] font-bold uppercase tracking-widest text-[#c87d55] bg-[#c87d55]/10 px-3 py-1.5 rounded-full border border-[#c87d55]/20">
-          ChronoVerse Dispatch
+          Chronoverse Dispatch
         </span>
         <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-100 mt-4 mb-3 tracking-tight">
           Institutional Macro Intelligence — Direct to Your Inbox

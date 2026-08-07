@@ -24,7 +24,7 @@ export default function DisclaimerPage() {
           ⚠️ CRITICAL NOTICE: NOT FINANCIAL ADVICE
         </h2>
         <p className="text-[#a1a1aa] text-sm leading-relaxed">
-          ChronoVerse Capital is an educational and research-oriented platform. We are <strong className="text-[#f4f4f5]">NOT</strong> registered investment advisors, brokers, or fiduciaries. The content provided herein is for informational and historical analysis purposes only.
+          Chronoverse Capital is an educational and research-oriented platform. We are <strong className="text-[#f4f4f5]">NOT</strong> registered investment advisors, brokers, or fiduciaries. The content provided herein is for informational and historical analysis purposes only.
         </p>
       </div>
 
@@ -35,7 +35,7 @@ export default function DisclaimerPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">1. General Liability Waiver</h2>
           <p>
-            By accessing this website and its associated reports (Dossiers), you acknowledge that <strong className="text-[#f4f4f5]">ChronoVerse Capital</strong> assumes no responsibility for any financial losses or damages resulting from the use of our content. Markets are inherently risky. You agree that any investment decisions you make are your sole responsibility.
+            By accessing this website and its associated reports (Dossiers), you acknowledge that <strong className="text-[#f4f4f5]">Chronoverse Capital</strong> assumes no responsibility for any financial losses or damages resulting from the use of our content. Markets are inherently risky. You agree that any investment decisions you make are your sole responsibility.
           </p>
         </section>
 
@@ -74,7 +74,7 @@ export default function DisclaimerPage() {
         <section className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#f4f4f5]">4. Affiliate Disclosure (FTC Compliance)</h2>
           <p>
-            In compliance with FTC guidelines, ChronoVerse Capital utilizes select partner links (e.g., <strong className="text-[#f4f4f5]">Agility Writer, XM Global</strong>). Clicking these links may result in a commission that supports our infrastructure at <strong className="text-[#c87d55]">no additional cost to you</strong>.
+            In compliance with FTC guidelines, Chronoverse Capital utilizes select partner links (e.g., <strong className="text-[#f4f4f5]">Agility Writer, XM Global</strong>). Clicking these links may result in a commission that supports our infrastructure at <strong className="text-[#c87d55]">no additional cost to you</strong>.
           </p>
         </section>
 

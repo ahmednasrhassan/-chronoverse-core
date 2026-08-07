@@ -93,6 +93,8 @@ class IntelligenceErrorBoundary extends React.Component<
 
 function TerminalIntelligenceContent() {
   // Scanner Typewriter State
+  // Default to an empty array so any .map()/.length access is always safe,
+  // even if a future refactor wires this up to a live market feed response.
   const [scannerText, setScannerText] = useState<string[]>([]);
 
   // V_INTEL Simulation States
@@ -119,8 +121,11 @@ function TerminalIntelligenceContent() {
   const [isDecrypting, setIsDecrypting] = useState(false);
 
   // 1. Scanner Output Effect
+  // Any future upgrade to a live market-feed / ticker API response should
+  // populate `lines` defensively (e.g. `response?.lines ?? FALLBACK_LINES`)
+  // so a failed fetch never leaves `lines` undefined before the interval runs.
   useEffect(() => {
-    const lines = [
+    const FALLBACK_LINES = [
       "> INITIATING V_INTEL SECURITY PROTOCOL...",
       "> SCANNING INCOMING CONNECTION...",
       "> TARGET OS DETECTED: [SECURE NODE]",
@@ -131,18 +136,32 @@ function TerminalIntelligenceContent() {
       "> ADVICE: PROCEED TO THE TERMINAL BELOW TO CALCULATE REAL RISKS.",
     ];
 
-    let currentLine = 0;
-    const interval = setInterval(() => {
-      if (currentLine < lines.length) {
-        setScannerText((prev) => [...prev, lines[currentLine]]);
-        currentLine++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 800);
+    // Defensive default: guarantee we always have a safe array to iterate,
+    // even if this were ever wired up to an external market feed response.
+    const lines = FALLBACK_LINES ?? [];
 
-    return () => clearInterval(interval);
+    let currentLine = 0;
+    let interval: ReturnType<typeof setInterval> | undefined;
+
+    try {
+      interval = setInterval(() => {
+        if (currentLine < (lines?.length ?? 0)) {
+          setScannerText((prev) => [...(prev ?? []), lines?.[currentLine] ?? ""]);
+          currentLine++;
+        } else if (interval) {
+          clearInterval(interval);
+        }
+      }, 800);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[Intelligence Terminal] Scanner effect failed, falling back safely:", err);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
+
 
   // 2. Preset Handler for V_INTEL
   const handlePresetChange = (preset: string) => {
@@ -177,43 +196,62 @@ function TerminalIntelligenceContent() {
 
   // Quiz Navigation
   const handleQuizAnswer = (nextStepNum: number, points: number) => {
-    setQuizScore((prev) => prev + points);
+    setQuizScore((prev) => (prev ?? 0) + (points ?? 0));
     if (nextStepNum <= 3) {
       setStep(nextStepNum);
     } else {
       setIsScanning(true);
       let p = 0;
       const interval = setInterval(() => {
-        p += 2;
-        setProgress(p);
-        if (p === 20) setStatusLog("CROSS-REFERENCING FIAT DECAY ALGORITHMS...");
-        if (p === 45) setStatusLog("CALCULATING V_INTEL THRESHOLD...");
-        if (p === 70) setStatusLog("MAPPING VULNERABILITIES TO THE BURNING GRID...");
-        if (p === 90) setStatusLog("DECRYPTING EXIT BLUEPRINT...");
-        if (p >= 100) {
+        try {
+          p += 2;
+          setProgress(p);
+          if (p === 20) setStatusLog("CROSS-REFERENCING FIAT DECAY ALGORITHMS...");
+          if (p === 45) setStatusLog("CALCULATING V_INTEL THRESHOLD...");
+          if (p === 70) setStatusLog("MAPPING VULNERABILITIES TO THE BURNING GRID...");
+          if (p === 90) setStatusLog("DECRYPTING EXIT BLUEPRINT...");
+          if (p >= 100) {
+            clearInterval(interval);
+            setIsScanning(false);
+            setQuizCompleted(true);
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("[Intelligence Terminal] Scan progress interval failed:", err);
           clearInterval(interval);
           setIsScanning(false);
-          setQuizCompleted(true);
         }
       }, 50);
     }
   };
 
   // Radar Chart Data Logic
-  const getRadarData = () => {
-    if (histAnchor === 1) return [90, 20, 10, 30, 80];
-    if (histAnchor === 40) return [40, 90, 95, 80, 20];
-    if (histAnchor === 1000000) return [100, 10, 0, 10, 90];
-    if (histAnchor === 85) return [100, 0, 0, 0, 10];
-    return [90, 20, 10, 30, 80];
+  // Falls back to a safe default 5-point dataset if the anchor lookup
+  // ever fails to resolve (e.g. malformed / unexpected value).
+  const DEFAULT_RADAR_POINTS = [90, 20, 10, 30, 80];
+  const getRadarData = (): number[] => {
+    try {
+      if (histAnchor === 1) return [90, 20, 10, 30, 80];
+      if (histAnchor === 40) return [40, 90, 95, 80, 20];
+      if (histAnchor === 1000000) return [100, 10, 0, 10, 90];
+      if (histAnchor === 85) return [100, 0, 0, 0, 10];
+      return DEFAULT_RADAR_POINTS;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[Intelligence Terminal] Radar data lookup failed, using default:", err);
+      return DEFAULT_RADAR_POINTS;
+    }
   };
 
+  // Radar labels/dataset are always given explicit safe defaults ([]/{})
+  // so Chart.js never receives undefined arrays that could throw at render.
+  const RADAR_LABELS: string[] = ["Liquidity", "Privacy", "Scarcity", "Autonomy", "Mobility"];
   const radarChartData = {
-    labels: ["Liquidity", "Privacy", "Scarcity", "Autonomy", "Mobility"],
+    labels: RADAR_LABELS ?? [],
     datasets: [
       {
         label: "Asset Resilience",
-        data: getRadarData(),
+        data: getRadarData() ?? DEFAULT_RADAR_POINTS,
         backgroundColor: "rgba(200, 125, 85, 0.25)",
         borderColor: "#c87d55",
         pointBackgroundColor: "#f4f4f5",
@@ -221,6 +259,8 @@ function TerminalIntelligenceContent() {
       },
     ],
   };
+
+
 
   const radarOptions = {
     scales: {
@@ -274,13 +314,14 @@ function TerminalIntelligenceContent() {
       {/* Scanner Output Header */}
       <div className="bg-[#050505] border border-[#c87d55] p-6 rounded-xl shadow-lg space-y-2">
         <div className="text-xs text-[#c87d55] leading-relaxed min-h-[120px]">
-          {scannerText.map((line, idx) => (
-            <p key={idx} className={line.includes("WARNING") ? "text-red-500 font-bold" : ""}>
-              {line}
+          {(scannerText ?? []).map((line, idx) => (
+            <p key={idx} className={line?.includes("WARNING") ? "text-red-500 font-bold" : ""}>
+              {line ?? ""}
             </p>
           ))}
           <span className="inline-block w-2 h-4 bg-[#c87d55] animate-pulse ml-1"></span>
         </div>
+
       </div>
 
       {/* Terminal Workstation Header */}

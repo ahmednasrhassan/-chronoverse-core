@@ -11,7 +11,7 @@ export default function PremiumVaultPage() {
           INSTITUTIONAL MEMBERSHIP
         </span>
         <h1 className="text-4xl md:text-5xl font-extrabold text-[#f4f4f5] tracking-tight">
-          The ChronoVerse <span className="text-[#c87d55]">Vault</span>
+          The Chronoverse <span className="text-[#c87d55]">Vault</span>
         </h1>
         <p className="text-[#a1a1aa] text-sm font-sans max-w-2xl mx-auto">
           Unlimited access to encrypted macro dossiers, priority liquidity signals, and custom financial models.
