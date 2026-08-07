@@ -17,8 +17,9 @@ function AdvancedChartComponent({ symbol = "BINANCE:BTCUSDT", theme = "dark" }: 
     script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
     script.onload = () => {
-      if (typeof window !== "undefined" && (window as any).TradingView) {
-        new (window as any).TradingView.widget({
+      const tv = (window as unknown as { TradingView?: { widget: new (config: Record<string, unknown>) => unknown } }).TradingView;
+      if (typeof window !== "undefined" && tv) {
+        new tv.widget({
           autosize: true,
           symbol: symbol,
           interval: "D",

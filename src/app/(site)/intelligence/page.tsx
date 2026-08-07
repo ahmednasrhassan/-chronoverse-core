@@ -412,14 +412,14 @@ function TerminalIntelligenceContent() {
           </span>
         </div>
         <div className="flex gap-4 min-w-max">
-          {(liveQuotes ?? []).map((quote) => {
+          {(liveQuotes ?? []).map((quote, quoteIdx) => {
             const changePercent = quote?.changePercent;
             const isPositive = (changePercent ?? 0) >= 0;
             const price = quote?.price;
 
             return (
               <div
-                key={quote?.symbol ?? Math.random()}
+                key={quote?.symbol ?? `quote-${quoteIdx}`}
                 className="flex flex-col min-w-[140px] bg-[#0a0a0a] border border-[#27272a] rounded-lg px-4 py-3"
               >
                 <span className="text-[10px] text-[#a1a1aa] uppercase tracking-wide">

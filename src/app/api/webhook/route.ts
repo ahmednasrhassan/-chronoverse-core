@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    await request.json();
 
     // General processing logic for external webhooks
     return NextResponse.json(
@@ -13,12 +13,13 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("General Webhook Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to process webhook payload";
     return NextResponse.json(
       {
         status: "error",
-        message: error.message || "Failed to process webhook payload",
+        message,
       },
       { status: 500 }
     );

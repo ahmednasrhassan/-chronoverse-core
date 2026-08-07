@@ -27,7 +27,7 @@ export default async function AuthorCard({ authorName }: AuthorCardProps) {
       if (sanityAuthor.role) authorData.role = sanityAuthor.role;
       if (sanityAuthor.bio) authorData.bio = sanityAuthor.bio;
     }
-  } catch (err) {
+  } catch {
     // Fallback quietly if fetch fails
   }
 

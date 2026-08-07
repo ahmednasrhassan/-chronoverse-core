@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-import { urlFor } from "@/sanity/image";
+import { urlForOptimized } from "@/sanity/image";
 
 interface SanityImageValue {
   _type: "image";
@@ -19,17 +19,26 @@ const components: PortableTextComponents = {
     image: ({ value }: { value: SanityImageValue }) => {
       if (!value?.asset) return null;
 
-      const imageUrl = urlFor(value).width(1200).fit("max").auto("format").url();
+      // `.auto("format")` + `.quality(80)` (via `urlForOptimized`) ensures
+      // every in-body image is served as a modern, heavily-compressed
+      // AVIF/WebP variant automatically. Alt/title text is sourced directly
+      // from the Sanity image metadata (falling back to a sensible
+      // default) so every embedded image ships with meaningful, accessible
+      // text.
+      const imageUrl = urlForOptimized(value).width(1200).fit("max").url();
+      const altText = value.alt || "Article image";
 
       return (
         <figure className="my-8 w-full">
           <div className="relative w-full h-96 md:h-[28rem] rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
             <Image
               src={imageUrl}
-              alt={value.alt || "Article image"}
+              alt={altText}
+              title={value.caption || altText}
               fill
               sizes="(max-width: 768px) 100vw, 768px"
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
           {value.caption && (

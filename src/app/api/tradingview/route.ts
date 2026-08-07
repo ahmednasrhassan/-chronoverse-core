@@ -4,7 +4,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { ticker, price, action, message } = body;
+    const { ticker, price, action } = body;
 
     return NextResponse.json(
       {
@@ -19,12 +19,13 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("TradingView Webhook Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to process TradingView webhook";
     return NextResponse.json(
       {
         status: "error",
-        message: error.message || "Failed to process TradingView webhook",
+        message,
       },
       { status: 500 }
     );

@@ -28,12 +28,13 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Dashboard API Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch dashboard data";
     return NextResponse.json(
       {
         status: "error",
-        message: error.message || "Failed to fetch dashboard data"
+        message
       },
       { status: 500 }
     );

@@ -1,12 +1,18 @@
 import React from "react";
-import MiniChart from "@/components/tradingview/MiniChart";
 import Link from "next/link";
 import { getSanityArticles, calculateReadTime } from "@/lib/content";
 
-// Ensure the homepage always reflects the latest published Sanity content
-// (no stale cached article cards).
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+// TradingView's mini symbol widgets pull in a third-party script and are
+// entirely client-side. `MiniChartLazy` wraps the actual widget in a
+// `next/dynamic(..., { ssr: false })` import inside its own Client
+// Component, keeping it out of the server-rendered HTML / initial JS
+// bundle so it never blocks first paint or the homepage's LCP.
+import MiniChart from "@/components/tradingview/MiniChartLazy";
+
+// Incremental Static Regeneration: serve the cached homepage instantly and
+// revalidate in the background at most once every 60 seconds, instead of
+// forcing a zero-cache dynamic render (`force-dynamic`) on every request.
+export const revalidate = 60;
 
 export default async function HomePage() {
   const tradingViewSymbols = [

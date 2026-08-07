@@ -1,5 +1,5 @@
 import { client } from "../sanity/client";
-import { urlFor } from "../sanity/image";
+import { urlForOptimized } from "../sanity/image";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -207,11 +207,14 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   let resolvedImageUrl: string | undefined;
   if (post.mainImage?.asset) {
     try {
-      resolvedImageUrl = urlFor(post.mainImage as never)
+      // `urlForOptimized` applies `.auto("format")` (serves modern
+      // AVIF/WebP automatically based on the browser's Accept header) and
+      // `.quality(80)` (a strong compression/fidelity balance) so hero/card
+      // images stay lightweight across the entire site by default.
+      resolvedImageUrl = urlForOptimized(post.mainImage as never)
         .width(1600)
         .height(900)
         .fit("crop")
-        .auto("format")
         .url();
     } catch {
       resolvedImageUrl = post.imageUrl || undefined;

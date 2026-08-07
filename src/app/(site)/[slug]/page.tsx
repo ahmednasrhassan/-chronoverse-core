@@ -11,9 +11,17 @@ import AIExecutiveSummary from "@/components/AIExecutiveSummary";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
 import MathContent from "@/components/MathContent";
-import SymbolOverview from "@/components/tradingview/SymbolOverview";
 import { detectMarketSymbol } from "@/lib/detectMarketSymbol";
 import { siteConfig } from "@/config/siteConfig";
+
+// TradingView's "Symbol Overview" widget pulls in a sizeable third-party
+// script and is only rendered conditionally (when a market symbol is
+// detected in the article). `SymbolOverviewLazy` wraps it in a
+// `next/dynamic(..., { ssr: false })` import inside its own Client
+// Component, keeping it completely out of the server-rendered HTML /
+// initial JS bundle so it never blocks first paint or LCP on articles
+// that don't need it.
+import SymbolOverview from "@/components/tradingview/SymbolOverviewLazy";
 
 
 
@@ -37,6 +45,11 @@ import { notFound } from "next/navigation";
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
+
+// Incremental Static Regeneration: serve cached HTML instantly while
+// revalidating in the background at most once every 60 seconds, instead of
+// forcing a zero-cache dynamic render on every single request.
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const articles = await getSanityArticles();
@@ -337,7 +350,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         {/* Auto-Generated Summary Block */}
         <div className="relative p-5 rounded-xl bg-zinc-900/40 border-l-4 border-[#c87d55] my-6 shadow-md print:border-gray-400 print:bg-transparent">
           <p className="text-base md:text-lg text-zinc-300 font-normal italic leading-relaxed">
-            "{autoSummary}"
+            &quot;{autoSummary}&quot;
           </p>
         </div>
         

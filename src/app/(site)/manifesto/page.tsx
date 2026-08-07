@@ -65,7 +65,7 @@ export default function ManifestoPage() {
         <div className="border-t border-[#27272a] pt-8 text-center space-y-2">
           <h3 className="text-[#c87d55] font-extrabold text-2xl tracking-widest">&gt;_ STAY SOVEREIGN.</h3>
           <p className="text-[#a1a1aa] text-xs italic">
-            // Chronoverse Intelligence Network | Established 2026 //
+            {"// Chronoverse Intelligence Network | Established 2026 //"}
           </p>
         </div>
       </div>

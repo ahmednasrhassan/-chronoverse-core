@@ -62,12 +62,13 @@ export async function POST(request: Request) {
       status: "success",
       message: "Email dispatched successfully via Amazon SES",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AWS SES Execution Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to dispatch email through AWS SES";
     return NextResponse.json(
       {
         status: "error",
-        message: error.message || "Failed to dispatch email through AWS SES",
+        message,
       },
       { status: 500 }
     );

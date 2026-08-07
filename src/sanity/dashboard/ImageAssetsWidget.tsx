@@ -47,10 +47,12 @@ export function ImageAssetsWidget() {
           <Grid columns={[3, 4]} gap={2}>
             {images.map((image) => (
               <Stack key={image._id} space={1}>
-                <Card radius={2} overflow="hidden" style={{ aspectRatio: "1 / 1" }}>
+                <Card radius={2} overflow="hidden" style={{ aspectRatio: "1 / 1", position: "relative" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`${image.url}?w=120&h=120&fit=crop&auto=format`}
                     alt={image.originalFilename || "Sanity image asset"}
+                    loading="lazy"
                     style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
                 </Card>

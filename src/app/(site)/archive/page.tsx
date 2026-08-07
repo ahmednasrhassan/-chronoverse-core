@@ -6,15 +6,17 @@ import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 /**
  * Intelligence Archive Index
  * ----------------------------
- * Fully dynamic: pulls every published `post` document directly from
- * Sanity via a single GROQ query (no caching, no ISR) so newly published
- * articles appear on this page immediately after being published in the
- * Studio. Posts are then grouped client-side (in this server component) by
- * their category for display — no hardcoded section/post data is used
- * anywhere on this page.
+ * Pulls every published `post` document directly from Sanity via a single
+ * GROQ query. Posts are then grouped server-side (in this server
+ * component) by their category for display — no hardcoded section/post
+ * data is used anywhere on this page.
+ *
+ * Uses Incremental Static Regeneration (revalidated at most once every 60
+ * seconds) instead of a zero-cache `force-dynamic` render, so this page is
+ * served instantly from cache while still staying reasonably fresh after
+ * new articles are published.
  */
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface ArchivePost {
   slug: string;
@@ -130,7 +132,7 @@ export default async function ArchiveIndexPage() {
 
       {/* Footer Info */}
       <footer className="border-t border-[#27272a] pt-8 text-center text-xs text-[#52525b]">
-        // Chronoverse Intelligence Ledger | Automated Directory Node //
+        {"// Chronoverse Intelligence Ledger | Automated Directory Node //"}
       </footer>
 
     </div>

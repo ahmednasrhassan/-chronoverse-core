@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import SocialGroup from '../socialicons';
 import { siteConfig } from '@/config/siteConfig';
 export default function Footer() {
 
