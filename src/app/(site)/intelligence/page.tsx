@@ -2,27 +2,96 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Radar } from "react-chartjs-2";
+import dynamic from "next/dynamic";
 
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
+// Chart.js touches browser-only globals (canvas/document) at import time.
+// Registering it eagerly at module scope can crash Server-Side Rendering
+// (causing the generic "This page couldn't load" error). We defer all
+// Chart.js setup + rendering to the client only via dynamic import.
+const Radar = dynamic(
+  async () => {
+    const {
+      Chart: ChartJS,
+      RadialLinearScale,
+      PointElement,
+      LineElement,
+      Filler,
+      Tooltip,
+      Legend,
+    } = await import("chart.js");
+    const { Radar: RadarChart } = await import("react-chartjs-2");
+
+    ChartJS.register(
+      RadialLinearScale,
+      PointElement,
+      LineElement,
+      Filler,
+      Tooltip,
+      Legend
+    );
+
+    return RadarChart;
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[220px] flex items-center justify-center text-[#a1a1aa] text-xs border border-[#27272a] rounded-lg">
+        LOADING RADAR DATA...
+      </div>
+    ),
+  }
 );
 
-export default function TerminalIntelligencePage() {
+// -----------------------------------------------------------------------------
+// Lightweight client-side Error Boundary.
+// Any unexpected runtime error thrown while rendering the terminal widgets
+// (bad chart data, malformed calculations, etc.) is caught here and a safe
+// fallback UI is rendered instead of bubbling up to Next.js' generic
+// "This page couldn't load" error screen.
+// -----------------------------------------------------------------------------
+class IntelligenceErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    // eslint-disable-next-line no-console
+    console.error("[Intelligence Terminal] Recovered from render error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="max-w-6xl mx-auto px-4 py-12 font-mono">
+          <div className="bg-[#18181b] border border-red-500/50 p-6 rounded-xl text-center space-y-3">
+            <h2 className="text-red-500 font-bold text-sm">[ MODULE OFFLINE ]</h2>
+            <p className="text-[#a1a1aa] text-xs">
+              This section of the terminal encountered an unexpected error and has been
+              safely isolated. The rest of the site remains fully operational.
+            </p>
+            <Link
+              href="/"
+              className="inline-block bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-6 py-2.5 rounded-md text-xs transition-colors"
+            >
+              RETURN TO BASE
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function TerminalIntelligenceContent() {
   // Scanner Typewriter State
   const [scannerText, setScannerText] = useState<string[]>([]);
 
@@ -104,7 +173,7 @@ export default function TerminalIntelligencePage() {
   // V_INTEL Score Calculation
   const safeV = volatilityVal === 0 ? 1 : volatilityVal;
   const vScore = (((returnVal * sovereigntyVal) / safeV) * (1 - macroVal / 110)).toFixed(2);
-  const numericVScore = parseFloat(vScore);
+  const numericVScore = parseFloat(vScore) || 0;
 
   // Quiz Navigation
   const handleQuizAnswer = (nextStepNum: number, points: number) => {
@@ -172,16 +241,31 @@ export default function TerminalIntelligencePage() {
     if (accessCode.trim().toUpperCase() === "LEMON-70") {
       setIsDecrypting(true);
       setTimeout(() => {
-        window.open(
-          "https://vault.chronoversecapital.com/checkout/buy/6bfbf7ab-53c3-4d6e-aad8-44f9835a7160",
-          "_blank"
-        );
-        setIsDecrypting(false);
-        setAccessCode("");
+        try {
+          window.open(
+            "https://vault.chronoversecapital.com/checkout/buy/6bfbf7ab-53c3-4d6e-aad8-44f9835a7160",
+            "_blank",
+            "noopener,noreferrer"
+          );
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("[Intelligence Terminal] Failed to open checkout link:", err);
+        } finally {
+          setIsDecrypting(false);
+          setAccessCode("");
+        }
       }, 3000);
     } else {
       alert("⚠️ [ACCESS DENIED]: INVALID ENCRYPTION KEY. IP LOGGED.");
     }
+  };
+
+  // Safe divide helper to avoid NaN / Infinity rendering issues
+  const safeDivide = (numerator: number, denominator: number) => {
+    if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+      return 0;
+    }
+    return numerator / denominator;
   };
 
   return (
@@ -225,6 +309,8 @@ export default function TerminalIntelligencePage() {
             src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&amp;symbol=BITSTAMP%3ABTCUSD&amp;interval=D&amp;hidesidetoolbar=0&amp;symboledit=1&amp;saveimage=1&amp;toolbarbg=0F0F0F&amp;studies=%5B%5D&amp;theme=dark&amp;style=1&amp;timezone=exchange"
             className="w-full h-full border-none"
             title="TradingView Market Chart"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
           ></iframe>
         </div>
       </div>
@@ -501,7 +587,7 @@ export default function TerminalIntelligencePage() {
               <input
                 type="number"
                 value={nomWealth}
-                onChange={(e) => setNomWealth(Number(e.target.value))}
+                onChange={(e) => setNomWealth(Number(e.target.value) || 0)}
                 className="w-full bg-[#0a0a0a] border border-[#27272a] text-[#c87d55] p-3 rounded-md focus:outline-none focus:border-[#c87d55]"
               />
             </div>
@@ -509,7 +595,7 @@ export default function TerminalIntelligencePage() {
               <label className="text-xs text-[#00cc66] block mb-1">Select Historical Anchor:</label>
               <select
                 value={histAnchor}
-                onChange={(e) => setHistAnchor(Number(e.target.value))}
+                onChange={(e) => setHistAnchor(Number(e.target.value) || 1)}
                 className="w-full bg-[#0a0a0a] border border-[#27272a] text-[#c87d55] p-3 rounded-md focus:outline-none focus:border-[#c87d55]"
               >
                 <option value={1}>USD (Current Illusion)</option>
@@ -521,7 +607,7 @@ export default function TerminalIntelligencePage() {
             <div className="bg-[#0a0a0a] border-l-4 border-[#c87d55] p-4 rounded-r-lg space-y-1">
               <span className="text-[#a1a1aa] text-xs">TRUE SOVEREIGN PURCHASING POWER:</span>
               <div className="text-2xl font-bold text-[#c87d55]">
-                {(nomWealth / histAnchor).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                {safeDivide(nomWealth, histAnchor).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
                 <span className="text-xs text-[#a1a1aa]">UNITS</span>
               </div>
             </div>
@@ -571,5 +657,13 @@ export default function TerminalIntelligencePage() {
       </div>
 
     </div>
+  );
+}
+
+export default function TerminalIntelligencePage() {
+  return (
+    <IntelligenceErrorBoundary>
+      <TerminalIntelligenceContent />
+    </IntelligenceErrorBoundary>
   );
 }
