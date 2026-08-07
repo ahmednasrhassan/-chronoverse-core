@@ -9,18 +9,31 @@ interface HeadingItem {
   level: number;
 }
 
+/**
+ * CLS fix: this component previously returned `null` until a post-mount
+ * `useEffect` finished walking the rendered <article> DOM for headings,
+ * then "popped in" a whole nav block a tick later — a textbook
+ * dynamic-content layout shift that pushes everything below it down the
+ * page. We now render a fixed-height skeleton with the same outer
+ * `my-8` box/border immediately, so the slot is reserved from first
+ * paint and swapping in the real TOC list causes zero shift.
+ */
 export default function AutoTOC() {
   const [headings, setHeadings] = useState<HeadingItem[]>([]);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const article = document.querySelector("article");
-    if (!article) return;
+    if (!article) {
+      setIsReady(true);
+      return;
+    }
 
     const elements = Array.from(article.querySelectorAll("h2, h3"));
 
     const items: HeadingItem[] = elements.map((elem, index) => {
       const text = elem.textContent?.trim() || "";
-      
+
       // Generate clean slug ID from heading text if missing
       if (!elem.id) {
         elem.id = text
@@ -37,13 +50,32 @@ export default function AutoTOC() {
     });
 
     setHeadings(items);
+    setIsReady(true);
   }, []);
+
+  // Before the DOM scan completes, reserve a minimum-height skeleton
+  // block instead of rendering nothing — this is the key CLS fix.
+  if (!isReady) {
+    return (
+      <div
+        className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md min-h-[140px] animate-pulse"
+        aria-hidden="true"
+      >
+        <div className="h-3 w-32 bg-zinc-800 rounded mb-4" />
+        <div className="space-y-3">
+          <div className="h-3 w-full bg-zinc-900 rounded" />
+          <div className="h-3 w-5/6 bg-zinc-900 rounded" />
+          <div className="h-3 w-2/3 bg-zinc-900 rounded" />
+        </div>
+      </div>
+    );
+  }
 
   if (headings.length === 0) return null;
 
   return (
-<nav className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md">
-        <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-[#c87d55] mb-4 flex items-center gap-2">
+    <nav className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md">
+      <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-[#c87d55] mb-4 flex items-center gap-2">
         <span>::</span> SECTION INDEX <span>::</span>
       </h3>
       <ul className="space-y-2 text-sm font-sans">

@@ -1,5 +1,7 @@
 import React from "react";
 import Image from "next/image";
+import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
+
 
 export default function AboutPage() {
   return (
@@ -15,7 +17,10 @@ export default function AboutPage() {
             height={100}
             className="h-auto max-w-full object-contain"
             priority
+            placeholder="blur"
+            blurDataURL={SHIMMER_BLUR_DATA_URL}
           />
+
         </div>
         <p className="text-[#c87d55] text-lg md:text-xl font-semibold font-mono tracking-wide">
           Decoding Future Markets Through Historical Intelligence.
@@ -70,7 +75,10 @@ export default function AboutPage() {
                 alt="Ahmed Abdel Fattah"
                 fill
                 className="object-cover"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
               />
+
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#f4f4f5]">Ahmed Abdel Fattah</h3>
@@ -89,7 +97,10 @@ export default function AboutPage() {
                 alt="Mohamed Younes"
                 fill
                 className="object-cover"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
               />
+
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#f4f4f5]">Mohamed Younes</h3>
@@ -108,7 +119,10 @@ export default function AboutPage() {
                 alt="Heba Sayed Ahmed"
                 fill
                 className="object-cover"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
               />
+
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#f4f4f5]">Heba Sayed Ahmed</h3>

@@ -6,15 +6,30 @@ import CookieConsent from "@/components/cookiesconsent";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
+// next/font automatically self-hosts Google Fonts (no external CDN
+// request), inlines the @font-face declarations at build time, and
+// pre-computes fallback font metrics (ascent/descent/line-gap/size
+// adjustments) so the fallback system font and the final web font share
+// near-identical box metrics — this is what actually prevents the
+// "Flash of Unstyled Text" reflow/CLS you get with a naive Google Fonts
+// <link> tag. `display: "swap"` + `adjustFontFallback` (on by default)
+// together guarantee text is visible immediately using a metrically-
+// matched fallback, then swaps in the real font with (near) zero
+// layout shift once it's ready.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
 });
+
 
 const SITE_URL = "https://www.chronoversecapital.com";
 const SITE_NAME = "Chronoverse Capital";

@@ -13,6 +13,8 @@ import ArticleShareButtons from "@/components/ArticleShareButtons";
 import MathContent from "@/components/MathContent";
 import { detectMarketSymbol } from "@/lib/detectMarketSymbol";
 import { siteConfig } from "@/config/siteConfig";
+import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
+
 
 // TradingView's "Symbol Overview" widget pulls in a sizeable third-party
 // script and is only rendered conditionally (when a market symbol is
@@ -176,6 +178,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
         {currentPage.imageUrl && (
           <figure className="mb-12 w-full print:mb-6">
+            {/* CLS fix: fixed `h-96` wrapper + `fill` reserves the hero
+                image's box from first paint regardless of the image's
+                real intrinsic size; `placeholder="blur"` fills that
+                locked box with a low-fidelity preview instead of a blank
+                gap while the network image downloads. */}
             <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
               <Image
                 src={currentPage.imageUrl}
@@ -185,10 +192,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
                 sizes="(max-w-768px) 100vw, 768px"
                 priority
                 className="w-full h-full object-cover print:object-contain print:scale-100"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
               />
             </div>
           </figure>
         )}
+
 
         {/* Enhanced Page Content Area: `legacyHtml` (raw pasted HTML/CSS/JS)
             takes priority over the structured Portable Text `bodyContent`
@@ -378,6 +388,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
       {currentPost.imageUrl && (
         <figure className="mb-12 w-full print:mb-6">
+          {/* CLS fix: same fixed-height (`h-96`) + `fill` + blur
+              placeholder pattern as above — the hero image's box is
+              reserved immediately, so the network image swapping in
+              (or `priority`-preloading) never shifts the article title,
+              TOC, or body content that follows. */}
           <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
             <Image 
               src={currentPost.imageUrl} 
@@ -387,6 +402,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
               sizes="(max-w-768px) 100vw, 768px"
               priority
               className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain print:scale-100"
+              placeholder="blur"
+              blurDataURL={SHIMMER_BLUR_DATA_URL}
             />
           </div>
           <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
@@ -394,6 +411,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           </figcaption>
         </figure>
       )}
+
 
       {/* Automatic Table of Contents */}
       <div className="print:hidden">

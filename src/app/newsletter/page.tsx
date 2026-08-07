@@ -79,15 +79,25 @@ export default function NewsletterPage() {
           </button>
         </form>
 
-        {feedback && (
-          <p
-            className={`mt-4 text-sm ${
-              status === "success" ? "text-emerald-400" : "text-red-400"
-            }`}
-          >
-            {feedback}
-          </p>
-        )}
+        {/* CLS fix: this feedback message is conditionally injected after
+            the form submits, previously with no reserved space — its
+            appearance pushed the card's bottom edge (and anything below
+            it) down by its own height, a classic dynamic-content shift.
+            Reserving a fixed-height `min-h` slot up front (present even
+            when empty) means the text simply appears in place with zero
+            layout movement. */}
+        <div className="mt-4 min-h-[20px]">
+          {feedback && (
+            <p
+              className={`text-sm ${
+                status === "success" ? "text-emerald-400" : "text-red-400"
+              }`}
+            >
+              {feedback}
+            </p>
+          )}
+        </div>
+
       </div>
     </main>
   );

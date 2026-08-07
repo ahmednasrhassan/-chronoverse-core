@@ -3,6 +3,8 @@ import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { urlForOptimized } from "@/sanity/image";
+import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
+
 
 interface SanityImageValue {
   _type: "image";
@@ -30,6 +32,15 @@ const components: PortableTextComponents = {
 
       return (
         <figure className="my-8 w-full">
+          {/* CLS fix: `fill` + this explicitly fixed-height (`h-96
+              md:h-[28rem]`) wrapper reserves the exact box for every
+              in-body image *before* it downloads — the wrapper's size
+              never depends on the image's real intrinsic dimensions, so
+              there is nothing for the image to shift once it loads.
+              `placeholder="blur"` additionally paints a low-fidelity
+              placeholder into that same locked box immediately instead
+              of a blank void, improving perceived load quality with zero
+              extra layout cost. */}
           <div className="relative w-full h-96 md:h-[28rem] rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
             <Image
               src={imageUrl}
@@ -39,8 +50,11 @@ const components: PortableTextComponents = {
               sizes="(max-width: 768px) 100vw, 768px"
               className="w-full h-full object-cover"
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={SHIMMER_BLUR_DATA_URL}
             />
           </div>
+
           {value.caption && (
             <figcaption className="text-center text-xs text-zinc-500 mt-3 italic">
               {value.caption}

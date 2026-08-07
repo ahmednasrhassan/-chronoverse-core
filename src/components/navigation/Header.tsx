@@ -38,10 +38,25 @@ export default function Header() {
 
   return (
     <>
-      {/* TradingView Ticker Tape */}
+      {/*
+        TradingView Ticker Tape.
+
+        CLS fix: the outer wrapper already locked `h-10` (good), but the
+        inner `#tv-ticker-container` div that TradingView's async script
+        injects its iframe into had no matching height — meaning between
+        first paint and the ~1-2s it takes the external
+        `embed-widget-ticker-tape.js` script to load and render, this
+        inner div could be 0px, and structural changes when the iframe
+        mounts inside a mismatched box were themselves eligible to shift
+        content beneath the sticky header. Giving the inner container an
+        explicit `h-full` (matches parent exactly) plus a background
+        skeleton tone means the box's true final size is committed from
+        first paint, so the async iframe injection cannot shift anything.
+      */}
       <div className="w-full bg-[#0a0806] border-b border-zinc-800/80 h-10 flex items-center overflow-hidden">
-        <div id="tv-ticker-container" className="w-full h-full"></div>
+        <div id="tv-ticker-container" className="w-full h-full bg-[#0a0806]"></div>
       </div>
+
 
       {/* Main Header */}
       <header className="w-full bg-[#0d0a08]/95 border-b border-zinc-800/80 sticky top-0 z-50 backdrop-blur-md">

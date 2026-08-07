@@ -33,8 +33,14 @@ function MarketTickerComponent() {
   }, []);
 
   return (
-    <div className="w-full border-b border-[#27272a] bg-[#0a0a0a]">
-      <div ref={containerRef} className="w-full" />
+    // CLS fix: this wrapper previously had no explicit height, so before
+    // TradingView's async ticker-tape script loaded and injected its
+    // iframe, the container collapsed to 0px, then suddenly expanded to
+    // ~40px once the widget mounted — shifting every element below it
+    // down the page. Locking `h-10` here (matching the identical ticker
+    // in `Header.tsx`) reserves the box up front so mount causes no shift.
+    <div className="w-full h-10 border-b border-[#27272a] bg-[#0a0a0a] overflow-hidden">
+      <div ref={containerRef} className="w-full h-full" />
     </div>
   );
 }
