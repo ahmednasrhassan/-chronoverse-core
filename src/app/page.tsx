@@ -83,7 +83,7 @@ export default function HomePage() {
         </section>
 
         {/* ================= SECTION 4: OFFICIAL SPONSORS (4 Cards) ================= */}
-        <section>
+{/* <section>
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4 text-center mt-8">Official Partners & Sponsors</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((sponsor) => (
@@ -94,8 +94,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </section>
-
+</section> */}
       </div>
     </div>
   );
