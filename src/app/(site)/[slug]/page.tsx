@@ -7,6 +7,11 @@ import PrintButton from "@/components/printbutton";
 import AuthorCard from "@/components/authorcard";
 import InternalLinksBox from "@/components/InternalLinksBox";
 import PortableTextContent from "@/components/PortableTextContent";
+import AIExecutiveSummary from "@/components/AIExecutiveSummary";
+import ReadingProgressBar from "@/components/ReadingProgressBar";
+import ArticleShareButtons from "@/components/ArticleShareButtons";
+import { siteConfig } from "@/config/siteConfig";
+
 
 import { 
   getSanityArticleBySlug, 
@@ -19,6 +24,8 @@ import {
 } from "@/lib/content";
 
 import { computeTopRelatedArticles } from "@/lib/relatedArticles";
+import { generateExecutiveSummary } from "@/lib/executiveSummary";
+
 import { notFound } from "next/navigation";
 
 
@@ -53,7 +60,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // Blogger-imported posts), automatically extracted from the first
     // `<img>` tag found in `legacyBody` via `extractFirstImageSrc`. This
     // guarantees `og:image` and the Twitter card image are never empty.
-    const resolvedOgImage = currentPost.imageUrl;
+    //
+    // As an additional branded fallback, we also generate a dynamic
+    // OpenGraph card via `/api/og` (see src/app/api/og/route.tsx) rendered
+    // with @vercel/og — carrying the article title + category + the
+    // "Chronoverse Capital" logo/branding — used whenever no dedicated
+    // hero image exists.
+    const dynamicOgImage = `/api/og?title=${encodeURIComponent(
+      currentPost.title || "Chronoverse Capital"
+    )}&category=${encodeURIComponent(currentPost.category || "Intelligence")}`;
+    const resolvedOgImage = currentPost.imageUrl || dynamicOgImage;
+
 
     return {
       title: `${currentPost.title} | Chronoverse Intelligence`,
@@ -210,10 +227,22 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // on-page summary and the SEO meta description perfectly in sync.
   const autoSummary = currentPost.seoDescription || rawText.substring(0, 140);
 
+  // AI Executive Summary — 3 concise, auto-generated key takeaways derived
+  // from the article's plain text, title, category, and keywords (see
+  // `generateExecutiveSummary` in src/lib/executiveSummary.ts). Never
+  // throws and always returns exactly 3 usable points.
+  const executiveSummaryPoints = generateExecutiveSummary(
+    currentPost.title,
+    currentPost.category,
+    rawText,
+    currentPost.keywords
+  );
+
   // Tags rendered in the UI — either editor-authored in Sanity or the
   // dynamically extracted fallback key terms (see `generateFallbackTags`
   // in src/lib/metadataFallback.ts), both surfaced via `currentPost.keywords`.
   const displayTags = (currentPost.keywords || []).slice(0, 8);
+
 
 
   // Sanitize HTML body to prevent any XSS vulnerabilities
@@ -249,10 +278,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
       
-      {/* Premium Top Reading Indicator Line */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] z-50 opacity-80 print:hidden" />
+      {/* Premium Top Reading Progress Bar (dynamically tracks scroll position) */}
+      <ReadingProgressBar />
 
       {/* Article Header & Admin Controls */}
+
       <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
@@ -268,6 +298,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           
           {/* Action Buttons */}
           <div className="flex items-center gap-2 print:hidden">
+            <ArticleShareButtons
+              title={currentPost.title}
+              url={`${siteConfig.url}/${currentPost.slug}`}
+            />
+
             <PrintButton />
 
             <Link
@@ -280,6 +315,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             </Link>
           </div>
         </div>
+
         
         <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
           {currentPost.title}
@@ -343,11 +379,16 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         <RelatedDropdown articles={formattedRelated} />
       </div>
 
+      {/* AI Executive Summary — rendered at the very top of the article
+          body, before the main content. See src/components/AIExecutiveSummary.tsx */}
+      <AIExecutiveSummary points={executiveSummaryPoints} />
+
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
           embedded images with hotspot-aware URLs, links, lists, etc.). */}
       <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+
         {sanitizedLegacyBody ? (
           <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />
         ) : currentPost.body && currentPost.body.length > 0 ? (

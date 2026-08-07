@@ -25,7 +25,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "./",
+    types: {
+      "application/rss+xml": [
+        { url: "/rss.xml", title: `${SITE_NAME} — RSS Feed` },
+      ],
+    },
   },
+
   title: {
     default: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     template: "%s | Chronoverse Capital",

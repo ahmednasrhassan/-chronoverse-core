@@ -38,6 +38,21 @@ const STATIC_ROUTES: Array<{
 ];
 
 /**
+ * Non-HTML feed/API endpoints included in the sitemap for discoverability
+ * (search engines and RSS aggregators alike). Kept in sync with
+ * `src/app/rss.xml/route.ts` and `src/app/feed.xml/route.ts`.
+ */
+const FEED_ROUTES: Array<{
+  path: string;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  priority: number;
+}> = [
+  { path: "/rss.xml", changeFrequency: "hourly", priority: 0.5 },
+  { path: "/feed.xml", changeFrequency: "hourly", priority: 0.5 },
+];
+
+
+/**
  * Fetches all published `post` documents from Sanity for inclusion in the
  * sitemap. Fails gracefully (returns an empty array) if Sanity is
  * unreachable so the sitemap always renders successfully.
@@ -113,6 +128,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route.priority,
   }));
 
+  const feedEntries: MetadataRoute.Sitemap = FEED_ROUTES.map((route) => ({
+    url: `${BASE_URL}${route.path}`,
+    lastModified: new Date(),
+    changeFrequency: route.changeFrequency,
+    priority: route.priority,
+  }));
+
+
   const postEntries: MetadataRoute.Sitemap = posts
     .filter((post) => !!post.slug)
     .map((post) => ({
@@ -144,7 +167,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seen = new Set<string>();
   const merged: MetadataRoute.Sitemap = [];
 
-  for (const entry of [...staticEntries, ...postEntries, ...pageEntries, ...categoryEntries]) {
+  for (const entry of [...staticEntries, ...feedEntries, ...postEntries, ...pageEntries, ...categoryEntries]) {
+
     if (!seen.has(entry.url)) {
       seen.add(entry.url);
       merged.push(entry);
