@@ -1,4 +1,5 @@
 import { client } from "../sanity/client";
+import { urlFor } from "../sanity/image";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -9,6 +10,8 @@ import {
   resolveFallbackCategory,
   slugifyCategory,
 } from "./metadataFallback";
+import type { PortableTextBlock } from "@portabletext/types";
+
 
 
 
@@ -38,6 +41,13 @@ export interface ContentItem {
   seoDescription?: string;
   bodyContent?: string;
   /**
+   * Structured Sanity Portable Text `body` blocks (headings, paragraphs,
+   * embedded images, etc.), used by `PortableTextContent` to render the
+   * primary article body for posts authored directly in the Studio. Falls
+   * back to `legacyBody` (raw Blogger-imported HTML) when this is empty.
+   */
+  body?: PortableTextBlock[];
+  /**
    * Optional manually-curated internal links, set explicitly by an editor
    * in Sanity (`manualRelatedLinks` field on the `post` schema). When
    * present, these take priority over the automated relevance-scoring
@@ -45,6 +55,16 @@ export interface ContentItem {
    * Intelligence" block on the post page.
    */
   manualRelatedLinks?: ContentItem[];
+}
+
+interface SanityImageAssetRef {
+  asset?: {
+    _ref?: string;
+    _id?: string;
+    url?: string;
+  };
+  hotspot?: unknown;
+  crop?: unknown;
 }
 
 interface SanityRawPost {
@@ -57,11 +77,14 @@ interface SanityRawPost {
   content: string | unknown;
   legacyBody: string | null;
   imageUrl: string | null;
+  mainImage?: SanityImageAssetRef | null;
   author: string | null;
   seoDescription?: string | null;
   bodyPlainText?: string | null;
+  body?: PortableTextBlock[] | null;
   manualRelatedLinks?: SanityRawPost[] | null;
 }
+
 
 
 
@@ -134,8 +157,10 @@ const POST_PROJECTION = `{
     "categorySlug": category->slug.current,
     keywords,
     "content": body,
+    body,
     legacyBody,
     "imageUrl": mainImage.asset->url,
+    mainImage,
     "author": author->name,
     seoDescription,
     "bodyPlainText": pt::text(body),
@@ -147,13 +172,16 @@ const POST_PROJECTION = `{
       "categorySlug": category->slug.current,
       keywords,
       "content": body,
+      body,
       legacyBody,
       "imageUrl": mainImage.asset->url,
+      mainImage,
       "author": author->name,
       seoDescription,
       "bodyPlainText": pt::text(body)
     }
   }`;
+
 
 function mapSanityPost(post: SanityRawPost): ContentItem {
   // Extract plain text from the structured `body` (via `pt::text`) or the
@@ -166,14 +194,37 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   const title = post.title || "Untitled";
 
   // --- Automated Featured Image Fallback ---
-  // If no `mainImage` asset is configured in Sanity (common for legacy
-  // Blogger-imported posts), fall back to the first `<img>` tag found
-  // inside the raw `legacyBody` HTML content, then finally to a generic
-  // placeholder image so the UI/SEO metadata never ship without an image.
-  const resolvedImageUrl =
-    post.imageUrl ||
+  // Priority order:
+  //   1. `mainImage` resolved through the Sanity image URL builder
+  //      (`urlFor`), which respects the editor-defined hotspot/crop and
+  //      produces an optimized, correctly-cropped URL — rather than the
+  //      raw, un-cropped `mainImage.asset->url` dereference.
+  //   2. The first `<img>` tag found inside the raw `legacyBody` HTML
+  //      content (common for legacy Blogger-imported posts with no
+  //      `mainImage` asset configured in Sanity).
+  //   3. A generic placeholder image so the UI/SEO metadata never ship
+  //      without an image.
+  let resolvedImageUrl: string | undefined;
+  if (post.mainImage?.asset) {
+    try {
+      resolvedImageUrl = urlFor(post.mainImage as never)
+        .width(1600)
+        .height(900)
+        .fit("crop")
+        .auto("format")
+        .url();
+    } catch {
+      resolvedImageUrl = post.imageUrl || undefined;
+    }
+  } else {
+    resolvedImageUrl = post.imageUrl || undefined;
+  }
+
+  resolvedImageUrl =
+    resolvedImageUrl ||
     extractFirstImageSrc(post.legacyBody || "") ||
     "/images/articles/deglobalization-impact/1767774882.webp";
+
 
 
   // --- Automated SEO Description / Excerpt Fallback ---
@@ -218,7 +269,9 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
 
     seoDescription: resolvedSeoDescription || undefined,
     bodyContent,
+    body: post.body && post.body.length > 0 ? post.body : undefined,
     manualRelatedLinks:
+
       post.manualRelatedLinks && post.manualRelatedLinks.length > 0
         ? post.manualRelatedLinks.filter(Boolean).map(mapSanityPost)
         : undefined,

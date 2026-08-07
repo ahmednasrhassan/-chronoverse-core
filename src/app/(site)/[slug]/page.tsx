@@ -6,6 +6,8 @@ import RelatedDropdown from "@/components/relateddropdown";
 import PrintButton from "@/components/printbutton";
 import AuthorCard from "@/components/authorcard";
 import InternalLinksBox from "@/components/InternalLinksBox";
+import PortableTextContent from "@/components/PortableTextContent";
+
 import { 
   getSanityArticleBySlug, 
   getSanityArticles, 
@@ -341,14 +343,20 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         <RelatedDropdown articles={formattedRelated} />
       </div>
 
-      {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Markdown */}
+      {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
+          Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
+          structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
+          embedded images with hotspot-aware URLs, links, lists, etc.). */}
       <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
         {sanitizedLegacyBody ? (
           <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />
+        ) : currentPost.body && currentPost.body.length > 0 ? (
+          <PortableTextContent value={currentPost.body} />
         ) : (
           <p>{currentPost.content}</p>
         )}
       </article>
+
 
       {/* Related Intelligence / Internal Links Block — rendered directly
           below the legacyBody HTML section. Prioritizes explicit manual
