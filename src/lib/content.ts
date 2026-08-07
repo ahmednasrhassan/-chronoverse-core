@@ -257,6 +257,14 @@ export interface PageContentItem {
   seoDescription?: string;
   bodyContent?: string;
   imageUrl?: string;
+  /**
+   * Raw legacy HTML/CSS/JS pasted directly into the Studio (see the
+   * `legacyHtml` field on the `page` schema). When present, this takes
+   * priority over `bodyContent` on the front-end and is rendered via
+   * `dangerouslySetInnerHTML` (after sanitization) — used for imported
+   * Blogger templates or standalone legacy microsites.
+   */
+  legacyHtml?: string;
 }
 
 interface SanityRawPage {
@@ -265,6 +273,7 @@ interface SanityRawPage {
   seoDescription?: string | null;
   bodyPlainText?: string | null;
   imageUrl?: string | null;
+  legacyHtml?: string | null;
 }
 
 /**
@@ -278,7 +287,8 @@ export async function getSanityPageBySlug(slug: string): Promise<PageContentItem
     title,
     seoDescription,
     "bodyPlainText": pt::text(content),
-    "imageUrl": mainImage.asset->url
+    "imageUrl": mainImage.asset->url,
+    legacyHtml
   }`;
 
   try {
@@ -290,6 +300,7 @@ export async function getSanityPageBySlug(slug: string): Promise<PageContentItem
       seoDescription: page.seoDescription || undefined,
       bodyContent: page.bodyPlainText || undefined,
       imageUrl: page.imageUrl || undefined,
+      legacyHtml: page.legacyHtml || undefined,
     };
   } catch (error) {
     console.warn(`Sanity fetch for page "${slug}" failed:`, error);

@@ -10,6 +10,7 @@ import {
   getSanityArticleBySlug, 
   getSanityArticles, 
   getRelatedArticles,
+  getSanityPageBySlug,
   stripHtml, 
   sanitizeHtml, 
   calculateReadTime, 
@@ -33,31 +34,55 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const currentPost = await getSanityArticleBySlug(slug);
 
-  if (!currentPost) {
+  if (currentPost) {
+    // Automated Metadata: prefer the editor-provided `seoDescription`. If it's
+    // empty, dynamically fall back to the first 160 characters extracted from
+    // the article's body text (`bodyContent`), so no post ever ships without
+    // a meta description.
+    const rawText = stripHtml(
+      currentPost.legacyBody || currentPost.bodyContent || currentPost.content || ""
+    );
+    const metaDescription =
+      currentPost.seoDescription && currentPost.seoDescription.trim().length > 0
+        ? currentPost.seoDescription.trim()
+        : rawText.length > 160
+          ? `${rawText.substring(0, 160).trim()}...`
+          : rawText;
+
+    return {
+      title: `${currentPost.title} | Chronoverse Intelligence`,
+      description: metaDescription,
+      openGraph: {
+        title: currentPost.title,
+        description: metaDescription,
+        images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
+      },
+    };
+  }
+
+  // Fallback: administrative `page` document (About, Privacy Policy, etc.)
+  const currentPage = await getSanityPageBySlug(slug);
+  if (!currentPage) {
     return {};
   }
 
-  // Automated Metadata: prefer the editor-provided `seoDescription`. If it's
-  // empty, dynamically fall back to the first 160 characters extracted from
-  // the article's body text (`bodyContent`), so no post ever ships without
-  // a meta description.
-  const rawText = stripHtml(
-    currentPost.legacyBody || currentPost.bodyContent || currentPost.content || ""
+  const rawPageText = stripHtml(
+    currentPage.legacyHtml || currentPage.bodyContent || ""
   );
-  const metaDescription =
-    currentPost.seoDescription && currentPost.seoDescription.trim().length > 0
-      ? currentPost.seoDescription.trim()
-      : rawText.length > 160
-        ? `${rawText.substring(0, 160).trim()}...`
-        : rawText;
+  const pageMetaDescription =
+    currentPage.seoDescription && currentPage.seoDescription.trim().length > 0
+      ? currentPage.seoDescription.trim()
+      : rawPageText.length > 160
+        ? `${rawPageText.substring(0, 160).trim()}...`
+        : rawPageText;
 
   return {
-    title: `${currentPost.title} | Chronoverse Intelligence`,
-    description: metaDescription,
+    title: `${currentPage.title} | Chronoverse Intelligence`,
+    description: pageMetaDescription,
     openGraph: {
-      title: currentPost.title,
-      description: metaDescription,
-      images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
+      title: currentPage.title,
+      description: pageMetaDescription,
+      images: currentPage.imageUrl ? [{ url: currentPage.imageUrl }] : [],
     },
   };
 }
@@ -69,8 +94,64 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Retrieve the current article directly matching the URL slug
   const currentPost = await getSanityArticleBySlug(slug);
 
+  // ---------------------------------------------------------------------
+  // Administrative Page fallback: if no `post` matches this slug, check
+  // for an administrative `page` document (About, Privacy Policy, etc.).
+  // These documents support an optional `legacyHtml` field for pasting raw
+  // legacy HTML/CSS/JS (e.g. imported Blogger templates or standalone
+  // microsites) — when present it is sanitized and rendered directly via
+  // `dangerouslySetInnerHTML`, taking priority over the structured
+  // Portable Text `bodyContent`.
+  // ---------------------------------------------------------------------
   if (!currentPost) {
-    notFound();
+    const currentPage = await getSanityPageBySlug(slug);
+
+    if (!currentPage) {
+      notFound();
+    }
+
+    const sanitizedLegacyHtml = currentPage.legacyHtml
+      ? sanitizeHtml(currentPage.legacyHtml)
+      : "";
+
+    return (
+      <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
+        <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] z-50 opacity-80 print:hidden" />
+
+        <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
+            {currentPage.title}
+          </h1>
+        </div>
+
+        {currentPage.imageUrl && (
+          <figure className="mb-12 w-full print:mb-6">
+            <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
+              <Image
+                src={currentPage.imageUrl}
+                alt={currentPage.title}
+                title={currentPage.title}
+                fill
+                sizes="(max-w-768px) 100vw, 768px"
+                priority
+                className="w-full h-full object-cover print:object-contain print:scale-100"
+              />
+            </div>
+          </figure>
+        )}
+
+        {/* Enhanced Page Content Area: `legacyHtml` (raw pasted HTML/CSS/JS)
+            takes priority over the structured Portable Text `bodyContent`
+            whenever it's populated. Sanitized before rendering. */}
+        <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+          {sanitizedLegacyHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyHtml }} />
+          ) : (
+            <p>{currentPage.bodyContent}</p>
+          )}
+        </article>
+      </main>
+    );
   }
 
   // Retrieve articles for generating related posts recommendations

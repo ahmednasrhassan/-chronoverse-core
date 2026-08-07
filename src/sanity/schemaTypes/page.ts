@@ -62,6 +62,15 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'legacyHtml',
+      title: 'Raw HTML (Legacy Code)',
+      type: 'text',
+      rows: 20,
+      group: 'content',
+      description:
+        'Paste raw legacy HTML/CSS/JS pages here (e.g. imported Blogger templates or standalone microsites). Accepts long strings/code snippets. When populated, this takes priority over the structured "Page Content" field above and is rendered directly on the front-end via dangerouslySetInnerHTML — use with caution and only trusted/sanitized source markup.',
+    }),
+    defineField({
       name: 'seoDescription',
       title: 'SEO Meta Description',
       type: 'text',
