@@ -118,7 +118,20 @@ export default defineType({
       description: 'Raw HTML from Blogger migration.',
       readOnly: false,
     }),
+    // Manual internal-linking override. When an editor explicitly picks
+    // related posts here, the front-end prioritizes these links over the
+    // automated relevance-scoring engine (see `src/lib/relatedArticles.ts`).
+    defineField({
+      name: 'manualRelatedLinks',
+      title: 'Manual Related / Internal Links',
+      type: 'array',
+      group: 'content',
+      of: [{ type: 'reference', to: { type: 'post' } }],
+      description:
+        'Optional. If you manually select related posts here, they take priority over the automated "Related Intelligence" internal-linking block. Leave empty to let the site auto-select the 8 most relevant articles.',
+    }),
   ],
+
   preview: {
     select: {
       title: 'title',

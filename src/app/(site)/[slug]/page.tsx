@@ -9,14 +9,16 @@ import InternalLinksBox from "@/components/InternalLinksBox";
 import { 
   getSanityArticleBySlug, 
   getSanityArticles, 
-  getRelatedArticles,
   getSanityPageBySlug,
   stripHtml, 
   sanitizeHtml, 
   calculateReadTime, 
   ContentItem 
 } from "@/lib/content";
+
+import { computeTopRelatedArticles } from "@/lib/relatedArticles";
 import { notFound } from "next/navigation";
+
 
 
 interface PageProps {
@@ -157,17 +159,28 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Retrieve articles for generating related posts recommendations
   const allArticles = await getSanityArticles();
 
-  // Automated Internal Linking Block: fetch 6-8 related articles matching
-  // the current post's category or tags/keywords directly via GROQ.
-  const relatedArticles = await getRelatedArticles(
-    currentPost.slug,
-    currentPost.categorySlug,
-    currentPost.keywords,
-    8
-  );
+  // --- Automated "Related Intelligence / Internal Links" Engine ---
+  // Priority order:
+  //   1. Explicit manual links curated by an editor in Sanity
+  //      (`manualRelatedLinks` field on the `post` schema).
+  //   2. Otherwise, automatically compute the TOP 8 most relevant articles
+  //      using a keyword/category/title relevance-scoring algorithm that
+  //      compares the plain text extracted from `legacyBody` (HTML tags
+  //      stripped) against every other fetched Sanity article.
+  const hasManualLinks =
+    currentPost.manualRelatedLinks && currentPost.manualRelatedLinks.length > 0;
+
+  const relatedArticles = hasManualLinks
+    ? currentPost.manualRelatedLinks!.slice(0, 8)
+    : computeTopRelatedArticles(currentPost, allArticles, 8);
+
+  const relatedArticlesTitle = hasManualLinks
+    ? "Related Intelligence"
+    : "Related Intelligence (Auto-Curated)";
 
   // Extract raw text for clean processing
   const rawText = stripHtml(currentPost.legacyBody || currentPost.content || "");
+
 
 
   // Calculate estimated read time dynamically (approx. 200 words per minute)
@@ -303,12 +316,16 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         )}
       </article>
 
+      {/* Related Intelligence / Internal Links Block — rendered directly
+          below the legacyBody HTML section. Prioritizes explicit manual
+          links curated in Sanity (`manualRelatedLinks`); otherwise falls
+          back to the automated TOP 8 relevance-scored articles computed
+          in `computeTopRelatedArticles` (src/lib/relatedArticles.ts). */}
+      <InternalLinksBox articles={relatedArticles} title={relatedArticlesTitle} />
+
       {/* Author Card Component */}
       <AuthorCard authorName={currentPost.author} />
 
-      {/* Automated Internal Linking Block: 6-8 related articles matching
-          category/tags, fetched via GROQ (getRelatedArticles). */}
-      <InternalLinksBox articles={relatedArticles} title="Further Reading & Context" />
 
 
       {/* Article Discussion & Comments Section */}

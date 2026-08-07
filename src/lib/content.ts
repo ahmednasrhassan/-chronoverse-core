@@ -30,6 +30,14 @@ export interface ContentItem {
   author?: string;
   seoDescription?: string;
   bodyContent?: string;
+  /**
+   * Optional manually-curated internal links, set explicitly by an editor
+   * in Sanity (`manualRelatedLinks` field on the `post` schema). When
+   * present, these take priority over the automated relevance-scoring
+   * engine (see `src/lib/relatedArticles.ts`) for the "Related
+   * Intelligence" block on the post page.
+   */
+  manualRelatedLinks?: ContentItem[];
 }
 
 interface SanityRawPost {
@@ -45,7 +53,9 @@ interface SanityRawPost {
   author: string | null;
   seoDescription?: string | null;
   bodyPlainText?: string | null;
+  manualRelatedLinks?: SanityRawPost[] | null;
 }
+
 
 
 
@@ -104,7 +114,21 @@ const POST_PROJECTION = `{
     "imageUrl": mainImage.asset->url,
     "author": author->name,
     seoDescription,
-    "bodyPlainText": pt::text(body)
+    "bodyPlainText": pt::text(body),
+    "manualRelatedLinks": manualRelatedLinks[]->{
+      "slug": slug.current,
+      title,
+      "date": publishedAt,
+      "category": category->title,
+      "categorySlug": category->slug.current,
+      keywords,
+      "content": body,
+      legacyBody,
+      "imageUrl": mainImage.asset->url,
+      "author": author->name,
+      seoDescription,
+      "bodyPlainText": pt::text(body)
+    }
   }`;
 
 function mapSanityPost(post: SanityRawPost): ContentItem {
@@ -127,8 +151,13 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     author: post.author || "Ahmed Abdel-Fattah",
     seoDescription: post.seoDescription || undefined,
     bodyContent,
+    manualRelatedLinks:
+      post.manualRelatedLinks && post.manualRelatedLinks.length > 0
+        ? post.manualRelatedLinks.filter(Boolean).map(mapSanityPost)
+        : undefined,
   };
 }
+
 
 // 1. Fetch a single article by its slug with fallback to local content
 export async function getSanityArticleBySlug(slug: string): Promise<ContentItem | null> {
