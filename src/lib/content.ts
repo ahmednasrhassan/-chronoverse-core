@@ -75,9 +75,26 @@ export function stripHtml(html: string): string {
 }
 
 /**
+ * Automated Featured Image Fallback.
+ *
+ * Legacy (Blogger-imported) posts often embed their lead image directly as
+ * the first `<img>` tag inside the raw `legacyBody`/`legacyHtml` content,
+ * rather than having a `mainImage` asset configured in Sanity. This helper
+ * scans the raw HTML and extracts the `src` of the first `<img>` tag found,
+ * so it can be used as a deterministic fallback for both the on-page hero
+ * image and the `og:image`/Twitter card metadata when `mainImage` is empty.
+ */
+export function extractFirstImageSrc(html: string): string | undefined {
+  if (!html) return undefined;
+  const match = html.match(/<img[^>]*\ssrc\s*=\s*["']([^"']+)["']/i);
+  return match ? match[1] : undefined;
+}
+
+/**
  * Sanitizes HTML to prevent XSS (Cross-Site Scripting) attacks by removing dangerous tags and attributes.
  */
 export function sanitizeHtml(html: string): string {
+
   if (!html) return "";
   
   // Remove script tags and their content
@@ -148,6 +165,17 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
 
   const title = post.title || "Untitled";
 
+  // --- Automated Featured Image Fallback ---
+  // If no `mainImage` asset is configured in Sanity (common for legacy
+  // Blogger-imported posts), fall back to the first `<img>` tag found
+  // inside the raw `legacyBody` HTML content, then finally to a generic
+  // placeholder image so the UI/SEO metadata never ship without an image.
+  const resolvedImageUrl =
+    post.imageUrl ||
+    extractFirstImageSrc(post.legacyBody || "") ||
+    "/images/articles/deglobalization-impact/1767774882.webp";
+
+
   // --- Automated SEO Description / Excerpt Fallback ---
   // If no `seoDescription` was authored in Sanity, dynamically generate a
   // clean 150–160 character excerpt from the first paragraph of the plain
@@ -185,8 +213,9 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     keywords: resolvedKeywords,
     content: typeof post.content === "string" ? post.content : "Article content from Sanity...",
     legacyBody: post.legacyBody || "",
-    imageUrl: post.imageUrl || "/images/articles/deglobalization-impact/1767774882.webp",
+    imageUrl: resolvedImageUrl,
     author: post.author || "Ahmed Abdel-Fattah",
+
     seoDescription: resolvedSeoDescription || undefined,
     bodyContent,
     manualRelatedLinks:

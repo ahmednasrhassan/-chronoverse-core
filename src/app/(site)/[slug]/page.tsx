@@ -45,6 +45,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // SEO (OpenGraph, meta description, meta keywords).
     const metaDescription = currentPost.seoDescription || "";
 
+    // Featured Image fallback: `currentPost.imageUrl` is guaranteed to be
+    // populated by `mapSanityPost` (src/lib/content.ts) — either from the
+    // Sanity `mainImage` asset, or, when that's empty (common for legacy
+    // Blogger-imported posts), automatically extracted from the first
+    // `<img>` tag found in `legacyBody` via `extractFirstImageSrc`. This
+    // guarantees `og:image` and the Twitter card image are never empty.
+    const resolvedOgImage = currentPost.imageUrl;
+
     return {
       title: `${currentPost.title} | Chronoverse Intelligence`,
       description: metaDescription,
@@ -52,11 +60,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       openGraph: {
         title: currentPost.title,
         description: metaDescription,
-        images: currentPost.imageUrl ? [{ url: currentPost.imageUrl }] : [],
+        images: resolvedOgImage ? [{ url: resolvedOgImage }] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: currentPost.title,
+        description: metaDescription,
+        images: resolvedOgImage ? [resolvedOgImage] : [],
       },
       category: currentPost.category,
     };
   }
+
 
 
   // Fallback: administrative `page` document (About, Privacy Policy, etc.)
