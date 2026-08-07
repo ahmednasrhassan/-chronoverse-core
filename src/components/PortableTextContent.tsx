@@ -79,13 +79,14 @@ const components: PortableTextComponents = {
         {children}
       </blockquote>
     ),
-    normal: ({ children }) => <p className="mb-5 leading-relaxed">{children}</p>,
+    normal: ({ children }) => <p className="mb-6 leading-[1.85]">{children}</p>,
   },
   list: {
-    bullet: ({ children }) => <ul className="list-disc pl-6 mb-5 space-y-2">{children}</ul>,
-    number: ({ children }) => <ol className="list-decimal pl-6 mb-5 space-y-2">{children}</ol>,
+    bullet: ({ children }) => <ul className="list-disc pl-6 mb-6 space-y-2 leading-[1.85]">{children}</ul>,
+    number: ({ children }) => <ol className="list-decimal pl-6 mb-6 space-y-2 leading-[1.85]">{children}</ol>,
   },
 };
+
 
 interface PortableTextContentProps {
   value: PortableTextBlock[] | null | undefined;

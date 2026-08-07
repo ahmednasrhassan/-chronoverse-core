@@ -50,3 +50,29 @@ a:hover {
   background-color: rgba(200, 125, 85, 0.3);
   color: #f4f4f5;
 }
+
+/*
+ * Institutional-grade reading experience: increased line-height and
+ * paragraph spacing applied globally to article body copy (Portable Text
+ * blocks + legacy Blogger HTML rendered inside `.prose` containers).
+ */
+article.prose,
+article.prose p {
+  line-height: 1.85;
+}
+
+article.prose p {
+  margin-bottom: 1.5rem;
+}
+
+.katex-display {
+  margin: 1.5rem 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.katex {
+  font-size: 1.05em;
+}
+

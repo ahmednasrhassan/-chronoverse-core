@@ -10,7 +10,11 @@ import PortableTextContent from "@/components/PortableTextContent";
 import AIExecutiveSummary from "@/components/AIExecutiveSummary";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
+import MathContent from "@/components/MathContent";
+import SymbolOverview from "@/components/tradingview/SymbolOverview";
+import { detectMarketSymbol } from "@/lib/detectMarketSymbol";
 import { siteConfig } from "@/config/siteConfig";
+
 
 
 import { 
@@ -248,6 +252,15 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Sanitize HTML body to prevent any XSS vulnerabilities
   const sanitizedLegacyBody = currentPost.legacyBody ? sanitizeHtml(currentPost.legacyBody) : "";
 
+  // --- Dynamic TradingView Chart Detection ---
+  // Scans the title + plain-text body for explicit chart tags
+  // (`[[chart:EXCHANGE:SYMBOL]]`) or common market terms/tickers (Bitcoin,
+  // Gold, S&P 500, DXY, etc.) and, when found, automatically renders an
+  // interactive TradingView "Symbol Overview" widget directly within the
+  // article — no manual embedding required by editors.
+  const detectedMarket = detectMarketSymbol(currentPost.title, rawText, currentPost.category);
+
+
   // --- Automatic Internal Links & Related Articles Engine ---
   // Filter related posts based on shared keywords or identical categories
   let relatedPosts = allArticles
@@ -386,17 +399,28 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
-          embedded images with hotspot-aware URLs, links, lists, etc.). */}
-      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
-
-        {sanitizedLegacyBody ? (
-          <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />
-        ) : currentPost.body && currentPost.body.length > 0 ? (
-          <PortableTextContent value={currentPost.body} />
-        ) : (
-          <p>{currentPost.content}</p>
-        )}
+          embedded images with hotspot-aware URLs, links, lists, etc.). Wrapped in `MathContent` so any
+          `$$...$$` / `$...$` LaTeX expressions in the article render as clean KaTeX-formatted equations. */}
+      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-[1.85] prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 prose-p:mb-6 prose-p:leading-[1.85] first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+        <MathContent>
+          {sanitizedLegacyBody ? (
+            <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />
+          ) : currentPost.body && currentPost.body.length > 0 ? (
+            <PortableTextContent value={currentPost.body} />
+          ) : (
+            <p>{currentPost.content}</p>
+          )}
+        </MathContent>
       </article>
+
+      {/* Dynamic TradingView Chart — rendered automatically when a market
+          symbol/instrument is detected in the article's context. */}
+      {detectedMarket && (
+        <div className="print:hidden">
+          <SymbolOverview symbol={detectedMarket.symbol} label={detectedMarket.label} />
+        </div>
+      )}
+
 
 
       {/* Related Intelligence / Internal Links Block — rendered directly
