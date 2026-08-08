@@ -1,13 +1,15 @@
 "use client";
 
 import React, { memo, useEffect, useRef, useState } from "react";
-import MiniChart from "./MiniChartLazy";
 
 interface Quote {
   symbol: string;
   label: string;
   price: number | null;
   changePercent: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
+  volume: number | null;
 }
 
 interface MarketQuoteCardProps {
@@ -17,11 +19,27 @@ interface MarketQuoteCardProps {
   label?: string;
 }
 
+/** Formats large volume numbers into a compact "1.2B" / "340M" style string. */
+function formatVolume(volume: number | null | undefined): string {
+  if (volume === null || volume === undefined) return "—";
+  if (volume >= 1_000_000_000) return `${(volume / 1_000_000_000).toFixed(2)}B`;
+  if (volume >= 1_000_000) return `${(volume / 1_000_000).toFixed(2)}M`;
+  if (volume >= 1_000) return `${(volume / 1_000).toFixed(2)}K`;
+  return volume.toLocaleString();
+}
+
+function formatPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
 /**
  * Proprietary "Market Quote" card. Combines a live price/percentage-change
- * header (sourced from `/api/market-data`, powered by `yahoo-finance2`)
- * with a compact, unbranded `lightweight-charts` mini area chart below it.
- * Clicking the card opens the symbol's Yahoo Finance quote page.
+ * header with a compact, fully native stats strip (24h High / 24h Low /
+ * Volume) — all sourced directly from `/api/market-data` (powered by
+ * `yahoo-finance2`). No third-party widgets, iframes, or embeds of any
+ * kind are ever rendered here. Clicking the card opens the symbol's
+ * Yahoo Finance quote page.
  */
 function MarketQuoteCardComponent({ symbol, label }: MarketQuoteCardProps) {
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -92,9 +110,7 @@ function MarketQuoteCardComponent({ symbol, label }: MarketQuoteCardProps) {
         </div>
         <div className="flex flex-col items-end shrink-0">
           <span className="text-white text-sm font-bold font-mono">
-            {price !== null && price !== undefined
-              ? price.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : "—"}
+            {formatPrice(price)}
           </span>
           <span
             className={`text-[11px] font-mono font-semibold ${
@@ -107,8 +123,34 @@ function MarketQuoteCardComponent({ symbol, label }: MarketQuoteCardProps) {
           </span>
         </div>
       </div>
-      <div className="flex-1 min-h-0">
-        <MiniChart symbol={symbol} />
+
+      {/* Native, fully unbranded stats strip — replaces the previous
+          embedded chart widget. No iframes, no third-party scripts. */}
+      <div className="flex-1 min-h-0 grid grid-cols-3 gap-2 rounded-lg bg-black/20 border border-zinc-800/60 px-2 py-2">
+        <div className="flex flex-col items-center justify-center gap-1">
+          <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-mono">
+            24h High
+          </span>
+          <span className="text-[11px] font-mono font-semibold text-[#00cc66]">
+            {formatPrice(quote?.dayHigh)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-1 border-x border-zinc-800/60">
+          <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-mono">
+            24h Low
+          </span>
+          <span className="text-[11px] font-mono font-semibold text-red-500">
+            {formatPrice(quote?.dayLow)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-1">
+          <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-mono">
+            Volume
+          </span>
+          <span className="text-[11px] font-mono font-semibold text-zinc-300">
+            {formatVolume(quote?.volume)}
+          </span>
+        </div>
       </div>
     </div>
   );

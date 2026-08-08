@@ -32,6 +32,12 @@ interface MarketQuote {
   label: string;
   price: number | null;
   changePercent: number | null;
+  /** Intraday high (regularMarketDayHigh) — used by compact stat displays. */
+  dayHigh: number | null;
+  /** Intraday low (regularMarketDayLow) — used by compact stat displays. */
+  dayLow: number | null;
+  /** Regular session volume (regularMarketVolume). */
+  volume: number | null;
 }
 
 interface ChartCandle {
@@ -58,12 +64,12 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs = FETCH_TIMEOUT_MS)
 
 /** Static, always-available dataset used when live providers are unreachable. */
 const FALLBACK_DATASET: MarketQuote[] = [
-  { symbol: "BTC-USD", label: "Bitcoin", price: 64250.12, changePercent: 1.8 },
-  { symbol: "ETH-USD", label: "Ethereum", price: 3120.55, changePercent: 0.9 },
-  { symbol: "GC=F", label: "Gold (Futures)", price: 2412.3, changePercent: 0.3 },
-  { symbol: "CL=F", label: "Crude Oil (WTI)", price: 78.4, changePercent: -0.4 },
-  { symbol: "^GSPC", label: "S&P 500", price: 5480.6, changePercent: -0.2 },
-  { symbol: "DX-Y.NYB", label: "US Dollar Index", price: 104.8, changePercent: 0.1 },
+  { symbol: "BTC-USD", label: "Bitcoin", price: 64250.12, changePercent: 1.8, dayHigh: 64980.5, dayLow: 63102.75, volume: 28450000000 },
+  { symbol: "ETH-USD", label: "Ethereum", price: 3120.55, changePercent: 0.9, dayHigh: 3168.2, dayLow: 3078.4, volume: 12980000000 },
+  { symbol: "GC=F", label: "Gold (Futures)", price: 2412.3, changePercent: 0.3, dayHigh: 2421.8, dayLow: 2401.1, volume: 185000 },
+  { symbol: "CL=F", label: "Crude Oil (WTI)", price: 78.4, changePercent: -0.4, dayHigh: 79.15, dayLow: 77.85, volume: 342000 },
+  { symbol: "^GSPC", label: "S&P 500", price: 5480.6, changePercent: -0.2, dayHigh: 5502.3, dayLow: 5468.9, volume: 2450000000 },
+  { symbol: "DX-Y.NYB", label: "US Dollar Index", price: 104.8, changePercent: 0.1, dayHigh: 105.05, dayLow: 104.55, volume: null },
 ];
 
 const SYMBOL_LABELS: Record<string, string> = {
@@ -102,6 +108,9 @@ async function fetchQuotes(symbols: string[]): Promise<MarketQuote[]> {
           label: SYMBOL_LABELS[symbol] ?? q?.shortName ?? symbol,
           price: q?.regularMarketPrice ?? null,
           changePercent: q?.regularMarketChangePercent ?? null,
+          dayHigh: q?.regularMarketDayHigh ?? null,
+          dayLow: q?.regularMarketDayLow ?? null,
+          volume: q?.regularMarketVolume ?? null,
         } as MarketQuote;
       })
       .filter((q): q is MarketQuote => q !== null);
