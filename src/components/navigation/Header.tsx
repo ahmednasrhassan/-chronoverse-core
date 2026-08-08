@@ -1,62 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import MarketTicker from '@/components/charts/MarketTicker';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Load TradingView Ticker Widget Script
-  useEffect(() => {
-    const scriptId = 'tv-ticker-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
-      script.async = true;
-      script.innerHTML = JSON.stringify({
-        "symbols": [
-          { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
-          { "proName": "TVC:GOLD", "title": "Gold" },
-          { "proName": "TVC:USOIL", "title": "Crude Oil" },
-          { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" },
-          { "proName": "FX:EURUSD", "title": "EUR/USD" },
-          { "proName": "TVC:DXY", "title": "US Dollar Index" }
-        ],
-        "showSymbolLogo": true,
-        "isTransparent": true,
-        "displayMode": "adaptive",
-        "colorTheme": "dark",
-        "locale": "en",
-        "disabled_features": ["show_watermark"]
-      });
-
-      document.getElementById('tv-ticker-container')?.appendChild(script);
-    }
-  }, []);
-
   return (
     <>
-      {/*
-        TradingView Ticker Tape.
-
-        CLS fix: the outer wrapper already locked `h-10` (good), but the
-        inner `#tv-ticker-container` div that TradingView's async script
-        injects its iframe into had no matching height — meaning between
-        first paint and the ~1-2s it takes the external
-        `embed-widget-ticker-tape.js` script to load and render, this
-        inner div could be 0px, and structural changes when the iframe
-        mounts inside a mismatched box were themselves eligible to shift
-        content beneath the sticky header. Giving the inner container an
-        explicit `h-full` (matches parent exactly) plus a background
-        skeleton tone means the box's true final size is committed from
-        first paint, so the async iframe injection cannot shift anything.
-      */}
-      <div className="w-full bg-[#0a0806] border-b border-zinc-800/80 h-10 flex items-center overflow-hidden">
-        <div id="tv-ticker-container" className="w-full h-full bg-[#0a0806]"></div>
-      </div>
-
+      {/* Proprietary Market Ticker Strip — fully unbranded, sourced from
+          `/api/market-data` (yahoo-finance2). Replaces the previous
+          TradingView ticker tape widget. */}
+      <MarketTicker />
 
       {/* Main Header */}
       <header className="w-full bg-[#0d0a08]/95 border-b border-zinc-800/80 sticky top-0 z-50 backdrop-blur-md">

@@ -12,6 +12,13 @@ import { Icon } from "@sanity/icons";
  * produce a professional meta description and rich excerpt, then patches
  * the document directly in Sanity.
  */
+// This is a Sanity Studio "document action" factory, not a React
+// component — Sanity's own API contract calls it per-document render and
+// expects it to use React hooks internally (see Sanity's official docs
+// for custom document actions). ESLint's `rules-of-hooks` can't recognize
+// this convention because the function name doesn't start with an
+// uppercase letter or "use", so we disable the rule for this function only.
+/* eslint-disable react-hooks/rules-of-hooks */
 export const generateSeoAction: DocumentActionComponent = (props): DocumentActionDescription | null => {
   const { id, type, draft, published, onComplete } = props;
   const [isRunning, setIsRunning] = useState(false);
@@ -21,6 +28,7 @@ export const generateSeoAction: DocumentActionComponent = (props): DocumentActio
   const targetId = draft?._id || published?._id || id;
 
   const handleGenerate = useCallback(async () => {
+
     setIsRunning(true);
     setError(null);
     try {

@@ -15,12 +15,17 @@ export default function CookieConsent() {
   });
 
   useEffect(() => {
-    // Check if user has already made a choice
+    // Check if user has already made a choice. One-time read of
+    // localStorage (external system) on mount to decide whether to show
+    // the banner; there is no external subscription to wire up.
     const consent = localStorage.getItem('chrono_cookie_consent');
     if (!consent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowBanner(true);
     }
   }, []);
+
+
 
   const handleAcceptAll = () => {
     const fullConsent = { necessary: true, analytics: true, marketing: true };

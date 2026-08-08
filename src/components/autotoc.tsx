@@ -24,10 +24,16 @@ export default function AutoTOC() {
 
   useEffect(() => {
     const article = document.querySelector("article");
+    // One-time post-mount DOM scan to build the TOC; there is no external
+    // event to subscribe to, so setting the "ready" flag directly here is
+    // intentional (not a derived-from-props/state cascading render).
     if (!article) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsReady(true);
       return;
     }
+
+
 
     const elements = Array.from(article.querySelectorAll("h2, h3"));
 

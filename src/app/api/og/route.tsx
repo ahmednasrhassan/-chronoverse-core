@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error("[api/og] Failed to generate OG image, returning safe fallback:", error);
 
     // Minimal, guaranteed-to-render fallback card so social scrapers never

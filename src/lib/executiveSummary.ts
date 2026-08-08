@@ -120,7 +120,7 @@ export function generateExecutiveSummary(
 
     return result.slice(0, 3);
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.error("[executiveSummary] Failed to generate summary, using safe fallback:", err);
     return [
       `This briefing covers "${title || "the article"}" and its implications for macro-aware investors.`,

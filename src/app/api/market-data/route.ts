@@ -1,22 +1,29 @@
 import { NextResponse } from "next/server";
+import yahooFinance from "yahoo-finance2";
 
 /**
  * Live Terminal Market Data Feed
  * --------------------------------
- * Server-side aggregator for the Intelligence Terminal's live market strip.
- * Pulls free, public, key-less endpoints (CoinGecko for crypto, Yahoo
- * Finance's public quote endpoint for equities/FX/gold) and normalizes
- * them into a single safe payload.
+ * Server-side aggregator for market quotes and OHLC chart data, powered
+ * entirely by `yahoo-finance2`. Fully replaces the previous TradingView
+ * embeds — this route is the single source of truth for both the ticker
+ * strip (quotes) and the Lightweight Charts candlestick/line series
+ * (history), normalized into safe, unbranded payloads.
  *
  * Resilience guarantees:
- *   - Each upstream fetch is wrapped in its own try/catch with a short
- *     timeout, so one slow/down provider never blocks or fails the others.
- *   - If ALL upstream providers fail, a static `FALLBACK_DATASET` is
- *     returned with `source: "fallback"` — the response is still HTTP 200,
- *     so the terminal UI never has to treat this as an error / render a
- *     "MODULE OFFLINE" state.
- *   - Runs at request time (`dynamic = "force-dynamic"`) but is cheap and
- *     narrow in scope (a handful of quotes).
+ *   - Each upstream call is wrapped in its own try/catch with a short
+ *     timeout race, so one slow/down symbol never blocks the others.
+ *   - If ALL upstream calls fail, a static `FALLBACK_DATASET` is
+ *     returned with `source: "fallback"` — response is still HTTP 200.
+ *   - Runs at request time (`dynamic = "force-dynamic"`).
+ *
+ * Usage:
+ *   GET /api/market-data                       -> quotes strip (default)
+ *   GET /api/market-data?symbols=BTC-USD,GC=F   -> quotes for specific symbols
+ *   GET /api/market-data?symbol=BTC-USD&range=1mo&interval=1d
+ *                                                -> historical OHLC series
+ *                                                   for a single symbol
+ *                                                   (for chart rendering)
  */
 export const dynamic = "force-dynamic";
 
@@ -27,24 +34,25 @@ interface MarketQuote {
   changePercent: number | null;
 }
 
-const FETCH_TIMEOUT_MS = 4000;
+interface ChartCandle {
+  time: number; // unix seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  value: number; // close, convenience field for line series
+}
 
-/** Fetch with an abort-based timeout so a hung upstream never blocks the route. */
-async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<Response | null> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+const FETCH_TIMEOUT_MS = 5000;
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
   try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "ChronoverseCapital-Terminal/1.0" },
-      cache: "no-store",
-    });
-    return res?.ok ? res : null;
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -53,95 +61,170 @@ const FALLBACK_DATASET: MarketQuote[] = [
   { symbol: "BTC-USD", label: "Bitcoin", price: 64250.12, changePercent: 1.8 },
   { symbol: "ETH-USD", label: "Ethereum", price: 3120.55, changePercent: 0.9 },
   { symbol: "GC=F", label: "Gold (Futures)", price: 2412.3, changePercent: 0.3 },
+  { symbol: "CL=F", label: "Crude Oil (WTI)", price: 78.4, changePercent: -0.4 },
   { symbol: "^GSPC", label: "S&P 500", price: 5480.6, changePercent: -0.2 },
   { symbol: "DX-Y.NYB", label: "US Dollar Index", price: 104.8, changePercent: 0.1 },
 ];
 
-async function fetchCoinGecko(): Promise<MarketQuote[]> {
+const SYMBOL_LABELS: Record<string, string> = {
+  "BTC-USD": "Bitcoin",
+  "ETH-USD": "Ethereum",
+  "GC=F": "Gold (Futures)",
+  "SI=F": "Silver (Futures)",
+  "CL=F": "Crude Oil (WTI)",
+  "BZ=F": "Brent Crude",
+  "^GSPC": "S&P 500",
+  "^NDX": "Nasdaq 100",
+  "^DJI": "Dow Jones",
+  "^TNX": "US 10-Year Treasury Yield",
+  "DX-Y.NYB": "US Dollar Index",
+  "EURUSD=X": "EUR/USD",
+  "GBPUSD=X": "GBP/USD",
+  "USDJPY=X": "USD/JPY",
+  "^VIX": "CBOE Volatility Index",
+};
+
+async function fetchQuotes(symbols: string[]): Promise<MarketQuote[]> {
   try {
-    const res = await fetchWithTimeout(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true"
+    const results = await withTimeout(
+      yahooFinance.quote(symbols, {}, { validateResult: false })
     );
-    if (!res) return [];
+    if (!results) return [];
 
-    const data = await res.json().catch(() => null);
-    if (!data) return [];
+    const arr = Array.isArray(results) ? results : [results];
 
-    const results: MarketQuote[] = [];
-
-    if (data?.bitcoin?.usd !== undefined) {
-      results.push({
-        symbol: "BTC-USD",
-        label: "Bitcoin",
-        price: data.bitcoin?.usd ?? null,
-        changePercent: data.bitcoin?.usd_24h_change ?? null,
-      });
-    }
-
-    if (data?.ethereum?.usd !== undefined) {
-      results.push({
-        symbol: "ETH-USD",
-        label: "Ethereum",
-        price: data.ethereum?.usd ?? null,
-        changePercent: data.ethereum?.usd_24h_change ?? null,
-      });
-    }
-
-    return results;
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("[api/market-data] CoinGecko fetch failed:", err);
-    return [];
-  }
-}
-
-async function fetchYahooFinance(): Promise<MarketQuote[]> {
-  const symbols = ["GC=F", "^GSPC", "DX-Y.NYB"];
-  const labels: Record<string, string> = {
-    "GC=F": "Gold (Futures)",
-    "^GSPC": "S&P 500",
-    "DX-Y.NYB": "US Dollar Index",
-  };
-
-  try {
-    const res = await fetchWithTimeout(
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols
-        .map(encodeURIComponent)
-        .join(",")}`
-    );
-    if (!res) return [];
-
-    const data = await res.json().catch(() => null);
-    const quoteResults = data?.quoteResponse?.result;
-    if (!Array.isArray(quoteResults)) return [];
-
-    return quoteResults
-      .map((q: { symbol?: string; regularMarketPrice?: number; regularMarketChangePercent?: number }) => {
+    return arr
+      .map((q) => {
         const symbol = q?.symbol;
         if (!symbol) return null;
         return {
           symbol,
-          label: labels[symbol] ?? symbol,
+          label: SYMBOL_LABELS[symbol] ?? q?.shortName ?? symbol,
           price: q?.regularMarketPrice ?? null,
           changePercent: q?.regularMarketChangePercent ?? null,
         } as MarketQuote;
       })
-      .filter((q: MarketQuote | null): q is MarketQuote => q !== null);
+      .filter((q): q is MarketQuote => q !== null);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("[api/market-data] Yahoo Finance fetch failed:", err);
+     
+    console.error("[api/market-data] Yahoo Finance quote fetch failed:", err);
     return [];
   }
 }
 
-export async function GET() {
+async function fetchChartHistory(
+  symbol: string,
+  range: string,
+  interval: string
+): Promise<ChartCandle[]> {
   try {
-    const [cryptoQuotes, financeQuotes] = await Promise.all([
-      fetchCoinGecko(),
-      fetchYahooFinance(),
-    ]);
+    const period2 = new Date();
+    const period1 = new Date();
 
-    const liveQuotes = [...(cryptoQuotes ?? []), ...(financeQuotes ?? [])];
+    const rangeDaysMap: Record<string, number> = {
+      "1d": 1,
+      "5d": 5,
+      "1mo": 30,
+      "3mo": 90,
+      "6mo": 180,
+      "1y": 365,
+      "2y": 730,
+      "5y": 1825,
+      max: 3650,
+    };
+    const days = rangeDaysMap[range] ?? 90;
+    period1.setDate(period1.getDate() - days);
+
+    const validIntervals = [
+      "1m", "2m", "5m", "15m", "30m", "60m", "90m",
+      "1h", "1d", "5d", "1wk", "1mo", "3mo",
+    ] as const;
+    const safeInterval = (validIntervals as readonly string[]).includes(interval)
+      ? (interval as (typeof validIntervals)[number])
+      : "1d";
+
+    const result = await withTimeout(
+      yahooFinance.chart(symbol, {
+        period1,
+        period2,
+        interval: safeInterval,
+      })
+    );
+
+    interface RawYahooQuote {
+      date?: Date | string | number;
+      open?: number | null;
+      high?: number | null;
+      low?: number | null;
+      close?: number | null;
+    }
+
+    const quotes = (result as { quotes?: RawYahooQuote[] } | null)?.quotes;
+    if (!Array.isArray(quotes)) return [];
+
+    return quotes
+      .filter((q) => q?.date && q?.close !== null && q?.close !== undefined)
+      .map((q) => {
+        const time = Math.floor(new Date(q.date as Date).getTime() / 1000);
+        return {
+          time,
+          open: q.open ?? q.close ?? 0,
+          high: q.high ?? q.close ?? 0,
+          low: q.low ?? q.close ?? 0,
+          close: q.close ?? 0,
+          value: q.close ?? 0,
+        } as ChartCandle;
+      });
+
+  } catch (err) {
+     
+    console.error(`[api/market-data] Yahoo Finance chart fetch failed for ${symbol}:`, err);
+    return [];
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const singleSymbol = searchParams.get("symbol");
+
+    // --- Historical chart-data mode (single symbol) ---
+    if (singleSymbol) {
+      const range = searchParams.get("range") ?? "3mo";
+      const interval = searchParams.get("interval") ?? "1d";
+
+      const candles = await fetchChartHistory(singleSymbol, range, interval);
+
+      if (candles.length === 0) {
+        return NextResponse.json(
+          {
+            status: "ok",
+            source: "fallback",
+            symbol: singleSymbol,
+            candles: [],
+          },
+          { status: 200 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          status: "ok",
+          source: "live",
+          symbol: singleSymbol,
+          candles,
+        },
+        { status: 200 }
+      );
+    }
+
+    // --- Quotes strip mode (multiple symbols) ---
+    const symbolsParam = searchParams.get("symbols");
+    const symbols = symbolsParam
+      ? symbolsParam.split(",").map((s) => s.trim()).filter(Boolean)
+      : FALLBACK_DATASET.map((q) => q.symbol);
+
+    const liveQuotes = await fetchQuotes(symbols);
 
     if (liveQuotes.length === 0) {
       return NextResponse.json(
@@ -164,20 +247,24 @@ export async function GET() {
       if (quote?.symbol) bySymbol.set(quote.symbol, quote);
     }
 
+    const merged = symbols
+      .map((s) => bySymbol.get(s))
+      .filter((q): q is MarketQuote => q !== undefined);
+
     return NextResponse.json(
       {
         status: "ok",
-        source: liveQuotes.length === FALLBACK_DATASET.length ? "live" : "partial",
-        quotes: Array.from(bySymbol.values()),
+        source: liveQuotes.length >= symbols.length ? "live" : "partial",
+        quotes: merged.length > 0 ? merged : Array.from(bySymbol.values()),
         fetchedAt: new Date().toISOString(),
       },
       { status: 200 }
     );
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.error("[api/market-data] Unexpected failure, returning safe fallback:", error);
 
-    // Absolute last resort: never let this route 500 — the terminal must
+    // Absolute last resort: never let this route 500 — callers must
     // always receive a usable payload.
     return NextResponse.json(
       {

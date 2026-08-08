@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import LightweightChart from "@/components/charts/LightweightChartLazy";
+
 
 // Chart.js touches browser-only globals (canvas/document) at import time.
 // Registering it eagerly at module scope can crash Server-Side Rendering
@@ -63,7 +65,7 @@ class IntelligenceErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: unknown) {
-    // eslint-disable-next-line no-console
+     
     console.error("[Intelligence Terminal] Recovered from render error:", error);
   }
 
@@ -140,7 +142,7 @@ function TerminalIntelligenceContent() {
           setFeedSource(data?.source === "live" || data?.source === "partial" ? data.source : "fallback");
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error("[Intelligence Terminal] Live market feed fetch failed, keeping safe fallback:", err);
         // No state change needed — `liveQuotes` already holds the safe
         // local fallback dataset from initialization.
@@ -209,7 +211,7 @@ function TerminalIntelligenceContent() {
         }
       }, 800);
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("[Intelligence Terminal] Scanner effect failed, falling back safely:", err);
     }
 
@@ -272,7 +274,7 @@ function TerminalIntelligenceContent() {
             setQuizCompleted(true);
           }
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.error("[Intelligence Terminal] Scan progress interval failed:", err);
           clearInterval(interval);
           setIsScanning(false);
@@ -293,7 +295,7 @@ function TerminalIntelligenceContent() {
       if (histAnchor === 85) return [100, 0, 0, 0, 10];
       return DEFAULT_RADAR_POINTS;
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("[Intelligence Terminal] Radar data lookup failed, using default:", err);
       return DEFAULT_RADAR_POINTS;
     }
@@ -344,7 +346,7 @@ function TerminalIntelligenceContent() {
             "noopener,noreferrer"
           );
         } catch (err) {
-          // eslint-disable-next-line no-console
+           
           console.error("[Intelligence Terminal] Failed to open checkout link:", err);
         } finally {
           setIsDecrypting(false);
@@ -454,14 +456,16 @@ function TerminalIntelligenceContent() {
         </div>
         
         <div className="w-full h-[550px] rounded-lg overflow-hidden border border-[#27272a]">
-          <iframe
-            src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&amp;symbol=BITSTAMP%3ABTCUSD&amp;interval=D&amp;hidesidetoolbar=0&amp;symboledit=1&amp;saveimage=1&amp;toolbarbg=0F0F0F&amp;studies=%5B%5D&amp;theme=dark&amp;style=1&amp;timezone=exchange"
-            className="w-full h-full border-none"
-            title="TradingView Market Chart"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
+          <LightweightChart
+            symbol="BTC-USD"
+            range="3mo"
+            interval="1d"
+            chartType="candlestick"
+            height={550}
+            refreshMs={60000}
+          />
         </div>
+
       </div>
 
       {/* V_INTEL Simulation Tool */}

@@ -2,12 +2,13 @@ import React from "react";
 import Link from "next/link";
 import { getLatestSanityArticles, calculateReadTime } from "@/lib/content";
 
-// TradingView's mini symbol widgets pull in a third-party script and are
-// entirely client-side. `MiniChartLazy` wraps the actual widget in a
+// The proprietary mini charts pull in `lightweight-charts` and are
+// entirely client-side. `MiniChartLazy` wraps the actual chart in a
 // `next/dynamic(..., { ssr: false })` import inside its own Client
 // Component, keeping it out of the server-rendered HTML / initial JS
 // bundle so it never blocks first paint or the homepage's LCP.
-import MiniChart from "@/components/tradingview/MiniChartLazy";
+import MiniChart from "@/components/charts/MiniChartLazy";
+
 
 // On-demand/no-cache revalidation: the homepage's "Latest Research" cards
 // must always reflect the most recently published Sanity post, so we
@@ -16,12 +17,8 @@ import MiniChart from "@/components/tradingview/MiniChartLazy";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const tradingViewSymbols = [
-    "FOREXCOM:SPXUSD",
-    "TVC:GOLD",
-    "TVC:USOIL",
-    "BINANCE:BTCUSDT",
-  ];
+  const marketSymbols = ["^GSPC", "GC=F", "CL=F", "BTC-USD"];
+
 
   // Strictly the latest 4 published posts, ordered chronologically:
   // *[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0..3]
@@ -31,12 +28,13 @@ export default async function HomePage() {
     <div className="min-h-screen bg-[#120e0c] p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-12 pt-4">
         
-        {/* ================= SECTION 1: TRADINGVIEW WIDGETS (4 Cards) ================= */}
+        {/* ================= SECTION 1: LIVE MARKET CHARTS (4 Cards) ================= */}
         <section>
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4">Live Markets Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {tradingViewSymbols.map((symbol, idx) => (
+            {marketSymbols.map((symbol: string, idx: number) => (
               <div key={idx} className="bg-[#18181b] border border-zinc-800 p-2 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors">
+
                 <MiniChart symbol={symbol} />
               </div>
             ))}

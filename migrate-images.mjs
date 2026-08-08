@@ -10,10 +10,10 @@ const client = createClient({
   useCdn: false,
 });
 
-// دالة تنزيل الصورة مع حد أقصى 3 ثواني للرد
+// 
 async function uploadImageToSanity(imageUrl) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 ثواني فقط
+  const timeoutId = setTimeout(() => controller.abort(), 3000); //
 
   try {
     const response = await fetch(imageUrl, { 
@@ -34,12 +34,13 @@ async function uploadImageToSanity(imageUrl) {
     return `${asset.url}?auto=format`;
   } catch (err) {
     clearTimeout(timeoutId);
-    console.log(`   ⏩ Skipped slow image: ${imageUrl.slice(0, 40)}...`);
+    console.log(`   ⏩ Skipped slow image: ${imageUrl.slice(0, 40)}... (${err?.message || err})`);
     return null;
   }
 }
 
-// دالة انتظار بسيط بين الصور عشان سيرفر جوجل ما يعلقش
+
+// 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function migrateAllImages() {
@@ -75,7 +76,7 @@ async function migrateAllImages() {
         hasChanges = true;
       }
       
-      await sleep(200); // انتظار 200 ملي ثانية بين كل صورة وصورة لعدم الحظر
+      await sleep(200); //
     }
 
     if (hasChanges) {
