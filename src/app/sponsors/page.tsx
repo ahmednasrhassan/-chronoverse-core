@@ -36,19 +36,19 @@ export default function SponsorsPage() {
       </section>
 
       {/* ==================== VALUE CARDS ==================== */}
-      <section className="space-y-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#f4f4f5] text-center">
+      <section className="bg-[#000000] space-y-8 py-12 rounded-2xl">
+        <h2 className="text-2xl md:text-3xl font-bold text-[#c87d55] text-center">
           Why Partner With Us
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* Card 1: Targeted Investors */}
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-7 space-y-4 hover:border-[#c87d55]/50 transition-all">
-            <div className="w-12 h-12 rounded-lg bg-[#c87d55]/10 flex items-center justify-center text-[#c87d55] text-2xl">
+          <div className="bg-[#000000] border border-[#c87d55] rounded-xl p-7 space-y-4 hover:border-[#c87d55] transition-all">
+            <div className="w-12 h-12 rounded-lg bg-[#000000] border border-[#c87d55] flex items-center justify-center text-[#c87d55] text-2xl">
               🎯
             </div>
-            <h3 className="text-lg font-bold text-[#f4f4f5]">Targeted Investors</h3>
-            <p className="text-[#a1a1aa] text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-[#c87d55]">Targeted Investors</h3>
+            <p className="text-[#c87d55] text-sm leading-relaxed">
               Connect directly with an engaged readership of institutional allocators, macro
               traders, and high-net-worth individuals actively seeking asset allocation and
               market-structure insight.
@@ -56,24 +56,24 @@ export default function SponsorsPage() {
           </div>
 
           {/* Card 2: Premium Analysis */}
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-7 space-y-4 hover:border-[#c87d55]/50 transition-all">
-            <div className="w-12 h-12 rounded-lg bg-[#c87d55]/10 flex items-center justify-center text-[#c87d55] text-2xl">
+          <div className="bg-[#000000] border border-[#c87d55] rounded-xl p-7 space-y-4 hover:border-[#c87d55] transition-all">
+            <div className="w-12 h-12 rounded-lg bg-[#000000] border border-[#c87d55] flex items-center justify-center text-[#c87d55] text-2xl">
               📊
             </div>
-            <h3 className="text-lg font-bold text-[#f4f4f5]">Premium Analysis</h3>
-            <p className="text-[#a1a1aa] text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-[#c87d55]">Premium Analysis</h3>
+            <p className="text-[#c87d55] text-sm leading-relaxed">
               Your brand is positioned alongside rigorous, historically-grounded macroeconomic
               research — reinforcing credibility and trust with a discerning financial audience.
             </p>
           </div>
 
           {/* Card 3: High-Performance Platform */}
-          <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-7 space-y-4 hover:border-[#c87d55]/50 transition-all">
-            <div className="w-12 h-12 rounded-lg bg-[#c87d55]/10 flex items-center justify-center text-[#c87d55] text-2xl">
+          <div className="bg-[#000000] border border-[#c87d55] rounded-xl p-7 space-y-4 hover:border-[#c87d55] transition-all">
+            <div className="w-12 h-12 rounded-lg bg-[#000000] border border-[#c87d55] flex items-center justify-center text-[#c87d55] text-2xl">
               ⚡
             </div>
-            <h3 className="text-lg font-bold text-[#f4f4f5]">High-Performance Platform</h3>
-            <p className="text-[#a1a1aa] text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-[#c87d55]">High-Performance Platform</h3>
+            <p className="text-[#c87d55] text-sm leading-relaxed">
               Built on a modern, fast, SEO-optimized publishing stack with strong organic reach —
               ensuring maximum visibility and durability for every sponsorship placement.
             </p>
@@ -81,6 +81,7 @@ export default function SponsorsPage() {
 
         </div>
       </section>
+
 
       {/* ==================== SPONSORSHIP CTA / FORM SECTION ==================== */}
       <section className="bg-[#0a0a0a] border border-[#27272a] rounded-2xl p-8 md:p-12 text-center space-y-6">
