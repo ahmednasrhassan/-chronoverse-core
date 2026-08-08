@@ -88,24 +88,26 @@ export default function SponsorsPage() {
         <h2 className="text-2xl md:text-3xl font-bold text-[#c87d55]">
           Start a Sponsorship Inquiry
         </h2>
-        <p className="text-[#c87d55] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          Tell us about your organization and sponsorship goals. Our team will follow up with
+        <p className="text-[#a1a1aa] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+          Tell us about your organization and sponsorship goals. Our team will follow up with 
           available placements, audience metrics, and pricing tailored to your objectives.
         </p>
+        
         <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 max-w-md mx-auto space-y-2">
           <span className="text-xs uppercase font-mono font-bold text-[#a1a1aa] tracking-widest block">
             Sponsorship Inquiries
           </span>
           <a
             href="mailto:sponsors@chronoversecapital.com"
-            className="text-[#c87d55] font-mono text-lg font-semibold hover:underline block"
+            className="text-[#c87d55] font-mono text-lg font-semibold hover:underline block break-all"
           >
             sponsors@chronoversecapital.com
           </a>
         </div>
+
         <a
           href="mailto:sponsors@chronoversecapital.com"
-          className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
+          className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3 rounded-md transition-colors"
         >
           Email Our Partnerships Team →
         </a>
