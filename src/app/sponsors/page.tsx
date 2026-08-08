@@ -12,23 +12,22 @@ export default function SponsorsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16 space-y-20">
 
-      {/* ==================== HERO SECTION ==================== */}
+     {/* ==================== HERO SECTION ==================== */}
       <section className="text-center space-y-6 border-b border-[#27272a] pb-14">
-        <span className="inline-block bg-[#c87d55]/10 border border-[#c87d55]/40 text-[#c87d55] px-4 py-1.5 rounded-full text-xs font-mono font-semibold uppercase tracking-widest">
+        <span className="inline-block bg-[#c87d55]/10 border border-[#c87d55]/40 text-[#c87d55] text-xs font-mono uppercase px-3 py-1 rounded-full">
           Sponsorship Program
         </span>
         <h1 className="text-4xl md:text-5xl font-bold text-[#f4f4f5] leading-tight max-w-3xl mx-auto">
           Partner with Chronoverse Capital
         </h1>
         <p className="text-[#a1a1aa] text-lg max-w-2xl mx-auto leading-relaxed">
-          Reach an institutional-grade audience of macroeconomic strategists, portfolio managers,
-          and sophisticated individual investors who rely on Chronoverse Capital for
-          decision-critical financial intelligence.
+          Reach an institutional-grade audience of macroeconomic strategists, portfolio managers, 
+          and sophisticated individual investors who rely on Chronoverse Capital for decision-critical financial intelligence.
         </p>
         <div className="pt-4">
           <a
             href="mailto:sponsors@chronoversecapital.com"
-            className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
+            className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3 rounded-md transition-colors"
           >
             Become a Sponsor →
           </a>
