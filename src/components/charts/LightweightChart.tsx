@@ -204,7 +204,7 @@ function LightweightChartComponent({
 
   return (
     <div className={`relative w-full ${className}`} style={{ height }}>
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} className="w-full h-full" style={{ minHeight: '550px' }} />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]/80 text-[#a1a1aa] text-xs font-mono">
           LOADING CHART DATA...
