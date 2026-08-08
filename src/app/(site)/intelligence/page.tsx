@@ -37,7 +37,7 @@ const Radar = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[220px] flex items-center justify-center text-[#a1a1aa] text-xs border border-[#27272a] rounded-lg">
+      <div className="w-full h-55 flex items-center justify-center text-[#a1a1aa] text-xs border border-[#27272a] rounded-lg">
         LOADING RADAR DATA...
       </div>
     ),
@@ -371,7 +371,7 @@ function TerminalIntelligenceContent() {
       
       {/* Scanner Output Header */}
       <div className="bg-[#050505] border border-[#c87d55] p-6 rounded-xl shadow-lg space-y-2">
-        <div className="text-xs text-[#c87d55] leading-relaxed min-h-[120px]">
+        <div className="text-xs text-[#c87d55] leading-relaxed min-h-30">
           {(scannerText ?? []).map((line, idx) => (
             <p key={idx} className={line?.includes("WARNING") ? "text-red-500 font-bold" : ""}>
               {line ?? ""}
@@ -422,7 +422,7 @@ function TerminalIntelligenceContent() {
             return (
               <div
                 key={quote?.symbol ?? `quote-${quoteIdx}`}
-                className="flex flex-col min-w-[140px] bg-[#0a0a0a] border border-[#27272a] rounded-lg px-4 py-3"
+                className="flex flex-col min-w-35 bg-[#0a0a0a] border border-[#27272a] rounded-lg px-4 py-3"
               >
                 <span className="text-[10px] text-[#a1a1aa] uppercase tracking-wide">
                   {quote?.label ?? quote?.symbol ?? "—"}
@@ -455,7 +455,7 @@ function TerminalIntelligenceContent() {
           </span>
         </div>
         
-        <div className="w-full h-[550px] rounded-lg overflow-hidden border border-[#27272a]">
+        <div className="w-full h-137.5 rounded-lg overflow-hidden border border-[#27272a]">
           <LightweightChart
             symbol="BTC-USD"
             range="3mo"
@@ -768,7 +768,7 @@ function TerminalIntelligenceContent() {
 
           <div className="flex flex-col items-center space-y-2">
             <h3 className="text-xs font-bold text-[#c87d55]">&gt; V_INTEL SURVIVAL RADAR</h3>
-            <div className="w-full max-w-[280px]">
+            <div className="w-full max-w-70">
               <Radar data={radarChartData} options={radarOptions} />
             </div>
           </div>

@@ -64,7 +64,7 @@ export default function AutoTOC() {
   if (!isReady) {
     return (
       <div
-        className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md min-h-[140px] animate-pulse"
+        className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md min-h-35 animate-pulse"
         aria-hidden="true"
       >
         <div className="h-3 w-32 bg-zinc-800 rounded mb-4" />

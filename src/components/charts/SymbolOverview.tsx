@@ -25,7 +25,7 @@ function SymbolOverviewComponent({ symbol, label }: SymbolOverviewProps) {
           :: LIVE MARKET DATA — {label || symbol} ::
         </h3>
       </div>
-      <div className="w-full h-[420px] rounded-xl overflow-hidden border border-[#27272a] bg-[#18181b] p-2">
+      <div className="w-full h-105 rounded-xl overflow-hidden border border-[#27272a] bg-[#18181b] p-2">
         <LightweightChart
           symbol={symbol}
           range="3mo"

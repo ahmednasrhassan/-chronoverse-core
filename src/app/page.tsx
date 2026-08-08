@@ -2,12 +2,13 @@ import React from "react";
 import Link from "next/link";
 import { getLatestSanityArticles, calculateReadTime } from "@/lib/content";
 
-// The proprietary mini charts pull in `lightweight-charts` and are
-// entirely client-side. `MiniChartLazy` wraps the actual chart in a
-// `next/dynamic(..., { ssr: false })` import inside its own Client
-// Component, keeping it out of the server-rendered HTML / initial JS
-// bundle so it never blocks first paint or the homepage's LCP.
-import MiniChart from "@/components/charts/MiniChartLazy";
+// The proprietary market quote cards fetch live data from
+// `/api/market-data` and pull in `lightweight-charts` for their mini
+// charts, both entirely client-side concerns. `MarketQuoteCardLazy` wraps
+// the actual card in a `next/dynamic(..., { ssr: false })` import inside
+// its own Client Component, keeping it out of the server-rendered HTML /
+// initial JS bundle so it never blocks first paint or the homepage's LCP.
+import MarketQuoteCard from "@/components/charts/MarketQuoteCardLazy";
 
 
 // On-demand/no-cache revalidation: the homepage's "Latest Research" cards
@@ -17,7 +18,13 @@ import MiniChart from "@/components/charts/MiniChartLazy";
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const marketSymbols = ["^GSPC", "GC=F", "CL=F", "BTC-USD"];
+  const marketSymbols: { symbol: string; label: string }[] = [
+    { symbol: "BTC-USD", label: "Bitcoin" },
+    { symbol: "^GSPC", label: "S&P 500" },
+    { symbol: "GC=F", label: "Gold (Futures)" },
+    { symbol: "CL=F", label: "Crude Oil (WTI)" },
+  ];
+
 
 
   // Strictly the latest 4 published posts, ordered chronologically:
@@ -31,14 +38,14 @@ export default async function HomePage() {
         {/* ================= SECTION 1: LIVE MARKET CHARTS (4 Cards) ================= */}
         <section>
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4">Live Markets Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {marketSymbols.map((symbol: string, idx: number) => (
-              <div key={idx} className="bg-[#18181b] border border-zinc-800 p-2 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors">
-
-                <MiniChart symbol={symbol} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {marketSymbols.map(({ symbol, label }) => (
+              <div key={symbol} className="bg-[#18181b] border border-zinc-800 p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors">
+                <MarketQuoteCard symbol={symbol} label={label} />
               </div>
             ))}
           </div>
+
         </section>
 
         {/* ================= SECTION 2: MACRO RESEARCH & INSIGHTS (4 Cards) ================= */}

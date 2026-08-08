@@ -19,7 +19,7 @@ const SymbolOverview = dynamic(() => import("./SymbolOverview"), {
       <div className="flex items-center justify-between mb-3">
         <div className="h-3 w-56 bg-zinc-800 rounded animate-pulse" />
       </div>
-      <div className="w-full h-[420px] rounded-xl overflow-hidden border border-[#27272a] bg-[#18181b] animate-pulse" />
+      <div className="w-full h-105 rounded-xl overflow-hidden border border-[#27272a] bg-[#18181b] animate-pulse" />
     </div>
   ),
 });

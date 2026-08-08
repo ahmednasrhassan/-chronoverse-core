@@ -86,7 +86,7 @@ export default function NewsletterPage() {
             Reserving a fixed-height `min-h` slot up front (present even
             when empty) means the text simply appears in place with zero
             layout movement. */}
-        <div className="mt-4 min-h-[20px]">
+        <div className="mt-4 min-h-5">
           {feedback && (
             <p
               className={`text-sm ${

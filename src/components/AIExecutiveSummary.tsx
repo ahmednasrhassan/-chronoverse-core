@@ -31,7 +31,7 @@ export default function AIExecutiveSummary({ points }: AIExecutiveSummaryProps) 
       aria-label="AI Executive Summary"
     >
       {/* Top accent line */}
-      <div className="h-[2px] w-full bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] opacity-80" />
+      <div className="h-0.5 w-full bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] opacity-80" />
 
       <button
         type="button"

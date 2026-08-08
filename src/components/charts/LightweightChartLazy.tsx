@@ -14,7 +14,7 @@ const LightweightChart = dynamic(() => import("./LightweightChart"), {
   ssr: false,
   loading: () => (
     <div
-      className="w-full h-full min-h-[200px] bg-[#0a0a0a] animate-pulse rounded-lg"
+      className="w-full h-full min-h-50 bg-[#0a0a0a] animate-pulse rounded-lg"
       aria-hidden="true"
     />
   ),
