@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getSanityArticles, calculateReadTime } from "@/lib/content";
+import { getLatestSanityArticles, calculateReadTime } from "@/lib/content";
 
 // TradingView's mini symbol widgets pull in a third-party script and are
 // entirely client-side. `MiniChartLazy` wraps the actual widget in a
@@ -9,10 +9,11 @@ import { getSanityArticles, calculateReadTime } from "@/lib/content";
 // bundle so it never blocks first paint or the homepage's LCP.
 import MiniChart from "@/components/tradingview/MiniChartLazy";
 
-// Incremental Static Regeneration: serve the cached homepage instantly and
-// revalidate in the background at most once every 60 seconds, instead of
-// forcing a zero-cache dynamic render (`force-dynamic`) on every request.
-export const revalidate = 60;
+// On-demand/no-cache revalidation: the homepage's "Latest Research" cards
+// must always reflect the most recently published Sanity post, so we
+// disable the ISR cache window entirely rather than tolerating a stale
+// window (e.g. `revalidate = 60`).
+export const revalidate = 0;
 
 export default async function HomePage() {
   const tradingViewSymbols = [
@@ -22,8 +23,9 @@ export default async function HomePage() {
     "BINANCE:BTCUSDT",
   ];
 
-  const allArticles = await getSanityArticles();
-  const featuredArticles = allArticles.slice(0, 4);
+  // Strictly the latest 4 published posts, ordered chronologically:
+  // *[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0..3]
+  const featuredArticles = await getLatestSanityArticles(4);
 
   return (
     <div className="min-h-screen bg-[#120e0c] p-6 md:p-10">

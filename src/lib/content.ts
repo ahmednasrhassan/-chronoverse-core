@@ -319,6 +319,32 @@ export async function getSanityArticles(): Promise<ContentItem[]> {
 }
 
 /**
+ * Homepage "Latest Articles" fetcher.
+ *
+ * Strictly fetches only the latest N published posts (with a defined
+ * slug), ordered chronologically by `publishedAt` descending, via:
+ *   `*[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0..3]`
+ *
+ * Paired with `export const revalidate = 0;` on the Homepage route, this
+ * guarantees the homepage cards always reflect the most recently published
+ * Sanity content with no stale cache window.
+ */
+export async function getLatestSanityArticles(limit: number = 4): Promise<ContentItem[]> {
+  const query = `*[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0...${limit}] ${POST_PROJECTION}`;
+
+  try {
+    const posts = await client.fetch<SanityRawPost[]>(query);
+    if (posts && posts.length > 0) {
+      return posts.map(mapSanityPost);
+    }
+  } catch (error) {
+    console.warn("Sanity fetch for latest articles failed, falling back to local content:", error);
+  }
+
+  return getLocalContent().slice(0, limit);
+}
+
+/**
  * Fetch all articles belonging to a specific category, matched by the
  * category document's slug (which should mirror the imported Blogger
  * label). Falls back to filtering local content by category name if the
