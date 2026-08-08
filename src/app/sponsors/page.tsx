@@ -28,7 +28,7 @@ export default function SponsorsPage() {
         <div className="pt-4">
           <a
             href="mailto:sponsors@chronoversecapital.com"
-            className="inline-block bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
+            className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
           >
             Become a Sponsor →
           </a>
@@ -105,7 +105,7 @@ export default function SponsorsPage() {
         </div>
         <a
           href="mailto:sponsors@chronoversecapital.com"
-          className="inline-block bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
+          className="inline-block bg-[#c87d55] hover:bg-[#a8633e] text-[#0a0a0a] font-bold px-8 py-3.5 rounded-lg transition-colors text-sm shadow-md"
         >
           Email Our Partnerships Team →
         </a>
