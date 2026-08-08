@@ -12,7 +12,7 @@ export default function SponsorsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16 space-y-20">
 
-     {/* ==================== HERO SECTION ==================== */}
+      {/* ==================== HERO SECTION ==================== */}
       <section className="text-center space-y-6 border-b border-[#27272a] pb-14">
         <span className="inline-block bg-[#c87d55]/10 border border-[#c87d55]/40 text-[#c87d55] text-xs font-mono uppercase px-3 py-1 rounded-full">
           Sponsorship Program
@@ -80,7 +80,6 @@ export default function SponsorsPage() {
 
         </div>
       </section>
-
 
       {/* ==================== SPONSORSHIP CTA / FORM SECTION ==================== */}
       <section className="bg-[#0a0a0a] border border-[#c87d55]/40 rounded-2xl p-8 md:p-12 text-center space-y-6">
