@@ -18,13 +18,10 @@ interface MarketQuoteCardProps {
 }
 
 /**
- * Proprietary "Market Quote" card — fully replaces the previous empty
- * TradingView widget containers. Combines a live price/percentage-change
+ * Proprietary "Market Quote" card. Combines a live price/percentage-change
  * header (sourced from `/api/market-data`, powered by `yahoo-finance2`)
  * with a compact, unbranded `lightweight-charts` mini area chart below it.
- *
- * Zero third-party branding: no TradingView or Yahoo Finance logos,
- * watermarks, or attribution are ever rendered.
+ * Clicking the card opens the symbol's Yahoo Finance quote page.
  */
 function MarketQuoteCardComponent({ symbol, label }: MarketQuoteCardProps) {
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -67,8 +64,25 @@ function MarketQuoteCardComponent({ symbol, label }: MarketQuoteCardProps) {
   const changePercent = quote?.changePercent;
   const isPositive = (changePercent ?? 0) >= 0;
 
+  const yahooFinanceUrl = `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
+
+  const handleClick = () => {
+    window.open(yahooFinanceUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <div className="w-full h-full flex flex-col gap-2">
+    <div
+      className="w-full h-full flex flex-col gap-2 cursor-pointer"
+      onClick={handleClick}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+    >
       <div className="flex items-start justify-between px-1">
         <div className="flex flex-col min-w-0">
           <span className="text-zinc-200 text-xs font-bold uppercase tracking-wide truncate">
