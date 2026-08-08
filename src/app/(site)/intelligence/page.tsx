@@ -457,8 +457,8 @@ function TerminalIntelligenceContent() {
           </span>
         </div>
         
-        <div className="w-full h-[550px] min-h-[550px] rounded-lg overflow-hidden border border-[#27272a]">
-          <LightweightChart 
+         <div className="w-full rounded-lg overflow-hidden" style={{ height: 550, minHeight: 550 }}>
+            <LightweightChart 
             symbol="BTC-USD"
             range="3mo"
             interval="1d"
