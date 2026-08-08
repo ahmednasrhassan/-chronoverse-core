@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import LightweightChart from "@/components/charts/LightweightChartLazy";
+import MarketQuoteCard from "@/components/charts/MarketQuoteCardLazy";
+const LightweightChart = dynamic(() => import("@/components/charts/LightweightChart"), { ssr: false });
+
 
 
 // Chart.js touches browser-only globals (canvas/document) at import time.
@@ -451,12 +453,12 @@ function TerminalIntelligenceContent() {
             [ ADVANCED MARKET WORKSTATION ]
           </h2>
           <span className="text-[#a1a1aa] text-xs">
-            LIVE ANALYTICS &amp; LIQUIDITY MAP
+            LIVE ANALYTICS & LIQUIDITY MAP
           </span>
         </div>
         
-        <div className="w-full h-137.5 rounded-lg overflow-hidden border border-[#27272a]">
-          <LightweightChart
+        <div className="w-full h-[550px] min-h-[550px] rounded-lg overflow-hidden border border-[#27272a]">
+          <LightweightChart 
             symbol="BTC-USD"
             range="3mo"
             interval="1d"
