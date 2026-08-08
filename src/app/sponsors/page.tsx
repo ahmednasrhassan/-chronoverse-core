@@ -99,7 +99,7 @@ export default function SponsorsPage() {
             href="mailto:sponsors@chronoversecapital.com"
             className="text-[#c87d55] font-mono text-lg font-semibold hover:underline block break-all"
           >
-            sponsors@chronoversecapital.com
+            info@chronoversecapital.com
           </a>
         </div>
 
