@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/navigation/Header";
 import Footer from "@/components/navigation/Footer";
@@ -25,6 +25,14 @@ const SITE_URL = "https://chronoversecapital.com";
 const SITE_NAME = "Chronoverse Capital";
 const DEFAULT_DESCRIPTION = "Chronoverse Capital offers institutional-grade macroeconomic intelligence, expert asset allocation strategies, and deep-dive financial market research.";
 
+// Viewport Optimization for Mobile & Tablets
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#120e0c",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: {
@@ -38,7 +46,7 @@ export const metadata: Metadata = {
     default: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     template: "%s | Chronoverse",
   },
-  description: DEFAULT_DESCRIPTION, 
+  description: DEFAULT_DESCRIPTION,
   keywords: [
     "Macro",
     "Finance",
@@ -97,7 +105,7 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-                <Script
+        <Script
           id="perf-google-analytics"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -125,9 +133,8 @@ export default function RootLayout({
             `,
           }}
         />
-
       </head>
-      <body className="min-h-full flex flex-col bg-[#120e0c] text-zinc-100 font-sans">
+      <body className="min-h-full flex flex-col bg-[#120e0c] text-zinc-100 font-sans overflow-x-hidden">
         <Header />
         <main className="flex-1 w-full bg-[#120e0c]">{children}</main>
         <Footer />
