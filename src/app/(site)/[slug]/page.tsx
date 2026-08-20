@@ -223,14 +223,6 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             </div>
           </figure>
         )}
-
-        {/* Market Chart Integration */}
-        {Boolean(detectMarketSymbol(currentPage.title || "")) && (
-          <div className="my-8 rounded-xl overflow-hidden border border-zinc-800 bg-[#121212] p-4">
-            {/* @ts-ignore */}
-            <SymbolOverview symbol={detectMarketSymbol(currentPage.title || "")} />
-          </div>
-        )}
         {/* Enhanced Page Content Area: `legacyHtml` (raw pasted HTML/CSS/JS)
             takes priority over the structured Portable Text `bodyContent`
             whenever it's populated. Sanitized before rendering. */}
