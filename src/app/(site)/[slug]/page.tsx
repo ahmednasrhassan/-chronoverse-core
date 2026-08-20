@@ -521,12 +521,19 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       <div className="my-8 print:hidden">
         <RelatedDropdown articles={formattedRelated} />
       </div>
-
+       
       {/* AI Executive Summary — rendered at the very top of the article
           body, before the main content. See src/components/AIExecutiveSummary.tsx */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
        {/* AI Audio Reader */}
       <AudioReader textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`} />
+      {/* Real-time Market Chart for Articles */}
+        {Boolean(detectMarketSymbol(`${currentPost?.title || ""} ${currentPost?.content || ""}`)) && (
+          <div className="my-8 w-full h-96 rounded-xl overflow-hidden border border-zinc-800 bg-[#121212] p-4 print:hidden">
+            {/* @ts-ignore */}
+            <SymbolOverview symbol={detectMarketSymbol(`${currentPost?.title || ""} ${currentPost?.content || ""}`)} />
+          </div>
+        )}
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
