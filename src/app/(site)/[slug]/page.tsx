@@ -451,24 +451,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
             <PrintButton />
 
-            {/* SECURITY NOTE: this "Edit" link to Sanity Studio is currently
-                rendered for EVERY visitor, not just logged-in admins/editors.
-                Studio itself may be login-protected, but exposing the exact
-                edit URL and confirming a CMS backend exists to anonymous
-                visitors is unnecessary information disclosure. Left
-                functional here since no auth/session check is wired into
-                this server component yet — wrap this in a real
-                admin/session check (e.g. via middleware, a cookie, or your
-                auth provider) before shipping, rather than showing it to
-                everyone. */}
-            <Link
-              href={`/studio/structure/intent/edit/id=${currentPost.slug}`}
-              target="_blank"
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded-lg transition-all border border-zinc-800 hover:border-zinc-700 shadow-sm"
-              title="Edit this article in Sanity CMS"
-            >
-              <span>✏️</span> Edit
-            </Link>
+           
           </div>
         </div>
 
