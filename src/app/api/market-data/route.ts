@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
+const yahooFinance = new YahooFinance();
 
 /**
  * Live Terminal Market Data Feed
@@ -114,7 +115,7 @@ async function fetchQuotes(symbols: string[]): Promise<MarketQuote[]> {
       })
       .filter((q): q is MarketQuote => q !== null);
   } catch (err) {
-     
+
     console.error("[api/market-data] Yahoo Finance quote fetch failed:", err);
     return [];
   }
@@ -185,7 +186,7 @@ async function fetchChartHistory(
       });
 
   } catch (err) {
-     
+
     console.error(`[api/market-data] Yahoo Finance chart fetch failed for ${symbol}:`, err);
     return [];
   }
@@ -269,7 +270,7 @@ export async function GET(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-     
+
     console.error("[api/market-data] Unexpected failure, returning safe fallback:", error);
 
     // Absolute last resort: never let this route 500 — callers must
