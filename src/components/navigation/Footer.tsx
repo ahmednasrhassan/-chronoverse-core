@@ -191,7 +191,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-300 gap-y-3">
-          <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Chronoverse Capital. All rights reserved.</p>
+        <p className="text-center sm:text-left">© {new Date().getFullYear()} Chronoverse Capital. All rights reserved.</p>
         </div>
 
       </div>
