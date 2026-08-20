@@ -13,7 +13,6 @@ import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
 import AudioReader from "@/components/AudioReader";
 import MathContent from "@/components/MathContent";
-import { detectMarketSymbol } from "@/lib/detectMarketSymbol";
 import { siteConfig } from "@/config/siteConfig";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
 
@@ -27,13 +26,13 @@ import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
 
 import SymbolOverview from "@/components/charts/SymbolOverviewLazy";
 
-import { 
-  getSanityArticleBySlug, 
-  getSanityArticles, 
+import {
+  getSanityArticleBySlug,
+  getSanityArticles,
   getSanityPageBySlug,
-  stripHtml, 
-  sanitizeHtml, 
-  calculateReadTime, 
+  stripHtml,
+  sanitizeHtml,
+  calculateReadTime,
   ContentItem,
   DEFAULT_CATEGORY_SLUG,
 } from "@/lib/content";
@@ -83,11 +82,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // 2. Optimize Meta Description (Ideal length 120 - 155 characters)
     let rawDescription = currentPost.seoDescription || "";
     if (!rawDescription) {
-     rawDescription = stripHtml(currentPost.legacyBody || currentPost.content || "");
+      rawDescription = stripHtml(currentPost.legacyBody || currentPost.content || "");
     }
 
     // Ensure minimum description length for SEO
-    const fullDescription = rawDescription.length < 110 
+    const fullDescription = rawDescription.length < 110
       ? `${rawDescription} Read the full institutional macroeconomic analysis on Chronoverse Capital.`
       : rawDescription;
 
@@ -134,7 +133,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const rawPageText = stripHtml(currentPage.legacyHtml || currentPage.bodyContent || "");
-  
+
   // Optimize Administrative Page Title & Description
   const maxTitleLength = 45;
   const optimizedPageTitle = `${truncateForSEO(currentPage.title || slug, maxTitleLength)}${BRAND_SUFFIX}`;
@@ -316,25 +315,17 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
   const transformedLegacyBody = strippedLegacyBody;
   const sanitizedLegacyBody = transformedLegacyBody ? sanitizeHtml(transformedLegacyBody) : "";
-  // --- Dynamic Market Chart Detection ---
-  // Scans the title + plain-text body for explicit chart tags
-  // (`[[chart:SYMBOL]]`) or common market terms/tickers (Bitcoin, Gold,
-  // S&P 500, DXY, etc.) and, when found, automatically renders an
-  // interactive proprietary "Symbol Overview" chart directly within the
-  // article — no manual embedding required by editors.
-  const detectedMarket = detectMarketSymbol(currentPost.title, rawText, currentPost.category);
-
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
 
   const breadcrumbItems = [
     { name: "Home", url: baseUrl },
-    { 
-      name: currentPost.category || "Research", 
-      url: `${baseUrl}/category/${currentPost.category || "general"}` 
+    {
+      name: currentPost.category || "Research",
+      url: `${baseUrl}/category/${currentPost.category || "general"}`
     },
-    { 
-      name: currentPost.title, 
-      url: `${baseUrl}/${currentPost.slug}` 
+    {
+      name: currentPost.title,
+      url: `${baseUrl}/${currentPost.slug}`
     },
   ];
   const articleSchema = {
@@ -400,7 +391,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
-      
+
       {/* Premium Top Reading Progress Bar (dynamically tracks scroll position) */}
       <ReadingProgressBar />
       <script
@@ -439,7 +430,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
               <span>⏱️</span> {readTimeMinutes} min read
             </span>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex items-center gap-2 print:hidden">
             <ArticleShareButtons
@@ -449,15 +440,15 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
             <PrintButton />
 
-           
+
           </div>
         </div>
 
-        
+
         <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
           {currentPost.title}
         </h1>
-        
+
         <div className="flex items-center justify-between text-xs text-zinc-300 pt-2 print:text-gray-500">
           <span>Published on {currentPost.date}</span>
           <span className="uppercase tracking-wider font-semibold text-zinc-400 print:hidden">Chronoverse Intelligence</span>
@@ -476,33 +467,33 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             ))}
           </div>
         )}
-        
+
       </div>
 
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
-     {currentPost.imageUrl && (
-  <figure className="mb-12 w-full print:mb-6">
-   <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
-      <Image
-        src={currentPost.imageUrl}
-        alt={autoAltText}
-        title={currentPost.title}
-        fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-        priority
-        quality={90}
-        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain"
-        placeholder="blur"
-        blurDataURL={SHIMMER_BLUR_DATA_URL}
-      />
-    </div>
-    {autoCaption && (
-      <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
-        {autoCaption}
-      </figcaption>
-    )}
-  </figure>
-)}
+      {currentPost.imageUrl && (
+        <figure className="mb-12 w-full print:mb-6">
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+            <Image
+              src={currentPost.imageUrl}
+              alt={autoAltText}
+              title={currentPost.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+              priority
+              quality={90}
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain"
+              placeholder="blur"
+              blurDataURL={SHIMMER_BLUR_DATA_URL}
+            />
+          </div>
+          {autoCaption && (
+            <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
+              {autoCaption}
+            </figcaption>
+          )}
+        </figure>
+      )}
 
       {/* Automatic Table of Contents */}
       <div className="print:hidden">
@@ -513,19 +504,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       <div className="my-8 print:hidden">
         <RelatedDropdown articles={formattedRelated} />
       </div>
-       
+
       {/* AI Executive Summary — rendered at the very top of the article
           body, before the main content. See src/components/AIExecutiveSummary.tsx */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
-       {/* AI Audio Reader */}
+      {/* AI Audio Reader */}
       <AudioReader textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`} />
-      {/* Real-time Market Chart for Articles */}
-        {Boolean(detectMarketSymbol(`${currentPost?.title || ""} ${currentPost?.content || ""}`)) && (
-          <div className="my-8 w-full h-96 rounded-xl overflow-hidden border border-zinc-800 bg-[#121212] p-4 print:hidden">
-            {/* @ts-ignore */}
-            <SymbolOverview symbol={detectMarketSymbol(`${currentPost?.title || ""} ${currentPost?.content || ""}`)} />
-          </div>
-        )}
+
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
@@ -562,7 +547,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           Discussion thread initialized for: <span className="text-[#c87d55] font-mono">{currentPost.slug}</span>
         </div>
       </section>
-      
+
     </main>
   );
 }
