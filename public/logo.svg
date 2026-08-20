@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Chronoverse Capital logo</title>
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06264a"/>
+      <stop offset="100%" stop-color="#0f3a77"/>
+    </linearGradient>
+    <radialGradient id="rimGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="20%" stop-color="#f8d27f"/>
+      <stop offset="60%" stop-color="#c98b33"/>
+      <stop offset="100%" stop-color="#6f4b24"/>
+    </radialGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <circle cx="256" cy="256" r="248" fill="url(#rimGrad)"/>
+    <circle cx="256" cy="256" r="198" fill="url(#bgGrad)"/>
+    <circle cx="256" cy="256" r="192" fill="none" stroke="#ffffff22" stroke-width="2"/>
+  </g>
+  <path d="M204 164a136 136 0 1 0 0 184" fill="none" stroke="#f2cd70" stroke-width="34" stroke-linecap="round"/>
+  <path d="M224 324l88-88 72 0" fill="none" stroke="#f2cd70" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M354 204l26-26 28 28" fill="none" stroke="#f2cd70" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="8" fill="#f0d482" opacity="0.85"/>
+</svg>

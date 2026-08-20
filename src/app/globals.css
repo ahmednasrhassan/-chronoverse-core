@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-page: #09090b;
+    --bg-card: #121215;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --accent-copper: #c87d55;
+    --accent-copper-hover: #e0946a;
+    --border-color: #27272a;
+  }
+}
+
+/*
+ * Register the design-system tokens as Tailwind theme colors so components
+ * can use standard utility classes (e.g. bg-card, border-border, text-copper)
+ * instead of arbitrary CSS-variable values like bg-[var(--bg-card)].
+ */
+@theme inline {
+  --color-page: var(--bg-page);
+  --color-card: var(--bg-card);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-copper: var(--accent-copper);
+  --color-copper-hover: var(--accent-copper-hover);
+  --color-border: var(--border-color);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+a {
+  color: var(--accent-copper);
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: var(--accent-copper-hover);
+}
+
+::selection {
+  background-color: rgba(200, 125, 85, 0.3);
+  color: #f4f4f5;
+}
+
+/*
+ * Institutional-grade reading experience: increased line-height and
+ * paragraph spacing applied globally to article body copy (Portable Text
+ * blocks + legacy Blogger HTML rendered inside `.prose` containers).
+ */
+article.prose,
+article.prose p {
+  line-height: 1.85;
+}
+
+article.prose p {
+  margin-bottom: 1.5rem;
+}
+
+.katex-display {
+  margin: 1.5rem 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+/*
+ * CLS fix — Legacy Blogger-imported article images.
+ *
+ * `legacyBody`/`legacyHtml` content is rendered via raw
+ * `dangerouslySetInnerHTML` (see `[slug]/page.tsx` and the admin `page`
+ * fallback), so any `<img>` tags inside it are plain native HTML — they
+ * never pass through `next/image` and therefore never get explicit
+ * width/height attributes. A `<img>` with no intrinsic size reserved
+ * renders at 0 height until the network image finishes downloading, then
+ * suddenly expands and pushes every following paragraph down — one of
+ * the single biggest sources of CLS on content-heavy article pages.
+ *
+ * `aspect-ratio: 16 / 9` reserves a stable, sensible box for every such
+ * image immediately (based purely on CSS, before the image loads), and
+ * `object-fit: cover` keeps the crop clean regardless of the source
+ * image's real aspect ratio. This works as a blunt but effective safety
+ * net specifically for the untyped legacy HTML pipeline; all *new*
+ * content authored in Sanity already goes through `next/image` with
+ * `fill`/explicit dimensions (see `PortableTextContent.tsx`) and does
+ * not rely on this rule.
+ */
+article.prose img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  height: auto;
+}
+
