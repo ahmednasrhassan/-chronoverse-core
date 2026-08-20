@@ -11,6 +11,7 @@ import PortableTextContent from "@/components/PortableTextContent";
 import AIExecutiveSummary from "@/components/AIExecutiveSummary";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
+import AudioReader from "@/components/AudioReader";
 import MathContent from "@/components/MathContent";
 import { detectMarketSymbol } from "@/lib/detectMarketSymbol";
 import { siteConfig } from "@/config/siteConfig";
@@ -223,7 +224,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           </figure>
         )}
 
-
+        {/* Market Chart Integration */}
+        {Boolean(detectMarketSymbol(currentPage.title || "")) && (
+          <div className="my-8 rounded-xl overflow-hidden border border-zinc-800 bg-[#121212] p-4">
+            {/* @ts-ignore */}
+            <SymbolOverview symbol={detectMarketSymbol(currentPage.title || "")} />
+          </div>
+        )}
         {/* Enhanced Page Content Area: `legacyHtml` (raw pasted HTML/CSS/JS)
             takes priority over the structured Portable Text `bodyContent`
             whenever it's populated. Sanitized before rendering. */}
@@ -518,7 +525,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* AI Executive Summary — rendered at the very top of the article
           body, before the main content. See src/components/AIExecutiveSummary.tsx */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
-
+       {/* AI Audio Reader */}
+       <AudioReader textToRead={currentPost.title} />
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
