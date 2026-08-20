@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface AudioReaderProps {
   textToRead: string;
@@ -9,15 +9,63 @@ interface AudioReaderProps {
 export default function AudioReader({ textToRead }: AudioReaderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const chunksRef = useRef<string[]>([]);
+  const currentChunkIndex = useRef(0);
+
+  const prepareChunks = (text: string) => {
+    const cleanText = text
+      .replace(/<[^>]*>?/gm, " ")
+      .replace(/[#*`_\[\]()]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const sentences = cleanText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleanText];
+    return sentences.map((s) => s.trim()).filter((s) => s.length > 0);
+  };
 
   useEffect(() => {
-    // إيقاف الصوت تلقائياً إذا خرج القارئ من الصفحة
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
+
+  const speakNextChunk = () => {
+    const synth = window.speechSynthesis;
+    if (currentChunkIndex.current >= chunksRef.current.length) {
+      setIsPlaying(false);
+      setIsPaused(false);
+      currentChunkIndex.current = 0;
+      return;
+    }
+
+    const chunk = chunksRef.current[currentChunkIndex.current];
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.rate = 1.0;
+
+    const voices = synth.getVoices();
+    const naturalVoice = voices.find(
+      (v) =>
+        v.lang.startsWith("en") &&
+        (v.name.includes("Natural") ||
+          v.name.includes("Google") ||
+          v.name.includes("Premium"))
+    );
+    if (naturalVoice) utterance.voice = naturalVoice;
+
+    utterance.onend = () => {
+      currentChunkIndex.current += 1;
+      speakNextChunk();
+    };
+
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      setIsPaused(false);
+    };
+
+    synth.speak(utterance);
+  };
 
   const handleTogglePlay = () => {
     if (!("speechSynthesis" in window)) {
@@ -36,28 +84,15 @@ export default function AudioReader({ textToRead }: AudioReaderProps) {
         setIsPaused(true);
       }
     } else {
-      synth.cancel(); // تنظيف أي صوت سابق
-      
-      const cleanText = textToRead.replace(/[#*`_]/g, ""); // تنظيف وسوم الماركداون
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = 0.95; // سرعة هادئة ومؤسسية
-      utterance.pitch = 1.0;
+      synth.cancel();
+      chunksRef.current = prepareChunks(textToRead);
+      currentChunkIndex.current = 0;
 
-      // اختيار صوت إنجليزي طبيعي إذا توفر في النظام
-      const voices = synth.getVoices();
-      const naturalVoice = voices.find(
-        (v) => v.lang.startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Premium"))
-      );
-      if (naturalVoice) utterance.voice = naturalVoice;
+      if (chunksRef.current.length === 0) return;
 
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-
-      synth.speak(utterance);
       setIsPlaying(true);
       setIsPaused(false);
+      speakNextChunk();
     }
   };
 
@@ -66,11 +101,12 @@ export default function AudioReader({ textToRead }: AudioReaderProps) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
       setIsPaused(false);
+      currentChunkIndex.current = 0;
     }
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-[#161616] my-6 max-w-fit">
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-[#161616] my-6 max-w-fit print:hidden">
       <button
         onClick={handleTogglePlay}
         className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase font-semibold text-[#c87d55] hover:text-[#d9916b] transition-colors"
@@ -79,9 +115,17 @@ export default function AudioReader({ textToRead }: AudioReaderProps) {
           {isPlaying && !isPaused && (
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c87d55] opacity-75"></span>
           )}
-          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isPlaying && !isPaused ? "bg-[#c87d55]" : "bg-zinc-600"}`}></span>
+          <span
+            className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+              isPlaying && !isPaused ? "bg-[#c87d55]" : "bg-zinc-600"
+            }`}
+          ></span>
         </span>
-        {isPlaying ? (isPaused ? "Resume Audio" : "Pause Audio") : "Listen to Briefing (AI Audio)"}
+        {isPlaying
+          ? isPaused
+            ? "Resume Audio"
+            : "Pause Audio"
+          : "Listen to Full Briefing"}
       </button>
 
       {isPlaying && (

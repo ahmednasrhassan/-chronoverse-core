@@ -526,7 +526,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           body, before the main content. See src/components/AIExecutiveSummary.tsx */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
        {/* AI Audio Reader */}
-       <AudioReader textToRead={currentPost.title} />
+      <AudioReader textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`} />
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
