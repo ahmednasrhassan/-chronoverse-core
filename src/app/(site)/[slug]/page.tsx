@@ -1,4 +1,4 @@
-import Breadcrumbs from "@/components/Breadcrumbs";
+
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -408,7 +408,6 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
-     <Breadcrumbs items={breadcrumbItems} />
       {/* Article Header & Admin Controls */}
       <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-4">
