@@ -482,31 +482,29 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       </div>
 
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
-      {currentPost.imageUrl && (
-        <figure className="mb-12 w-full print:mb-6">
-          {/* CLS fix: same fixed-height (`h-96`) + `fill` + blur
-              placeholder pattern as above — the hero image's box is
-              reserved immediately, so the network image swapping in
-              (or `priority`-preloading) never shifts the article title,
-              TOC, or body content that follows. */}
-          <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
-            <Image 
-              src={currentPost.imageUrl} 
-              alt={autoAltText} 
-              title={currentPost.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              priority
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain print:scale-100"
-              placeholder="blur"
-              blurDataURL={SHIMMER_BLUR_DATA_URL}
-            />
-          </div>
-          <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
-            {autoCaption}
-          </figcaption>
-        </figure>
-      )}
+     {currentPost.imageUrl && (
+  <figure className="mb-12 w-full print:mb-6">
+   <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+      <Image
+        src={currentPost.imageUrl}
+        alt={autoAltText}
+        title={currentPost.title}
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+        priority
+        quality={90}
+        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain"
+        placeholder="blur"
+        blurDataURL={SHIMMER_BLUR_DATA_URL}
+      />
+    </div>
+    {autoCaption && (
+      <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
+        {autoCaption}
+      </figcaption>
+    )}
+  </figure>
+)}
 
       {/* Automatic Table of Contents */}
       <div className="print:hidden">
