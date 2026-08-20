@@ -119,7 +119,48 @@ export default async function HomePage() {
             <NewsletterForm />
           </div>
         </section>
+        {/* ================= PARTNERSHIPS & PRIVATE SYNDICATE ================= */}
+        <section className="pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* 1. Institutional Sponsorship */}
+            <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-800 bg-[#141414] hover:border-zinc-700 transition-all">
+              <div className="flex flex-col gap-1 pr-2">
+                <span className="text-[11px] font-mono tracking-widest text-[#c87d55] uppercase font-semibold">
+                  Underwriting & Partnerships
+                </span>
+                <span className="text-base font-bold text-white tracking-wide">
+                  Official Institutional Partner
+                </span>
+                <span className="text-xs text-zinc-400 leading-relaxed">
+                  Strategic research underwriting, brand alignment, and executive intelligence syndication.
+                </span>
+              </div>
+              <span className="text-[11px] font-mono border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md bg-zinc-800/60 shrink-0">
+                Inquiries Open
+              </span>
+            </div>
 
+            {/* 2. Private VIP Syndicate (Alpha & Trading Club) */}
+            <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-800 bg-[#141414] hover:border-zinc-700 transition-all">
+              <div className="flex flex-col gap-1 pr-2">
+                <span className="text-[11px] font-mono tracking-widest text-emerald-400 uppercase font-semibold">
+                  Exclusive Membership
+                </span>
+                <span className="text-base font-bold text-white tracking-wide">
+                  Private Alpha Syndicate
+                </span>
+                <span className="text-xs text-zinc-400 leading-relaxed">
+                  Live quant charts, macro consensus & directives from top economists, private trade exchange, and closed institutional desks.
+                </span>
+              </div>
+              <span className="text-[11px] font-mono border border-emerald-800/60 text-emerald-400 px-3 py-1.5 rounded-md bg-emerald-950/40 shrink-0">
+                Launching Soon
+              </span>
+            </div>
+
+          </div>
+        </section>
         {/* ================= SECTION 4: OFFICIAL SPONSORS (4 Cards) ================= */}
         {/* <section>
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4 text-center mt-8">Official Partners & Sponsors</h2>
