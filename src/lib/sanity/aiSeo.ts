@@ -52,47 +52,38 @@ Content:
 ${truncated}`;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        const geminiKey = process.env.GEMINI_API_KEY || apiKey;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a precise assistant that only outputs valid JSON, with no markdown formatting or commentary.",
-          },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.4,
-        max_tokens: 300,
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.4,
+          maxOutputTokens: 300,
+        },
       }),
     });
 
     if (!response.ok) {
-      console.warn("[aiSeo] OpenAI request failed with status", response.status);
+      console.warn("[aiSeo] Gemini request failed with status", response.status);
       return null;
     }
 
     const data = await response.json();
-    const content: string | undefined = data?.choices?.[0]?.message?.content;
-    if (!content) return null;
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!rawText) return null;
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : content;
-    const parsed = JSON.parse(jsonString) as { excerpt?: string; seoDescription?: string };
-
-    if (!parsed.excerpt || !parsed.seoDescription) return null;
-
+    const parsed = JSON.parse(rawText);
     return {
-      excerpt: parsed.excerpt.trim(),
-      seoDescription: parsed.seoDescription.trim().slice(0, 160),
+      excerpt: String(parsed.excerpt).slice(0, 350),
+      seoDescription: String(parsed.seoDescription).slice(0, 160),
       source: "openai",
     };
+    
   } catch (err) {
     console.warn("[aiSeo] OpenAI generation failed, falling back:", err);
     return null;
