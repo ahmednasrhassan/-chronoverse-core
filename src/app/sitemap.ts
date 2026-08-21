@@ -5,7 +5,7 @@ import { DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
 
 // Revalidates cache every 1 hour (3600 seconds) to reduce Sanity API roundtrips
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 // Slugs that are permanently redirected (301/308) and MUST NOT appear in the sitemap
 const EXCLUDED_SLUGS = new Set([
