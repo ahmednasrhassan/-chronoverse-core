@@ -4,7 +4,65 @@ import { useState } from "react";
 
 interface AIExecutiveSummaryProps {
   /** Exactly 3 (or fewer, defensively handled) key takeaway strings. */
-  points?: string[];
+  points?: any[];
+}
+
+/**
+ * دالة مساعدة لاستخراج النص الصافي ومنع ظهور مفاتيح JSON / Portable Text
+ */
+function cleanTakeawayText(item: any): string {
+  if (!item) return "";
+
+  // لو كان العنصر نصاً
+  if (typeof item === "string") {
+    const trimmed = item.trim();
+    // لو النص عبارة عن JSON string خام
+    if (
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      trimmed.includes('"_type"') ||
+      trimmed.includes('"children"')
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return cleanTakeawayText(parsed);
+      } catch {
+        // تنظيف يدوي بالـ Regex في حال تعذر عمل JSON.parse
+        return trimmed
+          .replace(/[{}[\]"]/g, " ")
+          .replace(/_key:[^,]+,?/g, "")
+          .replace(/_type:[^,]+,?/g, "")
+          .replace(/marks:[^,]+,?/g, "")
+          .replace(/markDefs:[^,]+,?/g, "")
+          .replace(/style:[^,]+,?/g, "")
+          .replace(/children:/g, "")
+          .replace(/text:\s*/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+    }
+    return trimmed;
+  }
+
+  // لو كان العنصر Array
+  if (Array.isArray(item)) {
+    return item.map(cleanTakeawayText).filter(Boolean).join(" ");
+  }
+
+  // لو كان كائن Portable Text Block
+  if (typeof item === "object") {
+    if (Array.isArray(item.children)) {
+      return item.children
+        .map((child: any) => (child && typeof child.text === "string" ? child.text : ""))
+        .filter(Boolean)
+        .join(" ");
+    }
+    if (typeof item.text === "string") {
+      return item.text;
+    }
+  }
+
+  return String(item);
 }
 
 /**
@@ -21,7 +79,12 @@ interface AIExecutiveSummaryProps {
 export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const safePoints = (points ?? []).filter(Boolean).slice(0, 3);
+  // استخراج النصوص الصافية النظيفة وفلترتها
+  const safePoints = (points ?? [])
+    .map(cleanTakeawayText)
+    .filter((text) => typeof text === "string" && text.trim().length > 0)
+    .slice(0, 3);
+
   if (safePoints.length === 0) return null;
 
   return (
