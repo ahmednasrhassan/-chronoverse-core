@@ -258,39 +258,38 @@ export default async function UniversalArticlePage({ params }: PageProps) {
     ? "Related Intelligence"
     : "Related Intelligence (Auto-Curated)";
 
-  // Extract raw text for clean processing
-  // Extract and clean raw content from 
-  const cleanBodyContent = (typeof currentPost.body === 'string' ? currentPost.body : currentPost.legacyBody || JSON.stringify(currentPost.body || "") || "")
-    .replace(/["']?SYSTEM ENTROPY CHECK[\s\S]*?\[Gear \d+\/\d+\][^<]*/gi, '')
-    .replace(/SYSTEM ENTROPY CHECK[\s\S]*?(Table of Contents|01\.)/gi, '$1')
-    .trim();
-
-  // Extract raw text for clean processing (Read Time & AI Summary)
-  const rawText = stripHtml(cleanBodyContent);
+  // Extract pure human-readable text safely from Sanity blocks or legacy HTML
+  const rawText = Array.isArray(currentPost?.body) && currentPost.body.length > 0
+    ? currentPost.body
+        .filter((block: any) => block._type === "block" && Array.isArray(block.children))
+        .map((block: any) => block.children.map((c: any) => c.text || "").join(" "))
+        .join("\n\n")
+    : stripHtml(currentPost?.legacyBody || currentPost?.content || "");
 
   // Calculate estimated read time dynamically (approx. 200 words per minute)
   const readTimeMinutes = calculateReadTime(rawText);
 
   // Auto-generate Smart Image SEO Data
-  const autoAltText = `Illustration for ${currentPost.category} covering ${currentPost.title}`;
-  const autoCaption = `Figure 1: Visual representation of ${currentPost.title?.toLowerCase()} concepts.`;
+  const autoAltText = `Illustration for ${currentPost.category || "Research"} covering ${currentPost.title || ""}`;
+  const autoCaption = `Figure 1: Visual representation of ${(currentPost.title || "").toLowerCase()} concepts.`;
 
-  // Auto-generated summary snippet displayed in the UI — reuses the same
-  // dynamically-generated 150-160 character excerpt/SEO description that
-  // was resolved in `mapSanityPost` (src/lib/content.ts), keeping the
-  // on-page summary and the SEO meta description perfectly in sync.
   const autoSummary = currentPost.seoDescription || rawText.substring(0, 140);
 
-  // AI Executive Summary — 3 concise, auto-generated key takeaways derived
-  // from the article's plain text, title, category, and keywords (see
-  // `generateExecutiveSummary` in src/lib/executiveSummary.ts). Never
-  // throws and always returns exactly 3 usable points.
-  const executiveSummaryPoints = generateExecutiveSummary(
-    currentPost.title,
-    currentPost.category,
-    rawText,
-    currentPost.keywords
-  );
+  // Extract top 3 natural paragraphs directly for the Executive Summary
+  const naturalParagraphs = rawText
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 40 && !p.startsWith("Figure") && !p.startsWith("::"));
+
+  const executiveSummaryPoints =
+    naturalParagraphs.length >= 3
+      ? naturalParagraphs.slice(0, 3)
+      : generateExecutiveSummary(
+          currentPost.title,
+          currentPost.category,
+          rawText,
+          currentPost.keywords
+        );
 
   // Tags rendered in the UI — either editor-authored in Sanity or the
   // dynamically extracted fallback key terms (see `generateFallbackTags`
