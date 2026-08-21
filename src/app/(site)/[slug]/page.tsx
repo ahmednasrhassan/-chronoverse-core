@@ -49,7 +49,7 @@ interface PageProps {
 // Incremental Static Regeneration: serve cached HTML instantly while
 // revalidating in the background at most once every 60 seconds, instead of
 // forcing a zero-cache dynamic render on every single request.
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const articles = await getSanityArticles();
