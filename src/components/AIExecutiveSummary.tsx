@@ -8,12 +8,12 @@ interface AIExecutiveSummaryProps {
 }
 
 /**
- * دالة شاملة لتنظيف واستخراج النص الصافي ومنع ظهور مفاتيح Sanity و JSON
+ * دالة مساعدة صارمة لحذف كافة مفاتيح Sanity والرموز والشرط واستخراج النص الإنجليزي الصافي
  */
 function cleanTakeawayText(item: any): string {
   if (!item) return "";
 
-  // 1. التعامل مع الكائنات المباشرة
+  // 1. معالجة الكائنات والمصفوفات
   if (typeof item === "object") {
     if (Array.isArray(item)) {
       return item.map(cleanTakeawayText).filter(Boolean).join(" ");
@@ -29,50 +29,54 @@ function cleanTakeawayText(item: any): string {
     }
   }
 
-  // 2. التعامل مع السلاسل النصية
+  // 2. معالجة السلاسل النصية
   if (typeof item === "string") {
-    const trimmed = item.trim();
+    let text = item.trim();
 
-    // إذا كانت السلسلة تحتوي على كتل أو مفاتيح Portable Text
+    // فك تشفير JSON إذا كان بصيغة كائن مشفر
     if (
-      trimmed.includes("_type") ||
-      trimmed.includes("children") ||
-      trimmed.includes("marks") ||
-      trimmed.includes("_key") ||
-      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
-      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      (text.startsWith("{") && text.endsWith("}")) ||
+      (text.startsWith("[") && text.endsWith("]"))
     ) {
-      // محاولة أولى: فك تشفير JSON إن وجد
       try {
-        const parsed = JSON.parse(trimmed);
+        const parsed = JSON.parse(text);
         return cleanTakeawayText(parsed);
       } catch {
-        // محاولة ثانية: استخراج ما بعد "text :" أو "text:"
-        const matches = trimmed.match(/text\s*[:=]\s*([^,}\]]+)/gi);
-        if (matches && matches.length > 0) {
-          return matches
-            .map((m) => m.replace(/text\s*[:=]\s*/i, "").replace(/["']/g, "").trim())
-            .filter(Boolean)
-            .join(" ");
-        }
-
-        // محاولة ثالثة: تنظيف شامل وعزل المفاتيح المشوهة
-        return trimmed
-          .replace(/_key\s*:\s*[^,]+/gi, "")
-          .replace(/_type\s*:\s*[^,]+/gi, "")
-          .replace(/marks\s*:\s*[^,]+/gi, "")
-          .replace(/markDefs\s*:\s*[^,]+/gi, "")
-          .replace(/style\s*:\s*[^,]+/gi, "")
-          .replace(/children\s*:\s*/gi, "")
-          .replace(/text\s*:\s*/gi, "")
-          .replace(/[{}[\]"]/g, " ")
-          .replace(/[,;:]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
+        // الاستمرار للتنظيف النصي
       }
     }
 
-    return trimmed;
+    // تنظيف شامل إذا كان النص يحتوي على بنية Portable Text المشوهة
+    if (
+      text.includes("_key") ||
+      text.includes("_type") ||
+      text.includes("children") ||
+      text.includes("markDefs") ||
+      text.includes("marks") ||
+      text.includes("style")
+    ) {
+      // حذف مفاتيح Sanity وقيمها العشوائية
+      text = text
+        .replace(/_?key\s*[:=]?\s*\w+/gi, "")
+        .replace(/_?type\s*[:=]?\s*\w+/gi, "")
+        .replace(/markDefs\s*[:=]?\s*(\[[^\]]*\]|\w+)?/gi, "")
+        .replace(/marks\s*[:=]?\s*(\[[^\]]*\]|\w+)?/gi, "")
+        .replace(/style\s*[:=]?\s*\w+/gi, "")
+        .replace(/children\s*[:=]?\s*/gi, "")
+        .replace(/\btext\s*[:=]?\s*/gi, "")
+        .replace(/\bspan\b/gi, "")
+        .replace(/\bblock\b/gi, "")
+        .replace(/\bstrong\b/gi, "");
+
+      // إزالة كل علامات الـ JSON والأقواس والشرط السفلية
+      text = text
+        .replace(/[{}[\]"']/g, " ")
+        .replace(/[_:,;]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    return text;
   }
 
   return "";
@@ -163,3 +167,4 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
     </div>
   );
 }
+
