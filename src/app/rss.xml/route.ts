@@ -11,7 +11,7 @@ import { client } from "@/sanity/client";
  *     newsletter digest.
  */
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 const BASE_URL = "https://chronoversecapital.com";
 const SITE_TITLE = "Chronoverse Capital";
 const SITE_DESCRIPTION =
