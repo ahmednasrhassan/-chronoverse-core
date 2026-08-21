@@ -9,7 +9,7 @@ import {
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
-export const revalidate = 86400;
+export const revalidate = 3600;
 export async function generateStaticParams() {
   const categories = await getAllCategories();
   return categories.map((category) => ({
