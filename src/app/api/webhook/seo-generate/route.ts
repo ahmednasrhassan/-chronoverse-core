@@ -44,9 +44,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!dryRun) {
-      assertWriteTokenConfigured();
-    }
+        // if (!dryRun) {
+    //   assertWriteTokenConfigured();
+    // }
 
     const doc = await sanityWriteClient.fetch<SanityPostForSeo | null>(
       `*[_id == $id][0]{ _id, title, body, bodyRaw }`,
