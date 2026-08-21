@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 };
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const marketSymbols: { symbol: string; label: string }[] = [
