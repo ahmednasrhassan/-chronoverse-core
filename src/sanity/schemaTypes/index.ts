@@ -3,6 +3,7 @@ import page from './page'
 import author from './author'
 import category from './category'
 import subscriber from './subscriber'
+import { comment } from './comment'
 
 /**
  * Central schema registry for Sanity Studio.
@@ -12,6 +13,6 @@ import subscriber from './subscriber'
  * `src/app/studio/page.tsx`) can group them into distinct "Posts" and
  * "Pages" sections in the sidebar.
  */
-export const schemaTypes = [post, page, author, category, subscriber]
+export const schemaTypes = [post, page, author, category, subscriber, comment]
 
 export default schemaTypes

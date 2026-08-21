@@ -1,4 +1,4 @@
-
+import ExecutiveDiscussion from "@/components/ExecutiveDiscussion";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -545,15 +545,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       <AuthorCard authorName={currentPost.author} />
 
       {/* Article Discussion & Comments Section */}
-      <section className="mt-14 pt-8 border-t border-zinc-800 print:hidden">
-        <h2 className="text-xl font-semibold text-zinc-100 mb-6 flex items-center gap-2">
-          <span className="text-[#c87d55]">💬</span> Executive Discussion
-        </h2>
-        <div className="p-8 rounded-2xl border border-zinc-800 bg-[#181310] text-center text-zinc-400 text-sm shadow-inner">
-          Discussion thread initialized for: <span className="text-[#c87d55] font-mono">{currentPost.slug}</span>
-        </div>
-      </section>
-
+     <ExecutiveDiscussion postId={(currentPost as any)?._id || currentPost.slug || ""} comments={(currentPost as any)?.comments || []} />
     </main>
   );
 }
