@@ -8,12 +8,12 @@ interface AIExecutiveSummaryProps {
 }
 
 /**
- * دالة مساعدة صارمة لحذف كافة مفاتيح Sanity والرموز والشرط واستخراج النص الإنجليزي الصافي
+ * Strips Sanity Portable Text block artifacts, keys, and JSON syntax,
+ * returning pure human-readable text.
  */
 function cleanTakeawayText(item: any): string {
   if (!item) return "";
 
-  // 1. معالجة الكائنات والمصفوفات
   if (typeof item === "object") {
     if (Array.isArray(item)) {
       return item.map(cleanTakeawayText).filter(Boolean).join(" ");
@@ -29,11 +29,9 @@ function cleanTakeawayText(item: any): string {
     }
   }
 
-  // 2. معالجة السلاسل النصية
   if (typeof item === "string") {
     let text = item.trim();
 
-    // فك تشفير JSON إذا كان بصيغة كائن مشفر
     if (
       (text.startsWith("{") && text.endsWith("}")) ||
       (text.startsWith("[") && text.endsWith("]"))
@@ -42,34 +40,32 @@ function cleanTakeawayText(item: any): string {
         const parsed = JSON.parse(text);
         return cleanTakeawayText(parsed);
       } catch {
-        // الاستمرار للتنظيف النصي
+        // Fallback to regex cleaning below
       }
     }
 
-    // تنظيف شامل إذا كان النص يحتوي على بنية Portable Text المشوهة
     if (
       text.includes("_key") ||
+      text.includes("key ") ||
       text.includes("_type") ||
+      text.includes("type ") ||
       text.includes("children") ||
       text.includes("markDefs") ||
       text.includes("marks") ||
-      text.includes("style")
+      text.includes("span") ||
+      text.includes("block")
     ) {
-      // حذف مفاتيح Sanity وقيمها العشوائية
       text = text
-        .replace(/_?key\s*[:=]?\s*\w+/gi, "")
-        .replace(/_?type\s*[:=]?\s*\w+/gi, "")
-        .replace(/markDefs\s*[:=]?\s*(\[[^\]]*\]|\w+)?/gi, "")
-        .replace(/marks\s*[:=]?\s*(\[[^\]]*\]|\w+)?/gi, "")
-        .replace(/style\s*[:=]?\s*\w+/gi, "")
-        .replace(/children\s*[:=]?\s*/gi, "")
-        .replace(/\btext\s*[:=]?\s*/gi, "")
+        .replace(/\b_?key\s*:?\s*[a-zA-Z0-9_-]+/gi, "")
+        .replace(/\b_?type\s*:?\s*[a-zA-Z0-9_-]+/gi, "")
+        .replace(/\bmarkDefs\s*:?\s*(\[[^\]]*\]|\w+)?/gi, "")
+        .replace(/\bmarks\s*:?\s*(\[[^\]]*\]|\w+)?/gi, "")
+        .replace(/\bstyle\s*:?\s*\w+/gi, "")
+        .replace(/\bchildren\s*:?/gi, "")
+        .replace(/\btext\s*:?/gi, "")
         .replace(/\bspan\b/gi, "")
         .replace(/\bblock\b/gi, "")
-        .replace(/\bstrong\b/gi, "");
-
-      // إزالة كل علامات الـ JSON والأقواس والشرط السفلية
-      text = text
+        .replace(/\bstrong\b/gi, "")
         .replace(/[{}[\]"']/g, " ")
         .replace(/[_:,;]/g, " ")
         .replace(/\s+/g, " ")
@@ -96,7 +92,6 @@ function cleanTakeawayText(item: any): string {
 export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  // استخراج النصوص الصافية النظيفة وفلترتها
   const safePoints = (points ?? [])
     .map(cleanTakeawayText)
     .filter((text) => typeof text === "string" && text.trim().length > 0)
@@ -167,4 +162,3 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
     </div>
   );
 }
-
