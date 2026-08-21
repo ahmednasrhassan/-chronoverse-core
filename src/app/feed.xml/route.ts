@@ -8,7 +8,7 @@ import { client } from "@/sanity/client";
  * probe either path both receive a fully-branded, valid "Chronoverse
  * Capital" feed with proper canonical `<link>`/`<guid>` URLs.
  */
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 
 const BASE_URL = "https://chronoversecapital.com";
