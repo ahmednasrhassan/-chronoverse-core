@@ -275,12 +275,19 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
   const autoSummary = currentPost.seoDescription || rawText.substring(0, 140);
 
-  // Extract top 3 natural paragraphs directly for the Executive Summary
+  // Extract top 3 natural analytical paragraphs directly for the Executive Summary
   const naturalParagraphs = rawText
     .split(/\n+/)
     .map((p) => p.trim())
-    .filter((p) => p.length > 40 && !p.startsWith("Figure") && !p.startsWith("::"));
-
+    .filter(
+      (p) =>
+        p.length > 60 &&
+        !p.startsWith("Figure") &&
+        !p.startsWith("::") &&
+        !p.toLowerCase().startsWith("classification:") &&
+        !p.toLowerCase().startsWith("focus:") &&
+        !p.toLowerCase().startsWith("intel protocol")
+    );
   const executiveSummaryPoints =
     naturalParagraphs.length >= 3
       ? naturalParagraphs.slice(0, 3)
