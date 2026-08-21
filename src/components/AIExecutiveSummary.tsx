@@ -8,49 +8,16 @@ interface AIExecutiveSummaryProps {
 }
 
 /**
- * دالة مساعدة لاستخراج النص الصافي ومنع ظهور مفاتيح JSON / Portable Text
+ * دالة شاملة لتنظيف واستخراج النص الصافي ومنع ظهور مفاتيح Sanity و JSON
  */
 function cleanTakeawayText(item: any): string {
   if (!item) return "";
 
-  // لو كان العنصر نصاً
-  if (typeof item === "string") {
-    const trimmed = item.trim();
-    // لو النص عبارة عن JSON string خام
-    if (
-      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
-      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-      trimmed.includes('"_type"') ||
-      trimmed.includes('"children"')
-    ) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        return cleanTakeawayText(parsed);
-      } catch {
-        // تنظيف يدوي بالـ Regex في حال تعذر عمل JSON.parse
-        return trimmed
-          .replace(/[{}[\]"]/g, " ")
-          .replace(/_key:[^,]+,?/g, "")
-          .replace(/_type:[^,]+,?/g, "")
-          .replace(/marks:[^,]+,?/g, "")
-          .replace(/markDefs:[^,]+,?/g, "")
-          .replace(/style:[^,]+,?/g, "")
-          .replace(/children:/g, "")
-          .replace(/text:\s*/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-      }
-    }
-    return trimmed;
-  }
-
-  // لو كان العنصر Array
-  if (Array.isArray(item)) {
-    return item.map(cleanTakeawayText).filter(Boolean).join(" ");
-  }
-
-  // لو كان كائن Portable Text Block
+  // 1. التعامل مع الكائنات المباشرة
   if (typeof item === "object") {
+    if (Array.isArray(item)) {
+      return item.map(cleanTakeawayText).filter(Boolean).join(" ");
+    }
     if (Array.isArray(item.children)) {
       return item.children
         .map((child: any) => (child && typeof child.text === "string" ? child.text : ""))
@@ -58,11 +25,57 @@ function cleanTakeawayText(item: any): string {
         .join(" ");
     }
     if (typeof item.text === "string") {
-      return item.text;
+      return item.text.trim();
     }
   }
 
-  return String(item);
+  // 2. التعامل مع السلاسل النصية
+  if (typeof item === "string") {
+    const trimmed = item.trim();
+
+    // إذا كانت السلسلة تحتوي على كتل أو مفاتيح Portable Text
+    if (
+      trimmed.includes("_type") ||
+      trimmed.includes("children") ||
+      trimmed.includes("marks") ||
+      trimmed.includes("_key") ||
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+    ) {
+      // محاولة أولى: فك تشفير JSON إن وجد
+      try {
+        const parsed = JSON.parse(trimmed);
+        return cleanTakeawayText(parsed);
+      } catch {
+        // محاولة ثانية: استخراج ما بعد "text :" أو "text:"
+        const matches = trimmed.match(/text\s*[:=]\s*([^,}\]]+)/gi);
+        if (matches && matches.length > 0) {
+          return matches
+            .map((m) => m.replace(/text\s*[:=]\s*/i, "").replace(/["']/g, "").trim())
+            .filter(Boolean)
+            .join(" ");
+        }
+
+        // محاولة ثالثة: تنظيف شامل وعزل المفاتيح المشوهة
+        return trimmed
+          .replace(/_key\s*:\s*[^,]+/gi, "")
+          .replace(/_type\s*:\s*[^,]+/gi, "")
+          .replace(/marks\s*:\s*[^,]+/gi, "")
+          .replace(/markDefs\s*:\s*[^,]+/gi, "")
+          .replace(/style\s*:\s*[^,]+/gi, "")
+          .replace(/children\s*:\s*/gi, "")
+          .replace(/text\s*:\s*/gi, "")
+          .replace(/[{}[\]"]/g, " ")
+          .replace(/[,;:]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+    }
+
+    return trimmed;
+  }
+
+  return "";
 }
 
 /**
