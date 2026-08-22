@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "@/components/navigation/Header";
-import Footer from "@/components/navigation/Footer";
-import "./globals.css";
-import CookieConsentWrapper from "@/components/CookieConsentWrapper";
 import Script from "next/script";
 
-// next/font optimization
+import CookieConsentWrapper from "@/components/CookieConsentWrapper";
+
+import "./globals.css";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,9 +22,10 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://chronoversecapital.com";
 const SITE_NAME = "Chronoverse Capital";
-const DEFAULT_DESCRIPTION = "Chronoverse Capital offers institutional-grade macroeconomic intelligence, expert asset allocation strategies, and deep-dive financial market research.";
 
-// Viewport Optimization for Mobile & Tablets
+const DEFAULT_DESCRIPTION =
+  "Chronoverse Capital offers institutional-grade macroeconomic intelligence, expert asset allocation strategies, and deep-dive financial market research.";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -35,18 +35,26 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+
   alternates: {
     types: {
       "application/rss+xml": [
-        { url: "/rss.xml", title: `${SITE_NAME} - RSS Feed` },
+        {
+          url: "/rss.xml",
+          title: `${SITE_NAME} - RSS Feed`,
+        },
       ],
     },
   },
+
   title: {
-    default: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+    default:
+      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     template: "%s | Chronoverse",
   },
+
   description: DEFAULT_DESCRIPTION,
+
   keywords: [
     "Macro",
     "Finance",
@@ -54,17 +62,26 @@ export const metadata: Metadata = {
     "Research",
     "Chronoverse Capital",
   ],
-  authors: [{ name: "Chronoverse Capital Team" }],
+
+  authors: [
+    {
+      name: "Chronoverse Capital Team",
+    },
+  ],
+
   icons: {
     icon: "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
   },
+
   openGraph: {
     type: "website",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+    title:
+      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     description: DEFAULT_DESCRIPTION,
     locale: "en_US",
+
     images: [
       {
         url: "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
@@ -74,17 +91,24 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+    title:
+      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
     description: DEFAULT_DESCRIPTION,
     site: "@ChronoVerseCap",
     creator: "@ChronoVerseCap",
-    images: ["https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg"],
+
+    images: [
+      "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
+    ],
   },
+
   robots: {
     index: true,
     follow: true,
+
     googleBot: {
       index: true,
       follow: true,
@@ -92,7 +116,8 @@ export const metadata: Metadata = {
   },
 };
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W";
+const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W";
 
 export default function RootLayout({
   children,
@@ -111,8 +136,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
+
+              function gtag(){
+                dataLayer.push(arguments);
+              }
+
               gtag('js', new Date());
+
               gtag('config', '${GA_MEASUREMENT_ID}', {
                 page_path: window.location.pathname,
                 send_page_view: true
@@ -120,8 +150,12 @@ export default function RootLayout({
 
               function loadGtagScript() {
                 var s = document.createElement('script');
-                s.src = 'https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}';
+
+                s.src =
+                  'https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}';
+
                 s.async = true;
+
                 document.head.appendChild(s);
               }
 
@@ -134,10 +168,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#120e0c] text-zinc-100 font-sans overflow-x-hidden">
-        <Header />
-        <main className="flex-1 w-full bg-[#120e0c]">{children}</main>
-        <Footer />
+
+      <body className="min-h-full font-sans overflow-x-hidden">
+        {children}
+
         <CookieConsentWrapper />
       </body>
     </html>
