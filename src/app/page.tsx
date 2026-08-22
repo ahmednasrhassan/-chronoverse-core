@@ -22,13 +22,32 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const marketSymbols: { symbol: string; label: string }[] = [
-    { symbol: "BTC-USD", label: "Bitcoin" },
-    { symbol: "^GSPC", label: "S&P 500" },
-    { symbol: "GC=F", label: "Gold (Futures)" },
-    { symbol: "CL=F", label: "Crude Oil (WTI)" },
-  ];
-
+  const marketSymbols: {
+  symbol: string;
+  label: string;
+  href: string;
+}[] = [
+  {
+    symbol: "BTC-USD",
+    label: "Bitcoin",
+    href: "/markets/bitcoin",
+  },
+  {
+    symbol: "^GSPC",
+    label: "S&P 500",
+    href: "/markets/sp500",
+  },
+  {
+    symbol: "GC=F",
+    label: "Gold (Futures)",
+    href: "/markets/gold",
+  },
+  {
+    symbol: "CL=F",
+    label: "Crude Oil (WTI)",
+    href: "/markets/oil",
+  },
+];
   // Strictly the latest 4 published posts, ordered chronologically:
   // *[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0..3]
   const featuredArticles = await getLatestSanityArticles(4);
@@ -49,14 +68,19 @@ export default async function HomePage() {
             Live Markets Overview
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {marketSymbols.map(({ symbol, label }) => (
-              <div
-                key={symbol}
-                className="bg-[#18181b] border border-zinc-800 p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors"
-              >
-                <MarketQuoteCard symbol={symbol} label={label} />
-              </div>
-            ))}
+           {marketSymbols.map(({ symbol, label, href }) => (
+  <Link
+    key={symbol}
+    href={href}
+    aria-label={`Open ${label} chart`}
+    className="block bg-[#18181b] border border-zinc-800 p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors cursor-pointer"
+  >
+    <MarketQuoteCard
+      symbol={symbol}
+      label={label}
+    />
+  </Link>
+))}
           </div>
         </section>
 

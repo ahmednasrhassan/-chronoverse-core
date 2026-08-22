@@ -1,0 +1,1 @@
+import GoldChart from "@/components/charts/GoldChart"; export default function ChartTestPage() { return <main className="min-h-screen bg-[#0a0a0a] p-8"><div className="mx-auto max-w-6xl"><h1 className="mb-6 text-2xl font-bold text-white">Chronoverse Gold Chart Test</h1><GoldChart /></div></main>; }

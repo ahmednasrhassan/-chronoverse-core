@@ -1,7 +1,7 @@
 "use client";
 
-import LightweightChartLazy from "./LightweightChartLazy";
+import ChronoverseGoldEChart from "./engines/echarts/ChronoverseGoldEChart";
 
 export default function GoldChart() {
-  return <LightweightChartLazy symbol="GC=F" />;
+  return <ChronoverseGoldEChart />;
 }

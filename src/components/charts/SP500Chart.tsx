@@ -13,7 +13,7 @@ interface MarketDataResponse {
   candles?: MarketCandle[];
 }
 
-export default function BitcoinChart() {
+export default function SP500Chart() {
   const [candles, setCandles] =
     useState<MarketCandle[]>([]);
 
@@ -32,7 +32,7 @@ export default function BitcoinChart() {
         setError(null);
 
         const response = await fetch(
-          "/api/market-data?symbol=BTC-USD&range=3mo&interval=1d",
+          "/api/market-data?symbol=%5EGSPC&range=3mo&interval=1d",
           {
             cache: "no-store",
           }
@@ -40,7 +40,7 @@ export default function BitcoinChart() {
 
         if (!response.ok) {
           throw new Error(
-            `Bitcoin market data request failed with HTTP ${response.status}`
+            `S&P 500 market data request failed with HTTP ${response.status}`
           );
         }
 
@@ -59,7 +59,7 @@ export default function BitcoinChart() {
             nextCandles.length === 0
           ) {
             setError(
-              "Bitcoin market data is temporarily unavailable."
+              "S&P 500 market data is temporarily unavailable."
             );
           }
         }
@@ -68,7 +68,7 @@ export default function BitcoinChart() {
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to load Bitcoin market data."
+              : "Failed to load S&P 500 market data."
           );
         }
       } finally {
@@ -110,7 +110,7 @@ export default function BitcoinChart() {
   return (
     <ChronoverseCandlestickChart
       candles={candles}
-      symbol="Bitcoin"
+      symbol="S&P 500"
       loading={loading}
       className="w-full"
     />
