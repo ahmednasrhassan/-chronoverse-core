@@ -7,6 +7,8 @@
  * This file must remain vendor-agnostic.
  */
 
+import { registerMarketProviders } from "../register";
+
 import type { PremiumMarketDataProvider } from "./provider";
 
 import {
@@ -31,6 +33,15 @@ import {
 export function bootstrapPremiumMarketProvider():
   | PremiumMarketDataProvider
   | null {
+  /**
+   * Register all available provider adapters before
+   * attempting to resolve the configured provider.
+   *
+   * Registration is idempotent and performs no
+   * network requests.
+   */
+  registerMarketProviders();
+
   const config = getPremiumMarketConfig();
 
   if (!config.enabled) {
@@ -53,7 +64,9 @@ export function bootstrapPremiumMarketProvider():
 
   setActivePremiumProvider(config.providerId);
 
-  const provider = createPremiumProvider(config.providerId);
+  const provider = createPremiumProvider(
+    config.providerId
+  );
 
   if (!provider.isConfigured()) {
     throw new Error(
@@ -70,7 +83,9 @@ export function bootstrapPremiumMarketProvider():
  */
 export function hasUsablePremiumMarketProvider(): boolean {
   try {
-    return bootstrapPremiumMarketProvider() !== null;
+    return (
+      bootstrapPremiumMarketProvider() !== null
+    );
   } catch {
     return false;
   }
