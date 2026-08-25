@@ -20,6 +20,12 @@ type MacroBias =
   | "bearish"
   | "neutral";
 
+type ConflictLevel =
+  | "high"
+  | "moderate"
+  | "low"
+  | "none";
+
 type GoldIntelligence = {
   price: number | null;
 
@@ -177,12 +183,12 @@ export default function GoldIntelligencePanel() {
 
   if (loading) {
     return (
-      <section className="mb-6 rounded-2xl border border-white/10 bg-white/2.5 p-5 md:p-6">
+      <section className="mb-5 rounded-2xl border border-white/10 bg-white/2.5 p-4 md:p-5">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#c87d55]">
           Chronoverse Intelligence
         </p>
 
-        <p className="mt-3 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-400">
           Building live gold intelligence...
         </p>
       </section>
@@ -194,12 +200,12 @@ export default function GoldIntelligencePanel() {
     !data
   ) {
     return (
-      <section className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/4 p-5 md:p-6">
+      <section className="mb-5 rounded-2xl border border-red-500/20 bg-red-500/4 p-4 md:p-5">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-red-300">
           Intelligence temporarily unavailable
         </p>
 
-        <p className="mt-3 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-400">
           {error ??
             "Unable to load the current gold intelligence state."}
         </p>
@@ -207,7 +213,7 @@ export default function GoldIntelligencePanel() {
     );
   }
 
-  const confidence =
+  const conviction =
     Math.round(
       data.confidence * 100,
     );
@@ -217,36 +223,57 @@ export default function GoldIntelligencePanel() {
       data.signal.confidence * 100,
     );
 
-  const macroConfidence =
-    data.macro
-      ? Math.round(
-          data.macro.confidence * 100,
-        )
-      : null;
+  const conflict =
+    resolveConflict(
+      data.signal.direction,
+      data.signal.confidence,
+      data.macro,
+    );
+
+  const trendDriver =
+    resolveTrendDriver(
+      data,
+    );
+
+  const momentumDriver =
+    resolveMomentumDriver(
+      data,
+    );
+
+  const volatilityDriver =
+    resolveVolatilityDriver(
+      data.indicators
+        .annualizedVolatility,
+    );
+
+  const macroDriver =
+    resolveMacroDriver(
+      data.macro,
+    );
 
   return (
-    <section className="mb-6 overflow-hidden rounded-2xl border border-[#c87d55]/20 bg-[#17110f]">
-      <div className="border-b border-white/10 px-5 py-5 md:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <section className="mb-5 overflow-hidden rounded-2xl border border-[#c87d55]/20 bg-[#17110f]">
+      <div className="border-b border-white/10 px-5 py-4 md:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#c87d55]">
-              Chronoverse Intelligence Engine
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#c87d55]">
+              Chronoverse Gold Intelligence V2
             </p>
 
-            <h2 className="mt-2 text-xl font-semibold text-white">
-              Gold Market Intelligence
+            <h2 className="mt-1.5 text-lg font-semibold text-white md:text-xl">
+              Decision Layer
             </h2>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">
+            <p className="mt-1.5 max-w-3xl text-sm leading-5 text-zinc-400">
               Technical structure, market risk and
-              macroeconomic regime combined into one
-              institutional market state.
+              macroeconomic regime translated into one
+              actionable analytical state.
             </p>
           </div>
 
           {generatedAt ? (
-            <p className="font-mono text-[11px] uppercase tracking-wider text-zinc-600">
-              Generated{" "}
+            <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+              Updated{" "}
               {new Date(
                 generatedAt,
               ).toLocaleString()}
@@ -256,97 +283,158 @@ export default function GoldIntelligencePanel() {
       </div>
 
       <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Market State"
+        <DecisionCard
+          label="Market Regime"
           value={formatLabel(
             data.state,
           )}
-          detail="Integrated regime"
+          detail="Integrated state"
+          tone={stateTone(
+            data.state,
+          )}
         />
 
-        <MetricCard
+        <DecisionCard
           label="Technical Signal"
           value={formatLabel(
             data.signal.direction,
           )}
           detail={`${formatLabel(
             data.signal.strength,
-          )} · ${signalConfidence}% confidence`}
-        />
-
-        <MetricCard
-          label="Risk Regime"
-          value={formatLabel(
-            data.risk.level,
+          )} · ${signalConfidence}%`}
+          tone={directionTone(
+            data.signal.direction,
           )}
-          detail={`Risk score ${formatNumber(
-            data.risk.score,
-            2,
-          )}`}
         />
 
-        <MetricCard
-          label="Integrated Confidence"
-          value={`${confidence}%`}
-          detail="Technical + risk + macro"
+        <DecisionCard
+          label="Conviction"
+          value={`${conviction}/100`}
+          detail="Integrated confidence"
+          tone={convictionTone(
+            conviction,
+          )}
+        />
+
+        <DecisionCard
+          label="Signal Conflict"
+          value={
+            conflict === "none"
+              ? "Unavailable"
+              : formatLabel(
+                  conflict,
+                )
+          }
+          detail={buildConflictDetail(
+            data.signal.direction,
+            data.macro,
+          )}
+          tone={conflictTone(
+            conflict,
+          )}
         />
       </div>
 
-      <div className="grid gap-4 p-5 md:p-6 lg:grid-cols-[1.4fr_0.6fr]">
-        <div className="rounded-xl border border-white/10 bg-black/10 p-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-            Intelligence Summary
-          </p>
+      <div className="border-b border-white/10 px-5 py-3 md:px-6">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[11px] uppercase tracking-[0.14em]">
+          <span className="text-zinc-500">
+            Technical
+          </span>
 
-          <p className="mt-3 text-sm leading-7 text-zinc-200">
-            {data.summary}
-          </p>
-        </div>
+          <span
+            className={directionTone(
+              data.signal.direction,
+            )}
+          >
+            {directionMarker(
+              data.signal.direction,
+            )}{" "}
+            {formatLabel(
+              data.signal.direction,
+            )}
+          </span>
 
-        <div className="rounded-xl border border-white/10 bg-black/10 p-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-            Macro Regime
-          </p>
+          <span className="text-zinc-700">
+            /
+          </span>
 
-          <p className="mt-3 text-lg font-semibold text-white">
+          <span className="text-zinc-500">
+            Macro
+          </span>
+
+          <span
+            className={macroTone(
+              data.macro?.bias ??
+                "neutral",
+            )}
+          >
+            {macroMarker(
+              data.macro?.bias ??
+                "neutral",
+            )}{" "}
             {data.macro
               ? formatLabel(
                   data.macro.bias,
                 )
               : "Unavailable"}
+          </span>
+        </div>
+      </div>
+
+      <div className="px-5 py-4 md:px-6">
+        <div className="rounded-xl border border-[#c87d55]/20 bg-black/10 px-4 py-3.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c87d55]">
+            Chronoverse Outlook
           </p>
 
-          <p className="mt-1 text-xs text-zinc-500">
-            {data.macro &&
-            macroConfidence !== null
-              ? `${macroConfidence}% macro confidence`
-              : "Macro layer not supplied"}
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-zinc-200">
+            {data.summary}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 border-t border-white/10 p-5 md:p-6 lg:grid-cols-3">
+      <div className="border-t border-white/10 px-5 py-4 md:px-6">
+        <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+          Market Drivers
+        </p>
+
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <DriverCard
+            label="Trend"
+            value={trendDriver.value}
+            detail={trendDriver.detail}
+          />
+
+          <DriverCard
+            label="Momentum"
+            value={momentumDriver.value}
+            detail={momentumDriver.detail}
+          />
+
+          <DriverCard
+            label="Volatility"
+            value={volatilityDriver.value}
+            detail={volatilityDriver.detail}
+          />
+
+          <DriverCard
+            label="Macro"
+            value={macroDriver.value}
+            detail={macroDriver.detail}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-2.5 border-t border-white/10 px-5 py-4 md:px-6 lg:grid-cols-3">
         <IndicatorCard
           label="RSI"
           value={formatNumber(
             data.indicators.rsi,
             2,
           )}
-        />
-
-        <IndicatorCard
-          label="Volatility"
-          value={
-            data.indicators
-              .annualizedVolatility ===
-            null
-              ? "—"
-              : `${formatNumber(
-                  data.indicators
-                    .annualizedVolatility,
-                  2,
-                )}%`
-          }
+          detail={describeRsi(
+            data.indicators.rsi,
+          )}
         />
 
         <IndicatorCard
@@ -360,35 +448,93 @@ export default function GoldIntelligencePanel() {
                   2,
                 )}%`
           }
+          detail="Price momentum"
+        />
+
+        <IndicatorCard
+          label="Risk Score"
+          value={formatNumber(
+            data.risk.score,
+            2,
+          )}
+          detail={formatLabel(
+            data.risk.level,
+          )}
         />
       </div>
 
-      {data.warnings.length >
-      0 ? (
-        <div className="border-t border-white/10 px-5 py-5 md:px-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#c87d55]">
-            Active Intelligence Warnings
+      <div className="border-t border-white/10 px-5 py-4 md:px-6">
+        <div className="flex items-center justify-between gap-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c87d55]">
+            Risk Flags
           </p>
 
-          <div className="mt-3 space-y-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+            {data.warnings.length} active
+          </p>
+        </div>
+
+        {data.warnings.length >
+        0 ? (
+          <div className="mt-3 grid gap-2 lg:grid-cols-2">
             {data.warnings.map(
               (warning) => (
-                <p
+                <div
                   key={warning}
-                  className="text-sm leading-6 text-zinc-400"
+                  className="flex gap-2.5 rounded-lg border border-white/5 bg-black/10 px-3.5 py-2.5"
                 >
-                  • {warning}
-                </p>
+                  <span className="mt-0.5 text-[#c87d55]">
+                    •
+                  </span>
+
+                  <p className="text-xs leading-5 text-zinc-400">
+                    {warning}
+                  </p>
+                </div>
               ),
             )}
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <p className="mt-2 text-xs text-zinc-500">
+            No elevated intelligence warnings are currently active.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
 
-function MetricCard({
+function DecisionCard({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone: string;
+}) {
+  return (
+    <div className="bg-[#17110f] p-4">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+        {label}
+      </p>
+
+      <p
+        className={`mt-1.5 text-base font-semibold ${tone}`}
+      >
+        {value}
+      </p>
+
+      <p className="mt-1 text-[11px] text-zinc-500">
+        {detail}
+      </p>
+    </div>
+  );
+}
+
+function DriverCard({
   label,
   value,
   detail,
@@ -398,16 +544,16 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="bg-[#17110f] p-5">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+    <div className="rounded-xl border border-white/10 bg-black/10 p-3.5">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
         {label}
       </p>
 
-      <p className="mt-2 text-lg font-semibold text-white">
+      <p className="mt-1.5 text-sm font-semibold text-zinc-100">
         {value}
       </p>
 
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-[11px] leading-4 text-zinc-500">
         {detail}
       </p>
     </div>
@@ -417,30 +563,433 @@ function MetricCard({
 function IndicatorCard({
   label,
   value,
+  detail,
 }: {
   label: string;
   value: string;
+  detail: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/10 px-4 py-4">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+    <div className="rounded-xl border border-white/10 bg-black/10 px-3.5 py-3">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
         {label}
       </p>
 
-      <p className="mt-2 text-base font-semibold text-zinc-100">
+      <p className="mt-1.5 text-sm font-semibold text-zinc-100">
         {value}
+      </p>
+
+      <p className="mt-1 text-[11px] text-zinc-500">
+        {detail}
       </p>
     </div>
   );
+}
+
+function resolveConflict(
+  direction: SignalDirection,
+  signalConfidence: number,
+  macro: GoldIntelligence["macro"],
+): ConflictLevel {
+  if (macro === null) {
+    return "none";
+  }
+
+  const opposite =
+    (
+      direction === "bullish" &&
+      macro.bias === "bearish"
+    ) ||
+    (
+      direction === "bearish" &&
+      macro.bias === "bullish"
+    );
+
+  if (!opposite) {
+    return "low";
+  }
+
+  if (
+    signalConfidence >= 0.65 &&
+    macro.confidence >= 0.65
+  ) {
+    return "high";
+  }
+
+  return "moderate";
+}
+
+function resolveTrendDriver(
+  data: GoldIntelligence,
+): {
+  value: string;
+  detail: string;
+} {
+  const {
+    price,
+    indicators,
+  } = data;
+
+  if (
+    price === null ||
+    indicators.ema20 === null ||
+    indicators.ema50 === null ||
+    indicators.ema200 === null
+  ) {
+    return {
+      value: "Unavailable",
+      detail:
+        "Insufficient EMA structure.",
+    };
+  }
+
+  if (
+    price >
+      indicators.ema20 &&
+    indicators.ema20 >
+      indicators.ema50 &&
+    indicators.ema50 >
+      indicators.ema200
+  ) {
+    return {
+      value: "Strong Bullish",
+      detail:
+        "Price and EMA structure are fully aligned.",
+    };
+  }
+
+  if (
+    price <
+      indicators.ema20 &&
+    indicators.ema20 <
+      indicators.ema50 &&
+    indicators.ema50 <
+      indicators.ema200
+  ) {
+    return {
+      value: "Strong Bearish",
+      detail:
+        "Price and EMA structure are negatively aligned.",
+    };
+  }
+
+  return {
+    value: "Mixed",
+    detail:
+      "Trend structure is not fully aligned.",
+  };
+}
+
+function resolveMomentumDriver(
+  data: GoldIntelligence,
+): {
+  value: string;
+  detail: string;
+} {
+  const rsi =
+    data.indicators.rsi;
+
+  const roc =
+    data.indicators.roc;
+
+  const histogram =
+    data.indicators.macdHistogram;
+
+  if (
+    rsi === null ||
+    roc === null ||
+    histogram === null
+  ) {
+    return {
+      value: "Unavailable",
+      detail:
+        "Momentum inputs are incomplete.",
+    };
+  }
+
+  if (
+    roc > 0 &&
+    histogram > 0
+  ) {
+    if (rsi >= 70) {
+      return {
+        value: "Bullish / Extended",
+        detail:
+          "Momentum is positive but RSI is elevated.",
+      };
+    }
+
+    return {
+      value: "Bullish",
+      detail:
+        "ROC and MACD momentum remain positive.",
+    };
+  }
+
+  if (
+    roc < 0 &&
+    histogram < 0
+  ) {
+    if (rsi <= 30) {
+      return {
+        value: "Bearish / Extended",
+        detail:
+          "Negative momentum with oversold RSI.",
+      };
+    }
+
+    return {
+      value: "Bearish",
+      detail:
+        "ROC and MACD momentum remain negative.",
+    };
+  }
+
+  return {
+    value: "Mixed",
+    detail:
+      "Momentum indicators are diverging.",
+  };
+}
+
+function resolveVolatilityDriver(
+  volatility: number | null,
+): {
+  value: string;
+  detail: string;
+} {
+  if (volatility === null) {
+    return {
+      value: "Unavailable",
+      detail:
+        "No volatility estimate.",
+    };
+  }
+
+  if (volatility >= 35) {
+    return {
+      value: "Elevated",
+      detail:
+        `${volatility.toFixed(
+          1,
+        )}% annualized volatility.`,
+    };
+  }
+
+  if (volatility >= 20) {
+    return {
+      value: "Moderate",
+      detail:
+        `${volatility.toFixed(
+          1,
+        )}% annualized volatility.`,
+    };
+  }
+
+  return {
+    value: "Contained",
+    detail:
+      `${volatility.toFixed(
+        1,
+      )}% annualized volatility.`,
+  };
+}
+
+function resolveMacroDriver(
+  macro: GoldIntelligence["macro"],
+): {
+  value: string;
+  detail: string;
+} {
+  if (macro === null) {
+    return {
+      value: "Unavailable",
+      detail:
+        "Macro layer not supplied.",
+    };
+  }
+
+  return {
+    value: formatLabel(
+      macro.bias,
+    ),
+    detail:
+      `${Math.round(
+        macro.confidence * 100,
+      )}% confidence · ${Math.round(
+        macro.coverage * 100,
+      )}% coverage`,
+  };
+}
+
+function buildConflictDetail(
+  technical: SignalDirection,
+  macro: GoldIntelligence["macro"],
+): string {
+  if (macro === null) {
+    return "Macro unavailable";
+  }
+
+  return (
+    `${formatLabel(
+      technical,
+    )} technical / ` +
+    `${formatLabel(
+      macro.bias,
+    )} macro`
+  );
+}
+
+function describeRsi(
+  rsi: number | null,
+): string {
+  if (rsi === null) {
+    return "Unavailable";
+  }
+
+  if (rsi >= 70) {
+    return "Overbought zone";
+  }
+
+  if (rsi <= 30) {
+    return "Oversold zone";
+  }
+
+  return "Neutral momentum zone";
+}
+
+function stateTone(
+  state: IntelligenceState,
+): string {
+  if (
+    state === "opportunity"
+  ) {
+    return "text-emerald-300";
+  }
+
+  if (
+    state === "risk"
+  ) {
+    return "text-red-300";
+  }
+
+  return "text-amber-300";
+}
+
+function directionTone(
+  direction: SignalDirection,
+): string {
+  if (
+    direction === "bullish"
+  ) {
+    return "text-emerald-300";
+  }
+
+  if (
+    direction === "bearish"
+  ) {
+    return "text-red-300";
+  }
+
+  return "text-zinc-300";
+}
+
+function macroTone(
+  bias: MacroBias,
+): string {
+  if (
+    bias === "bullish"
+  ) {
+    return "text-emerald-300";
+  }
+
+  if (
+    bias === "bearish"
+  ) {
+    return "text-red-300";
+  }
+
+  return "text-zinc-300";
+}
+
+function convictionTone(
+  conviction: number,
+): string {
+  if (conviction >= 70) {
+    return "text-emerald-300";
+  }
+
+  if (conviction >= 50) {
+    return "text-amber-300";
+  }
+
+  return "text-zinc-300";
+}
+
+function conflictTone(
+  conflict: ConflictLevel,
+): string {
+  if (conflict === "high") {
+    return "text-red-300";
+  }
+
+  if (
+    conflict === "moderate"
+  ) {
+    return "text-amber-300";
+  }
+
+  return "text-zinc-300";
+}
+
+function directionMarker(
+  direction: SignalDirection,
+): string {
+  if (
+    direction === "bullish"
+  ) {
+    return "↑";
+  }
+
+  if (
+    direction === "bearish"
+  ) {
+    return "↓";
+  }
+
+  return "→";
+}
+
+function macroMarker(
+  bias: MacroBias,
+): string {
+  if (
+    bias === "bullish"
+  ) {
+    return "↑";
+  }
+
+  if (
+    bias === "bearish"
+  ) {
+    return "↓";
+  }
+
+  return "→";
 }
 
 function formatLabel(
   value: string,
 ): string {
   return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase(),
+    .replaceAll(
+      "_",
+      " ",
+    )
+    .replace(
+      /\b\w/g,
+      (letter) =>
+        letter.toUpperCase(),
     );
 }
 
@@ -450,7 +999,9 @@ function formatNumber(
 ): string {
   if (
     value === null ||
-    !Number.isFinite(value)
+    !Number.isFinite(
+      value,
+    )
   ) {
     return "—";
   }

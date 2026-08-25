@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 
 import {
   getFullLiveGoldIntelligence,
@@ -8,21 +9,53 @@ import {
  * Chronoverse Capital
  * Gold Intelligence API
  *
- * GET /api/markets/gold/intelligence
- *
- * Server-side only.
+ * Production cache:
+ * - caches successful intelligence result
+ * - revalidates every 5 minutes
+ * - shared through Next.js cache layer
  */
+
+const getCachedGoldIntelligence =
+  unstable_cache(
+    async () => {
+      const intelligence =
+        await getFullLiveGoldIntelligence();
+
+      return {
+        generatedAt:
+          new Date().toISOString(),
+        intelligence,
+      };
+    },
+    [
+      "chronoverse",
+      "markets",
+      "gold",
+      "intelligence",
+    ],
+    {
+      revalidate: 300,
+      tags: [
+        "gold-intelligence",
+      ],
+    },
+  );
+
 export async function GET() {
   try {
-    const intelligence =
-      await getFullLiveGoldIntelligence();
+    const result =
+      await getCachedGoldIntelligence();
 
     return NextResponse.json(
       {
         ok: true,
         asset: "gold",
-        generatedAt: new Date().toISOString(),
-        intelligence,
+        generatedAt:
+          result.generatedAt,
+        cached: true,
+        stale: false,
+        intelligence:
+          result.intelligence,
       },
       {
         status: 200,
@@ -38,7 +71,8 @@ export async function GET() {
       {
         ok: false,
         asset: "gold",
-        generatedAt: new Date().toISOString(),
+        generatedAt:
+          new Date().toISOString(),
         error:
           error instanceof Error
             ? error.message
