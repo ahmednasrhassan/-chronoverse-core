@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
 import GoldChart from "@/components/charts/GoldChart";
+import GoldIntelligencePanel from "@/components/markets/gold/GoldIntelligencePanel";
 
 export const metadata: Metadata = {
-  title: "Gold Market | Chronoverse Capital",
+  title:
+    "Gold Market | Chronoverse Capital",
+
   description:
-    "Live gold futures chart, market data, and technical analysis from Chronoverse Capital.",
+    "Live gold futures chart, market data, technical analysis, risk and macro intelligence from Chronoverse Capital.",
 };
 
 export default function GoldMarketPage() {
@@ -22,10 +25,14 @@ export default function GoldMarketPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-            Live gold futures market data with Chronoverse technical
-            indicators and institutional market intelligence.
+            Live gold futures market data with
+            Chronoverse technical indicators,
+            macroeconomic regime analysis and
+            institutional market intelligence.
           </p>
         </header>
+
+        <GoldIntelligencePanel />
 
         <GoldChart />
       </div>
