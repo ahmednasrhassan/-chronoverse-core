@@ -15,6 +15,7 @@
     "@sanity/dashboard": "^6.0.14",
     "@sanity/image-url": "^2.1.1",
     "@sanity/structure": "^2.36.2",
+    "@upstash/redis": "^1.38.2",
     "axios": "^1.18.1",
     "chart.js": "^4.5.1",
     "dotenv": "^17.4.2",
