@@ -3,7 +3,9 @@ import {
   type GoldIntelligenceResult,
 } from "./intelligence";
 
+import { goldProfile } from "./profile";
 import {
+  
   fetchGoldCloses,
 } from "./price";
 
@@ -112,7 +114,7 @@ export async function getFullLiveGoldIntelligence():
    * the entire historical dataset.
    */
   const closes =
-    allCloses.slice(-600);
+    allCloses.slice(-goldProfile.historyLimit);
 
   /*
    * ------------------------------------------------------

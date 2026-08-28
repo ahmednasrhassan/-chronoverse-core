@@ -5,7 +5,7 @@ import {
 import {
   calculateGoldMacroScore,
   type GoldMacroScoreResult,
-} from "./macroScore";
+} from "../../assets/gold/macroScore";
 
 /**
  * Chronoverse Capital

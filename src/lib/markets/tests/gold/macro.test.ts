@@ -1,7 +1,7 @@
 import {
   getGoldMacroSnapshot,
   type GoldMacroSnapshot,
-} from "./macro";
+} from "../../assets/gold/macro";
 
 import {
   createFredProvider,

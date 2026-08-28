@@ -1,7 +1,7 @@
 import {
   calculateGoldIntelligence,
   type GoldIntelligenceResult,
-} from "./intelligence";
+} from "../../assets/gold/intelligence";
 
 import {
   runGoldMacroScoreSmokeTest,
