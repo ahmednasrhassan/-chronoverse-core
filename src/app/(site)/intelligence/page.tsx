@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-const LightweightChart = dynamic(() => import("@/components/charts/LightweightChart"), { ssr: false });
 
 
 
@@ -443,30 +442,6 @@ function TerminalIntelligenceContent() {
           })}
         </div>
       </div>
-
-     {/* 
-      <div className="bg-[#0f0f0f] border border-[#27272a] rounded-xl overflow-hidden p-4 space-y-4 shadow-2xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#27272a] pb-3">
-          <h2 className="text-lg font-bold text-[#c87d55] uppercase tracking-wider">
-            [ ADVANCED MARKET WORKSTATION ]
-          </h2>
-          <span className="text-[#a1a1aa] text-xs">
-            LIVE ANALYTICS & LIQUIDITY MAP
-          </span>
-        </div>
-        
-         <div className="w-full rounded-lg overflow-hidden" style={{ height: 550, minHeight: 550 }}>
-            <LightweightChart 
-            symbol="BTC-USD"
-            range="3mo"
-            interval="1d"
-            chartType="candlestick"
-            height={550}
-            refreshMs={60000}
-          />
-        </div>
-      </div>
-      */}
 
       {/* V_INTEL Simulation Tool */}
       <div className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-6">

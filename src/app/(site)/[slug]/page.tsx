@@ -16,16 +16,6 @@ import MathContent from "@/components/MathContent";
 import { siteConfig } from "@/config/siteConfig";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
 
-// The proprietary "Symbol Overview" chart pulls in `lightweight-charts`
-// and is only rendered conditionally (when a market symbol is detected
-// in the article). `SymbolOverviewLazy` wraps it in a
-// `next/dynamic(..., { ssr: false })` import inside its own Client
-// Component, keeping it completely out of the server-rendered HTML /
-// initial JS bundle so it never blocks first paint or LCP on articles
-// that don't need it.
-
-import SymbolOverview from "@/components/charts/SymbolOverviewLazy";
-
 import {
   getSanityArticleBySlug,
   getSanityArticles,
