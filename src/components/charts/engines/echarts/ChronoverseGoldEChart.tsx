@@ -116,7 +116,7 @@ export default function ChronoverseGoldEChart() {
         () => {
           void loadData();
         },
-        60_000
+        15 * 60 * 1000
       );
 
     return () => {

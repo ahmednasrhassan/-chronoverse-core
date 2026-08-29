@@ -85,7 +85,7 @@ export default function OilChart() {
         () => {
           void loadData();
         },
-        60_000
+        15 * 60 * 1000
       );
 
     return () => {

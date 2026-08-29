@@ -50,7 +50,7 @@ export default function ChronoverseMarketChart({
   interval = "1d",
   height = 520,
   className = "",
-  refreshMs = 60_000,
+  refreshMs = 15 * 60 * 1000,
 }: ChronoverseMarketChartProps) {
   const [candles, setCandles] = useState<MarketCandle[]>([]);
   const [loading, setLoading] = useState(true);
