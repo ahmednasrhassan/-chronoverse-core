@@ -11,7 +11,7 @@ import {
  *
  * Production cache:
  * - caches successful intelligence result
- * - revalidates every 15 minutes
+ * - revalidates every 60 minutes
  * - shared through Next.js cache layer
  */
 
@@ -34,7 +34,7 @@ const getCachedGoldIntelligence =
       "intelligence",
     ],
     {
-      revalidate: 900,
+      revalidate: 3600,
       tags: [
         "gold-intelligence",
       ],
