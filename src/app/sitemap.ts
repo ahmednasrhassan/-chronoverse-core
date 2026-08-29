@@ -4,8 +4,8 @@ import { DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
 
-// Revalidates cache every 1 hour (3600 seconds) to reduce Sanity API roundtrips
-export const revalidate = 3600;
+// The sitemap is refreshed on-demand when Sanity publishes, updates,
+// or deletes editorial content through `/api/revalidate`.
 
 // Slugs that are permanently redirected (301/308) and MUST NOT appear in the sitemap
 const EXCLUDED_SLUGS = new Set([
@@ -66,7 +66,13 @@ const STATIC_LAST_MODIFIED: Record<string, Date> = {};
 async function getSanityPosts(): Promise<SanitySlugDoc[]> {
   try {
     const posts = await client.fetch<SanitySlugDoc[]>(
-      `*[_type == "post" && defined(slug.current) && !(_id in path('drafts.**'))] {
+      `*[
+        _type == "post" &&
+        defined(slug.current) &&
+        defined(publishedAt) &&
+        publishedAt <= now() &&
+        !(_id in path('drafts.**'))
+      ] {
         "slug": slug.current,
         "updatedAt": _updatedAt,
         publishedAt
@@ -88,6 +94,9 @@ async function getCategorySlugs(): Promise<string[]> {
       client.fetch<string[]>(
         `array::unique(*[
           _type == "post" &&
+          defined(slug.current) &&
+          defined(publishedAt) &&
+          publishedAt <= now() &&
           defined(category->slug.current) &&
           !(_id in path('drafts.**'))
         ].category->slug.current)`
@@ -95,6 +104,9 @@ async function getCategorySlugs(): Promise<string[]> {
       client.fetch<boolean>(
         `count(*[
           _type == "post" &&
+          defined(slug.current) &&
+          defined(publishedAt) &&
+          publishedAt <= now() &&
           !defined(category) &&
           !(_id in path('drafts.**'))
         ]) > 0`
@@ -164,7 +176,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 3. Process Category Entries
   const categoryEntries: MetadataRoute.Sitemap = categorySlugs.map((slug) => ({
     url: cleanUrl(`category/${slug}`),
-    lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 0.6,
   }));

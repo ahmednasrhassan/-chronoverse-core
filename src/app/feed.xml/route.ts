@@ -8,7 +8,7 @@ import { client } from "@/sanity/client";
  * probe either path both receive a fully-branded, valid "Chronoverse
  * Capital" feed with proper canonical `<link>`/`<guid>` URLs.
  */
-export const revalidate = 3600;
+export const dynamic = "force-static";
 
 
 const BASE_URL = "https://chronoversecapital.com";
@@ -31,7 +31,8 @@ async function getPublishedPosts(): Promise<SanityRssPost[]> {
       _type == "post" &&
       defined(slug.current) &&
       defined(publishedAt) &&
-      publishedAt <= now()
+      publishedAt <= now() &&
+      !(_id in path('drafts.**'))
     ] | order(publishedAt desc) [0...50] {
       "slug": slug.current,
       title,
@@ -113,7 +114,6 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=3600",
     },
   });
 }

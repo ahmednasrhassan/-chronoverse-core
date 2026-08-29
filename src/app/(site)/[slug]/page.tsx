@@ -46,10 +46,8 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Incremental Static Regeneration: serve cached HTML instantly while
-// revalidating in the background at most once every 60 seconds, instead of
-// forcing a zero-cache dynamic render on every single request.
-export const revalidate = 3600;
+// Article and administrative-page content is refreshed on-demand when
+// Sanity publishes, updates, or deletes a post through `/api/revalidate`.
 
 export async function generateStaticParams() {
   const articles = await getSanityArticles();

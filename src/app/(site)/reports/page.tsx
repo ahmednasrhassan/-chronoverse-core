@@ -4,12 +4,12 @@ import { getSanityArticles, stripHtml, calculateReadTime } from '@/lib/content';
 /**
  * Research & Intelligence Reports
  * --------------------------------
- * Fully dynamic: fetches every published post directly from Sanity via
+ * Fetches every published post directly from Sanity via
  * `getSanityArticles()` (see `src/lib/content.ts`). No hardcoded article
  * data — the report cards below (title, category, summary, date, read
- * time) are all derived live from the CMS.
+ * time) are refreshed on-demand when Sanity publishes, updates, or deletes
+ * a post through `/api/revalidate`.
  */
-export const revalidate = 60;
 
 export default async function ReportsPage() {
   const articles = await getSanityArticles();

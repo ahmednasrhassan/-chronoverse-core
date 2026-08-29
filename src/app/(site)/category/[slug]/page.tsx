@@ -9,7 +9,9 @@ import {
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
-export const revalidate = 3600;
+
+// Category content is refreshed on-demand when Sanity publishes,
+// updates, or deletes a post through `/api/revalidate`.
 export async function generateStaticParams() {
   const categories = await getAllCategories();
   return categories.map((category) => ({

@@ -11,12 +11,9 @@ import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
  * component) by their category for display — no hardcoded section/post
  * data is used anywhere on this page.
  *
- * Uses Incremental Static Regeneration (revalidated at most once every 60
- * seconds) instead of a zero-cache `force-dynamic` render, so this page is
- * served instantly from cache while still staying reasonably fresh after
- * new articles are published.
+ * This page is refreshed on-demand when Sanity publishes, updates,
+ * or deletes a post through `/api/revalidate`.
  */
-export const revalidate = 60;
 
 interface ArchivePost {
   slug: string;
@@ -27,7 +24,13 @@ interface ArchivePost {
 }
 
 async function getAllPublishedPosts(): Promise<ArchivePost[]> {
-  const query = `*[_type == "post" && defined(slug.current)] | order(publishedAt desc) {
+  const query = `*[
+    _type == "post" &&
+    defined(slug.current) &&
+    defined(publishedAt) &&
+    publishedAt <= now() &&
+    !(_id in path('drafts.**'))
+  ] | order(publishedAt desc) {
     "slug": slug.current,
     title,
     "date": publishedAt,

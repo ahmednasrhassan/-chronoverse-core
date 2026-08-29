@@ -10,16 +10,13 @@ import NewsletterForm from "@/components/NewsLetterForm";
 // initial JS bundle so it never blocks first paint or the homepage's LCP.
 import MarketQuoteCard from "@/components/charts/MarketQuoteCardLazy";
 
-// On-demand/no-cache revalidation: the homepage's "Latest Research" cards
-// must always reflect the most recently published Sanity post, so we
-// disable the ISR cache window entirely rather than tolerating a stale
-// window (e.g. `revalidate = 60`).
+// The homepage's editorial content is refreshed on-demand when Sanity
+// publishes, updates, or deletes a post through `/api/revalidate`.
 export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
 };
-export const revalidate = 3600;
 
 export default async function HomePage() {
   const marketSymbols: {
