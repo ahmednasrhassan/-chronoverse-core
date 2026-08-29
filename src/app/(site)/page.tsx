@@ -45,7 +45,7 @@ export default async function HomePage() {
   const featuredArticles = await getLatestSanityArticles(4);
 
   return (
-    <div className="min-h-screen bg-[#120e0c] p-6 md:p-10">
+    <div className="min-h-screen bg-[#050506] p-6 md:p-10">
       
       {/* 🟢 SEO FIX: Visually hidden H1 tag to resolve Ahrefs 'H1 tag missing or empty' error */}
       <h1 className="sr-only">
@@ -56,7 +56,7 @@ export default async function HomePage() {
         
         {/* ================= SECTION 1: LIVE MARKET CHARTS (4 Cards) ================= */}
         <section>
-          <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4">
+          <h2 className="text-[#C8A7E8] text-sm font-bold uppercase tracking-widest mb-4">
             Live Markets Overview
           </h2>
 
@@ -66,18 +66,18 @@ export default async function HomePage() {
         {/* ================= SECTION 2: MACRO RESEARCH & INSIGHTS (4 Cards) ================= */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest">
+            <h2 className="text-[#C8A7E8] text-sm font-bold uppercase tracking-widest">
               Macroeconomic Research
             </h2>
             <Link
               href="/reports"
-              className="text-xs text-zinc-400 hover:text-[#c87d55] transition-colors"
+              className="text-xs text-muted hover:text-[#C8A7E8] transition-colors"
             >
               View All Reports &rarr;
             </Link>
           </div>
           {featuredArticles.length === 0 ? (
-            <div className="bg-[#18181b] border border-zinc-800 rounded-xl p-10 text-center text-zinc-300">
+            <div className="bg-[#0D0D11] border border-border rounded-xl p-10 text-center text-secondary">
               No published research available yet. Check back soon.
             </div>
           ) : (
@@ -86,18 +86,18 @@ export default async function HomePage() {
                 <Link
                   key={article.slug}
                   href={`/${article.slug}`}
-                  className="bg-[#18181b] border border-zinc-800 p-6 rounded-xl shadow-lg shadow-black/40 hover:border-[#c87d55] transition-all cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden"
+                  className="bg-[#0D0D11] border border-border p-6 rounded-xl shadow-lg shadow-black/40 hover:border-[#C8A7E8] transition-all cursor-pointer flex flex-col justify-between h-48 group relative overflow-hidden"
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#c87d55] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#C8A7E8] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
                   <div>
-                    <span className="text-[10px] font-bold text-[#c87d55] bg-[#c87d55]/10 px-2 py-1 rounded tracking-wider uppercase">
+                    <span className="text-[10px] font-bold text-[#C8A7E8] bg-[#C8A7E8]/10 px-2 py-1 rounded tracking-wider uppercase">
                       {article.category}
                     </span>
-                    <h3 className="mt-4 text-zinc-100 font-bold text-lg leading-snug group-hover:text-white transition-colors line-clamp-3">
+                    <h3 className="mt-4 text-mauve font-bold text-lg leading-snug group-hover:text-purple-brand transition-colors line-clamp-3">
                       {article.title}
                     </h3>
                   </div>
-                  <span className="text-xs text-zinc-300 font-mono">
+                  <span className="text-xs text-secondary font-mono">
                     {calculateReadTime(
                       article.bodyContent || article.content || ""
                     )}{" "}
@@ -111,12 +111,12 @@ export default async function HomePage() {
 
         {/* ================= SECTION 3: AMAZON SES NEWSLETTER (1 Large Card) ================= */}
         <section>
-          <div className="bg-linear-to-br from-[#18181b] to-[#0a0a0a] border border-zinc-800 rounded-xl p-8 lg:p-14 shadow-2xl shadow-black/50 relative overflow-hidden flex flex-col items-center text-center">
-            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-br from-transparent via-[#c87d55] to-transparent opacity-40"></div>
-            <h2 className="text-3xl font-extrabold text-white mb-4 tracking-tight">
+          <div className="bg-linear-to-br from-[#0D0D11] to-[#050506] border border-border rounded-xl p-8 lg:p-14 shadow-2xl shadow-black/50 relative overflow-hidden flex flex-col items-center text-center">
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-br from-transparent via-[#C8A7E8] to-transparent opacity-40"></div>
+            <h2 className="text-3xl font-extrabold text-mauve mb-4 tracking-tight">
               Institutional Briefing
             </h2>
-            <p className="text-zinc-300 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+            <p className="text-secondary max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
               Gain an asymmetric edge in global markets. Receive proprietary macroeconomic research, liquidity trend analyses, and strategic asset allocation directives delivered directly to your executive inbox.
             </p>
             <NewsletterForm />
@@ -128,33 +128,33 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* 1. Institutional Sponsorship */}
-            <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-800 bg-[#141414] hover:border-zinc-700 transition-all">
+            <div className="flex items-center justify-between p-5 rounded-xl border border-border bg-[#15131A] hover:border-purple-border transition-all">
               <div className="flex flex-col gap-1 pr-2">
-                <span className="text-[11px] font-mono tracking-widest text-[#c87d55] uppercase font-semibold">
+                <span className="text-[11px] font-mono tracking-widest text-[#C8A7E8] uppercase font-semibold">
                   Underwriting & Partnerships
                 </span>
-                <span className="text-base font-bold text-white tracking-wide">
+                <span className="text-base font-bold text-primary tracking-wide">
                   Official Institutional Partner
                 </span>
-                <span className="text-xs text-zinc-400 leading-relaxed">
+                <span className="text-xs text-muted leading-relaxed">
                   Strategic research underwriting, brand alignment, and executive intelligence syndication.
                 </span>
               </div>
-              <span className="text-[11px] font-mono border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md bg-zinc-800/60 shrink-0">
+              <span className="text-[11px] font-mono border border-purple-border text-secondary px-3 py-1.5 rounded-md bg-raised/60 shrink-0">
                 Inquiries Open
               </span>
             </div>
 
             {/* 2. Private VIP Syndicate (Alpha & Trading Club) */}
-            <div className="flex items-center justify-between p-5 rounded-xl border border-zinc-800 bg-[#141414] hover:border-zinc-700 transition-all">
+            <div className="flex items-center justify-between p-5 rounded-xl border border-border bg-[#15131A] hover:border-purple-border transition-all">
               <div className="flex flex-col gap-1 pr-2">
                 <span className="text-[11px] font-mono tracking-widest text-emerald-400 uppercase font-semibold">
                   Exclusive Membership
                 </span>
-                <span className="text-base font-bold text-white tracking-wide">
+                <span className="text-base font-bold text-primary tracking-wide">
                   Private Alpha Syndicate
                 </span>
-                <span className="text-xs text-zinc-400 leading-relaxed">
+                <span className="text-xs text-muted leading-relaxed">
                   Live quant charts, macro consensus & directives from top economists, private trade exchange, and closed institutional desks.
                 </span>
               </div>
@@ -168,11 +168,11 @@ export default async function HomePage() {
 
         {/* ================= SECTION 4: OFFICIAL SPONSORS (4 Cards) ================= */}
         {/* <section>
-          <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4 text-center mt-8">Official Partners & Sponsors</h2>
+          <h2 className="text-[#C8A7E8] text-sm font-bold uppercase tracking-widest mb-4 text-center mt-8">Official Partners & Sponsors</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((sponsor) => (
-              <div key={sponsor} className="bg-[#18181b] border border-zinc-800 h-24 rounded-xl flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer shadow-md hover:border-[#c87d55]/50 group">
-                <span className="text-zinc-600 group-hover:text-zinc-300 font-extrabold tracking-widest text-sm transition-colors">
+              <div key={sponsor} className="bg-[#0D0D11] border border-border h-24 rounded-xl flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer shadow-md hover:border-[#C8A7E8]/50 group">
+                <span className="text-muted group-hover:text-secondary font-extrabold tracking-widest text-sm transition-colors">
                   SPONSOR {sponsor}
                 </span>
               </div>

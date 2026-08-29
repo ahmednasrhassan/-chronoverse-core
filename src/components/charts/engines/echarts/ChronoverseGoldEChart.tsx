@@ -199,8 +199,8 @@ export default function ChronoverseGoldEChart() {
     candles.length === 0
   ) {
     return (
-      <div className="flex min-h-105 items-center justify-center rounded-xl border border-zinc-800 bg-black/20 px-6 text-center">
-        <p className="font-mono text-sm text-zinc-400">
+      <div className="flex min-h-105 items-center justify-center rounded-xl border border-border bg-black/20 px-6 text-center">
+        <p className="font-mono text-sm text-muted">
           {error}
         </p>
       </div>
@@ -214,21 +214,21 @@ export default function ChronoverseGoldEChart() {
     ) >= 0;
 
   return (
-    <section className="w-full overflow-hidden rounded-xl border border-zinc-800 bg-black/20">
-      <div className="flex flex-col gap-4 border-b border-zinc-800 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <section className="w-full overflow-hidden rounded-xl border border-border bg-black/20">
+      <div className="flex flex-col gap-4 border-b border-border px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-base font-bold uppercase tracking-wide text-white">
+            <h2 className="text-base font-bold uppercase tracking-wide text-mauve">
               Gold Futures
             </h2>
 
-            <span className="rounded-md border border-zinc-700 bg-zinc-900/70 px-2 py-1 font-mono text-[10px] text-zinc-400">
+            <span className="rounded-md border border-purple-border bg-raised/70 px-2 py-1 font-mono text-[10px] text-muted">
               GC=F
             </span>
           </div>
 
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="font-mono text-2xl font-semibold text-white">
+            <span className="font-mono text-2xl font-semibold text-primary">
               {formatPrice(
                 marketStats.lastPrice
               )}
@@ -275,7 +275,7 @@ export default function ChronoverseGoldEChart() {
             </span>
           </div>
 
-          <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-500">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted">
             Chronoverse Market Data
             {source
               ? ` · ${source}`
@@ -284,8 +284,8 @@ export default function ChronoverseGoldEChart() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">
+          <div className="rounded-lg border border-border bg-black/30 px-3 py-2">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-muted">
               3M High
             </div>
 
@@ -296,8 +296,8 @@ export default function ChronoverseGoldEChart() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">
+          <div className="rounded-lg border border-border bg-black/30 px-3 py-2">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-muted">
               3M Low
             </div>
 
@@ -308,22 +308,22 @@ export default function ChronoverseGoldEChart() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">
+          <div className="rounded-lg border border-border bg-black/30 px-3 py-2">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-muted">
               Range
             </div>
 
-            <div className="mt-1 font-mono text-sm font-semibold text-zinc-200">
+            <div className="mt-1 font-mono text-sm font-semibold text-secondary">
               3M
             </div>
           </div>
 
-          <div className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2">
-            <div className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">
+          <div className="rounded-lg border border-border bg-black/30 px-3 py-2">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-muted">
               Interval
             </div>
 
-            <div className="mt-1 font-mono text-sm font-semibold text-zinc-200">
+            <div className="mt-1 font-mono text-sm font-semibold text-secondary">
               1D
             </div>
           </div>

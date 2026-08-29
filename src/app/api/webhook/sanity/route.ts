@@ -120,21 +120,21 @@ function buildArticleEmailHtml(post: PublishedPost, articleUrl: string): string 
 
   const summaryHtml =
     summaryPoints.length === 1
-      ? `<p style="color:#a1a1aa;font-size:15px;line-height:1.6;margin:0 0 24px 0;">${summaryPoints[0]}</p>`
-      : `<ul style="color:#a1a1aa;font-size:15px;line-height:1.6;margin:0 0 24px 0;padding-left:20px;">
+      ? `<p style="color:#CFC5B8;font-size:15px;line-height:1.6;margin:0 0 24px 0;">${summaryPoints[0]}</p>`
+      : `<ul style="color:#CFC5B8;font-size:15px;line-height:1.6;margin:0 0 24px 0;padding-left:20px;">
           ${summaryPoints.map((point) => `<li style="margin-bottom:8px;">${point}</li>`).join("")}
         </ul>`;
 
   const category = post.categoryTitle
-    ? `<span style="display:inline-block;font-size:11px;color:#c87d55;background-color:#18181b;border:1px solid #c87d5540;border-radius:4px;padding:3px 10px;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase;">${post.categoryTitle}</span>`
+    ? `<span style="display:inline-block;font-size:11px;color:#C8A7E8;background-color:#0D0D11;border:1px solid #C8A7E840;border-radius:4px;padding:3px 10px;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase;">${post.categoryTitle}</span>`
     : "";
 
   return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0a0a0a;color:#f4f4f5;padding:32px 16px;">
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#050506;color:#F3EBDD;padding:32px 16px;">
     <table style="max-width:600px;margin:0 auto;width:100%;border-collapse:collapse;">
       <tr>
-        <td style="padding-bottom:24px;border-bottom:1px solid #27272a;">
-          <span style="color:#c87d55;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// New Dispatch</span>
+        <td style="padding-bottom:24px;border-bottom:1px solid #292432;">
+          <span style="color:#C8A7E8;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// New Dispatch</span>
           <h1 style="font-size:22px;font-weight:bold;margin:8px 0 0 0;color:#ffffff;">Chronoverse Capital</h1>
         </td>
       </tr>
@@ -145,11 +145,11 @@ function buildArticleEmailHtml(post: PublishedPost, articleUrl: string): string 
             <a href="${articleUrl}" style="color:#ffffff;text-decoration:none;">${post.title}</a>
           </h2>
           ${summaryHtml}
-          <a href="${articleUrl}" style="display:inline-block;background-color:#c87d55;color:#0a0a0a;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:6px;">Read Full Article →</a>
+          <a href="${articleUrl}" style="display:inline-block;background-color:#C8A7E8;color:#050506;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:6px;">Read Full Article →</a>
         </td>
       </tr>
       <tr>
-        <td style="padding-top:40px;text-align:center;color:#71717a;font-size:12px;">
+        <td style="padding-top:40px;text-align:center;color:#91889A;font-size:12px;">
           You are receiving this email because you subscribed to Chronoverse Capital's newsletter.<br/>
           Chronoverse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States
         </td>

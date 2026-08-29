@@ -90,17 +90,17 @@ function MarketQuoteCardComponent({
     <div className="w-full h-full flex flex-col gap-2">
       <div className="flex items-start justify-between px-1">
         <div className="flex flex-col min-w-0">
-          <span className="text-zinc-200 text-xs font-bold uppercase tracking-wide truncate">
+          <span className="text-secondary text-xs font-bold uppercase tracking-wide truncate">
             {displayLabel}
           </span>
 
-          <span className="text-zinc-300 text-[10px] font-mono">
+          <span className="text-secondary text-[10px] font-mono">
             {symbol}
           </span>
         </div>
 
         <div className="flex flex-col items-end shrink-0">
-          <span className="text-white text-sm font-bold font-mono">
+          <span className="text-primary text-sm font-bold font-mono">
             {formatPrice(price)}
           </span>
 
@@ -126,9 +126,9 @@ function MarketQuoteCardComponent({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 grid grid-cols-3 gap-2 rounded-lg bg-black/20 border border-zinc-800/60 px-2 py-2">
+      <div className="flex-1 min-h-0 grid grid-cols-3 gap-2 rounded-lg bg-black/20 border border-border/60 px-2 py-2">
         <div className="flex flex-col items-center justify-center gap-1">
-          <span className="text-[9px] uppercase tracking-widest text-zinc-300 font-mono">
+          <span className="text-[9px] uppercase tracking-widest text-secondary font-mono">
             24h High
           </span>
 
@@ -139,8 +139,8 @@ function MarketQuoteCardComponent({
           </span>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-1 border-x border-zinc-800/60">
-          <span className="text-[9px] uppercase tracking-widest text-zinc-300 font-mono">
+        <div className="flex flex-col items-center justify-center gap-1 border-x border-border/60">
+          <span className="text-[9px] uppercase tracking-widest text-secondary font-mono">
             24h Low
           </span>
 
@@ -152,11 +152,11 @@ function MarketQuoteCardComponent({
         </div>
 
         <div className="flex flex-col items-center justify-center gap-1">
-          <span className="text-[9px] uppercase tracking-widest text-zinc-300 font-mono">
+          <span className="text-[9px] uppercase tracking-widest text-secondary font-mono">
             Volume
           </span>
 
-          <span className="text-[11px] font-mono font-semibold text-zinc-300">
+          <span className="text-[11px] font-mono font-semibold text-secondary">
             {formatVolume(
               quote?.volume
             )}

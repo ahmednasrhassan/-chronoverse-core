@@ -74,12 +74,12 @@ export async function POST(request: Request) {
         Body: {
           Html: {
             Data: `
-              <div style="font-family: monospace; background-color: #0a0a0a; color: #f4f4f5; padding: 24px; border: 1px solid #c87d55; border-radius: 8px;">
-                <h2 style="color: #c87d55; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
+              <div style="font-family: monospace; background-color: #050506; color: #F3EBDD; padding: 24px; border: 1px solid #C8A7E8; border-radius: 8px;">
+                <h2 style="color: #C8A7E8; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
                 <p><strong>Subscriber Email:</strong> ${email}</p>
                 <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
-                <hr style="border-color: #27272a; margin-top: 20px;" />
-                <span style="font-size: 10px; color: #71717a;">Engineered by Chronoverse Capital Infrastructure</span>
+                <hr style="border-color: #292432; margin-top: 20px;" />
+                <span style="font-size: 10px; color: #91889A;">Engineered by Chronoverse Capital Infrastructure</span>
               </div>
             `,
             Charset: "UTF-8",

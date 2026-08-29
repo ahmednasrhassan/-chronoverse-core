@@ -387,7 +387,7 @@ export default function ChronoverseCandlestickChart({
 
       return {
         backgroundColor:
-          "#0a0a0a",
+          "#050506",
 
         animation: false,
 
@@ -398,7 +398,7 @@ export default function ChronoverseCandlestickChart({
 
           textStyle: {
             color:
-              "#f4f4f5",
+              "#F3EBDD",
             fontSize: 14,
             fontFamily:
               "monospace",
@@ -420,7 +420,7 @@ export default function ChronoverseCandlestickChart({
 
           textStyle: {
             color:
-              "#a1a1aa",
+              "#CFC5B8",
             fontFamily:
               "monospace",
             fontSize: 10,
@@ -438,7 +438,7 @@ export default function ChronoverseCandlestickChart({
 
             lineStyle: {
               color:
-                "#c87d55",
+                "#C8A7E8",
             },
           },
 
@@ -450,7 +450,7 @@ export default function ChronoverseCandlestickChart({
 
           textStyle: {
             color:
-              "#f4f4f5",
+              "#F3EBDD",
             fontFamily:
               "monospace",
           },
@@ -520,7 +520,7 @@ export default function ChronoverseCandlestickChart({
 
             axisLabel: {
               color:
-                "#71717a",
+                "#91889A",
               fontFamily:
                 "monospace",
               fontSize: 10,
@@ -676,7 +676,7 @@ export default function ChronoverseCandlestickChart({
 
             axisLabel: {
               color:
-                "#a1a1aa",
+                "#CFC5B8",
               fontFamily:
                 "monospace",
             },
@@ -684,7 +684,7 @@ export default function ChronoverseCandlestickChart({
             splitLine: {
               lineStyle: {
                 color:
-                  "#18181b",
+                  "#0D0D11",
               },
             },
           },
@@ -737,7 +737,7 @@ export default function ChronoverseCandlestickChart({
 
             axisLabel: {
               color:
-                "#71717a",
+                "#91889A",
               fontFamily:
                 "monospace",
               fontSize: 10,
@@ -746,7 +746,7 @@ export default function ChronoverseCandlestickChart({
             splitLine: {
               lineStyle: {
                 color:
-                  "#18181b",
+                  "#0D0D11",
               },
             },
           },
@@ -771,7 +771,7 @@ export default function ChronoverseCandlestickChart({
 
             axisLabel: {
               color:
-                "#71717a",
+                "#91889A",
               fontFamily:
                 "monospace",
               fontSize: 10,
@@ -780,7 +780,7 @@ export default function ChronoverseCandlestickChart({
             splitLine: {
               lineStyle: {
                 color:
-                  "#18181b",
+                  "#0D0D11",
               },
             },
           },
@@ -831,12 +831,12 @@ export default function ChronoverseCandlestickChart({
 
             handleStyle: {
               color:
-                "#c87d55",
+                "#C8A7E8",
             },
 
             textStyle: {
               color:
-                "#71717a",
+                "#91889A",
             },
           },
         ],
@@ -1000,7 +1000,7 @@ export default function ChronoverseCandlestickChart({
                   "insideEndTop",
 
                 color:
-                  "#71717a",
+                  "#91889A",
 
                 fontFamily:
                   "monospace",

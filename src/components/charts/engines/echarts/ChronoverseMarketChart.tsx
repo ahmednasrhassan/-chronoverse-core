@@ -135,7 +135,7 @@ export default function ChronoverseMarketChart({
       <div
         className={[
          "flex min-h-80 items-center justify-center rounded-xl",
-          "border border-zinc-800 bg-[#0a0a0a] px-6 text-center",
+          "border border-border bg-[#050506] px-6 text-center",
           className,
         ]
           .filter(Boolean)
@@ -143,11 +143,11 @@ export default function ChronoverseMarketChart({
         style={{ height }}
       >
         <div>
-          <p className="font-mono text-sm text-zinc-300">
+          <p className="font-mono text-sm text-secondary">
             Market data unavailable
           </p>
 
-          <p className="mt-2 max-w-md text-xs text-zinc-500">
+          <p className="mt-2 max-w-md text-xs text-muted">
             {error}
           </p>
         </div>

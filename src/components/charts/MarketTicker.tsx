@@ -150,11 +150,11 @@ function MarketTickerComponent() {
           key={`${keyPrefix}-${q.symbol}-${idx}`}
           className="inline-flex items-center gap-2 px-4 whitespace-nowrap text-xs font-mono"
         >
-          <span className="text-zinc-300">
+          <span className="text-secondary">
             {q.label}
           </span>
 
-          <span className="text-zinc-100 font-bold">
+          <span className="text-primary font-bold">
             {q.price !== null &&
             q.price !== undefined
               ? q.price.toLocaleString(
@@ -187,7 +187,7 @@ function MarketTickerComponent() {
     });
 
   return (
-    <div className="w-full h-10 border-b border-[#27272a] bg-[#0a0a0a] overflow-hidden flex items-center">
+    <div className="w-full h-10 border-b border-border bg-[#050506] overflow-hidden flex items-center">
       <div className="w-full h-full overflow-hidden relative flex items-center">
         <div className="flex items-center animate-[ticker-scroll_40s_linear_infinite] whitespace-nowrap">
           {renderItems("a")}

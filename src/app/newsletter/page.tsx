@@ -48,15 +48,15 @@ export default function NewsletterPage() {
   }
 
   return (
-    <main className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-[#120e0c]">
-      <div className="max-w-lg w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/40">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#c87d55] bg-[#c87d55]/10 px-3 py-1.5 rounded-full border border-[#c87d55]/20">
+    <main className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-[#050506]">
+      <div className="max-w-lg w-full bg-[#0D0D11] border border-border rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/40">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A7E8] bg-[#C8A7E8]/10 px-3 py-1.5 rounded-full border border-[#C8A7E8]/20">
           Chronoverse Dispatch
         </span>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-100 mt-4 mb-3 tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-primary mt-4 mb-3 tracking-tight">
           Institutional Macro Intelligence — Direct to Your Inbox
         </h1>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-8">
+        <p className="text-sm text-muted leading-relaxed mb-8">
           Subscribe to our Amazon SES-powered newsletter for exclusive macroeconomic
           data, asset allocation strategies, and direct institutional insights.
         </p>
@@ -68,12 +68,12 @@ export default function NewsletterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
-            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#c87d55] transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-raised border border-border text-primary placeholder:text-muted focus:outline-none focus:border-[#C8A7E8] transition-colors"
           />
           <button
             type="submit"
             disabled={status === "loading"}
-            className="w-full px-4 py-3 rounded-xl bg-[#c87d55] hover:bg-[#e0946a] text-black font-bold text-sm uppercase tracking-wide transition-colors disabled:opacity-60"
+            className="w-full px-4 py-3 rounded-xl bg-[#C8A7E8] hover:bg-[#A77BD8] text-black font-bold text-sm uppercase tracking-wide transition-colors disabled:opacity-60"
           >
             {status === "loading" ? "Submitting…" : "Subscribe"}
           </button>

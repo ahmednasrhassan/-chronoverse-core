@@ -179,11 +179,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       : "";
 
     return (
-      <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
-        <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] z-50 opacity-80 print:hidden" />
+      <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
+        <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#C8A7E8,#d97706,#C8A7E8)] z-50 opacity-80 print:hidden" />
 
-        <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
+        <div className="mb-10 border-b border-border/80 pb-8 print:border-none print:pb-2">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-mauve mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
             {currentPage.title}
           </h1>
         </div>
@@ -195,7 +195,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
                 real intrinsic size; `placeholder="blur"` fills that
                 locked box with a low-fidelity preview instead of a blank
                 gap while the network image downloads. */}
-            <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl print:border-none print:h-auto print:max-h-80">
+            <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-border shadow-2xl print:border-none print:h-auto print:max-h-80">
               <Image
                 src={currentPage.imageUrl}
                 alt={currentPage.title}
@@ -213,7 +213,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         {/* Enhanced Page Content Area: `legacyHtml` (raw pasted HTML/CSS/JS)
             takes priority over the structured Portable Text `bodyContent`
             whenever it's populated. Sanitized before rendering. */}
-        <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-relaxed prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+        <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-secondary leading-relaxed prose-headings:text-mauve prose-headings:font-bold prose-a:text-[#C8A7E8] hover:prose-a:text-[#A77BD8] prose-strong:text-primary print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-border [&_img]:w-full [&_img]:my-8">
           {sanitizedLegacyHtml ? (
             <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyHtml }} />
           ) : (
@@ -384,7 +384,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   }));
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#c87d55]/30 selection:text-[#c87d55]">
+    <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
 
       {/* Premium Top Reading Progress Bar (dynamically tracks scroll position) */}
       <ReadingProgressBar />
@@ -393,7 +393,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
       {/* Article Header & Admin Controls */}
-      <div className="mb-10 border-b border-zinc-800/80 pb-8 print:border-none print:pb-2">
+      <div className="mb-10 border-b border-border/80 pb-8 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             {/* Category badge is now a real link to /category/[slug] instead
@@ -413,14 +413,14 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             {currentPost.category ? (
               <Link
                 href={`/category/${currentPost.categorySlug || DEFAULT_CATEGORY_SLUG}`}
-                className="text-xs font-bold uppercase tracking-widest text-[#c87d55] bg-[#c87d55]/10 px-3 py-1.5 rounded-full border border-[#c87d55]/20 hover:bg-[#c87d55]/20 transition-colors print:bg-transparent print:border-none print:px-0"
+                className="text-xs font-bold uppercase tracking-widest text-[#C8A7E8] bg-[#C8A7E8]/10 px-3 py-1.5 rounded-full border border-[#C8A7E8]/20 hover:bg-[#C8A7E8]/20 transition-colors print:bg-transparent print:border-none print:px-0"
               >
                 {currentPost.category}
               </Link>
             ) : null}
-            <span className="text-zinc-400 text-xs print:hidden">•</span>
+            <span className="text-muted text-xs print:hidden">•</span>
             {/* Displaying Auto-Calculated Read Time */}
-            <span className="text-xs text-zinc-400 font-medium print:hidden flex items-center gap-1.5">
+            <span className="text-xs text-muted font-medium print:hidden flex items-center gap-1.5">
               <span>⏱️</span> {readTimeMinutes} min read
             </span>
           </div>
@@ -439,13 +439,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         </div>
 
 
-        <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-mauve mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
           {currentPost.title}
         </h1>
 
-        <div className="flex items-center justify-between text-xs text-zinc-300 pt-2 print:text-gray-500">
+        <div className="flex items-center justify-between text-xs text-secondary pt-2 print:text-gray-500">
           <span>Published on {currentPost.date}</span>
-          <span className="uppercase tracking-wider font-semibold text-zinc-400 print:hidden">Chronoverse Intelligence</span>
+          <span className="uppercase tracking-wider font-semibold text-muted print:hidden">Chronoverse Intelligence</span>
         </div>
 
         {/* Auto-Generated / Editor-Curated Tags */}
@@ -454,7 +454,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             {displayTags.map((tag) => (
               <span
                 key={tag}
-                className="text-[11px] font-medium text-zinc-400 bg-zinc-900/60 border border-zinc-800 px-2.5 py-1 rounded-full"
+                className="text-[11px] font-medium text-muted bg-raised/60 border border-border px-2.5 py-1 rounded-full"
               >
                 #{tag}
               </span>
@@ -467,7 +467,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
       {currentPost.imageUrl && (
         <figure className="mb-12 w-full print:mb-6">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border shadow-2xl">
             <Image
               src={currentPost.imageUrl}
               alt={autoAltText}
@@ -482,7 +482,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             />
           </div>
           {autoCaption && (
-            <figcaption className="text-center text-xs text-zinc-500 mt-3 italic print:text-gray-500">
+            <figcaption className="text-center text-xs text-muted mt-3 italic print:text-gray-500">
               {autoCaption}
             </figcaption>
           )}
@@ -510,7 +510,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           structured Portable Text `body` blocks are rendered via `PortableTextContent` (headings, paragraphs,
           embedded images with hotspot-aware URLs, links, lists, etc.). Wrapped in `MathContent` so any
           `$$...$$` / `$...$` LaTeX expressions in the article render as clean KaTeX-formatted equations. */}
-      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-zinc-300 leading-[1.85] prose-headings:text-zinc-100 prose-headings:font-bold prose-a:text-[#c87d55] hover:prose-a:text-[#e09870] prose-strong:text-zinc-100 prose-p:mb-6 prose-p:leading-[1.85] first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#c87d55] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-zinc-800 [&_img]:w-full [&_img]:my-8">
+      <article className="prose prose-invert lg:prose-lg mt-8 max-w-none text-secondary leading-[1.85] prose-headings:text-mauve prose-headings:font-bold prose-a:text-[#C8A7E8] hover:prose-a:text-[#A77BD8] prose-strong:text-primary prose-p:mb-6 prose-p:leading-[1.85] first-letter:float-left first-letter:text-6xl first-letter:font-black first-letter:text-[#C8A7E8] first-letter:mr-3 first-letter:mt-1 first-letter:leading-none print:prose-stone print:text-black print:prose-a:text-black [&_img]:rounded-2xl [&_img]:border [&_img]:border-border [&_img]:w-full [&_img]:my-8">
         <MathContent>
           {sanitizedLegacyBody ? (
             <div dangerouslySetInnerHTML={{ __html: sanitizedLegacyBody }} />

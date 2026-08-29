@@ -42,7 +42,7 @@ export default function ReadingProgressBar() {
 
   return (
     <div
-      className="fixed top-0 left-0 w-full h-1 z-50 bg-zinc-900/40 print:hidden pointer-events-none"
+      className="fixed top-0 left-0 w-full h-1 z-50 bg-raised/40 print:hidden pointer-events-none"
       role="progressbar"
       aria-valuenow={Math.round(progress)}
       aria-valuemin={0}
@@ -50,7 +50,7 @@ export default function ReadingProgressBar() {
       aria-label="Reading progress"
     >
       <div
-        className="h-full bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] shadow-[0_0_8px_rgba(200,125,85,0.6)] transition-[width] duration-150 ease-out"
+        className="h-full bg-[linear-gradient(to_right,#C8A7E8,#d97706,#C8A7E8)] shadow-[0_0_8px_rgba(200,125,85,0.6)] transition-[width] duration-150 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>

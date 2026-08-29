@@ -25,7 +25,7 @@ function cleanText(input: unknown): string {
  * current post's category and/or tags (see `getRelatedArticles` in
  * `src/lib/content.ts`), improving crawlability and topical SEO clustering.
  *
- * Styled to match the site's dark theme + copper (#c87d55) accent used
+ * Styled to match the site's dark theme + mauve accent accent used
  * throughout `app/(site)/[slug]/page.tsx`.
  */
 export default function InternalLinksBox({
@@ -38,14 +38,14 @@ export default function InternalLinksBox({
 
   return (
     <section
-      className="mt-16 pt-10 border-t border-zinc-800 print:hidden"
+      className="mt-16 pt-10 border-t border-border print:hidden"
       aria-labelledby="internal-links-heading"
     >
       <h2
         id="internal-links-heading"
-        className="text-2xl font-bold text-zinc-100 mb-6 flex items-center gap-2 tracking-tight"
+        className="text-2xl font-bold text-mauve mb-6 flex items-center gap-2 tracking-tight"
       >
-        <span className="text-[#c87d55]" aria-hidden="true">
+        <span className="text-mauve" aria-hidden="true">
           📚
         </span>{" "}
         {title}
@@ -75,21 +75,21 @@ export default function InternalLinksBox({
             <Link
               key={`${slugString}-${idx}`}
               href={`/${slugString}`}
-              className="group flex flex-col justify-between p-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-[#c87d55]/60 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="group flex flex-col justify-between p-5 rounded-2xl border border-border/80 bg-raised/40 hover:bg-raised/60 hover:border-purple-border/60 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <div>
                 {article.category && (
-                  <span className="text-[10px] uppercase font-bold text-[#c87d55] tracking-widest mb-3 block">
+                  <span className="text-[10px] uppercase font-bold text-mauve tracking-widest mb-3 block">
                     {article.category}
                   </span>
                 )}
-                <h3 className="text-sm font-semibold text-zinc-200 group-hover:text-white mb-2 line-clamp-2 leading-snug">
+                <h3 className="text-sm font-semibold text-secondary group-hover:text-purple-brand mb-2 line-clamp-2 leading-snug">
                   {article.title}
                 </h3>
               </div>
 
               {rawExcerpt && (
-                <p className="text-xs text-zinc-400 line-clamp-2 mt-3 pt-3 border-t border-zinc-800/50">
+                <p className="text-xs text-muted line-clamp-2 mt-3 pt-3 border-t border-border/50">
                   {rawExcerpt.substring(0, 90)}…
                 </p>
               )}

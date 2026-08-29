@@ -57,14 +57,14 @@ export default function AutoTOC() {
   if (!isReady) {
     return (
       <div
-        className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md min-h-[140px] animate-pulse"
+        className="my-8 p-6 bg-card border border-border rounded-none shadow-md min-h-[140px] animate-pulse"
         aria-hidden="true"
       >
-        <div className="h-3 w-32 bg-zinc-800 rounded mb-4" />
+        <div className="h-3 w-32 bg-raised rounded mb-4" />
         <div className="space-y-3">
-          <div className="h-3 w-full bg-zinc-900 rounded" />
-          <div className="h-3 w-5/6 bg-zinc-900 rounded" />
-          <div className="h-3 w-2/3 bg-zinc-900 rounded" />
+          <div className="h-3 w-full bg-raised rounded" />
+          <div className="h-3 w-5/6 bg-raised rounded" />
+          <div className="h-3 w-2/3 bg-raised rounded" />
         </div>
       </div>
     );
@@ -75,9 +75,9 @@ export default function AutoTOC() {
   return (
     <nav
       aria-label="Table of contents"
-      className="my-8 p-6 bg-zinc-950 border border-zinc-800 rounded-none shadow-md"
+      className="my-8 p-6 bg-card border border-border rounded-none shadow-md"
     >
-      <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-[#c87d55] mb-4 flex items-center gap-2">
+      <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-[#C8A7E8] mb-4 flex items-center gap-2">
         <span aria-hidden="true">::</span> SECTION INDEX <span aria-hidden="true">::</span>
       </h3>
       <ul className="space-y-2 text-sm font-sans">
@@ -90,13 +90,13 @@ export default function AutoTOC() {
             >
               <a
                 href={`#${item.id}`}
-                className="group flex items-baseline gap-3 text-zinc-300 hover:text-[#c87d55] transition-colors py-1"
+                className="group flex items-baseline gap-3 text-secondary hover:text-[#C8A7E8] transition-colors py-1"
               >
-                <span className="font-mono text-xs text-zinc-400 group-hover:text-[#c87d55]/70">
+                <span className="font-mono text-xs text-muted group-hover:text-[#C8A7E8]/70">
                   {serialNum}.
                 </span>
                 <span
-                  className="border-b border-dotted border-zinc-800 flex-1 group-hover:border-[#c87d55]/30 order-2 h-3"
+                  className="border-b border-dotted border-border flex-1 group-hover:border-[#C8A7E8]/30 order-2 h-3"
                   aria-hidden="true"
                 />
                 <span className="order-1 group-hover:underline decoration-1 decoration-dotted underline-offset-4">

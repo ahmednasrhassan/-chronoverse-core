@@ -31,7 +31,7 @@ export default function ArticleShareButtons({
         rel="noopener noreferrer"
         aria-label="Share on X (Twitter)"
         title="Share on X (Twitter)"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded-lg transition-all border border-zinc-800 hover:border-zinc-700 shadow-sm"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary bg-raised hover:bg-raised hover:text-purple-brand rounded-lg transition-all border border-border hover:border-purple-border shadow-sm"
       >
         <svg
           className="w-3.5 h-3.5"
@@ -50,7 +50,7 @@ export default function ArticleShareButtons({
         rel="noopener noreferrer"
         aria-label="Share on LinkedIn"
         title="Share on LinkedIn"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 hover:text-white rounded-lg transition-all border border-zinc-800 hover:border-zinc-700 shadow-sm"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary bg-raised hover:bg-raised hover:text-purple-brand rounded-lg transition-all border border-border hover:border-purple-border shadow-sm"
       >
         <svg
           className="w-3.5 h-3.5"

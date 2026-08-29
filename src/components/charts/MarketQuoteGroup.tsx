@@ -176,7 +176,7 @@ export default function MarketQuoteGroup({
             key={symbol}
             href={href}
             aria-label={`Open ${label} chart`}
-            className="block bg-[#18181b] border border-zinc-800 p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors cursor-pointer"
+            className="block bg-[#0D0D11] border border-border p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#C8A7E8]/50 transition-colors cursor-pointer"
           >
             <MarketQuoteCard
               symbol={symbol}

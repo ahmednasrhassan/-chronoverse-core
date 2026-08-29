@@ -2,33 +2,61 @@
 
 @layer base {
   :root {
-    --bg-page: #09090b;
-    --bg-card: #121215;
-    --text-primary: #f4f4f5;
-    --text-secondary: #a1a1aa;
-    --accent-copper: #c87d55;
-    --accent-copper-hover: #e0946a;
-    --border-color: #27272a;
+    --bg-page: #050506;
+    --bg-card: #0d0d11;
+    --bg-raised: #15131a;
+
+    --text-primary: #f3ebdd;
+    --text-secondary: #cfc5b8;
+    --text-muted: #91889a;
+
+    --accent-mauve: #c8a7e8;
+    --accent-purple: #a77bd8;
+    --accent-purple-dark: #6f4c91;
+
+    --border-color: #292432;
   }
 }
 
 /*
- * Register the design-system tokens as Tailwind theme colors so components
- * can use standard utility classes (e.g. bg-card, border-border, text-copper)
- * instead of arbitrary CSS-variable values like bg-[var(--bg-card)].
+ * Chronoverse global design-system tokens.
+ *
+ * Brand identity:
+ * - black / charcoal surfaces
+ * - cream typography
+ * - mauve / violet accents
+ *
+ * Market-state colors such as green/red remain independent from
+ * the brand palette and should continue to communicate direction,
+ * risk and status.
  */
 @theme inline {
   --color-page: var(--bg-page);
   --color-card: var(--bg-card);
+  --color-raised: var(--bg-raised);
+
   --color-primary: var(--text-primary);
   --color-secondary: var(--text-secondary);
-  --color-copper: var(--accent-copper);
-  --color-copper-hover: var(--accent-copper-hover);
+  --color-muted: var(--text-muted);
+
+  /*
+   * Legacy aliases are intentionally retained so existing components
+   * using text-copper / bg-copper do not need to be rewritten at once.
+   * They now resolve to the Chronoverse mauve identity.
+   */
+  --color-copper: var(--accent-mauve);
+  --color-copper-hover: var(--accent-purple);
+
+  --color-mauve: var(--accent-mauve);
+  --color-purple-brand: var(--accent-purple);
+  --color-purple-border: var(--accent-purple-dark);
+
   --color-border: var(--border-color);
 }
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--bg-page);
 }
 
 body {
@@ -37,18 +65,32 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
+p,
+li {
+  color: inherit;
+}
+
+/*
+ * Global links inherit the Chronoverse mauve identity.
+ *
+ * Tailwind classes applied directly to a link can still override this
+ * where a component requires a specific semantic state.
+ */
 a {
-  color: var(--accent-copper);
-  transition: color 0.2s ease-in-out;
+  color: var(--accent-mauve);
+  transition:
+    color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out;
 }
 
 a:hover {
-  color: var(--accent-copper-hover);
+  color: var(--accent-purple);
 }
 
 ::selection {
-  background-color: rgba(200, 125, 85, 0.3);
-  color: #f4f4f5;
+  background-color: rgba(167, 123, 216, 0.32);
+  color: var(--text-primary);
 }
 
 /*
@@ -63,6 +105,27 @@ article.prose p {
 
 article.prose p {
   margin-bottom: 1.5rem;
+}
+
+/*
+ * Article headings use the same brand hierarchy while body copy stays
+ * cream for comfortable long-form reading.
+ */
+article.prose h1,
+article.prose h2,
+article.prose h3,
+article.prose h4,
+article.prose h5,
+article.prose h6 {
+  color: var(--accent-mauve);
+}
+
+article.prose a {
+  color: var(--accent-mauve);
+}
+
+article.prose a:hover {
+  color: var(--accent-purple);
 }
 
 .katex-display {
@@ -102,4 +165,3 @@ article.prose img {
   object-fit: cover;
   height: auto;
 }
-

@@ -37,7 +37,7 @@ const Radar = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-55 flex items-center justify-center text-[#a1a1aa] text-xs border border-[#27272a] rounded-lg">
+      <div className="w-full h-55 flex items-center justify-center text-[#CFC5B8] text-xs border border-border rounded-lg">
         LOADING RADAR DATA...
       </div>
     ),
@@ -73,15 +73,15 @@ class IntelligenceErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div className="max-w-6xl mx-auto px-4 py-12 font-mono">
-          <div className="bg-[#18181b] border border-red-500/50 p-6 rounded-xl text-center space-y-3">
+          <div className="bg-[#0D0D11] border border-red-500/50 p-6 rounded-xl text-center space-y-3">
             <h2 className="text-red-500 font-bold text-sm">[ MODULE OFFLINE ]</h2>
-            <p className="text-[#a1a1aa] text-xs">
+            <p className="text-[#CFC5B8] text-xs">
               This section of the terminal encountered an unexpected error and has been
               safely isolated. The rest of the site remains fully operational.
             </p>
             <Link
               href="/"
-              className="inline-block bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-6 py-2.5 rounded-md text-xs transition-colors"
+              className="inline-block bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-6 py-2.5 rounded-md text-xs transition-colors"
             >
               RETURN TO BASE
             </Link>
@@ -311,8 +311,8 @@ function TerminalIntelligenceContent() {
         label: "Asset Resilience",
         data: getRadarData() ?? DEFAULT_RADAR_POINTS,
         backgroundColor: "rgba(200, 125, 85, 0.25)",
-        borderColor: "#c87d55",
-        pointBackgroundColor: "#f4f4f5",
+        borderColor: "#C8A7E8",
+        pointBackgroundColor: "#F3EBDD",
         borderWidth: 2,
       },
     ],
@@ -325,7 +325,7 @@ function TerminalIntelligenceContent() {
       r: {
         angleLines: { color: "#27272a" },
         grid: { color: "#27272a" },
-        pointLabels: { color: "#c87d55", font: { family: "monospace", size: 11 } },
+        pointLabels: { color: "#C8A7E8", font: { family: "monospace", size: 11 } },
         ticks: { display: false, min: 0, max: 100 },
       },
     },
@@ -370,22 +370,22 @@ function TerminalIntelligenceContent() {
     <div className="max-w-6xl mx-auto px-4 py-12 space-y-12 font-mono">
       
       {/* Scanner Output Header */}
-      <div className="bg-[#050505] border border-[#c87d55] p-6 rounded-xl shadow-lg space-y-2">
-        <div className="text-xs text-[#c87d55] leading-relaxed min-h-30">
+      <div className="bg-[#050505] border border-[#C8A7E8] p-6 rounded-xl shadow-lg space-y-2">
+        <div className="text-xs text-[#C8A7E8] leading-relaxed min-h-30">
           {(scannerText ?? []).map((line, idx) => (
             <p key={idx} className={line?.includes("WARNING") ? "text-red-500 font-bold" : ""}>
               {line ?? ""}
             </p>
           ))}
-          <span className="inline-block w-2 h-4 bg-[#c87d55] animate-pulse ml-1"></span>
+          <span className="inline-block w-2 h-4 bg-[#C8A7E8] animate-pulse ml-1"></span>
         </div>
 
       </div>
 
       {/* Terminal Workstation Header */}
-      <header className="border-b border-[#27272a] pb-6 space-y-2">
-        <h1 className="text-3xl font-bold text-[#f4f4f5] tracking-wider">
-          [ CHRONOVERSE <span className="text-[#c87d55]">INTELLIGENCE TERMINAL</span> ]
+      <header className="border-b border-border pb-6 space-y-2">
+        <h1 className="text-3xl font-bold text-[#F3EBDD] tracking-wider">
+          [ CHRONOVERSE <span className="text-[#C8A7E8]">INTELLIGENCE TERMINAL</span> ]
         </h1>
         <p className="text-[#00cc66] text-xs">
           SYSTEM STATUS: LIVE // SECURE CONNECTION ESTABLISHED
@@ -396,9 +396,9 @@ function TerminalIntelligenceContent() {
           (CoinGecko + Yahoo Finance), always rendered with a safe local
           fallback dataset if the live fetch fails, so this widget never
           throws or shows a "MODULE OFFLINE" state. */}
-      <div className="bg-[#0f0f0f] border border-[#27272a] rounded-xl p-4 overflow-x-auto">
+      <div className="bg-[#0f0f0f] border border-border rounded-xl p-4 overflow-x-auto">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] uppercase tracking-widest text-[#a1a1aa]">
+          <span className="text-[10px] uppercase tracking-widest text-[#CFC5B8]">
             Live Market Feed
           </span>
           <span
@@ -406,8 +406,8 @@ function TerminalIntelligenceContent() {
               feedSource === "live"
                 ? "text-[#00cc66] border-[#00cc66]/40 bg-[#00cc66]/10"
                 : feedSource === "partial"
-                ? "text-[#c87d55] border-[#c87d55]/40 bg-[#c87d55]/10"
-                : "text-[#a1a1aa] border-[#27272a] bg-[#18181b]"
+                ? "text-[#C8A7E8] border-[#C8A7E8]/40 bg-[#C8A7E8]/10"
+                : "text-[#CFC5B8] border-border bg-[#0D0D11]"
             }`}
           >
             {feedSource === "live" ? "LIVE" : feedSource === "partial" ? "PARTIAL" : "LOCAL CACHE"}
@@ -422,12 +422,12 @@ function TerminalIntelligenceContent() {
             return (
               <div
                 key={quote?.symbol ?? `quote-${quoteIdx}`}
-                className="flex flex-col min-w-35 bg-[#0a0a0a] border border-[#27272a] rounded-lg px-4 py-3"
+                className="flex flex-col min-w-35 bg-[#050506] border border-border rounded-lg px-4 py-3"
               >
-                <span className="text-[10px] text-[#a1a1aa] uppercase tracking-wide">
+                <span className="text-[10px] text-[#CFC5B8] uppercase tracking-wide">
                   {quote?.label ?? quote?.symbol ?? "—"}
                 </span>
-                <span className="text-sm font-bold text-[#f4f4f5]">
+                <span className="text-sm font-bold text-[#F3EBDD]">
                   {price !== null && price !== undefined
                     ? `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
                     : "—"}
@@ -444,8 +444,8 @@ function TerminalIntelligenceContent() {
       </div>
 
       {/* V_INTEL Simulation Tool */}
-      <div className="bg-[#18181b] border border-[#27272a] p-6 rounded-xl space-y-6">
-        <h2 className="text-xl font-bold text-[#c87d55] text-center border-b border-[#27272a] pb-4">
+      <div className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-6">
+        <h2 className="text-xl font-bold text-[#C8A7E8] text-center border-b border-border pb-4">
           &gt; RUN V_INTEL SIMULATION (ADVANCED)
         </h2>
 
@@ -454,7 +454,7 @@ function TerminalIntelligenceContent() {
           <select
             value={assetPreset}
             onChange={(e) => handlePresetChange(e.target.value)}
-            className="bg-[#0a0a0a] border border-[#27272a] text-[#c87d55] font-bold p-3 rounded-md w-full max-w-md focus:outline-none focus:border-[#c87d55]"
+            className="bg-[#050506] border border-border text-[#C8A7E8] font-bold p-3 rounded-md w-full max-w-md focus:outline-none focus:border-[#C8A7E8]"
           >
             <option value="custom">[ SELECT ASSET CLASS TO SIMULATE ]</option>
             <option value="fiat">TRADITIONAL FIAT (BANK DEPOSITS)</option>
@@ -465,38 +465,38 @@ function TerminalIntelligenceContent() {
         </div>
 
         {/* Sliders Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs text-[#a1a1aa]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs text-[#CFC5B8]">
           <div className="space-y-2">
-            <label className="block">EXPECTED RETURN: <span className="text-[#f4f4f5] font-bold">{returnVal}%</span></label>
+            <label className="block">EXPECTED RETURN: <span className="text-[#F3EBDD] font-bold">{returnVal}%</span></label>
             <input
               type="range"
               min="0"
               max="100"
               value={returnVal}
               onChange={(e) => setReturnVal(Number(e.target.value))}
-              className="w-full accent-[#c87d55]"
+              className="w-full accent-[#C8A7E8]"
             />
           </div>
           <div className="space-y-2">
-            <label className="block">SOVEREIGNTY (S): <span className="text-[#f4f4f5] font-bold">{sovereigntyVal}/10</span></label>
+            <label className="block">SOVEREIGNTY (S): <span className="text-[#F3EBDD] font-bold">{sovereigntyVal}/10</span></label>
             <input
               type="range"
               min="0"
               max="10"
               value={sovereigntyVal}
               onChange={(e) => setSovereigntyVal(Number(e.target.value))}
-              className="w-full accent-[#c87d55]"
+              className="w-full accent-[#C8A7E8]"
             />
           </div>
           <div className="space-y-2">
-            <label className="block">VOLATILITY (σ): <span className="text-[#f4f4f5] font-bold">{volatilityVal}%</span></label>
+            <label className="block">VOLATILITY (σ): <span className="text-[#F3EBDD] font-bold">{volatilityVal}%</span></label>
             <input
               type="range"
               min="0"
               max="100"
               value={volatilityVal}
               onChange={(e) => setVolatilityVal(Number(e.target.value))}
-              className="w-full accent-[#c87d55]"
+              className="w-full accent-[#C8A7E8]"
             />
           </div>
           <div className="space-y-2">
@@ -513,14 +513,14 @@ function TerminalIntelligenceContent() {
         </div>
 
         {/* Results Display */}
-        <div className="text-center space-y-4 pt-4 border-t border-[#27272a]">
-          <span className="text-[#a1a1aa] text-xs uppercase tracking-widest">V_INTEL SCORE:</span>
+        <div className="text-center space-y-4 pt-4 border-t border-border">
+          <span className="text-[#CFC5B8] text-xs uppercase tracking-widest">V_INTEL SCORE:</span>
           <div
             className={`text-6xl font-extrabold transition-all ${
               numericVScore < 1.5
                 ? "text-red-500"
                 : numericVScore <= 4
-                ? "text-[#c87d55]"
+                ? "text-[#C8A7E8]"
                 : "text-[#00cc66]"
             }`}
           >
@@ -532,7 +532,7 @@ function TerminalIntelligenceContent() {
               numericVScore < 1.5
                 ? "bg-red-950/20 border-red-500 text-red-400"
                 : numericVScore <= 4
-                ? "bg-[#c87d55]/10 border-[#c87d55] text-[#c87d55]"
+                ? "bg-[#C8A7E8]/10 border-[#C8A7E8] text-[#C8A7E8]"
                 : "bg-green-950/20 border-green-500 text-green-400"
             }`}
           >
@@ -557,69 +557,69 @@ function TerminalIntelligenceContent() {
 
       {/* Systemic Heatmap: The Burning Map */}
       <div className="space-y-6">
-        <div className="border-b border-[#27272a] pb-4">
-          <h2 className="text-xl font-bold text-[#f4f4f5]">[ THE BURNING MAP ]</h2>
-          <p className="text-[#a1a1aa] text-xs">GLOBAL SYSTEMIC HEATMAP // REAL-TIME FRICTION DATA</p>
+        <div className="border-b border-border pb-4">
+          <h2 className="text-xl font-bold text-[#F3EBDD]">[ THE BURNING MAP ]</h2>
+          <p className="text-[#CFC5B8] text-xs">GLOBAL SYSTEMIC HEATMAP // REAL-TIME FRICTION DATA</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-[#18181b] border border-red-500/50 p-6 rounded-xl space-y-4 shadow-lg">
+          <div className="bg-[#0D0D11] border border-red-500/50 p-6 rounded-xl space-y-4 shadow-lg">
             <h3 className="text-red-500 font-bold border-b border-red-500/30 pb-2 flex justify-between">
               AMERICAS (USD) <span>[CRITICAL]</span>
             </h3>
-            <div className="space-y-2 text-xs text-[#a1a1aa]">
+            <div className="space-y-2 text-xs text-[#CFC5B8]">
               <p className="flex justify-between">Debt Expansion Rate: <span className="text-red-500 font-bold">+8.4%</span></p>
               <p className="flex justify-between">Purchasing Power Decay: <span className="text-red-500 font-bold">SEVERE</span></p>
-              <p className="flex justify-between">Regulatory Friction: <span className="text-[#f4f4f5] font-bold">HIGH</span></p>
+              <p className="flex justify-between">Regulatory Friction: <span className="text-[#F3EBDD] font-bold">HIGH</span></p>
             </div>
           </div>
 
-          <div className="bg-[#18181b] border border-[#c87d55]/50 p-6 rounded-xl space-y-4 shadow-lg">
-            <h3 className="text-[#c87d55] font-bold border-b border-[#c87d55]/30 pb-2 flex justify-between">
+          <div className="bg-[#0D0D11] border border-[#C8A7E8]/50 p-6 rounded-xl space-y-4 shadow-lg">
+            <h3 className="text-[#C8A7E8] font-bold border-b border-[#C8A7E8]/30 pb-2 flex justify-between">
               EUROZONE (EUR) <span>[HIGH]</span>
             </h3>
-            <div className="space-y-2 text-xs text-[#a1a1aa]">
-              <p className="flex justify-between">Energy Volatility Index: <span className="text-[#c87d55] font-bold">ELEVATED</span></p>
-              <p className="flex justify-between">Central Bank Liquidity: <span className="text-[#f4f4f5] font-bold">RESTRICTIVE</span></p>
-              <p className="flex justify-between">CBDC Implementation: <span className="text-[#f4f4f5] font-bold">PHASE 2</span></p>
+            <div className="space-y-2 text-xs text-[#CFC5B8]">
+              <p className="flex justify-between">Energy Volatility Index: <span className="text-[#C8A7E8] font-bold">ELEVATED</span></p>
+              <p className="flex justify-between">Central Bank Liquidity: <span className="text-[#F3EBDD] font-bold">RESTRICTIVE</span></p>
+              <p className="flex justify-between">CBDC Implementation: <span className="text-[#F3EBDD] font-bold">PHASE 2</span></p>
             </div>
           </div>
 
-          <div className="bg-[#18181b] border border-[#00cc66]/50 p-6 rounded-xl space-y-4 shadow-lg">
+          <div className="bg-[#0D0D11] border border-[#00cc66]/50 p-6 rounded-xl space-y-4 shadow-lg">
             <h3 className="text-[#00cc66] font-bold border-b border-[#00cc66]/30 pb-2 flex justify-between">
               MIDDLE EAST (GCC) <span>[STABLE]</span>
             </h3>
-            <div className="space-y-2 text-xs text-[#a1a1aa]">
+            <div className="space-y-2 text-xs text-[#CFC5B8]">
               <p className="flex justify-between">Gold Accumulation: <span className="text-[#00cc66] font-bold">+14.2%</span></p>
               <p className="flex justify-between">Energy Sovereignty: <span className="text-[#00cc66] font-bold">ABSOLUTE</span></p>
-              <p className="flex justify-between">Tax Friction: <span className="text-[#f4f4f5] font-bold">MINIMAL</span></p>
+              <p className="flex justify-between">Tax Friction: <span className="text-[#F3EBDD] font-bold">MINIMAL</span></p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Personal Sovereignty Audit Quiz */}
-      <div className="bg-[#18181b] border border-[#27272a] p-8 rounded-xl space-y-6">
-        <div className="text-center border-b border-[#27272a] pb-4 space-y-1">
-          <h2 className="text-xl font-bold text-[#f4f4f5]">[ PERSONAL SOVEREIGNTY AUDIT ]</h2>
-          <p className="text-[#a1a1aa] text-xs">THE WORLD IS BURNING. ARE YOU EXPOSED?</p>
+      <div className="bg-[#0D0D11] border border-border p-8 rounded-xl space-y-6">
+        <div className="text-center border-b border-border pb-4 space-y-1">
+          <h2 className="text-xl font-bold text-[#F3EBDD]">[ PERSONAL SOVEREIGNTY AUDIT ]</h2>
+          <p className="text-[#CFC5B8] text-xs">THE WORLD IS BURNING. ARE YOU EXPOSED?</p>
         </div>
 
         {!isScanning && !quizCompleted && (
           <div className="space-y-6 max-w-2xl mx-auto">
             {step === 1 && (
               <div className="space-y-4 text-center">
-                <p className="text-[#f4f4f5] text-sm font-semibold">
+                <p className="text-[#F3EBDD] text-sm font-semibold">
                   &gt; QUESTION 1/3: Where is the majority (&gt;70%) of your wealth currently stored?
                 </p>
                 <div className="space-y-3">
-                  <button onClick={() => handleQuizAnswer(2, 0)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(2, 0)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [A] Traditional Banks &amp; Fiat Currency
                   </button>
-                  <button onClick={() => handleQuizAnswer(2, 5)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(2, 5)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [B] Real Estate &amp; Regulated Stocks
                   </button>
-                  <button onClick={() => handleQuizAnswer(2, 10)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(2, 10)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [C] Physical Gold &amp; Decentralized Crypto
                   </button>
                 </div>
@@ -628,17 +628,17 @@ function TerminalIntelligenceContent() {
 
             {step === 2 && (
               <div className="space-y-4 text-center">
-                <p className="text-[#f4f4f5] text-sm font-semibold">
+                <p className="text-[#F3EBDD] text-sm font-semibold">
                   &gt; QUESTION 2/3: If your central bank freezes accounts tomorrow, how long can you survive?
                 </p>
                 <div className="space-y-3">
-                  <button onClick={() => handleQuizAnswer(3, 0)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(3, 0)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [A] Less than 30 days (Total Dependency)
                   </button>
-                  <button onClick={() => handleQuizAnswer(3, 5)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(3, 5)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [B] 1 to 6 months (Partial Buffer)
                   </button>
-                  <button onClick={() => handleQuizAnswer(3, 10)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(3, 10)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [C] Indefinitely (Decoupled)
                   </button>
                 </div>
@@ -647,17 +647,17 @@ function TerminalIntelligenceContent() {
 
             {step === 3 && (
               <div className="space-y-4 text-center">
-                <p className="text-[#f4f4f5] text-sm font-semibold">
+                <p className="text-[#F3EBDD] text-sm font-semibold">
                   &gt; QUESTION 3/3: What is your primary source of income?
                 </p>
                 <div className="space-y-3">
-                  <button onClick={() => handleQuizAnswer(4, 0)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(4, 0)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [A] Corporate Salary mapped to a single jurisdiction
                   </button>
-                  <button onClick={() => handleQuizAnswer(4, 5)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(4, 5)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [B] Local Business owner
                   </button>
-                  <button onClick={() => handleQuizAnswer(4, 10)} className="w-full bg-[#0a0a0a] hover:bg-[#27272a] border border-[#27272a] hover:border-[#c87d55] text-[#c87d55] p-4 rounded-lg text-left text-xs transition-colors">
+                  <button onClick={() => handleQuizAnswer(4, 10)} className="w-full bg-[#050506] hover:bg-raised border border-border hover:border-[#C8A7E8] text-[#C8A7E8] p-4 rounded-lg text-left text-xs transition-colors">
                     [C] Borderless digital income / Capital gains
                   </button>
                 </div>
@@ -669,32 +669,32 @@ function TerminalIntelligenceContent() {
         {/* Scan Progress Bar */}
         {isScanning && (
           <div className="text-center space-y-4 py-8">
-            <p className="text-[#f4f4f5] text-sm">&gt; INITIATING SYSTEMIC SCAN...</p>
-            <div className="w-full bg-[#0a0a0a] border border-[#c87d55] h-3 rounded-full overflow-hidden">
-              <div className="bg-[#c87d55] h-full transition-all" style={{ width: `${progress}%` }}></div>
+            <p className="text-[#F3EBDD] text-sm">&gt; INITIATING SYSTEMIC SCAN...</p>
+            <div className="w-full bg-[#050506] border border-[#C8A7E8] h-3 rounded-full overflow-hidden">
+              <div className="bg-[#C8A7E8] h-full transition-all" style={{ width: `${progress}%` }}></div>
             </div>
-            <p className="text-[#c87d55] text-xs font-bold">{statusLog}</p>
+            <p className="text-[#C8A7E8] text-xs font-bold">{statusLog}</p>
           </div>
         )}
 
         {/* Audit Results */}
         {quizCompleted && (
-          <div className="bg-[#0a0a0a] border border-[#c87d55] p-6 rounded-xl text-center space-y-4">
-            <h3 className="text-xl font-bold text-[#f4f4f5]">&gt; AUDIT COMPLETE</h3>
-            <p className="text-sm text-[#a1a1aa]">
+          <div className="bg-[#050506] border border-[#C8A7E8] p-6 rounded-xl text-center space-y-4">
+            <h3 className="text-xl font-bold text-[#F3EBDD]">&gt; AUDIT COMPLETE</h3>
+            <p className="text-sm text-[#CFC5B8]">
               DIAGNOSIS:{" "}
-              <span className={`font-bold ${quizScore <= 10 ? "text-red-500" : quizScore <= 20 ? "text-[#c87d55]" : "text-[#00cc66]"}`}>
+              <span className={`font-bold ${quizScore <= 10 ? "text-red-500" : quizScore <= 20 ? "text-[#C8A7E8]" : "text-[#00cc66]"}`}>
                 {quizScore <= 10 ? "SYSTEM SLAVE [CRITICAL EXPOSURE]" : quizScore <= 20 ? "THE OBSERVER [PARTIALLY SECURED]" : "SOVEREIGN NODE [DECOUPLED]"}
               </span>
             </p>
-            <p className="text-xs text-[#a1a1aa] max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-[#CFC5B8] max-w-md mx-auto leading-relaxed">
               {quizScore <= 10
                 ? "Your liquidity is collateralized by the grid. Immediate financial decoupling required."
                 : quizScore <= 20
                 ? "You are still bound to fiat gateways and vulnerable to localized macroeconomic shocks."
                 : "Your assets are uncollateralized and mathematically secured outside the consensus grid."}
             </p>
-            <Link href="/reports" className="inline-block bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-6 py-2.5 rounded-md text-xs transition-colors">
+            <Link href="/reports" className="inline-block bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-6 py-2.5 rounded-md text-xs transition-colors">
               ACCESS RESEARCH DOSSIERS
             </Link>
           </div>
@@ -702,10 +702,10 @@ function TerminalIntelligenceContent() {
       </div>
 
       {/* Denominator Engine & Radar Section */}
-      <div className="bg-[#18181b] border border-[#27272a] p-8 rounded-xl space-y-6">
-        <div className="border-b border-[#27272a] pb-4">
-          <h2 className="text-xl font-bold text-[#c87d55]">&gt; THE DENOMINATOR COLLAPSE ENGINE</h2>
-          <p className="text-[#a1a1aa] text-xs">STRESS-TESTING ASSETS AGAINST HISTORICAL LIQUIDITY TRAPS.</p>
+      <div className="bg-[#0D0D11] border border-border p-8 rounded-xl space-y-6">
+        <div className="border-b border-border pb-4">
+          <h2 className="text-xl font-bold text-[#C8A7E8]">&gt; THE DENOMINATOR COLLAPSE ENGINE</h2>
+          <p className="text-[#CFC5B8] text-xs">STRESS-TESTING ASSETS AGAINST HISTORICAL LIQUIDITY TRAPS.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -716,7 +716,7 @@ function TerminalIntelligenceContent() {
                 type="number"
                 value={nomWealth}
                 onChange={(e) => setNomWealth(Number(e.target.value) || 0)}
-                className="w-full bg-[#0a0a0a] border border-[#27272a] text-[#c87d55] p-3 rounded-md focus:outline-none focus:border-[#c87d55]"
+                className="w-full bg-[#050506] border border-border text-[#C8A7E8] p-3 rounded-md focus:outline-none focus:border-[#C8A7E8]"
               />
             </div>
             <div>
@@ -724,7 +724,7 @@ function TerminalIntelligenceContent() {
               <select
                 value={histAnchor}
                 onChange={(e) => setHistAnchor(Number(e.target.value) || 1)}
-                className="w-full bg-[#0a0a0a] border border-[#27272a] text-[#c87d55] p-3 rounded-md focus:outline-none focus:border-[#c87d55]"
+                className="w-full bg-[#050506] border border-border text-[#C8A7E8] p-3 rounded-md focus:outline-none focus:border-[#C8A7E8]"
               >
                 <option value={1}>USD (Current Illusion)</option>
                 <option value={40}>Gold Standard (1971 Pre-Shock)</option>
@@ -732,17 +732,17 @@ function TerminalIntelligenceContent() {
                 <option value={85}>CBDC Rollout (2026 Simulation)</option>
               </select>
             </div>
-            <div className="bg-[#0a0a0a] border-l-4 border-[#c87d55] p-4 rounded-r-lg space-y-1">
-              <span className="text-[#a1a1aa] text-xs">TRUE SOVEREIGN PURCHASING POWER:</span>
-              <div className="text-2xl font-bold text-[#c87d55]">
+            <div className="bg-[#050506] border-l-4 border-[#C8A7E8] p-4 rounded-r-lg space-y-1">
+              <span className="text-[#CFC5B8] text-xs">TRUE SOVEREIGN PURCHASING POWER:</span>
+              <div className="text-2xl font-bold text-[#C8A7E8]">
                 {safeDivide(nomWealth, histAnchor).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                <span className="text-xs text-[#a1a1aa]">UNITS</span>
+                <span className="text-xs text-[#CFC5B8]">UNITS</span>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col items-center space-y-2">
-            <h3 className="text-xs font-bold text-[#c87d55]">&gt; V_INTEL SURVIVAL RADAR</h3>
+            <h3 className="text-xs font-bold text-[#C8A7E8]">&gt; V_INTEL SURVIVAL RADAR</h3>
             <div className="w-full max-w-70">
               <Radar data={radarChartData} options={radarOptions} />
             </div>
@@ -754,7 +754,7 @@ function TerminalIntelligenceContent() {
       <div className="bg-[#050505] border border-[#00cc66] p-6 rounded-xl space-y-4">
         <div className="border-b border-[#00cc66]/30 pb-2">
           <span className="text-[#00cc66] text-xs font-bold">[SYSTEM] V_INTEL SECURE DECRYPTION INTERFACE</span>
-          <p className="text-[#a1a1aa] text-[10px]">ENCRYPTION: AES-256-GCM // STATUS: WAITING FOR KEY</p>
+          <p className="text-[#CFC5B8] text-[10px]">ENCRYPTION: AES-256-GCM // STATUS: WAITING FOR KEY</p>
         </div>
 
         {!isDecrypting ? (
@@ -765,7 +765,7 @@ function TerminalIntelligenceContent() {
               placeholder="ENTER KEY (e.g. LEMON-70)"
               value={accessCode}
               onChange={(e) => setAccessCode(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-[#27272a] text-[#00cc66] p-3 rounded-md focus:outline-none focus:border-[#00cc66]"
+              className="w-full bg-[#050506] border border-border text-[#00cc66] p-3 rounded-md focus:outline-none focus:border-[#00cc66]"
             />
             <button
               onClick={handleDecryption}
@@ -779,7 +779,7 @@ function TerminalIntelligenceContent() {
             <p>&gt; INITIATING BRUTE FORCE DECRYPTION...</p>
             <p>&gt; BYPASSING FIREWALL [9.2.1.0]...</p>
             <p>&gt; DECRYPTING DATA STREAM [LEMON_70_SEC]...</p>
-            <p className="text-[#c87d55] font-bold">&gt; ACCESS GRANTED. REDIRECTING TO SECURE DOSSIER...</p>
+            <p className="text-[#C8A7E8] font-bold">&gt; ACCESS GRANTED. REDIRECTING TO SECURE DOSSIER...</p>
           </div>
         )}
       </div>

@@ -16,17 +16,17 @@ export default async function ReportsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      <header className="mb-12 border-b border-[#27272a] pb-8">
-        <h1 className="text-4xl font-bold text-[#f4f4f5] mb-4">
-          Research & <span className="text-[#c87d55]">Intelligence Reports</span>
+      <header className="mb-12 border-b border-border pb-8">
+        <h1 className="text-4xl font-bold text-[#F3EBDD] mb-4">
+          Research & <span className="text-[#C8A7E8]">Intelligence Reports</span>
         </h1>
-        <p className="text-[#a1a1aa] text-lg">
+        <p className="text-[#CFC5B8] text-lg">
           Institutional-grade research, macro liquidity analysis, and cyclical dynamics.
         </p>
       </header>
 
       {articles.length === 0 ? (
-        <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-10 text-center text-[#a1a1aa]">
+        <div className="bg-[#0D0D11] border border-border rounded-xl p-10 text-center text-[#CFC5B8]">
           No reports have been published yet. Check back soon.
         </div>
       ) : (
@@ -42,24 +42,24 @@ export default async function ReportsPage() {
               <Link
                 key={article.slug}
                 href={`/${article.slug}`}
-                className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#c87d55]/50 transition-all flex flex-col justify-between"
+                className="bg-[#0D0D11] border border-border rounded-xl p-6 hover:border-[#C8A7E8]/50 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between text-xs text-[#a1a1aa] mb-3">
-                    <span className="px-2.5 py-1 rounded-md bg-[#c87d55]/15 text-[#c87d55] border border-[#c87d55]/30 font-medium">
+                  <div className="flex items-center justify-between text-xs text-[#CFC5B8] mb-3">
+                    <span className="px-2.5 py-1 rounded-md bg-[#C8A7E8]/15 text-[#C8A7E8] border border-[#C8A7E8]/30 font-medium">
                       {article.category}
                     </span>
                     <span>{readTime}</span>
                   </div>
-                  <h2 className="text-xl font-bold text-[#f4f4f5] mb-3 hover:text-[#c87d55] transition-colors">
+                  <h2 className="text-xl font-bold text-[#F3EBDD] mb-3 hover:text-[#C8A7E8] transition-colors">
                     {article.title}
                   </h2>
-                  <p className="text-[#a1a1aa] text-sm mb-6 line-clamp-3">{summary}</p>
+                  <p className="text-[#CFC5B8] text-sm mb-6 line-clamp-3">{summary}</p>
                 </div>
 
-                <div className="pt-4 border-t border-[#27272a] flex items-center justify-between text-xs text-[#a1a1aa]">
+                <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-[#CFC5B8]">
                   <span>{article.date}</span>
-                  <span className="text-[#c87d55] font-semibold hover:underline">Read Report →</span>
+                  <span className="text-[#C8A7E8] font-semibold hover:underline">Read Report →</span>
                 </div>
               </Link>
             );

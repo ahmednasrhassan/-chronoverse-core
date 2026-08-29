@@ -26,7 +26,7 @@ const components: PortableTextComponents = {
 
       return (
         <figure className="my-8 w-full">
-          <div className="relative w-full h-96 md:h-[28rem] rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+          <div className="relative w-full h-96 md:h-[28rem] rounded-2xl overflow-hidden border border-border shadow-2xl">
             <Image
               src={imageUrl}
               alt={altText}
@@ -41,7 +41,7 @@ const components: PortableTextComponents = {
           </div>
 
           {value.caption && (
-            <figcaption className="text-center text-xs text-zinc-400 mt-3 italic">
+            <figcaption className="text-center text-xs text-muted mt-3 italic">
               {value.caption}
             </figcaption>
           )}
@@ -55,7 +55,7 @@ const components: PortableTextComponents = {
       const isInternal = href.startsWith("/") || href.startsWith("#");
       if (isInternal) {
         return (
-          <Link href={href} className="text-[#c87d55] hover:text-[#e09870] underline">
+          <Link href={href} className="text-[#C8A7E8] hover:text-[#A77BD8] underline">
             {children}
           </Link>
         );
@@ -65,7 +65,7 @@ const components: PortableTextComponents = {
           href={href}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          className="text-[#c87d55] hover:text-[#e09870] underline"
+          className="text-[#C8A7E8] hover:text-[#A77BD8] underline"
         >
           {children}
         </a>
@@ -74,16 +74,16 @@ const components: PortableTextComponents = {
   },
   block: {
     h2: ({ children }) => (
-      <h2 className="text-2xl md:text-3xl font-bold text-zinc-100 mt-10 mb-4">{children}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-primary mt-10 mb-4">{children}</h2>
     ),
     h3: ({ children }) => (
-      <h3 className="text-xl md:text-2xl font-bold text-zinc-100 mt-8 mb-3">{children}</h3>
+      <h3 className="text-xl md:text-2xl font-bold text-primary mt-8 mb-3">{children}</h3>
     ),
     h4: ({ children }) => (
-      <h4 className="text-lg font-bold text-zinc-100 mt-6 mb-2">{children}</h4>
+      <h4 className="text-lg font-bold text-primary mt-6 mb-2">{children}</h4>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-[#c87d55] pl-5 italic text-zinc-300 my-6">
+      <blockquote className="border-l-4 border-[#C8A7E8] pl-5 italic text-secondary my-6">
         {children}
       </blockquote>
     ),

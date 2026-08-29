@@ -184,11 +184,11 @@ export default function GoldIntelligencePanel() {
   if (loading) {
     return (
       <section className="mb-5 rounded-2xl border border-white/10 bg-white/2.5 p-4 md:p-5">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#c87d55]">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-mauve">
           Chronoverse Intelligence
         </p>
 
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-secondary">
           Building live gold intelligence...
         </p>
       </section>
@@ -205,7 +205,7 @@ export default function GoldIntelligencePanel() {
           Intelligence temporarily unavailable
         </p>
 
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-secondary">
           {error ??
             "Unable to load the current gold intelligence state."}
         </p>
@@ -252,19 +252,19 @@ export default function GoldIntelligencePanel() {
     );
 
   return (
-    <section className="mb-5 overflow-hidden rounded-2xl border border-[#c87d55]/20 bg-[#17110f]">
+    <section className="mb-5 overflow-hidden rounded-2xl border border-purple-border/20 bg-card">
       <div className="border-b border-white/10 px-5 py-4 md:px-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#c87d55]">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-mauve">
               Chronoverse Gold Intelligence V2
             </p>
 
-            <h2 className="mt-1.5 text-lg font-semibold text-white md:text-xl">
+            <h2 className="mt-1.5 text-lg font-semibold text-mauve md:text-xl">
               Decision Layer
             </h2>
 
-            <p className="mt-1.5 max-w-3xl text-sm leading-5 text-zinc-400">
+            <p className="mt-1.5 max-w-3xl text-sm leading-5 text-secondary">
               Technical structure, market risk and
               macroeconomic regime translated into one
               actionable analytical state.
@@ -272,7 +272,7 @@ export default function GoldIntelligencePanel() {
           </div>
 
           {generatedAt ? (
-            <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-muted">
               Updated{" "}
               {new Date(
                 generatedAt,
@@ -337,7 +337,7 @@ export default function GoldIntelligencePanel() {
 
       <div className="border-b border-white/10 px-5 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[11px] uppercase tracking-[0.14em]">
-          <span className="text-zinc-500">
+          <span className="text-muted">
             Technical
           </span>
 
@@ -354,11 +354,11 @@ export default function GoldIntelligencePanel() {
             )}
           </span>
 
-          <span className="text-zinc-700">
+          <span className="text-muted">
             /
           </span>
 
-          <span className="text-zinc-500">
+          <span className="text-muted">
             Macro
           </span>
 
@@ -382,19 +382,19 @@ export default function GoldIntelligencePanel() {
       </div>
 
       <div className="px-5 py-4 md:px-6">
-        <div className="rounded-xl border border-[#c87d55]/20 bg-black/10 px-4 py-3.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c87d55]">
+        <div className="rounded-xl border border-purple-border/20 bg-black/10 px-4 py-3.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-mauve">
             Chronoverse Outlook
           </p>
 
-          <p className="mt-2 max-w-4xl text-sm leading-6 text-zinc-200">
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-secondary">
             {data.summary}
           </p>
         </div>
       </div>
 
       <div className="border-t border-white/10 px-5 py-4 md:px-6">
-        <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+        <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
           Market Drivers
         </p>
 
@@ -465,11 +465,11 @@ export default function GoldIntelligencePanel() {
 
       <div className="border-t border-white/10 px-5 py-4 md:px-6">
         <div className="flex items-center justify-between gap-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c87d55]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-mauve">
             Risk Flags
           </p>
 
-          <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-muted">
             {data.warnings.length} active
           </p>
         </div>
@@ -483,11 +483,11 @@ export default function GoldIntelligencePanel() {
                   key={warning}
                   className="flex gap-2.5 rounded-lg border border-white/5 bg-black/10 px-3.5 py-2.5"
                 >
-                  <span className="mt-0.5 text-[#c87d55]">
+                  <span className="mt-0.5 text-mauve">
                     •
                   </span>
 
-                  <p className="text-xs leading-5 text-zinc-400">
+                  <p className="text-xs leading-5 text-secondary">
                     {warning}
                   </p>
                 </div>
@@ -495,7 +495,7 @@ export default function GoldIntelligencePanel() {
             )}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-muted">
             No elevated intelligence warnings are currently active.
           </p>
         )}
@@ -516,8 +516,8 @@ function DecisionCard({
   tone: string;
 }) {
   return (
-    <div className="bg-[#17110f] p-4">
-      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+    <div className="bg-card p-4">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
 
@@ -527,7 +527,7 @@ function DecisionCard({
         {value}
       </p>
 
-      <p className="mt-1 text-[11px] text-zinc-500">
+      <p className="mt-1 text-[11px] text-muted">
         {detail}
       </p>
     </div>
@@ -545,15 +545,15 @@ function DriverCard({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/10 p-3.5">
-      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
 
-      <p className="mt-1.5 text-sm font-semibold text-zinc-100">
+      <p className="mt-1.5 text-sm font-semibold text-primary">
         {value}
       </p>
 
-      <p className="mt-1 text-[11px] leading-4 text-zinc-500">
+      <p className="mt-1 text-[11px] leading-4 text-muted">
         {detail}
       </p>
     </div>
@@ -571,15 +571,15 @@ function IndicatorCard({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/10 px-3.5 py-3">
-      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+      <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
 
-      <p className="mt-1.5 text-sm font-semibold text-zinc-100">
+      <p className="mt-1.5 text-sm font-semibold text-primary">
         {value}
       </p>
 
-      <p className="mt-1 text-[11px] text-zinc-500">
+      <p className="mt-1 text-[11px] text-muted">
         {detail}
       </p>
     </div>
@@ -891,7 +891,7 @@ function directionTone(
     return "text-red-300";
   }
 
-  return "text-zinc-300";
+  return "text-secondary";
 }
 
 function macroTone(
@@ -909,7 +909,7 @@ function macroTone(
     return "text-red-300";
   }
 
-  return "text-zinc-300";
+  return "text-secondary";
 }
 
 function convictionTone(
@@ -923,7 +923,7 @@ function convictionTone(
     return "text-amber-300";
   }
 
-  return "text-zinc-300";
+  return "text-secondary";
 }
 
 function conflictTone(
@@ -939,7 +939,7 @@ function conflictTone(
     return "text-amber-300";
   }
 
-  return "text-zinc-300";
+  return "text-secondary";
 }
 
 function directionMarker(

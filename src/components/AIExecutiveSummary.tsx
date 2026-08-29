@@ -83,7 +83,7 @@ function cleanTakeawayText(item: any): string {
  * -------------------
  * Institutional-terminal styled "AI Executive Summary" box rendered at the
  * very top of every article body. Displays 3 concise key takeaways with a
- * smooth collapse/expand toggle that matches the dark copper (#c87d55)
+ * smooth collapse/expand toggle that matches the dark copper (#C8A7E8)
  * aesthetic used across Chronoverse Capital.
  *
  * Defensive by design: renders nothing if no usable points are provided
@@ -101,12 +101,12 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
 
   return (
     <div
-      className="relative mb-10 rounded-2xl border border-[#c87d55]/30 bg-gradient-to-br from-[#1a1512] via-[#151110] to-[#0f0c0b] shadow-xl overflow-hidden print:hidden"
+      className="relative mb-10 rounded-2xl border border-[#C8A7E8]/30 bg-gradient-to-br from-[#1a1512] via-[#151110] to-[#0f0c0b] shadow-xl overflow-hidden print:hidden"
       role="region"
       aria-label="AI Executive Summary"
     >
       {/* Top accent line */}
-      <div className="h-0.5 w-full bg-[linear-gradient(to_right,#c87d55,#d97706,#c87d55)] opacity-80" />
+      <div className="h-0.5 w-full bg-[linear-gradient(to_right,#C8A7E8,#d97706,#C8A7E8)] opacity-80" />
 
       <button
         type="button"
@@ -115,21 +115,21 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#c87d55]/10 border border-[#c87d55]/30 text-[#c87d55] text-sm font-bold">
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#C8A7E8]/10 border border-[#C8A7E8]/30 text-[#C8A7E8] text-sm font-bold">
             AI
           </span>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-[#c87d55] leading-none">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-[#C8A7E8] leading-none">
               Executive Summary
             </h2>
-            <p className="text-[11px] text-zinc-300 mt-1">
+            <p className="text-[11px] text-secondary mt-1">
               3 key takeaways · auto-generated briefing
             </p>
           </div>
         </div>
 
         <span
-          className={`text-[#c87d55] text-xs font-mono transition-transform duration-300 shrink-0 ${
+          className={`text-[#C8A7E8] text-xs font-mono transition-transform duration-300 shrink-0 ${
             isOpen ? "rotate-180" : "rotate-0"
           }`}
           aria-hidden="true"
@@ -148,9 +148,9 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
             {safePoints.map((point, idx) => (
               <li
                 key={`${idx}-${point.slice(0, 15)}`}
-                className="flex items-start gap-3 text-sm text-zinc-300 leading-relaxed bg-black/20 border border-zinc-800/60 rounded-xl px-4 py-3"
+                className="flex items-start gap-3 text-sm text-secondary leading-relaxed bg-black/20 border border-border/60 rounded-xl px-4 py-3"
               >
-                <span className="mt-0.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#c87d55]/15 border border-[#c87d55]/40 text-[#c87d55] text-[10px] font-bold shrink-0">
+                <span className="mt-0.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#C8A7E8]/15 border border-[#C8A7E8]/40 text-[#C8A7E8] text-[10px] font-bold shrink-0">
                   {idx + 1}
                 </span>
                 <span>{point}</span>

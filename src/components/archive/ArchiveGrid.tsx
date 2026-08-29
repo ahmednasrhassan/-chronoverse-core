@@ -19,7 +19,7 @@ export default function ArchiveGrid({ articles = [] }: ArchiveGridProps) {
     return (
       <div className="text-center py-16 p-8 rounded-xl bg-card border border-border">
         <p className="text-base text-secondary mb-2">No research reports found in the archive.</p>
-        <p className="text-xs text-zinc-400">Try adjusting your search query or filter settings.</p>
+        <p className="text-xs text-muted">Try adjusting your search query or filter settings.</p>
       </div>
     );
   }
@@ -36,7 +36,7 @@ export default function ArchiveGrid({ articles = [] }: ArchiveGridProps) {
               <span className="px-2.5 py-0.5 rounded-full bg-copper/10 text-copper font-medium">
                 {article.category || "Research"}
               </span>
-              <time className="text-zinc-400">
+              <time className="text-muted">
                 {article.publishedAt
                   ? new Date(article.publishedAt).toLocaleDateString('en-US', {
                       month: 'short',

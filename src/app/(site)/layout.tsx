@@ -7,10 +7,10 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-[#120e0c] text-zinc-100">
+    <div className="min-h-screen bg-page text-primary">
       <Header />
 
-      <main className="min-h-screen w-full bg-[#120e0c]">
+      <main className="min-h-screen w-full bg-page">
         {children}
       </main>
 

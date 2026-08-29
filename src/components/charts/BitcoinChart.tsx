@@ -99,8 +99,8 @@ export default function BitcoinChart() {
     candles.length === 0
   ) {
     return (
-      <div className="flex min-h-80 items-center justify-center rounded-xl border border-zinc-800 bg-black/20 px-6 text-center">
-        <p className="font-mono text-sm text-zinc-400">
+      <div className="flex min-h-80 items-center justify-center rounded-xl border border-border bg-black/20 px-6 text-center">
+        <p className="font-mono text-sm text-muted">
           {error}
         </p>
       </div>

@@ -21,7 +21,7 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 const SITE_NAME = "Chronoverse Capital";
-const ACCENT = "#c87d55";
+const ACCENT = "#C8A7E8";
 
 function safeParam(value: string | null, fallback: string, maxLen = 140): string {
   const trimmed = (value ?? "").trim();
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            backgroundColor: "#120e0c",
+            backgroundColor: "#050506",
             backgroundImage:
               "radial-gradient(circle at 25% 15%, rgba(200,125,85,0.18), transparent 45%), radial-gradient(circle at 85% 85%, rgba(200,125,85,0.10), transparent 50%)",
             padding: "64px",
@@ -92,10 +92,10 @@ export async function GET(request: NextRequest) {
                 flexDirection: "column",
               }}
             >
-              <span style={{ color: "#f4f4f5", fontSize: "26px", fontWeight: 700, letterSpacing: "1px" }}>
+              <span style={{ color: "#F3EBDD", fontSize: "26px", fontWeight: 700, letterSpacing: "1px" }}>
                 {SITE_NAME}
               </span>
-              <span style={{ color: "#a1a1aa", fontSize: "16px", letterSpacing: "2px" }}>
+              <span style={{ color: "#CFC5B8", fontSize: "16px", letterSpacing: "2px" }}>
                 DECODING FUTURE MARKETS
               </span>
             </div>
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
             </span>
             <span
               style={{
-                color: "#f4f4f5",
+                color: "#F3EBDD",
                 fontSize: "56px",
                 fontWeight: 800,
                 lineHeight: 1.15,
@@ -137,8 +137,8 @@ export async function GET(request: NextRequest) {
               paddingTop: "24px",
             }}
           >
-            <span style={{ color: "#71717a", fontSize: "16px" }}>www.chronoversecapital.com</span>
-            <span style={{ color: "#71717a", fontSize: "16px" }}>Institutional Research Terminal</span>
+            <span style={{ color: "#91889A", fontSize: "16px" }}>www.chronoversecapital.com</span>
+            <span style={{ color: "#91889A", fontSize: "16px" }}>Institutional Research Terminal</span>
           </div>
         </div>
       ),
@@ -162,8 +162,8 @@ export async function GET(request: NextRequest) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#120e0c",
-            color: "#c87d55",
+            backgroundColor: "#050506",
+            color: "#C8A7E8",
             fontSize: "48px",
             fontWeight: 700,
             fontFamily: "sans-serif",

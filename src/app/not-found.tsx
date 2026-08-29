@@ -17,17 +17,17 @@ export default function NotFound() {
           <span className="bg-red-500/15 text-red-400 px-3 py-1 rounded-md text-xs font-semibold border border-red-500/30 inline-block tracking-widest uppercase">
             SIGNAL LOST // 404
           </span>
-          <h1 className="text-7xl md:text-9xl font-extrabold text-[#f4f4f5] tracking-tighter leading-none">
-            4<span className="text-[#c87d55]">0</span>4
+          <h1 className="text-7xl md:text-9xl font-extrabold text-[#F3EBDD] tracking-tighter leading-none">
+            4<span className="text-[#C8A7E8]">0</span>4
           </h1>
-          <p className="text-[#a1a1aa] text-sm md:text-base font-sans max-w-md mx-auto leading-relaxed">
+          <p className="text-[#CFC5B8] text-sm md:text-base font-sans max-w-md mx-auto leading-relaxed">
             The dossier, report, or intelligence node you are attempting to access has been
             archived, relocated, or never existed within this timeline.
           </p>
         </div>
 
         {/* Terminal-style Diagnostic Box */}
-        <div className="bg-[#0a0a0a] border border-[#27272a] rounded-xl p-5 text-left text-xs text-[#71717a] space-y-1.5 shadow-xl max-w-md mx-auto">
+        <div className="bg-[#050506] border border-border rounded-xl p-5 text-left text-xs text-[#91889A] space-y-1.5 shadow-xl max-w-md mx-auto">
           <p>&gt; QUERYING ARCHIVE NODE...</p>
           <p>&gt; STATUS: <span className="text-red-500 font-bold">RESOURCE NOT FOUND</span></p>
           <p>&gt; RECOMMENDATION: RETURN TO SECURE TERMINAL</p>
@@ -37,13 +37,13 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
           <Link
             href="/"
-            className="w-full sm:w-auto bg-[#c87d55] hover:bg-[#d88d65] text-black font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-md"
+            className="w-full sm:w-auto bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-md"
           >
             ← Return to Home Terminal
           </Link>
           <Link
             href="/reports"
-            className="w-full sm:w-auto bg-[#18181b] hover:bg-[#27272a] text-[#f4f4f5] border border-[#27272a] hover:border-[#c87d55]/50 font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors"
+            className="w-full sm:w-auto bg-[#0D0D11] hover:bg-raised text-[#F3EBDD] border border-border hover:border-[#C8A7E8]/50 font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors"
           >
             Browse Dossiers →
           </Link>

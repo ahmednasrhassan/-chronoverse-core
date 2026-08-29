@@ -35,8 +35,8 @@ export default function ArchiveFilters({
   const getButtonClass = (isActive: boolean) =>
     `px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
       isActive
-        ? "bg-copper text-white shadow-sm"
-        : "bg-zinc-800/60 text-secondary hover:text-white hover:bg-zinc-800"
+        ? "bg-copper text-primary shadow-sm"
+        : "bg-raised/60 text-secondary hover:text-primary hover:bg-raised"
     }`;
 
   return (
@@ -67,10 +67,10 @@ export default function ArchiveFilters({
         <select
           value={selectedYear}
           onChange={(e) => onSelectYear(e.target.value)}
-          className="bg-zinc-800/80 border border-border text-xs text-primary rounded-lg px-3 py-1.5 focus:outline-none focus:border-copper transition-colors cursor-pointer"
+          className="bg-raised/80 border border-border text-xs text-primary rounded-lg px-3 py-1.5 focus:outline-none focus:border-copper transition-colors cursor-pointer"
         >
           {years.map((year) => (
-            <option key={year} value={year} className="bg-zinc-900 text-white">
+            <option key={year} value={year} className="bg-raised text-primary">
               {year === "All" ? "All Years" : year}
             </option>
           ))}

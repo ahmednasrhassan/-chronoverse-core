@@ -158,8 +158,8 @@ export default function EChartsEngine({
     if (loading) {
       chart.showLoading("default", {
         text: "Loading market data...",
-        color: "#c87d55",
-        textColor: "#a1a1aa",
+        color: "#C8A7E8",
+        textColor: "#CFC5B8",
         maskColor: "rgba(10, 10, 10, 0.75)",
       });
     } else {

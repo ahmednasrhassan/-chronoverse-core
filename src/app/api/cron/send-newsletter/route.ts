@@ -110,16 +110,16 @@ function buildArticlesHtml(posts: RecentPost[]): string {
       const link = `${BASE_URL}/${post.slug}`;
       const description = resolveDescription(post);
       const category = post.categoryTitle
-        ? `<span style="display:inline-block;font-size:11px;color:#c87d55;background-color:#18181b;border:1px solid #c87d5540;border-radius:4px;padding:2px 8px;margin-bottom:8px;">${post.categoryTitle}</span><br/>`
+        ? `<span style="display:inline-block;font-size:11px;color:#C8A7E8;background-color:#0D0D11;border:1px solid #C8A7E840;border-radius:4px;padding:2px 8px;margin-bottom:8px;">${post.categoryTitle}</span><br/>`
         : "";
 
       return `
         <tr>
-          <td style="padding:16px 0;border-bottom:1px solid #27272a;">
+          <td style="padding:16px 0;border-bottom:1px solid #292432;">
             ${category}
-            <a href="${link}" style="color:#f4f4f5;font-size:17px;font-weight:600;text-decoration:none;line-height:1.4;">${post.title}</a>
-            <p style="color:#a1a1aa;font-size:14px;line-height:1.5;margin:8px 0 12px 0;">${description}</p>
-            <a href="${link}" style="color:#c87d55;font-size:13px;font-weight:bold;text-decoration:none;">Read Full Dispatch →</a>
+            <a href="${link}" style="color:#F3EBDD;font-size:17px;font-weight:600;text-decoration:none;line-height:1.4;">${post.title}</a>
+            <p style="color:#CFC5B8;font-size:14px;line-height:1.5;margin:8px 0 12px 0;">${description}</p>
+            <a href="${link}" style="color:#C8A7E8;font-size:13px;font-weight:bold;text-decoration:none;">Read Full Dispatch →</a>
           </td>
         </tr>`;
     })
@@ -136,23 +136,23 @@ function buildEmailHtml(posts: RecentPost[]): string {
   });
 
   return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0a0a0a;color:#f4f4f5;padding:32px 16px;">
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#050506;color:#F3EBDD;padding:32px 16px;">
     <table style="max-width:600px;margin:0 auto;width:100%;border-collapse:collapse;">
       <tr>
-        <td style="padding-bottom:24px;border-bottom:1px solid #27272a;">
-          <span style="color:#c87d55;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// Daily Dispatch</span>
+        <td style="padding-bottom:24px;border-bottom:1px solid #292432;">
+          <span style="color:#C8A7E8;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// Daily Dispatch</span>
           <h1 style="font-size:24px;font-weight:bold;margin:8px 0 0 0;color:#ffffff;">Chronoverse Capital Newsletter</h1>
-          <p style="color:#71717a;font-size:13px;margin:8px 0 0 0;">${today}</p>
+          <p style="color:#91889A;font-size:13px;margin:8px 0 0 0;">${today}</p>
         </td>
       </tr>
       <tr>
-        <td style="padding:20px 0 0 0;color:#a1a1aa;font-size:14px;line-height:1.6;">
+        <td style="padding:20px 0 0 0;color:#CFC5B8;font-size:14px;line-height:1.6;">
           The latest institutional market intelligence from Chronoverse Capital, delivered straight to your inbox.
         </td>
       </tr>
       ${articlesHtml}
       <tr>
-        <td style="padding-top:32px;text-align:center;color:#71717a;font-size:12px;">
+        <td style="padding-top:32px;text-align:center;color:#91889A;font-size:12px;">
           You are receiving this email because you subscribed to Chronoverse Capital's newsletter.<br/>
           Chronoverse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States
         </td>

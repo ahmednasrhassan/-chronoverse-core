@@ -106,18 +106,18 @@ export default function AudioReader({ textToRead }: AudioReaderProps) {
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-[#161616] my-6 max-w-fit print:hidden">
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-[#15131A] my-6 max-w-fit print:hidden">
       <button
         onClick={handleTogglePlay}
-        className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase font-semibold text-[#c87d55] hover:text-[#d9916b] transition-colors"
+        className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase font-semibold text-[#C8A7E8] hover:text-[#d9916b] transition-colors"
       >
         <span className="relative flex h-2.5 w-2.5">
           {isPlaying && !isPaused && (
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c87d55] opacity-75"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C8A7E8] opacity-75"></span>
           )}
           <span
             className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-              isPlaying && !isPaused ? "bg-[#c87d55]" : "bg-zinc-600"
+              isPlaying && !isPaused ? "bg-[#C8A7E8]" : "bg-zinc-600"
             }`}
           ></span>
         </span>
@@ -131,7 +131,7 @@ export default function AudioReader({ textToRead }: AudioReaderProps) {
       {isPlaying && (
         <button
           onClick={handleStop}
-          className="text-zinc-500 hover:text-zinc-300 text-xs font-mono ml-2 border-l border-zinc-700 pl-3 transition-colors"
+          className="text-muted hover:text-secondary text-xs font-mono ml-2 border-l border-purple-border pl-3 transition-colors"
         >
           Stop
         </button>
