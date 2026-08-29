@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import MarketQuoteCard from "@/components/charts/MarketQuoteCardLazy";
 const LightweightChart = dynamic(() => import("@/components/charts/LightweightChart"), { ssr: false });
 
 

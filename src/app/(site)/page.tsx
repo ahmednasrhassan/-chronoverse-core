@@ -2,13 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getLatestSanityArticles, calculateReadTime } from "@/lib/content";
 import NewsletterForm from "@/components/NewsLetterForm";
-// The proprietary market quote cards fetch live data from
-// `/api/market-data` and pull in `lightweight-charts` for their mini
-// charts, both entirely client-side concerns. `MarketQuoteCardLazy` wraps
-// the actual card in a `next/dynamic(..., { ssr: false })` import inside
-// its own Client Component, keeping it out of the server-rendered HTML /
-// initial JS bundle so it never blocks first paint or the homepage's LCP.
-import MarketQuoteCard from "@/components/charts/MarketQuoteCardLazy";
+import MarketQuoteGroup from "@/components/charts/MarketQuoteGroup";
 
 // The homepage's editorial content is refreshed on-demand when Sanity
 // publishes, updates, or deletes a post through `/api/revalidate`.
@@ -45,6 +39,7 @@ export default async function HomePage() {
     href: "/markets/oil",
   },
 ];
+
   // Strictly the latest 4 published posts, ordered chronologically:
   // *[_type == "post" && defined(slug.current)] | order(publishedAt desc)[0..3]
   const featuredArticles = await getLatestSanityArticles(4);
@@ -64,21 +59,8 @@ export default async function HomePage() {
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4">
             Live Markets Overview
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-           {marketSymbols.map(({ symbol, label, href }) => (
-  <Link
-    key={symbol}
-    href={href}
-    aria-label={`Open ${label} chart`}
-    className="block bg-[#18181b] border border-zinc-800 p-3 rounded-xl h-40 shadow-lg shadow-black/40 hover:border-[#c87d55]/50 transition-colors cursor-pointer"
-  >
-    <MarketQuoteCard
-      symbol={symbol}
-      label={label}
-    />
-  </Link>
-))}
-          </div>
+
+          <MarketQuoteGroup markets={marketSymbols} />
         </section>
 
         {/* ================= SECTION 2: MACRO RESEARCH & INSIGHTS (4 Cards) ================= */}
@@ -140,6 +122,7 @@ export default async function HomePage() {
             <NewsletterForm />
           </div>
         </section>
+
         {/* ================= PARTNERSHIPS & PRIVATE SYNDICATE ================= */}
         <section className="pt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,6 +165,7 @@ export default async function HomePage() {
 
           </div>
         </section>
+
         {/* ================= SECTION 4: OFFICIAL SPONSORS (4 Cards) ================= */}
         {/* <section>
           <h2 className="text-[#c87d55] text-sm font-bold uppercase tracking-widest mb-4 text-center mt-8">Official Partners & Sponsors</h2>
