@@ -26,7 +26,6 @@ const yahooFinance = new YahooFinance();
  *
  * Client components never communicate directly with a market-data vendor.
  */
-export const revalidate = 300;
 
 interface MarketQuote {
   symbol: string;
