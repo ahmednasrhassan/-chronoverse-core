@@ -1,5 +1,5 @@
 import YahooFinance from "yahoo-finance2";
-
+import { unstable_cache } from "next/cache";
 import { bootstrapPremiumMarketProvider } from "@/lib/markets/providers/premium/bootstrap";
 import type { HistoricalDataRequest } from "@/lib/markets/providers/premium/provider";
 
@@ -44,8 +44,22 @@ async function withTimeout<T>(
     return null;
   }
 }
+const HISTORICAL_CACHE_SECONDS = 15 * 60;
 
-export async function getHistoricalMarketData(
+export const getHistoricalMarketData = unstable_cache(
+  fetchHistoricalMarketData,
+  [
+    "chronoverse",
+    "markets",
+    "historical-data",
+  ],
+  {
+    revalidate: HISTORICAL_CACHE_SECONDS,
+    tags: ["market-historical-data"],
+  },
+);
+
+async function fetchHistoricalMarketData(
   symbol: string,
   range = "3mo",
   interval = "1d"
