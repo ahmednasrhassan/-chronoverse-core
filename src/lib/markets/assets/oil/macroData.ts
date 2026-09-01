@@ -3,9 +3,8 @@ import type {
 } from "./macro";
 
 import {
-  eiaOilFundamentalsProvider,
-} from "../../providers/eia/provider";
-
+  getEiaOilFundamentals,
+} from "../../providers/eia/oilFundamentalsCache";
 /**
  * Chronoverse Capital
  * Oil Macro Data Adapter
@@ -21,8 +20,7 @@ import {
 export async function getOilMacroInput():
   Promise<OilMacroInput> {
   const fundamentals =
-    await eiaOilFundamentalsProvider
-      .getOilFundamentals();
+    await getEiaOilFundamentals();
 
   return {
     inventoriesChangePct:
