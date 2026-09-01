@@ -8,6 +8,17 @@ import {
 } from "./intelligence";
 
 import {
+  calculateOilRegimeMemory,
+  createOilRegimeSnapshot,
+  type OilRegimeMemoryResult,
+} from "./regimeMemory";
+
+import {
+  appendOilRegimeSnapshot,
+  getLatestOilRegimeSnapshot,
+} from "./regimeHistory";
+
+import {
   getOilMacroInput,
 } from "./macroData";
 
@@ -16,6 +27,12 @@ import {
 } from "./profile";
 
 const OIL_HISTORY_RANGE = "5y";
+
+export type LiveOilIntelligenceResult =
+  OilIntelligenceResult & {
+    regimeMemory:
+      OilRegimeMemoryResult;
+  };
 
 /**
  * Chronoverse Capital
@@ -27,6 +44,8 @@ const OIL_HISTORY_RANGE = "5y";
  * - official EIA fundamentals
  * - Oil macro interpretation
  * - Universal Market Intelligence Core
+ * - Universal Regime Memory
+ * - persistent Oil regime history
  *
  * Historical market data and macro data are
  * independent, so they are resolved concurrently.
@@ -34,7 +53,7 @@ const OIL_HISTORY_RANGE = "5y";
  * Server-side only.
  */
 export async function getLiveOilIntelligence():
-  Promise<OilIntelligenceResult> {
+  Promise<LiveOilIntelligenceResult> {
   const [
     marketData,
     macro,
@@ -69,8 +88,33 @@ export async function getLiveOilIntelligence():
     );
   }
 
-  return calculateOilIntelligence({
-    closes,
-    macro,
-  });
+  const intelligence =
+    calculateOilIntelligence({
+      closes,
+      macro,
+    });
+
+  const previousSnapshot =
+    await getLatestOilRegimeSnapshot();
+
+  const currentSnapshot =
+    createOilRegimeSnapshot(
+      intelligence,
+    );
+
+  const regimeMemory =
+    calculateOilRegimeMemory(
+      currentSnapshot,
+      previousSnapshot,
+    );
+
+  await appendOilRegimeSnapshot(
+    currentSnapshot,
+    previousSnapshot,
+  );
+
+  return {
+    ...intelligence,
+    regimeMemory,
+  };
 }

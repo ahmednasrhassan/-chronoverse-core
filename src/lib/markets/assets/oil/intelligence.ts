@@ -2,7 +2,10 @@ import {
   calculateMarketIntelligence,
   type MarketIntelligenceResult,
 } from "../../core/marketIntelligence";
-
+import {
+  calculateMarketState,
+  type MarketIntelligenceState,
+} from "../../core/marketState";
 import {
   calculateOilMacro,
   type OilMacroInput,
@@ -35,6 +38,12 @@ export type OilIntelligenceResult =
      */
     macro:
       OilMacroResult | null;
+
+    state:
+      MarketIntelligenceState;
+
+    confidence:
+      number;
   };
 
 /**
@@ -68,9 +77,37 @@ export function calculateOilIntelligence(
       : calculateOilMacro(
           input.macro,
         );
+  const marketState =
+  calculateMarketState({
+    signal:
+      core.signal,
 
+    risk:
+      core.risk,
+
+    macro:
+      macro === null
+        ? null
+        : {
+            bias:
+              macro.direction,
+
+            confidence:
+              macro.confidence,
+
+            coverage:
+              macro.coverage,
+          },
+  });
   return {
-    ...core,
-    macro,
-  };
+  ...core,
+
+  macro,
+
+  state:
+    marketState.state,
+
+  confidence:
+    marketState.confidence,
+};
 }
