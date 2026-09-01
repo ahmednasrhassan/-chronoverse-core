@@ -1,95 +1,57 @@
-import { Redis } from "@upstash/redis";
-
 import type {
   GoldRegimeMemoryResult,
   GoldRegimeSnapshot,
 } from "./regimeMemory";
 
-const MAX_GOLD_REGIME_HISTORY = 120;
-
-const GOLD_REGIME_HISTORY_KEY =
-  "chronoverse:gold:regime:history";
+import {
+  appendMarketRegimeSnapshot,
+  clearMarketRegimeHistory,
+  getLatestMarketRegimeSnapshot,
+  getMarketRegimeHistory,
+  getMarketRegimeHistoryCount,
+  getPreviousMarketRegimeSnapshot,
+  type MarketRegimeHistoryConfig,
+} from "../../core/regimeHistory";
 
 /**
  * Chronoverse Capital
- * Gold Regime History
+ * Gold Regime History Adapter
  *
- * Persistent Upstash Redis store.
- *
- * Responsibilities:
- * - retain recent regime snapshots
- * - expose latest snapshot
- * - expose previous snapshot
- * - expose bounded history
- * - survive deployments / cold starts
+ * Preserves Gold's existing public API
+ * and Redis history key while delegating
+ * persistent storage to the universal
+ * regime-history core.
  */
 
-let redisClient: Redis | null = null;
+const goldRegimeHistoryConfig:
+  MarketRegimeHistoryConfig = {
+    key:
+      "chronoverse:gold:regime:history",
 
-function getRedisClient(): Redis {
-  if (redisClient) {
-    return redisClient;
-  }
+    maxHistory:
+      120,
 
-  const url =
-    process.env.KV_REST_API_URL;
-
-  const token =
-    process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
-    throw new Error(
-      "[Chronoverse Gold Regime] Missing KV_REST_API_URL or KV_REST_API_TOKEN.",
-    );
-  }
-
-  redisClient = new Redis({
-    url,
-    token,
-  });
-
-  return redisClient;
-}
+    errorPrefix:
+      "[Chronoverse Gold Regime]",
+  };
 
 /**
- * Append a new regime snapshot.
+ * Append a new Gold regime snapshot.
  *
- * History is stored oldest -> newest.
- * Maximum retained history = 120 snapshots.
+ * Optional latestSnapshot allows callers
+ * that already fetched the latest regime
+ * to avoid a duplicate Redis LINDEX.
  */
 export async function appendGoldRegimeSnapshot(
   snapshot: GoldRegimeSnapshot,
+  latestSnapshot?:
+    | GoldRegimeSnapshot
+    | null,
 ): Promise<void> {
-  const redis =
-    getRedisClient();
-
-  const latest =
-    await getLatestGoldRegimeSnapshot();
-
-  /*
-   * Avoid inserting the exact same
-   * generated snapshot twice.
-   */
-  if (
-    latest &&
-    latest.timestamp === snapshot.timestamp
-  ) {
-    return;
-  }
-
-  await redis.rpush(
-    GOLD_REGIME_HISTORY_KEY,
+  return appendMarketRegimeSnapshot(
+    goldRegimeHistoryConfig,
     snapshot,
-  );
-
-  /*
-   * Keep only the most recent
-   * MAX_GOLD_REGIME_HISTORY records.
-   */
-  await redis.ltrim(
-    GOLD_REGIME_HISTORY_KEY,
-    -MAX_GOLD_REGIME_HISTORY,
-    -1,
+    latestSnapshot,
   );
 }
 
@@ -98,18 +60,11 @@ export async function appendGoldRegimeSnapshot(
  */
 export async function getLatestGoldRegimeSnapshot():
   Promise<GoldRegimeSnapshot | null> {
-  const redis =
-    getRedisClient();
-
-  const snapshot =
-    await redis.lindex(
-      GOLD_REGIME_HISTORY_KEY,
-      -1,
-    );
-
-  return snapshot as
-    | GoldRegimeSnapshot
-    | null;
+  return getLatestMarketRegimeSnapshot<
+    GoldRegimeSnapshot
+  >(
+    goldRegimeHistoryConfig,
+  );
 }
 
 /**
@@ -118,18 +73,11 @@ export async function getLatestGoldRegimeSnapshot():
  */
 export async function getPreviousGoldRegimeSnapshot():
   Promise<GoldRegimeSnapshot | null> {
-  const redis =
-    getRedisClient();
-
-  const snapshot =
-    await redis.lindex(
-      GOLD_REGIME_HISTORY_KEY,
-      -2,
-    );
-
-  return snapshot as
-    | GoldRegimeSnapshot
-    | null;
+  return getPreviousMarketRegimeSnapshot<
+    GoldRegimeSnapshot
+  >(
+    goldRegimeHistoryConfig,
+  );
 }
 
 /**
@@ -138,18 +86,11 @@ export async function getPreviousGoldRegimeSnapshot():
  */
 export async function getGoldRegimeHistory():
   Promise<readonly GoldRegimeSnapshot[]> {
-  const redis =
-    getRedisClient();
-
-  const history =
-    await redis.lrange(
-      GOLD_REGIME_HISTORY_KEY,
-      0,
-      -1,
-    );
-
-  return history as unknown as
-    GoldRegimeSnapshot[];
+  return getMarketRegimeHistory<
+    GoldRegimeSnapshot
+  >(
+    goldRegimeHistoryConfig,
+  );
 }
 
 /**
@@ -157,26 +98,20 @@ export async function getGoldRegimeHistory():
  */
 export async function getGoldRegimeHistoryCount():
   Promise<number> {
-  const redis =
-    getRedisClient();
-
-  return redis.llen(
-    GOLD_REGIME_HISTORY_KEY,
+  return getMarketRegimeHistoryCount(
+    goldRegimeHistoryConfig,
   );
 }
 
 /**
- * Clears persistent regime history.
+ * Clears persistent Gold regime history.
  *
  * Intended for maintenance/testing only.
  */
 export async function clearGoldRegimeHistory():
   Promise<void> {
-  const redis =
-    getRedisClient();
-
-  await redis.del(
-    GOLD_REGIME_HISTORY_KEY,
+  return clearMarketRegimeHistory(
+    goldRegimeHistoryConfig,
   );
 }
 

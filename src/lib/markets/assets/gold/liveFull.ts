@@ -165,8 +165,9 @@ export async function getFullLiveGoldIntelligence():
     );
 
   await appendGoldRegimeSnapshot(
-    currentSnapshot,
-  );
+  currentSnapshot,
+  previousSnapshot,
+);
 
   /*
    * ------------------------------------------------------
