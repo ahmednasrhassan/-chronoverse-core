@@ -1,7 +1,9 @@
 import {
   calculateMarketIntelligence,
 } from "../../core/marketIntelligence";
-
+import {
+  calculateMarketState,
+} from "../../core/marketState";
 import {
   goldProfile,
 } from "./profile";
@@ -324,19 +326,18 @@ export function calculateGoldIntelligence(
    * experience.
    */
 
-  const state =
-    resolveState(
-      signal,
-      risk,
-      macro,
-    );
+  const marketState =
+  calculateMarketState({
+    signal,
+    risk,
+    macro,
+  });
 
-  const confidence =
-    calculateCombinedConfidence(
-      signal,
-      risk,
-      macro,
-    );
+const state =
+  marketState.state;
+
+const confidence =
+  marketState.confidence;
 
   const warnings =
     buildWarnings({
@@ -414,208 +415,6 @@ export function calculateGoldIntelligence(
   };
 }
 
-/**
- * ========================================================
- * GOLD STATE RESOLUTION
- * ========================================================
- *
- * Technical direction remains the primary
- * tactical signal.
- *
- * Macro acts as:
- *
- * - confirmation
- * - contradiction
- * - regime filter
- *
- * Macro does NOT blindly override
- * price structure.
- */
-function resolveState(
-  signal: GoldSignalResult,
-  risk: GoldRiskResult,
-  macro:
-    | GoldMacroScoreResult
-    | null,
-): GoldIntelligenceState {
-  /*
-   * ------------------------------------------------------
-   * HARD RISK OVERRIDE
-   * ------------------------------------------------------
-   *
-   * Elevated market risk remains dominant.
-   */
-
-  if (
-    risk.level ===
-      "high"
-  ) {
-    return "risk";
-  }
-
-  /*
-   * ------------------------------------------------------
-   * BEARISH TECHNICAL STRUCTURE
-   * ------------------------------------------------------
-   */
-
-  if (
-    signal.direction ===
-      "bearish" &&
-    signal.confidence >=
-      0.55
-  ) {
-    /*
-     * Strong supportive macro conditions
-     * create disagreement with bearish price
-     * structure.
-     */
-
-    if (
-      macro !== null &&
-      macro.bias ===
-        "bullish" &&
-      macro.confidence >=
-        0.65
-    ) {
-      return "caution";
-    }
-
-    return "risk";
-  }
-
-  /*
-   * ------------------------------------------------------
-   * BULLISH TECHNICAL STRUCTURE
-   * ------------------------------------------------------
-   */
-
-  if (
-    signal.direction ===
-      "bullish" &&
-    signal.confidence >=
-      0.55 &&
-    risk.level ===
-      "low"
-  ) {
-    /*
-     * Strong bearish macro conditions block
-     * a clean opportunity classification.
-     */
-
-    if (
-      macro !== null &&
-      macro.bias ===
-        "bearish" &&
-      macro.confidence >=
-        0.65
-    ) {
-      return "caution";
-    }
-
-    return "opportunity";
-  }
-
-  /*
-   * ------------------------------------------------------
-   * DEFAULT MIXED STATE
-   * ------------------------------------------------------
-   */
-
-  return "caution";
-}
-
-/**
- * ========================================================
- * COMBINED CONFIDENCE
- * ========================================================
- *
- * Combines:
- *
- * - Technical signal confidence
- * - Risk quality
- * - Optional macro confidence
- *
- * Macro receives weight only when available.
- */
-function calculateCombinedConfidence(
-  signal: GoldSignalResult,
-  risk: GoldRiskResult,
-  macro:
-    | GoldMacroScoreResult
-    | null,
-): number {
-  const riskQuality =
-    1 -
-    risk.score;
-
-  /*
-   * ------------------------------------------------------
-   * NO MACRO LAYER
-   * ------------------------------------------------------
-   *
-   * Preserve the original Gold engine
-   * behaviour when macro intelligence
-   * is not supplied.
-   */
-
-  if (
-    macro === null
-  ) {
-    const combined =
-      signal.confidence *
-        0.75 +
-      riskQuality *
-        0.25;
-
-    return Number(
-      clamp(
-        combined,
-        0,
-        1,
-      ).toFixed(
-        4,
-      ),
-    );
-  }
-
-  /*
-   * ------------------------------------------------------
-   * MACRO QUALITY
-   * ------------------------------------------------------
-   *
-   * Macro confidence has value only when
-   * meaningful data coverage exists.
-   */
-
-  const macroQuality =
-    macro.confidence *
-    macro.coverage;
-
-  /*
-   * ------------------------------------------------------
-   * THREE-LAYER CONFIDENCE
-   * ------------------------------------------------------
-   */
-
-  const combined =
-    signal.confidence *
-      0.6 +
-    riskQuality *
-      0.2 +
-    macroQuality *
-      0.2;
-
-  return Number(
-    clamp(
-      combined,
-      0,
-      1,
-    ).toFixed(
-      4,
-    ),
-  );
-}
 
 /**
  * ========================================================
@@ -1143,23 +942,4 @@ function createEmptyResult(
       "Market intelligence is waiting for valid price history.",
     ],
   };
-}
-
-/**
- * ========================================================
- * NUMERIC CLAMP
- * ========================================================
- */
-function clamp(
-  value: number,
-  min: number,
-  max: number,
-): number {
-  return Math.min(
-    max,
-    Math.max(
-      min,
-      value,
-    ),
-  );
 }
