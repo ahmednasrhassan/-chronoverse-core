@@ -55,7 +55,7 @@ export function RecentContentWidget() {
   return (
     <DashboardWidgetContainer header="Recent Content">
       <Box padding={3}>
-        <Stack space={2}>
+        <Stack gap={2}>
           {docs === null && <Text muted>Loading…</Text>}
           {docs !== null && docs.length === 0 && <Text muted>No content yet.</Text>}
           {docs?.map((doc) => (

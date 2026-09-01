@@ -23,13 +23,20 @@ const STATS_QUERY = `{
   "images": count(*[_type == "sanity.imageAsset"])
 }`;
 
-function StatCard({ label, value }: { label: string; value: number | null }) {
+function StatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | null;
+}) {
   return (
     <Card padding={3} radius={2} shadow={1} tone="primary">
-      <Stack space={2}>
+      <Stack gap={2}>
         <Text size={3} weight="bold">
           {value === null ? "…" : value}
         </Text>
+
         <Text size={1} muted>
           {label}
         </Text>
@@ -43,19 +50,29 @@ function StatCard({ label, value }: { label: string; value: number | null }) {
  * drafts, pages, authors, categories, and image assets across the dataset.
  */
 export function ContentStatsWidget() {
-  const client = useClient({ apiVersion: "2024-03-01" });
-  const [stats, setStats] = useState<StatsResult | null>(null);
+  const client = useClient({
+    apiVersion: "2024-03-01",
+  });
+
+  const [stats, setStats] =
+    useState<StatsResult | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
     client
       .fetch<StatsResult>(STATS_QUERY)
       .then((result) => {
-        if (isMounted) setStats(result);
+        if (isMounted) {
+          setStats(result);
+        }
       })
       .catch(() => {
-        if (isMounted) setStats(null);
+        if (isMounted) {
+          setStats(null);
+        }
       });
+
     return () => {
       isMounted = false;
     };
@@ -64,13 +81,46 @@ export function ContentStatsWidget() {
   return (
     <DashboardWidgetContainer header="Content Stats">
       <Flex padding={3}>
-        <Grid columns={[2, 3]} gap={3} style={{ width: "100%" }}>
-          <StatCard label="Published Posts" value={stats ? stats.posts - stats.drafts : null} />
-          <StatCard label="Drafts" value={stats ? stats.drafts : null} />
-          <StatCard label="Pages" value={stats ? stats.pages : null} />
-          <StatCard label="Authors" value={stats ? stats.authors : null} />
-          <StatCard label="Categories" value={stats ? stats.categories : null} />
-          <StatCard label="Image Assets" value={stats ? stats.images : null} />
+        <Grid
+              gap={3}
+             style={{
+            width: "100%",
+           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            }}
+>
+          <StatCard
+            label="Published Posts"
+            value={
+              stats
+                ? stats.posts - stats.drafts
+                : null
+            }
+          />
+
+          <StatCard
+            label="Drafts"
+            value={stats ? stats.drafts : null}
+          />
+
+          <StatCard
+            label="Pages"
+            value={stats ? stats.pages : null}
+          />
+
+          <StatCard
+            label="Authors"
+            value={stats ? stats.authors : null}
+          />
+
+          <StatCard
+            label="Categories"
+            value={stats ? stats.categories : null}
+          />
+
+          <StatCard
+            label="Image Assets"
+            value={stats ? stats.images : null}
+          />
         </Grid>
       </Flex>
     </DashboardWidgetContainer>

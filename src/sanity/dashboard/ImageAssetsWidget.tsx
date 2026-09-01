@@ -25,6 +25,7 @@ export function ImageAssetsWidget() {
 
   useEffect(() => {
     let isMounted = true;
+
     client
       .fetch<ImageAsset[]>(IMAGES_QUERY)
       .then((result) => {
@@ -33,6 +34,7 @@ export function ImageAssetsWidget() {
       .catch(() => {
         if (isMounted) setImages([]);
       });
+
     return () => {
       isMounted = false;
     };
@@ -42,18 +44,39 @@ export function ImageAssetsWidget() {
     <DashboardWidgetContainer header="Image Assets Manager">
       <Box padding={3}>
         {images === null && <Text muted>Loading…</Text>}
-        {images !== null && images.length === 0 && <Text muted>No images uploaded yet.</Text>}
+
+        {images !== null && images.length === 0 && (
+          <Text muted>No images uploaded yet.</Text>
+        )}
+
         {images && images.length > 0 && (
-          <Grid columns={[3, 4]} gap={2}>
+          <Grid
+            gap={2}
+            style={{
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            }}
+          >
             {images.map((image) => (
-              <Stack key={image._id} space={1}>
-                <Card radius={2} overflow="hidden" style={{ aspectRatio: "1 / 1", position: "relative" }}>
+              <Stack key={image._id} gap={1}>
+                <Card
+                  radius={2}
+                  overflow="hidden"
+                  style={{
+                    aspectRatio: "1 / 1",
+                    position: "relative",
+                  }}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`${image.url}?w=120&h=120&fit=crop&auto=format`}
                     alt={image.originalFilename || "Sanity image asset"}
                     loading="lazy"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
                   />
                 </Card>
               </Stack>

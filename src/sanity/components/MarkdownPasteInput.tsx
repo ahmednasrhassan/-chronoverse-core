@@ -208,7 +208,7 @@ export function MarkdownPasteInput(props: ArrayOfObjectsInputProps) {
   }, [markdownPayload, onChange])
 
   return (
-    <Stack space={3}>
+    <Stack gap={3}>
       <Card padding={2} tone="primary" radius={2} border>
         <Flex justify="space-between" align="center">
           <Box padding={2}>
@@ -247,7 +247,7 @@ export function MarkdownPasteInput(props: ArrayOfObjectsInputProps) {
           }
         >
           <Box padding={4}>
-            <Stack space={3}>
+            <Stack gap={3}>
               <Text size={1} muted>
                 Paste your Markdown article body below. Leading `#` tags will convert automatically to `h2` down to `h6`, protecting your single page-level H1.
               </Text>

@@ -41,7 +41,7 @@ export function QuickDraftsWidget() {
   return (
     <DashboardWidgetContainer header="Quick Drafts">
       <Box padding={3}>
-        <Stack space={2}>
+        <Stack gap={2}>
           {drafts === null && <Text muted>Loading…</Text>}
           {drafts !== null && drafts.length === 0 && <Text muted>No pending drafts. 🎉</Text>}
           {drafts?.map((draft) => (
