@@ -16,14 +16,10 @@
     "@sanity/image-url": "^2.1.1",
     "@sanity/structure": "^2.36.2",
     "@upstash/redis": "^1.38.2",
-    "axios": "^1.18.1",
     "chart.js": "^4.5.1",
-    "dotenv": "^17.4.2",
     "echarts": "^6.1.0",
     "fast-xml-parser": "^5.10.1",
-    "gray-matter": "^4.0.3",
     "katex": "^0.18.1",
-    "lightweight-charts": "^5.2.0",
     "marked": "^18.0.9",
     "next": "^16.3.4",
     "next-sanity": "^13.3.3",
@@ -33,7 +29,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "sanity": "^6.12.0",
-    "styled-components": "^6.4.4",
+    "styled-components": "^6.5.3",
     "yahoo-finance2": "^4.0.1"
   },
   "devDependencies": {
