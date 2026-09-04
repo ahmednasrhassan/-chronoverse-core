@@ -2,6 +2,7 @@ import YahooFinance from "yahoo-finance2";
 import { unstable_cache } from "next/cache";
 
 import type {
+  AssetClass,
   CandleInterval,
   HistoricalDataRequest,
   HistoricalDataResponse,
@@ -9,6 +10,11 @@ import type {
   MarketDataProvenance,
   MarketDataStatus,
 } from "@/lib/markets/core/types";
+
+import type {
+  PremiumMarketDataProvider,
+  PremiumProviderCapabilities,
+} from "@/lib/markets/providers/premium/provider";
 
 import { bootstrapPremiumMarketProvider } from "@/lib/markets/providers/premium/bootstrap";
 
@@ -37,6 +43,15 @@ export interface HistoricalMarketResult {
   window?: HistoricalDataWindow;
 
   candles: HistoricalMarketCandle[];
+}
+
+export type HistoricalMarketDataCacheMode =
+  | "shared"
+  | "caller-owned";
+
+export interface HistoricalMarketDataOptions {
+  readonly assetClass?: AssetClass;
+  readonly cacheMode?: HistoricalMarketDataCacheMode;
 }
 
 const FETCH_TIMEOUT_MS =
@@ -68,7 +83,7 @@ async function withTimeout<T>(
   }
 }
 
-export const getHistoricalMarketData =
+const getSharedHistoricalMarketData =
   unstable_cache(
     fetchHistoricalMarketData,
     [
@@ -86,10 +101,42 @@ export const getHistoricalMarketData =
     },
   );
 
+export function getHistoricalMarketData(
+  symbol: string,
+  range = "3mo",
+  interval = "1d",
+  options: HistoricalMarketDataOptions = {},
+): Promise<HistoricalMarketResult> {
+  if (options.cacheMode === "caller-owned") {
+    return fetchHistoricalMarketData(
+      symbol,
+      range,
+      interval,
+      options.assetClass,
+    );
+  }
+
+  if (options.assetClass === undefined) {
+    return getSharedHistoricalMarketData(
+      symbol,
+      range,
+      interval,
+    );
+  }
+
+  return getSharedHistoricalMarketData(
+    symbol,
+    range,
+    interval,
+    options.assetClass,
+  );
+}
+
 async function fetchHistoricalMarketData(
   symbol: string,
   range = "3mo",
   interval = "1d",
+  assetClass?: AssetClass,
 ): Promise<HistoricalMarketResult> {
   const request =
     createHistoricalRequest(
@@ -116,6 +163,7 @@ async function fetchHistoricalMarketData(
   const primary =
     await fetchChronoverseHistory(
       request,
+      assetClass,
     );
 
   if (
@@ -155,12 +203,22 @@ async function fetchHistoricalMarketData(
 
 async function fetchChronoverseHistory(
   request: HistoricalDataRequest,
+  assetClass?: AssetClass,
 ): Promise<HistoricalMarketResult | null> {
   try {
     const provider =
       bootstrapPremiumMarketProvider();
 
     if (!provider) {
+      return null;
+    }
+
+    if (
+      !isPremiumProviderEligible(
+        provider,
+        assetClass,
+      )
+    ) {
       return null;
     }
 
@@ -265,6 +323,61 @@ async function fetchChronoverseHistory(
     );
 
     return null;
+  }
+}
+
+function isPremiumProviderEligible(
+  provider: PremiumMarketDataProvider,
+  assetClass: AssetClass | undefined,
+): boolean {
+  if (assetClass === undefined) {
+    return true;
+  }
+
+  if (
+    provider.info.capabilities.historical ===
+    false
+  ) {
+    return false;
+  }
+
+  const capability =
+    resolveAssetClassCapability(
+      provider.info.capabilities,
+      assetClass,
+    );
+
+  return capability !== false;
+}
+
+function resolveAssetClassCapability(
+  capabilities: PremiumProviderCapabilities,
+  assetClass: AssetClass,
+): boolean | undefined {
+  switch (assetClass) {
+    case "equity":
+      return capabilities.stocks;
+
+    case "index":
+      return capabilities.indices;
+
+    case "forex":
+      return capabilities.forex;
+
+    case "crypto":
+      return capabilities.crypto;
+
+    case "commodity":
+      return capabilities.commodities;
+
+    case "bond":
+      return capabilities.fixedIncome;
+
+    case "etf":
+    case "fund":
+    case "future":
+    case "unknown":
+      return undefined;
   }
 }
 
