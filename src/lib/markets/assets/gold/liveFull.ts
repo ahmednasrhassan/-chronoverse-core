@@ -4,10 +4,22 @@ import {
 } from "./intelligence";
 
 import { goldProfile } from "./profile";
+
 import {
-  
-  fetchGoldCloses,
-} from "./price";
+  getHistoricalMarketData,
+} from "../../services/historicalMarketData";
+
+import {
+  runEngineRuntimeV3,
+} from "../../engine/runtime";
+
+import type {
+  EngineMacroV3,
+} from "../../engine/contracts";
+
+import type {
+  MarketTechnicalSnapshot,
+} from "../../core/intelligenceEngine";
 
 import {
   getGoldMacroSnapshot,
@@ -15,6 +27,7 @@ import {
 
 import {
   calculateGoldMacroScore,
+  type GoldMacroScoreResult,
 } from "./macroScore";
 
 import {
@@ -37,6 +50,19 @@ export type FullLiveGoldIntelligenceResult =
     regimeMemory:
       GoldRegimeMemoryResult;
   };
+
+type GoldRuntimeIntelligence =
+  GoldIntelligenceResult & {
+    technical:
+      MarketTechnicalSnapshot;
+  };
+
+type GoldMacroCompatibility = Pick<
+  GoldMacroScoreResult,
+  "factors"
+>;
+
+const GOLD_HISTORY_RANGE = "5y";
 
 /**
  * Chronoverse Capital
@@ -79,42 +105,26 @@ export async function getFullLiveGoldIntelligence():
    */
 
   const [
-    allCloses,
+    marketData,
     macroSnapshot,
   ] = await Promise.all([
-    fetchGoldCloses(),
+    getHistoricalMarketData(
+      goldProfile.symbol,
+      GOLD_HISTORY_RANGE,
+      goldProfile.defaultInterval,
+      {
+        assetClass:
+          goldProfile.assetClass,
+
+        cacheMode:
+          "caller-owned",
+      },
+    ),
 
     getGoldMacroSnapshot(
       fredProvider,
     ),
   ]);
-
-  /*
-   * ------------------------------------------------------
-   * PRICE VALIDATION
-   * ------------------------------------------------------
-   */
-
-  if (allCloses.length === 0) {
-    throw new Error(
-      "[Chronoverse Gold] No live gold price history available.",
-    );
-  }
-
-  /*
-   * Keep enough history for:
-   *
-   * EMA 200
-   * RSI
-   * MACD
-   * Momentum
-   * Volatility
-   *
-   * while avoiding unnecessary processing of
-   * the entire historical dataset.
-   */
-  const closes =
-    allCloses.slice(-goldProfile.historyLimit);
 
   /*
    * ------------------------------------------------------
@@ -127,47 +137,50 @@ export async function getFullLiveGoldIntelligence():
       macroSnapshot,
     );
 
-  /*
-   * ------------------------------------------------------
-   * CURRENT INTELLIGENCE
-   * ------------------------------------------------------
-   */
-
-  const intelligence =
-    calculateGoldIntelligence({
-      closes,
-      macro,
+  const runtime =
+    await runEngineRuntimeV3({
+      asset: "gold",
+      symbol: goldProfile.symbol,
+      historyLimit:
+        goldProfile.historyLimit,
+      minimumRequiredHistory: 1,
+      insufficientHistoryMessage:
+        () =>
+          "[Chronoverse Gold] No live gold price history available.",
+      marketData,
+      macroInput: macro,
+      calculateIntelligence:
+        calculateGoldRuntimeIntelligence,
+      buildMacro:
+        buildGoldEngineMacro,
+      createRegimeSnapshot:
+        createGoldRegimeSnapshot,
+      calculateRegimeMemory:
+        calculateGoldRegimeMemory,
+      getLatestRegimeSnapshot:
+        getLatestGoldRegimeSnapshot,
+      appendRegimeSnapshot:
+        appendGoldRegimeSnapshot,
     });
 
-  /*
-   * ------------------------------------------------------
-   * REGIME MEMORY
-   *
-   * 1. Read the latest stored snapshot.
-   * 2. Build the current snapshot.
-   * 3. Compare current against previous.
-   * 4. Store current snapshot for the next cycle.
-   * ------------------------------------------------------
-   */
-
-  const previousSnapshot =
-    await getLatestGoldRegimeSnapshot();
-
-  const currentSnapshot =
-    createGoldRegimeSnapshot(
-      intelligence,
-    );
-
   const regimeMemory =
-    calculateGoldRegimeMemory(
-      currentSnapshot,
-      previousSnapshot,
-    );
+    runtime.engineResult.regime.availability ===
+    "available"
+      ? runtime.engineResult.regime.memory
+      : null;
 
-  await appendGoldRegimeSnapshot(
-  currentSnapshot,
-  previousSnapshot,
-);
+  if (regimeMemory === null) {
+    throw new Error(
+      "[Chronoverse Gold] Regime memory was not computed.",
+    );
+  }
+
+  const {
+    technical: internalTechnical,
+    ...intelligence
+  } = runtime.intelligence;
+
+  void internalTechnical;
 
   /*
    * ------------------------------------------------------
@@ -180,4 +193,99 @@ export async function getFullLiveGoldIntelligence():
 
     regimeMemory,
   };
+}
+
+function calculateGoldRuntimeIntelligence(
+  input: {
+    readonly closes: readonly number[];
+    readonly macro: GoldMacroScoreResult;
+  },
+): GoldRuntimeIntelligence {
+  const intelligence =
+    calculateGoldIntelligence(input);
+
+  return {
+    ...intelligence,
+    technical:
+      mapGoldTechnicalSnapshot(
+        intelligence,
+      ),
+  };
+}
+
+function mapGoldTechnicalSnapshot(
+  intelligence: GoldIntelligenceResult,
+): MarketTechnicalSnapshot {
+  const indicators =
+    intelligence.indicators;
+
+  return {
+    price: intelligence.price,
+    emaFast: indicators.ema20,
+    emaMedium: indicators.ema50,
+    emaSlow: indicators.ema200,
+    rsi: indicators.rsi,
+    macd: indicators.macd,
+    macdSignal: indicators.macdSignal,
+    macdHistogram:
+      indicators.macdHistogram,
+    momentum: indicators.momentum,
+    roc: indicators.roc,
+    annualizedVolatility:
+      indicators.annualizedVolatility,
+    priceVsEmaMedium:
+      indicators.priceVsEma50,
+    priceVsEmaSlow:
+      indicators.priceVsEma200,
+  };
+}
+
+function buildGoldEngineMacro(
+  intelligence: GoldRuntimeIntelligence,
+): EngineMacroV3<GoldMacroCompatibility> {
+  const macro = intelligence.macro;
+
+  if (macro === null) {
+    return {
+      availability: "unavailable",
+      reason: "Gold macro input was not supplied.",
+    };
+  }
+
+  const drivers = [
+    ["real-yield-10y", macro.factors.realYield10Y],
+    ["nominal-yield-10y", macro.factors.nominalYield10Y],
+    ["dollar-index-proxy", macro.factors.dollarIndexProxy],
+    ["inflation-expectation-10y", macro.factors.inflationExpectation10Y],
+  ] as const;
+  const missing = drivers
+    .filter(([, value]) => value === null)
+    .map(([id]) => id);
+  const data = {
+    direction: macro.bias,
+    score: macro.score,
+    strength: macro.strength,
+    confidence: macro.confidence,
+    coverage: macro.coverage,
+    drivers: drivers.map(([id, value]) => ({
+      id,
+      available: value !== null,
+      contribution: null,
+    })),
+    reasons: macro.reasons,
+    migrationDetails: {
+      factors: macro.factors,
+    },
+  };
+
+  return missing.length === 0
+    ? {
+        availability: "available",
+        data,
+      }
+    : {
+        availability: "partial",
+        data,
+        missing,
+      };
 }
