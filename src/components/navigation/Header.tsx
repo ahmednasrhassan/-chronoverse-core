@@ -11,7 +11,7 @@ export default function Header() {
   return (
     <>
       {/* Proprietary Market Ticker Strip — fully unbranded, sourced from
-          `/api/market-data` (yahoo-finance2). Replaces the previous
+          the internal "/api/market-data" gateway. Replaces the previous
           ticker tape widget. */}
       <MarketTicker />
 

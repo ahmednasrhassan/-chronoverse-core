@@ -2,6 +2,12 @@ import {
   getHistoricalMarketData,
 } from "../../services/historicalMarketData";
 
+import type {
+  HistoricalDataWindow,
+  MarketDataProvenance,
+  MarketDataStatus,
+} from "../../core/types";
+
 import {
   calculateOilIntelligence,
   type OilIntelligenceResult,
@@ -32,6 +38,13 @@ export type LiveOilIntelligenceResult =
   OilIntelligenceResult & {
     regimeMemory:
       OilRegimeMemoryResult;
+
+    marketData: {
+      provider: string | null;
+      status: MarketDataStatus;
+      provenance?: MarketDataProvenance;
+      window?: HistoricalDataWindow;
+    };
   };
 
 /**
@@ -82,9 +95,15 @@ export async function getLiveOilIntelligence():
         -oilProfile.historyLimit,
       );
 
-  if (closes.length === 0) {
+  const minimumRequiredHistory =
+    oilProfile.technical.ema.slow;
+
+  if (
+    closes.length <
+    minimumRequiredHistory
+  ) {
     throw new Error(
-      "[Chronoverse Oil] No live oil price history available.",
+      `[Chronoverse Oil] Insufficient price history: received ${closes.length}, minimum required ${minimumRequiredHistory}.`,
     );
   }
 
@@ -115,6 +134,21 @@ export async function getLiveOilIntelligence():
 
   return {
     ...intelligence,
+
     regimeMemory,
+
+    marketData: {
+      provider:
+        marketData.provider,
+
+      status:
+        marketData.status,
+
+      provenance:
+        marketData.provenance,
+
+      window:
+        marketData.window,
+    },
   };
 }

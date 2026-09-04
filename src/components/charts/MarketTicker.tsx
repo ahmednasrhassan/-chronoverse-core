@@ -28,7 +28,7 @@ const REFRESH_MS = 15 * 60 * 1000;
 /**
  * Proprietary, fully unbranded market ticker strip — replaces the
  * previous "ticker tape" widget. Sourced entirely from the
- * internal `/api/market-data` route (yahoo-finance2), styled natively to
+ * internal "/api/market-data" gateway, styled natively to
  * match Chronoverse Capital's dark aesthetic. Scrolls continuously via a
  * pure CSS animation — no third-party script, iframe, or attribution.
  *

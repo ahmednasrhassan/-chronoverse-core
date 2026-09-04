@@ -84,6 +84,10 @@ export class MarketstackProvider
     const candles =
       mapMarketstackResponseToCandles(response);
 
+    const firstCandle = candles.at(0);
+    const lastCandle = candles.at(-1);
+    const fetchedAt = Math.floor(Date.now() / 1000);
+
     return {
       symbol: request.symbol,
       interval: request.interval,
@@ -91,6 +95,22 @@ export class MarketstackProvider
 
       provider: this.id,
       status: "end_of_day",
+
+      provenance: {
+        provider: this.id,
+        fetchedAt,
+        sourceTimestamp: lastCandle?.time,
+      },
+
+      window: {
+        requestedFrom: request.from,
+        requestedTo: request.to,
+
+        firstTimestamp: firstCandle?.time,
+        lastTimestamp: lastCandle?.time,
+
+        receivedPoints: candles.length,
+      },
     };
   }
 }

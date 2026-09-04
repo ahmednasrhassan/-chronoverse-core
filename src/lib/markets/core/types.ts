@@ -25,7 +25,25 @@ export type MarketDataStatus =
   | "realtime"
   | "delayed"
   | "end_of_day"
+  | "stale"
   | "unavailable";
+
+export interface MarketDataProvenance {
+  provider: string;
+
+  fetchedAt: number;
+  sourceTimestamp?: number;
+}
+
+export interface HistoricalDataWindow {
+  requestedFrom?: number;
+  requestedTo?: number;
+
+  firstTimestamp?: number;
+  lastTimestamp?: number;
+
+  receivedPoints: number;
+}
 
 export type CandleInterval =
   | "1m"
@@ -69,6 +87,8 @@ export interface MarketQuote {
 
   status: MarketDataStatus;
   provider: string;
+
+  provenance?: MarketDataProvenance;
 }
 
 export interface MarketCandle {
@@ -96,6 +116,9 @@ export interface HistoricalDataResponse {
 
   provider: string;
   status: MarketDataStatus;
+
+  provenance?: MarketDataProvenance;
+  window?: HistoricalDataWindow;
 }
 
 export interface MarketDataProvider {
