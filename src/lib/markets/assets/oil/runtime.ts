@@ -2,6 +2,14 @@ import {
   getHistoricalMarketData,
 } from "../../services/historicalMarketData";
 
+import {
+  runEngineRuntimeV3,
+} from "../../engine/runtime";
+
+import type {
+  EngineMacroV3,
+} from "../../engine/contracts";
+
 import type {
   HistoricalDataWindow,
   MarketDataProvenance,
@@ -12,6 +20,10 @@ import {
   calculateOilIntelligence,
   type OilIntelligenceResult,
 } from "./intelligence";
+
+import type {
+  OilMacroResult,
+} from "./macro";
 
 import {
   calculateOilRegimeMemory,
@@ -47,6 +59,11 @@ export type LiveOilIntelligenceResult =
     };
   };
 
+type OilMacroCompatibility = Pick<
+  OilMacroResult,
+  "drivers"
+>;
+
 /**
  * Chronoverse Capital
  * Live Oil Intelligence Runtime
@@ -80,57 +97,48 @@ export async function getLiveOilIntelligence():
     getOilMacroInput(),
   ]);
 
-  const closes =
-    marketData.candles
-      .map(
-        (candle) =>
-          candle.close,
-      )
-      .filter(
-        (close) =>
-          Number.isFinite(close) &&
-          close > 0,
-      )
-      .slice(
-        -oilProfile.historyLimit,
-      );
-
   const minimumRequiredHistory =
     oilProfile.technical.ema.slow;
 
-  if (
-    closes.length <
-    minimumRequiredHistory
-  ) {
-    throw new Error(
-      `[Chronoverse Oil] Insufficient price history: received ${closes.length}, minimum required ${minimumRequiredHistory}.`,
-    );
-  }
-
-  const intelligence =
-    calculateOilIntelligence({
-      closes,
-      macro,
+  const runtime =
+    await runEngineRuntimeV3({
+      asset: "oil",
+      symbol: oilProfile.symbol,
+      historyLimit: oilProfile.historyLimit,
+      minimumRequiredHistory,
+      insufficientHistoryMessage:
+        (received, minimum) =>
+          `[Chronoverse Oil] Insufficient price history: received ${received}, minimum required ${minimum}.`,
+      marketData,
+      macroInput: macro,
+      calculateIntelligence:
+        calculateOilIntelligence,
+      buildMacro:
+        buildOilEngineMacro,
+      createRegimeSnapshot:
+        createOilRegimeSnapshot,
+      calculateRegimeMemory:
+        calculateOilRegimeMemory,
+      getLatestRegimeSnapshot:
+        getLatestOilRegimeSnapshot,
+      appendRegimeSnapshot:
+        appendOilRegimeSnapshot,
     });
 
-  const previousSnapshot =
-    await getLatestOilRegimeSnapshot();
-
-  const currentSnapshot =
-    createOilRegimeSnapshot(
-      intelligence,
-    );
+  const intelligence =
+    runtime.intelligence;
 
   const regimeMemory =
-    calculateOilRegimeMemory(
-      currentSnapshot,
-      previousSnapshot,
-    );
+    runtime.engineResult.regime.availability ===
+    "available"
+      ? runtime.engineResult.regime.memory
+      : null;
 
-  await appendOilRegimeSnapshot(
-    currentSnapshot,
-    previousSnapshot,
-  );
+  if (regimeMemory === null) {
+    throw new Error(
+      "[Chronoverse Oil] Regime memory was not computed.",
+    );
+  }
 
   return {
     ...intelligence,
@@ -139,16 +147,76 @@ export async function getLiveOilIntelligence():
 
     marketData: {
       provider:
-        marketData.provider,
+        runtime.engineResult.marketData.provider,
 
       status:
-        marketData.status,
+        runtime.engineResult.marketData.status,
 
       provenance:
-        marketData.provenance,
+        runtime.engineResult.marketData.provenance,
 
       window:
-        marketData.window,
+        runtime.engineResult.marketData.historicalWindow,
     },
   };
+}
+
+function buildOilEngineMacro(
+  intelligence: OilIntelligenceResult,
+): EngineMacroV3<OilMacroCompatibility> {
+  const macro = intelligence.macro;
+
+  if (macro === null) {
+    return {
+      availability: "unavailable",
+      reason: "Oil macro input was not supplied.",
+    };
+  }
+
+  const drivers = [
+    ["inventories", macro.drivers.inventories],
+    ["production", macro.drivers.production],
+    ["global-demand", macro.drivers.globalDemand],
+    ["usd", macro.drivers.usd],
+  ] as const;
+  const missing = drivers
+    .filter(([, driver]) => !driver.available)
+    .map(([id]) => id);
+  const data = {
+    direction: macro.direction,
+    score: macro.score,
+    confidence: macro.confidence,
+    coverage: macro.coverage,
+    drivers: drivers.map(([id, driver]) => ({
+      id,
+      available: driver.available,
+      direction:
+        driver.available
+          ? driver.score > 0
+            ? "bullish" as const
+            : driver.score < 0
+              ? "bearish" as const
+              : "neutral" as const
+          : undefined,
+      contribution: driver.available
+        ? driver.score
+        : null,
+      reason: driver.reason,
+    })),
+    reasons: macro.reasons,
+    migrationDetails: {
+      drivers: macro.drivers,
+    },
+  };
+
+  return missing.length === 0
+    ? {
+        availability: "available",
+        data,
+      }
+    : {
+        availability: "partial",
+        data,
+        missing,
+      };
 }
