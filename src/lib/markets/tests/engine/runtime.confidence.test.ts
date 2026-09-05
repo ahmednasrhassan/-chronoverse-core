@@ -35,11 +35,11 @@ const signal: MarketSignalResult = {
   reasons: ["Test signal"],
 };
 
-const risk: MarketRiskResult = {
+const risk = {
   score: 0.9,
   level: "high",
   reasons: ["Test risk"],
-};
+} satisfies MarketRiskResult;
 
 const intelligence = {
   technical,
