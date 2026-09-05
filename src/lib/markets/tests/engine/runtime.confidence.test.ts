@@ -4,6 +4,12 @@ import type {
 import {
   runEngineRuntimeV3,
 } from "../../engine/runtime";
+import type {
+  MarketRiskResult,
+} from "../../core/riskEngine";
+import type {
+  MarketSignalResult,
+} from "../../core/signalEngine";
 
 const technical = {
   price: 100,
@@ -21,19 +27,19 @@ const technical = {
   priceVsEmaSlow: 3,
 };
 
-const signal = {
+const signal: MarketSignalResult = {
   score: 1,
   direction: "bullish",
   strength: "strong",
   confidence: 0.2,
   reasons: ["Test signal"],
-} as const;
+};
 
-const risk = {
+const risk: MarketRiskResult = {
   score: 0.9,
   level: "high",
   reasons: ["Test risk"],
-} as const;
+};
 
 const intelligence = {
   technical,
@@ -240,8 +246,15 @@ async function main(): Promise<void> {
     0.75,
     "applicable macro conviction",
   );
+  const technicalSection =
+    applicable.runtime.engineResult.technical;
+
+  if (technicalSection.availability !== "available") {
+    throw new Error("Technical output is unavailable.");
+  }
+
   assertEqual(
-    applicable.runtime.engineResult.technical.data,
+    technicalSection.data,
     technical,
     "technical output",
   );

@@ -101,6 +101,81 @@ export type EngineConfidenceSectionV3 =
       readonly reason?: string;
     };
 
+export type EngineContradictionEvidenceSourceV3 =
+  | "signal"
+  | "macro"
+  | "crossAsset"
+  | "positioning"
+  | "scenario";
+
+export interface EngineContradictionEvidenceV3 {
+  readonly source: EngineContradictionEvidenceSourceV3;
+
+  /**
+   * Signed directional evidence.
+   * Intended normalized range: -1..1.
+   */
+  readonly signedScore: number;
+
+  /**
+   * Optional usable evidence coverage.
+   * Intended normalized range: 0..1.
+   */
+  readonly coverage?: number;
+}
+
+export interface EngineContradictionConflictV3 {
+  readonly sources: readonly [
+    EngineContradictionEvidenceSourceV3,
+    EngineContradictionEvidenceSourceV3,
+  ];
+
+  /**
+   * Conflict magnitude.
+   * Intended normalized range: 0..1.
+   */
+  readonly score: number;
+}
+
+export interface EngineContradictionV3 {
+  /**
+   * Aggregate contradiction magnitude.
+   * Intended normalized range: 0..1.
+   */
+  readonly score: number;
+
+  readonly evidence:
+    readonly EngineContradictionEvidenceV3[];
+
+  readonly conflicts:
+    readonly EngineContradictionConflictV3[];
+
+  readonly strongestConflict:
+    EngineContradictionConflictV3 | null;
+}
+
+export type EngineContradictionSectionV3 =
+  | {
+      readonly availability: "not-computed";
+    }
+  | {
+      readonly availability: "not-applicable";
+      readonly reason?: string;
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineContradictionV3;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineContradictionV3;
+      readonly missing: readonly string[];
+    }
+  | {
+      readonly availability: "unavailable";
+      readonly reason?: string;
+    };
+
 type AvailableMarketDataStatus = Exclude<MarketDataStatus, "unavailable">;
 
 type EngineAvailableMarketDataV3 = {
@@ -200,7 +275,7 @@ export interface EngineResultV3<
   readonly crossAsset: EngineDeferredSection;
   readonly positioning: EngineDeferredSection;
   readonly scenario: EngineDeferredSection;
-  readonly contradiction: EngineDeferredSection;
+  readonly contradiction: EngineContradictionSectionV3;
   readonly confidence: EngineConfidenceSectionV3;
   readonly decision: EngineDeferredSection;
   readonly recommendation: EngineDeferredSection;
