@@ -140,6 +140,79 @@ export type EngineDecisionSectionV3 =
       readonly reason?: string;
     };
 
+export type EngineDecisionConvictionChangeV3 =
+  | "increased"
+  | "decreased"
+  | "unchanged";
+
+export type EngineDecisionTransitionV3 =
+  | {
+      readonly kind: "maintained";
+      readonly stance: EngineDecisionStanceV3;
+    }
+  | {
+      readonly kind: "neutralized";
+      readonly from: "bullish" | "bearish";
+    }
+  | {
+      readonly kind: "emerged";
+      readonly to: "bullish" | "bearish";
+    }
+  | {
+      readonly kind: "reversed";
+      readonly from: "bullish";
+      readonly to: "bearish";
+    }
+  | {
+      readonly kind: "reversed";
+      readonly from: "bearish";
+      readonly to: "bullish";
+    };
+
+export type EngineDecisionLifecycleV3 =
+  | {
+      readonly comparison: "initialized";
+      readonly current: EngineDecisionV3;
+    }
+  | {
+      readonly comparison: "compared";
+      readonly previous: EngineDecisionV3;
+      readonly current: EngineDecisionV3;
+      readonly transition: EngineDecisionTransitionV3;
+
+      /**
+       * Current signed Decision score minus previous signed Decision score.
+       * Intended normalized range: -2..2.
+       */
+      readonly decisionScoreDelta: number;
+
+      /**
+       * Current absolute Decision score minus previous absolute Decision score.
+       * Intended normalized range: -1..1.
+       */
+      readonly convictionDelta: number;
+
+      readonly convictionChange: EngineDecisionConvictionChangeV3;
+    };
+
+export type EngineDecisionLifecycleSectionV3 =
+  | {
+      readonly availability: "not-computed";
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineDecisionLifecycleV3;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineDecisionLifecycleV3;
+      readonly missing: readonly string[];
+    }
+  | {
+      readonly availability: "unavailable";
+      readonly reason?: string;
+    };
+
 export type EngineContradictionEvidenceSourceV3 =
   | "signal"
   | "macro"
