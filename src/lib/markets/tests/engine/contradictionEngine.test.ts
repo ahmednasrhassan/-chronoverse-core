@@ -108,6 +108,33 @@ function assertScore(
   assertEqual(data.score, expected, `${label} score`);
 }
 
+function assertContradiction(
+  signalScore: number,
+  macroScore: number,
+  coverage: number,
+  expectedAggregate: number,
+  expectedConflict: number,
+  label: string,
+): void {
+  const data = requireAvailable(
+    calculate(signalScore, macroScore, coverage),
+    label,
+  );
+
+  assertEqual(data.score, expectedAggregate, `${label} aggregate`);
+  assertEqual(data.conflicts.length, 1, `${label} conflicts`);
+  assertEqual(
+    data.conflicts[0]?.score,
+    expectedConflict,
+    `${label} conflict score`,
+  );
+  assertEqual(
+    data.strongestConflict?.score,
+    expectedConflict,
+    `${label} strongest conflict`,
+  );
+}
+
 // 1-2. Aligned evidence has no contradiction or zero-valued conflicts.
 for (const [signalScore, macroScore, label] of [
   [1, 1, "aligned bullish"],
@@ -140,11 +167,34 @@ for (const [signalScore, macroScore, label] of [
   assertEqual(data.strongestConflict?.score, 1, `${label} strongest conflict`);
 }
 
-// 5-6. The weaker magnitude and macro coverage bound conflict.
-assertScore(0.8, -0.4, 1, 0.4, "bounded conflict");
-assertScore(0.8, -0.4, 0.5, 0.2, "coverage-scaled conflict");
+// 5-8. Effective macro magnitude bounds raw overlap before normalization.
+assertContradiction(0.8, -0.4, 1, 0.4, 0.4, "bounded conflict");
+assertContradiction(
+  0.8,
+  -0.4,
+  0.5,
+  4 / 15,
+  0.2,
+  "coverage-adjusted macro bound",
+);
+assertContradiction(
+  0.2,
+  -1,
+  0.5,
+  4 / 15,
+  0.2,
+  "signal-bound counterexample",
+);
+assertContradiction(
+  1,
+  -0.2,
+  0.5,
+  2 / 15,
+  0.1,
+  "effective macro bound",
+);
 
-// 7-8. Neutral usable evidence produces a valid zero score.
+// 9-10. Neutral usable evidence produces a valid zero score.
 assertScore(0, -1, 1, 0, "neutral signal");
 assertScore(1, 0, 1, 0, "neutral macro");
 
@@ -249,7 +299,8 @@ assertEqual(calculate(1, -1, Number.POSITIVE_INFINITY).availability, "unavailabl
     throw new Error(`partial lifecycle: received ${result.availability}`);
   }
 
-  assertEqual(result.data.score, 0.2, "partial score");
+  assertEqual(result.data.score, 4 / 15, "partial aggregate score");
+  assertEqual(result.data.conflicts[0]?.score, 0.2, "partial conflict score");
   assertEqual(
     result.missing.join(","),
     "technical-a,shared,macro-b",

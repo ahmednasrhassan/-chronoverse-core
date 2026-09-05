@@ -90,28 +90,29 @@ export function calculateEngineContradictionV3<
     };
   }
 
-  const pairConflict = hasOppositeNonZeroSigns(
+  const signalMagnitude = Math.abs(signalScore);
+  const effectiveMacroMagnitude =
+    macroCoverage * Math.abs(macroScore);
+  const opposingOverlap = hasOppositeNonZeroSigns(
     signalScore,
     macroScore,
   )
-    ? clamp01(
-        Math.min(
-          Math.abs(signalScore),
-          Math.abs(macroScore),
-        ) * macroCoverage,
-      )
+    ? Math.min(signalMagnitude, effectiveMacroMagnitude)
     : 0;
+  const aggregateContradiction = clamp01(
+    (2 * opposingOverlap) / (1 + macroCoverage),
+  );
 
   const conflict: EngineContradictionConflictV3 | null =
-    pairConflict > 0
+    opposingOverlap > 0
       ? {
           sources: ["signal", "macro"],
-          score: pairConflict,
+          score: opposingOverlap,
         }
       : null;
 
   const data = {
-    score: pairConflict,
+    score: aggregateContradiction,
     evidence: [
       {
         source: "signal" as const,
