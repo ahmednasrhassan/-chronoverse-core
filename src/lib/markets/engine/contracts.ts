@@ -101,6 +101,45 @@ export type EngineConfidenceSectionV3 =
       readonly reason?: string;
     };
 
+export type EngineDecisionStanceV3 =
+  | "bullish"
+  | "bearish"
+  | "neutral";
+
+export interface EngineDecisionV3 {
+  /**
+   * Signed analytical stance.
+   *
+   * Intended normalized range: -1..1.
+   * Absolute value must equal canonical Market Conviction.
+   *
+   * Positive => bullish
+   * Negative => bearish
+   * Zero     => neutral
+   */
+  readonly score: number;
+
+  readonly stance: EngineDecisionStanceV3;
+}
+
+export type EngineDecisionSectionV3 =
+  | {
+      readonly availability: "not-computed";
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineDecisionV3;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineDecisionV3;
+      readonly missing: readonly string[];
+    }
+  | {
+      readonly availability: "unavailable";
+      readonly reason?: string;
+    };
+
 export type EngineContradictionEvidenceSourceV3 =
   | "signal"
   | "macro"
@@ -277,6 +316,6 @@ export interface EngineResultV3<
   readonly scenario: EngineDeferredSection;
   readonly contradiction: EngineContradictionSectionV3;
   readonly confidence: EngineConfidenceSectionV3;
-  readonly decision: EngineDeferredSection;
+  readonly decision: EngineDecisionSectionV3;
   readonly recommendation: EngineDeferredSection;
 }
