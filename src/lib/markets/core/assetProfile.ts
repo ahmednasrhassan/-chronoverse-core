@@ -3,11 +3,13 @@ import type {
   CandleInterval,
 } from "./types";
 
-export type MarketAssetId =
-  | "gold"
-  | "oil"
-  | "bitcoin"
-  | "sp500";
+import type {
+  MarketAssetId,
+} from "./assets";
+
+export type {
+  MarketAssetId,
+} from "./assets";
 
 export type MacroDriverId =
   | "real-yields"

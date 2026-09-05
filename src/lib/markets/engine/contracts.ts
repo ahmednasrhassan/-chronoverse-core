@@ -2,6 +2,7 @@
 import type { MarketTechnicalSnapshot } from "../core/intelligenceEngine";
 import type { MarketDirection } from "../core/intelligenceTypes";
 import type { MarketStateResult } from "../core/marketState";
+import type { MarketAssetId } from "../core/assets";
 import type {
   MarketRegimeMemoryResult,
   MarketRegimeSnapshot,
@@ -18,18 +19,7 @@ export const ENGINE_RESULT_VERSION = "3" as const;
 export type EngineResultVersion = typeof ENGINE_RESULT_VERSION;
 
 export type EngineAssetId =
-  | "gold"
-  | "oil"
-  | "sp500"
-  | "nasdaq100"
-  | "bitcoin"
-  | "dxy"
-  | "us10y"
-  | "silver"
-  | "copper"
-  | "naturalGas"
-  | "eurusd"
-  | "ethereum";
+  MarketAssetId;
 
 export type EngineSerializable<T> =
   T extends string | number | boolean | null
