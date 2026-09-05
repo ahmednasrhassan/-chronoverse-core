@@ -99,23 +99,41 @@ const regimeMemory = {
   },
 } as const;
 
-const normalizedMacro: EngineMacroV3 = {
-  availability: "available",
-  data: {
+function normalizedMacro(
+  score: number,
+  coverage: number,
+  missing?: readonly string[],
+): EngineMacroV3 {
+  const data = {
     direction: "bullish",
-    score: 0.5,
+    score,
     confidence: 0.1,
-    coverage: 1,
+    coverage,
     drivers: [],
     reasons: ["Test macro"],
-  },
-};
+  } as const;
+
+  return missing === undefined
+    ? {
+        availability: "available",
+        data,
+      }
+    : {
+        availability: "partial",
+        data,
+        missing,
+      };
+}
 
 type RunOptions = {
   readonly macroApplicability:
     | "applicable"
     | "not-applicable";
   readonly receivedPoints?: number;
+  readonly signalScore?: number;
+  readonly macroScore?: number;
+  readonly macroCoverage?: number;
+  readonly macroMissing?: readonly string[];
   readonly throwFromIntelligence?: boolean;
 };
 
@@ -125,6 +143,19 @@ async function runCase(options: RunOptions) {
   let getSnapshotCalls = 0;
   let regimeCalls = 0;
   let persistenceCalls = 0;
+  const caseSignal: MarketSignalResult = {
+    ...signal,
+    score: options.signalScore ?? signal.score,
+  };
+  const caseIntelligence = {
+    ...intelligence,
+    signal: caseSignal,
+  };
+  const caseMacro = normalizedMacro(
+    options.macroScore ?? 0.5,
+    options.macroCoverage ?? 1,
+    options.macroMissing,
+  );
 
   const runtime = await runEngineRuntimeV3({
     asset: "gold",
@@ -156,11 +187,11 @@ async function runCase(options: RunOptions) {
         throw new Error("Expected callback failure");
       }
 
-      return intelligence;
+      return caseIntelligence;
     },
     buildMacro: () => {
       buildMacroCalls += 1;
-      return normalizedMacro;
+      return caseMacro;
     },
     createRegimeSnapshot: () => snapshot,
     calculateRegimeMemory: () => {
@@ -188,6 +219,7 @@ async function runCase(options: RunOptions) {
     getSnapshotCalls,
     regimeCalls,
     persistenceCalls,
+    signal: caseSignal,
   };
 }
 
@@ -217,12 +249,28 @@ function requireAvailableConfidence(
   return confidence.data;
 }
 
+function requireAvailableContradiction(
+  result: Awaited<ReturnType<typeof runCase>>["runtime"],
+) {
+  const contradiction = result.engineResult.contradiction;
+
+  if (contradiction.availability !== "available") {
+    throw new Error(
+      `contradiction: expected available, received ${contradiction.availability}`,
+    );
+  }
+
+  return contradiction.data;
+}
+
 async function main(): Promise<void> {
   const applicable = await runCase({
     macroApplicability: "applicable",
   });
   const applicableConfidence =
     requireAvailableConfidence(applicable.runtime);
+  const alignedContradiction =
+    requireAvailableContradiction(applicable.runtime);
 
   assertEqual(applicable.intelligenceCalls, 1, "intelligence calls");
   assertEqual(applicable.buildMacroCalls, 1, "buildMacro calls");
@@ -246,6 +294,13 @@ async function main(): Promise<void> {
     0.75,
     "applicable macro conviction",
   );
+  assertEqual(alignedContradiction.score, 0, "aligned contradiction score");
+  assertEqual(alignedContradiction.conflicts.length, 0, "aligned conflicts");
+  assertEqual(
+    alignedContradiction.strongestConflict,
+    null,
+    "aligned strongest conflict",
+  );
   const technicalSection =
     applicable.runtime.engineResult.technical;
 
@@ -258,7 +313,11 @@ async function main(): Promise<void> {
     technical,
     "technical output",
   );
-  assertEqual(applicable.runtime.engineResult.signal, signal, "signal output");
+  assertEqual(
+    applicable.runtime.engineResult.signal,
+    applicable.signal,
+    "signal output",
+  );
   assertEqual(applicable.runtime.engineResult.risk, risk, "risk output");
   assertEqual(applicable.runtime.engineResult.state.state, "opportunity", "state output");
   assertEqual(applicable.runtime.engineResult.state.confidence, 0.3, "state confidence");
@@ -301,6 +360,54 @@ async function main(): Promise<void> {
     notApplicableConfidence.conviction.data.score,
     1,
     "signal-only conviction",
+  );
+  assertEqual(
+    notApplicable.runtime.engineResult.contradiction.availability,
+    "not-applicable",
+    "contradiction macro applicability",
+  );
+
+  const opposing = await runCase({
+    macroApplicability: "applicable",
+    macroScore: -1,
+  });
+  const opposingContradiction =
+    requireAvailableContradiction(opposing.runtime);
+
+  assertEqual(opposingContradiction.score, 1, "opposing contradiction score");
+  assertEqual(opposingContradiction.conflicts.length, 1, "opposing conflicts");
+
+  const partialMacro = await runCase({
+    macroApplicability: "applicable",
+    macroScore: -1,
+    macroMissing: ["macro-driver"],
+  });
+  const partialContradiction =
+    partialMacro.runtime.engineResult.contradiction;
+
+  if (partialContradiction.availability !== "partial") {
+    throw new Error(
+      `partial contradiction: received ${partialContradiction.availability}`,
+    );
+  }
+
+  assertEqual(partialContradiction.data.score, 1, "partial contradiction score");
+  assertEqual(
+    partialContradiction.missing.join(","),
+    "macro-driver",
+    "partial contradiction missing",
+  );
+
+  const zeroCoverage = await runCase({
+    macroApplicability: "applicable",
+    macroScore: -1,
+    macroCoverage: 0,
+  });
+
+  assertEqual(
+    zeroCoverage.runtime.engineResult.contradiction.availability,
+    "unavailable",
+    "zero-coverage contradiction",
   );
 
   const invalidHistory = await runCase({

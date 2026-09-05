@@ -17,6 +17,9 @@ import type {
 import {
   calculateEngineConfidenceV3,
 } from "../core/confidenceEngine";
+import {
+  calculateEngineContradictionV3,
+} from "../core/contradictionEngine";
 import type {
   HistoricalDataWindow,
   MarketDataProvenance,
@@ -238,6 +241,11 @@ export async function runEngineRuntimeV3<
       signal,
       macro: confidenceMacroInput,
     });
+  const contradiction =
+    calculateEngineContradictionV3({
+      signal,
+      macro: confidenceMacroInput,
+    });
 
   const engineResult: EngineResultV3<
     TMacroDetails,
@@ -266,7 +274,7 @@ export async function runEngineRuntimeV3<
     crossAsset: NOT_COMPUTED,
     positioning: NOT_COMPUTED,
     scenario: NOT_COMPUTED,
-    contradiction: NOT_COMPUTED,
+    contradiction,
     confidence: {
       availability: "available",
       data: calculatedConfidence,
