@@ -275,6 +275,44 @@ function requireAvailableContradiction(
   return contradiction.data;
 }
 
+function requireUsableDecision(
+  result: Awaited<ReturnType<typeof runCase>>["runtime"],
+) {
+  const decision = result.engineResult.decision;
+
+  if (
+    decision.availability !== "available" &&
+    decision.availability !== "partial"
+  ) {
+    throw new Error(
+      `decision: expected usable, received ${decision.availability}`,
+    );
+  }
+
+  return decision;
+}
+
+function assertDecisionMatchesConviction(
+  result: Awaited<ReturnType<typeof runCase>>["runtime"],
+  label: string,
+): void {
+  const confidence = requireAvailableConfidence(result);
+  const decision = requireUsableDecision(result);
+
+  if (
+    confidence.conviction.availability !== "available" &&
+    confidence.conviction.availability !== "partial"
+  ) {
+    throw new Error(`${label}: canonical conviction is unavailable.`);
+  }
+
+  assertClose(
+    Math.abs(decision.data.score),
+    confidence.conviction.data.score,
+    `${label} Decision magnitude`,
+  );
+}
+
 async function main(): Promise<void> {
   const applicable = await runCase({
     macroApplicability: "applicable",
@@ -305,6 +343,17 @@ async function main(): Promise<void> {
     applicableConfidence.conviction.data.score,
     0.75,
     "applicable macro conviction",
+  );
+  const applicableDecision = requireUsableDecision(applicable.runtime);
+
+  assertEqual(applicableDecision.availability, "partial", "applicable Decision lifecycle");
+  assertEqual(applicableDecision.data.stance, "bullish", "applicable Decision stance");
+  assertEqual(applicableDecision.data.score, 0.75, "applicable Decision score");
+  assertDecisionMatchesConviction(applicable.runtime, "applicable");
+  assertEqual(
+    applicable.runtime.engineResult.recommendation.availability,
+    "not-computed",
+    "recommendation lifecycle",
   );
   assertEqual(alignedContradiction.score, 0, "aligned contradiction score");
   assertEqual(alignedContradiction.conflicts.length, 0, "aligned conflicts");
@@ -356,6 +405,17 @@ async function main(): Promise<void> {
     "regime output",
   );
 
+  const bearish = await runCase({
+    macroApplicability: "applicable",
+    signalScore: -1,
+    macroScore: -1,
+  });
+  const bearishDecision = requireUsableDecision(bearish.runtime);
+
+  assertEqual(bearishDecision.data.stance, "bearish", "bearish Decision stance");
+  assertEqual(bearishDecision.data.score, -1, "bearish Decision score");
+  assertDecisionMatchesConviction(bearish.runtime, "bearish");
+
   const notApplicable = await runCase({
     macroApplicability: "not-applicable",
   });
@@ -395,6 +455,11 @@ async function main(): Promise<void> {
     "not-applicable",
     "confidence contradiction applicability",
   );
+  const notApplicableDecision = requireUsableDecision(notApplicable.runtime);
+
+  assertEqual(notApplicableDecision.data.stance, "bullish", "not-applicable Decision stance");
+  assertEqual(notApplicableDecision.data.score, 1, "not-applicable Decision score");
+  assertDecisionMatchesConviction(notApplicable.runtime, "not-applicable");
 
   const opposing = await runCase({
     macroApplicability: "applicable",
@@ -419,6 +484,11 @@ async function main(): Promise<void> {
     opposingContradiction.score,
     "opposing canonical contradiction consumption",
   );
+  const opposingDecision = requireUsableDecision(opposing.runtime);
+
+  assertEqual(opposingDecision.data.stance, "neutral", "canceled Decision stance");
+  assertEqual(opposingDecision.data.score, 0, "canceled Decision score");
+  assertDecisionMatchesConviction(opposing.runtime, "canceled");
 
   const partialCoverage = await runCase({
     macroApplicability: "applicable",
@@ -452,6 +522,34 @@ async function main(): Promise<void> {
     partialCoverageContradiction.score,
     "partial-coverage canonical contradiction consumption",
   );
+  const partialCoverageDecision = requireUsableDecision(partialCoverage.runtime);
+
+  assertEqual(partialCoverageDecision.data.stance, "bullish", "partial-coverage Decision stance");
+  assertClose(partialCoverageDecision.data.score, 0.4, "partial-coverage Decision score");
+  assertDecisionMatchesConviction(partialCoverage.runtime, "partial-coverage");
+
+  const macroDominant = await runCase({
+    macroApplicability: "applicable",
+    signalScore: 0.2,
+    macroScore: -1,
+    macroCoverage: 0.5,
+  });
+  const macroDominantContradiction =
+    requireAvailableContradiction(macroDominant.runtime);
+  const macroDominantConfidence =
+    requireAvailableConfidence(macroDominant.runtime);
+  const macroDominantDecision =
+    requireUsableDecision(macroDominant.runtime);
+
+  if (macroDominantConfidence.conviction.availability !== "partial") {
+    throw new Error("Macro-dominant conviction is unavailable.");
+  }
+
+  assertClose(macroDominantContradiction.score, 4 / 15, "macro-dominant contradiction");
+  assertClose(macroDominantConfidence.conviction.data.score, 0.2, "macro-dominant conviction");
+  assertEqual(macroDominantDecision.data.stance, "bearish", "macro-dominant Decision stance");
+  assertClose(macroDominantDecision.data.score, -0.2, "macro-dominant Decision score");
+  assertDecisionMatchesConviction(macroDominant.runtime, "macro-dominant");
 
   const partialMacro = await runCase({
     macroApplicability: "applicable",
@@ -472,6 +570,11 @@ async function main(): Promise<void> {
     partialContradiction.missing.join(","),
     "macro-driver",
     "partial contradiction missing",
+  );
+  assertEqual(
+    partialMacro.runtime.engineResult.decision.availability,
+    "partial",
+    "partial evidence Decision lifecycle",
   );
 
   const zeroCoverage = await runCase({
@@ -502,6 +605,12 @@ async function main(): Promise<void> {
     "unavailable",
     "zero-coverage confidence contradiction",
   );
+  const zeroCoverageDecision = requireUsableDecision(zeroCoverage.runtime);
+
+  assertEqual(zeroCoverageDecision.availability, "partial", "zero-coverage Decision lifecycle");
+  assertEqual(zeroCoverageDecision.data.stance, "bullish", "zero-coverage Decision stance");
+  assertEqual(zeroCoverageDecision.data.score, 1, "zero-coverage Decision score");
+  assertDecisionMatchesConviction(zeroCoverage.runtime, "zero-coverage");
 
   const invalidHistory = await runCase({
     macroApplicability: "applicable",
