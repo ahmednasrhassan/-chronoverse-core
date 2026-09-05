@@ -43,9 +43,15 @@ export type EngineDeferredSection =
   | { readonly availability: "not-computed" }
   | { readonly availability: "unavailable"; readonly reason?: string };
 
+export type EngineNotApplicableSection = {
+  readonly availability: "not-applicable";
+  readonly reason?: string;
+};
+
 export type EngineConfidenceInputV3 =
   | EngineDataSection<number>
-  | EngineDeferredSection;
+  | EngineDeferredSection
+  | EngineNotApplicableSection;
 
 export interface EngineDataConfidenceSnapshotV3 {
   /** Score intended to be normalized to the inclusive range 0..1. */
