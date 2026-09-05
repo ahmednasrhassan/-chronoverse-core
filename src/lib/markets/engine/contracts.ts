@@ -43,6 +43,58 @@ export type EngineDeferredSection =
   | { readonly availability: "not-computed" }
   | { readonly availability: "unavailable"; readonly reason?: string };
 
+export type EngineConfidenceInputV3 =
+  | EngineDataSection<number>
+  | EngineDeferredSection;
+
+export interface EngineDataConfidenceSnapshotV3 {
+  /** Score intended to be normalized to the inclusive range 0..1. */
+  readonly score: number;
+  readonly components: {
+    readonly marketData: EngineConfidenceInputV3;
+    readonly technical: EngineConfidenceInputV3;
+    readonly macro: EngineConfidenceInputV3;
+    readonly crossAsset: EngineConfidenceInputV3;
+    readonly positioning: EngineConfidenceInputV3;
+  };
+}
+
+export interface EngineMarketConvictionSnapshotV3 {
+  /** Score intended to be normalized to the inclusive range 0..1. */
+  readonly score: number;
+  readonly components: {
+    readonly signal: EngineConfidenceInputV3;
+    readonly macro: EngineConfidenceInputV3;
+    readonly state: EngineConfidenceInputV3;
+    readonly regime: EngineConfidenceInputV3;
+    readonly crossAsset: EngineConfidenceInputV3;
+    readonly positioning: EngineConfidenceInputV3;
+    readonly scenario: EngineConfidenceInputV3;
+    readonly contradiction: EngineConfidenceInputV3;
+  };
+}
+
+export interface EngineConfidenceV3 {
+  readonly data:
+    EngineDataSection<EngineDataConfidenceSnapshotV3>;
+
+  readonly conviction:
+    EngineDataSection<EngineMarketConvictionSnapshotV3>;
+}
+
+export type EngineConfidenceSectionV3 =
+  | {
+      readonly availability: "not-computed";
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineConfidenceV3;
+    }
+  | {
+      readonly availability: "unavailable";
+      readonly reason?: string;
+    };
+
 type AvailableMarketDataStatus = Exclude<MarketDataStatus, "unavailable">;
 
 type EngineAvailableMarketDataV3 = {
@@ -143,7 +195,7 @@ export interface EngineResultV3<
   readonly positioning: EngineDeferredSection;
   readonly scenario: EngineDeferredSection;
   readonly contradiction: EngineDeferredSection;
-  readonly confidence: EngineDeferredSection;
+  readonly confidence: EngineConfidenceSectionV3;
   readonly decision: EngineDeferredSection;
   readonly recommendation: EngineDeferredSection;
 }
