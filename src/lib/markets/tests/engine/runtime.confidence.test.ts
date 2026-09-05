@@ -235,6 +235,18 @@ function assertEqual<T>(
   }
 }
 
+function assertClose(
+  actual: number,
+  expected: number,
+  label: string,
+): void {
+  if (Math.abs(actual - expected) > Number.EPSILON * 8) {
+    throw new Error(
+      `${label}: expected ${String(expected)}, received ${String(actual)}`,
+    );
+  }
+}
+
 function requireAvailableConfidence(
   result: Awaited<ReturnType<typeof runCase>>["runtime"],
 ) {
@@ -301,6 +313,18 @@ async function main(): Promise<void> {
     null,
     "aligned strongest conflict",
   );
+  assertEqual(
+    applicableConfidence.conviction.data.components.contradiction.availability,
+    "available",
+    "confidence contradiction lifecycle",
+  );
+  assertEqual(
+    applicableConfidence.conviction.data.components.contradiction.availability === "available"
+      ? applicableConfidence.conviction.data.components.contradiction.data
+      : null,
+    alignedContradiction.score,
+    "confidence canonical contradiction score",
+  );
   const technicalSection =
     applicable.runtime.engineResult.technical;
 
@@ -366,6 +390,11 @@ async function main(): Promise<void> {
     "not-applicable",
     "contradiction macro applicability",
   );
+  assertEqual(
+    notApplicableConfidence.conviction.data.components.contradiction.availability,
+    "not-applicable",
+    "confidence contradiction applicability",
+  );
 
   const opposing = await runCase({
     macroApplicability: "applicable",
@@ -376,6 +405,53 @@ async function main(): Promise<void> {
 
   assertEqual(opposingContradiction.score, 1, "opposing contradiction score");
   assertEqual(opposingContradiction.conflicts.length, 1, "opposing conflicts");
+  const opposingConfidence = requireAvailableConfidence(opposing.runtime);
+
+  if (opposingConfidence.conviction.availability !== "partial") {
+    throw new Error("Opposing conviction is unavailable.");
+  }
+
+  assertEqual(opposingConfidence.conviction.data.score, 0, "opposing conviction");
+  assertEqual(
+    opposingConfidence.conviction.data.components.contradiction.availability === "available"
+      ? opposingConfidence.conviction.data.components.contradiction.data
+      : null,
+    opposingContradiction.score,
+    "opposing canonical contradiction consumption",
+  );
+
+  const partialCoverage = await runCase({
+    macroApplicability: "applicable",
+    signalScore: 0.8,
+    macroScore: -0.4,
+    macroCoverage: 0.5,
+  });
+  const partialCoverageContradiction =
+    requireAvailableContradiction(partialCoverage.runtime);
+  const partialCoverageConfidence =
+    requireAvailableConfidence(partialCoverage.runtime);
+
+  if (partialCoverageConfidence.conviction.availability !== "partial") {
+    throw new Error("Partial-coverage conviction is unavailable.");
+  }
+
+  assertClose(
+    partialCoverageContradiction.score,
+    4 / 15,
+    "partial-coverage contradiction",
+  );
+  assertClose(
+    partialCoverageConfidence.conviction.data.score,
+    0.4,
+    "partial-coverage conviction",
+  );
+  assertEqual(
+    partialCoverageConfidence.conviction.data.components.contradiction.availability === "available"
+      ? partialCoverageConfidence.conviction.data.components.contradiction.data
+      : null,
+    partialCoverageContradiction.score,
+    "partial-coverage canonical contradiction consumption",
+  );
 
   const partialMacro = await runCase({
     macroApplicability: "applicable",
@@ -408,6 +484,23 @@ async function main(): Promise<void> {
     zeroCoverage.runtime.engineResult.contradiction.availability,
     "unavailable",
     "zero-coverage contradiction",
+  );
+  const zeroCoverageConfidence =
+    requireAvailableConfidence(zeroCoverage.runtime);
+
+  if (zeroCoverageConfidence.conviction.availability !== "partial") {
+    throw new Error("Zero-coverage conviction is unavailable.");
+  }
+
+  assertEqual(
+    zeroCoverageConfidence.conviction.data.score,
+    1,
+    "zero-coverage signal-only conviction",
+  );
+  assertEqual(
+    zeroCoverageConfidence.conviction.data.components.contradiction.availability,
+    "unavailable",
+    "zero-coverage confidence contradiction",
   );
 
   const invalidHistory = await runCase({

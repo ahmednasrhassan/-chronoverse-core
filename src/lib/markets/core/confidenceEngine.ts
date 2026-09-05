@@ -1,6 +1,7 @@
 import type {
   EngineConfidenceInputV3,
   EngineConfidenceV3,
+  EngineContradictionSectionV3,
   EngineDataSection,
   EngineMacroV3,
   EngineMarketDataV3,
@@ -32,12 +33,17 @@ export interface CalculateEngineConfidenceV3Input<
   readonly technical: EngineDataSection<MarketTechnicalSnapshot>;
   readonly signal: EngineDataSection<MarketSignalResult>;
   readonly macro: EngineConfidenceMacroInputV3<TMacroDetails>;
+  readonly contradiction: EngineContradictionSectionV3;
 }
 
 type ResolvedComponent = {
   readonly component: EngineConfidenceInputV3;
   readonly score: number | null;
   readonly missing: readonly string[];
+};
+
+type ResolvedContradiction = ResolvedComponent & {
+  readonly score: number | null;
 };
 
 const NOT_COMPUTED = {
@@ -90,6 +96,9 @@ export function calculateEngineConfidenceV3<
 
   const signal = resolveSignal(input.signal);
   const macroConviction = resolveMacroConviction(input.macro);
+  const contradiction = resolveContradiction(
+    input.contradiction,
+  );
 
   if (signal.score === null || signal.signedScore === null) {
     return {
@@ -101,20 +110,92 @@ export function calculateEngineConfidenceV3<
     };
   }
 
-  const convictionScore =
+  const convictionComponents = {
+    signal: signal.component,
+    macro: macroConviction.component,
+    state: {
+      availability: "unavailable" as const,
+      reason: "State confidence is derived and not independent conviction evidence.",
+    },
+    regime: {
+      availability: "unavailable" as const,
+      reason: "Current regime confidence is derived and not an independent measure.",
+    },
+    crossAsset: NOT_COMPUTED,
+    positioning: NOT_COMPUTED,
+    scenario: NOT_COMPUTED,
+    contradiction: contradiction.component,
+  };
+  const deferredMissing = [
+    "state",
+    "regime",
+    "crossAsset",
+    "positioning",
+    "scenario",
+  ];
+
+  if (input.macro.applicability === "not-applicable") {
+    return {
+      data,
+      conviction: {
+        availability: "partial",
+        data: {
+          score: Math.abs(signal.signedScore),
+          components: convictionComponents,
+        },
+        missing: unique([
+          ...signal.missing,
+          ...contradiction.missing,
+          ...deferredMissing,
+        ]),
+      },
+    };
+  }
+
+  if (
     macroConviction.signedScore === null ||
     macroConviction.coverage === null ||
     macroConviction.coverage === 0
-      ? Math.abs(signal.signedScore)
-      : clamp01(
-          Math.abs(
-            (
-              signal.signedScore +
-              macroConviction.coverage * macroConviction.signedScore
-            ) /
-              (1 + macroConviction.coverage),
-          ),
-        );
+  ) {
+    return {
+      data,
+      conviction: {
+        availability: "partial",
+        data: {
+          score: Math.abs(signal.signedScore),
+          components: convictionComponents,
+        },
+        missing: unique([
+          ...signal.missing,
+          ...macroConviction.missing,
+          ...(macroConviction.coverage === 0 ? ["macro"] : []),
+          ...contradiction.missing,
+          ...deferredMissing,
+        ]),
+      },
+    };
+  }
+
+  if (contradiction.score === null) {
+    return {
+      data,
+      conviction: {
+        availability: "unavailable",
+        reason: "Usable canonical contradiction evidence is required for market conviction.",
+      },
+    };
+  }
+
+  const rawEvidenceStrength =
+    (
+      Math.abs(signal.signedScore) +
+      macroConviction.coverage *
+        Math.abs(macroConviction.signedScore)
+    ) /
+    (1 + macroConviction.coverage);
+  const convictionScore = clamp01(
+    rawEvidenceStrength - contradiction.score,
+  );
 
   return {
     data,
@@ -122,34 +203,86 @@ export function calculateEngineConfidenceV3<
       availability: "partial",
       data: {
         score: convictionScore,
-        components: {
-          signal: signal.component,
-          macro: macroConviction.component,
-          state: {
-            availability: "unavailable",
-            reason: "State confidence is derived and not independent conviction evidence.",
-          },
-          regime: {
-            availability: "unavailable",
-            reason: "Current regime confidence is derived and not an independent measure.",
-          },
-          crossAsset: NOT_COMPUTED,
-          positioning: NOT_COMPUTED,
-          scenario: NOT_COMPUTED,
-          contradiction: NOT_COMPUTED,
-        },
+        components: convictionComponents,
       },
       missing: unique([
         ...signal.missing,
         ...macroConviction.missing,
-        "state",
-        "regime",
-        "crossAsset",
-        "positioning",
-        "scenario",
-        "contradiction",
+        ...contradiction.missing,
+        ...deferredMissing,
       ]),
     },
+  };
+}
+
+function resolveContradiction(
+  contradiction: EngineContradictionSectionV3,
+): ResolvedContradiction {
+  if (contradiction.availability === "not-computed") {
+    return {
+      component: NOT_COMPUTED,
+      score: null,
+      missing: ["contradiction"],
+    };
+  }
+
+  if (contradiction.availability === "not-applicable") {
+    return {
+      component: {
+        availability: "not-applicable",
+        reason: contradiction.reason,
+      },
+      score: null,
+      missing: [],
+    };
+  }
+
+  if (contradiction.availability === "unavailable") {
+    return unavailableContradiction(
+      contradiction.reason ?? "Contradiction evidence is unavailable.",
+    );
+  }
+
+  if (!isFiniteNumber(contradiction.data.score)) {
+    return unavailableContradiction(
+      "A finite contradiction score is required for market conviction.",
+    );
+  }
+
+  const score = clamp01(contradiction.data.score);
+
+  if (contradiction.availability === "partial") {
+    return {
+      component: {
+        availability: "partial",
+        data: score,
+        missing: contradiction.missing,
+      },
+      score,
+      missing: contradiction.missing,
+    };
+  }
+
+  return {
+    component: {
+      availability: "available",
+      data: score,
+    },
+    score,
+    missing: [],
+  };
+}
+
+function unavailableContradiction(
+  reason: string,
+): ResolvedContradiction {
+  return {
+    component: {
+      availability: "unavailable",
+      reason,
+    },
+    score: null,
+    missing: ["contradiction"],
   };
 }
 

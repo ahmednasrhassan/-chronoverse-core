@@ -232,6 +232,11 @@ export async function runEngineRuntimeV3<
           applicability: "applicable" as const,
           section: macro,
         };
+  const contradiction =
+    calculateEngineContradictionV3({
+      signal,
+      macro: confidenceMacroInput,
+    });
   const calculatedConfidence =
     calculateEngineConfidenceV3({
       marketData,
@@ -240,11 +245,7 @@ export async function runEngineRuntimeV3<
       technical,
       signal,
       macro: confidenceMacroInput,
-    });
-  const contradiction =
-    calculateEngineContradictionV3({
-      signal,
-      macro: confidenceMacroInput,
+      contradiction,
     });
 
   const engineResult: EngineResultV3<
