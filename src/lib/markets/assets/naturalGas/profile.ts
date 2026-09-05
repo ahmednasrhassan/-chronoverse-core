@@ -8,7 +8,7 @@ export const naturalGasProfile =
 
     symbol: "NG=F",
 
-    displayName: "Natural Gas",
+    displayName: "Natural Gas (Henry Hub)",
 
     assetClass: "commodity",
 

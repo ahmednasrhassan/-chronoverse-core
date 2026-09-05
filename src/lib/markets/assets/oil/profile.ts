@@ -8,7 +8,7 @@ export const oilProfile =
 
     symbol: "CL=F",
 
-    displayName: "Crude Oil",
+    displayName: "WTI Crude Oil",
 
     assetClass: "commodity",
 
