@@ -106,6 +106,10 @@ export async function getLiveOilIntelligence():
       symbol: oilProfile.symbol,
       historyLimit: oilProfile.historyLimit,
       minimumRequiredHistory,
+      macroApplicability:
+        oilProfile.macro.enabled
+          ? "applicable"
+          : "not-applicable",
       insufficientHistoryMessage:
         (received, minimum) =>
           `[Chronoverse Oil] Insufficient price history: received ${received}, minimum required ${minimum}.`,

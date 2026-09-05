@@ -144,6 +144,10 @@ export async function getFullLiveGoldIntelligence():
       historyLimit:
         goldProfile.historyLimit,
       minimumRequiredHistory: 1,
+      macroApplicability:
+        goldProfile.macro.enabled
+          ? "applicable"
+          : "not-applicable",
       insufficientHistoryMessage:
         () =>
           "[Chronoverse Gold] No live gold price history available.",

@@ -14,6 +14,9 @@ import type {
 import type {
   MarketSignalResult,
 } from "../core/signalEngine";
+import {
+  calculateEngineConfidenceV3,
+} from "../core/confidenceEngine";
 import type {
   HistoricalDataWindow,
   MarketDataProvenance,
@@ -23,6 +26,7 @@ import {
   ENGINE_RESULT_VERSION,
   type EngineAssetId,
   type EngineMacroV3,
+  type EngineMarketDataV3,
   type EngineResultV3,
   type EngineSerializable,
 } from "./contracts";
@@ -63,6 +67,9 @@ export type EngineRuntimeInput<
   readonly symbol: string;
   readonly historyLimit: number;
   readonly minimumRequiredHistory: number;
+  readonly macroApplicability:
+    | "applicable"
+    | "not-applicable";
   readonly insufficientHistoryMessage: (
     received: number,
     minimum: number,
@@ -185,6 +192,52 @@ export async function runEngineRuntimeV3<
     input.marketData.candles.at(-1)?.time;
   const provider = input.marketData.provider;
   const status = input.marketData.status;
+  const marketData: EngineMarketDataV3 =
+    provider === null || status === "unavailable"
+      ? {
+          availability: "unavailable",
+          provider,
+          status: "unavailable",
+          provenance: input.marketData.provenance,
+          historicalWindow: input.marketData.window,
+          latestTimestampSeconds,
+        }
+      : {
+          availability:
+            status === "realtime" ? "available" : "partial",
+          provider,
+          status,
+          provenance: input.marketData.provenance,
+          historicalWindow: input.marketData.window,
+          latestTimestampSeconds,
+        };
+  const technical = {
+    availability: "available",
+    data: intelligence.technical,
+  } as const;
+  const signal = {
+    availability: "available",
+    data: intelligence.signal,
+  } as const;
+  const macro = input.buildMacro(intelligence);
+  const confidenceMacroInput =
+    input.macroApplicability === "not-applicable"
+      ? {
+          applicability: "not-applicable" as const,
+        }
+      : {
+          applicability: "applicable" as const,
+          section: macro,
+        };
+  const calculatedConfidence =
+    calculateEngineConfidenceV3({
+      marketData,
+      minimumRequiredHistory:
+        input.minimumRequiredHistory,
+      technical,
+      signal,
+      macro: confidenceMacroInput,
+    });
 
   const engineResult: EngineResultV3<
     TMacroDetails,
@@ -196,30 +249,9 @@ export async function runEngineRuntimeV3<
     asset: input.asset,
     symbol: input.symbol,
     evaluatedAt,
-    marketData:
-      provider === null || status === "unavailable"
-        ? {
-            availability: "unavailable",
-            provider,
-            status: "unavailable",
-            provenance: input.marketData.provenance,
-            historicalWindow: input.marketData.window,
-            latestTimestampSeconds,
-          }
-        : {
-            availability:
-              status === "realtime" ? "available" : "partial",
-            provider,
-            status,
-            provenance: input.marketData.provenance,
-            historicalWindow: input.marketData.window,
-            latestTimestampSeconds,
-          },
-    technical: {
-      availability: "available",
-      data: intelligence.technical,
-    },
-    macro: input.buildMacro(intelligence),
+    marketData,
+    technical,
+    macro,
     signal: intelligence.signal,
     risk: intelligence.risk,
     state: {
@@ -235,7 +267,10 @@ export async function runEngineRuntimeV3<
     positioning: NOT_COMPUTED,
     scenario: NOT_COMPUTED,
     contradiction: NOT_COMPUTED,
-    confidence: NOT_COMPUTED,
+    confidence: {
+      availability: "available",
+      data: calculatedConfidence,
+    },
     decision: NOT_COMPUTED,
     recommendation: NOT_COMPUTED,
   };

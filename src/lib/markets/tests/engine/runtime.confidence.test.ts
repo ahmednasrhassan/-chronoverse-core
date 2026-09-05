@@ -1,0 +1,332 @@
+import type {
+  EngineMacroV3,
+} from "../../engine/contracts";
+import {
+  runEngineRuntimeV3,
+} from "../../engine/runtime";
+
+const technical = {
+  price: 100,
+  emaFast: 99,
+  emaMedium: 98,
+  emaSlow: 97,
+  rsi: 55,
+  macd: 1,
+  macdSignal: 0.8,
+  macdHistogram: 0.2,
+  momentum: 1,
+  roc: 1,
+  annualizedVolatility: 20,
+  priceVsEmaMedium: 2,
+  priceVsEmaSlow: 3,
+};
+
+const signal = {
+  score: 1,
+  direction: "bullish",
+  strength: "strong",
+  confidence: 0.2,
+  reasons: ["Test signal"],
+} as const;
+
+const risk = {
+  score: 0.9,
+  level: "high",
+  reasons: ["Test risk"],
+} as const;
+
+const intelligence = {
+  technical,
+  signal,
+  risk,
+  state: "opportunity",
+  confidence: 0.3,
+} as const;
+
+const snapshot = {
+  timestamp: "2026-01-01T00:00:00.000Z",
+  state: "opportunity",
+  confidence: 0.3,
+  signalDirection: "bullish",
+  signalConfidence: 0.2,
+  macroBias: "bullish",
+  macroConfidence: 0.4,
+  riskLevel: "high",
+  riskScore: 0.9,
+} as const;
+
+const regimeMemory = {
+  current: snapshot,
+  previous: null,
+  transition: {
+    changed: false,
+    from: null,
+    to: "opportunity",
+    direction: "new",
+  },
+  conviction: {
+    current: 30,
+    previous: null,
+    change: null,
+    direction: "stable",
+  },
+  technical: {
+    current: "bullish",
+    previous: null,
+    confidence: 20,
+    previousConfidence: null,
+    change: "stable",
+  },
+  macro: {
+    current: "bullish",
+    previous: null,
+    confidence: 40,
+    previousConfidence: null,
+    change: "stable",
+  },
+  risk: {
+    currentLevel: "high",
+    previousLevel: null,
+    currentScore: 0.9,
+    previousScore: null,
+    change: "stable",
+  },
+} as const;
+
+const normalizedMacro: EngineMacroV3 = {
+  availability: "available",
+  data: {
+    direction: "bullish",
+    score: 0.5,
+    confidence: 0.1,
+    coverage: 1,
+    drivers: [],
+    reasons: ["Test macro"],
+  },
+};
+
+type RunOptions = {
+  readonly macroApplicability:
+    | "applicable"
+    | "not-applicable";
+  readonly receivedPoints?: number;
+  readonly throwFromIntelligence?: boolean;
+};
+
+async function runCase(options: RunOptions) {
+  let intelligenceCalls = 0;
+  let buildMacroCalls = 0;
+  let getSnapshotCalls = 0;
+  let regimeCalls = 0;
+  let persistenceCalls = 0;
+
+  const runtime = await runEngineRuntimeV3({
+    asset: "gold",
+    symbol: "TEST",
+    historyLimit: 600,
+    minimumRequiredHistory: 1,
+    macroApplicability: options.macroApplicability,
+    insufficientHistoryMessage:
+      (received, minimum) =>
+        `Received ${received}; required ${minimum}.`,
+    marketData: {
+      provider: "in-memory",
+      status: "realtime",
+      window: {
+        receivedPoints: options.receivedPoints ?? 1,
+      },
+      candles: [
+        {
+          time: 1,
+          close: 100,
+        },
+      ],
+    },
+    macroInput: null,
+    calculateIntelligence: () => {
+      intelligenceCalls += 1;
+
+      if (options.throwFromIntelligence) {
+        throw new Error("Expected callback failure");
+      }
+
+      return intelligence;
+    },
+    buildMacro: () => {
+      buildMacroCalls += 1;
+      return normalizedMacro;
+    },
+    createRegimeSnapshot: () => snapshot,
+    calculateRegimeMemory: () => {
+      regimeCalls += 1;
+      return regimeMemory;
+    },
+    getLatestRegimeSnapshot: async () => {
+      getSnapshotCalls += 1;
+      return null;
+    },
+    appendRegimeSnapshot: async (
+      current,
+      previous,
+    ) => {
+      persistenceCalls += 1;
+      assertEqual(current, snapshot, "persisted current snapshot");
+      assertEqual(previous, null, "persisted previous snapshot");
+    },
+  });
+
+  return {
+    runtime,
+    intelligenceCalls,
+    buildMacroCalls,
+    getSnapshotCalls,
+    regimeCalls,
+    persistenceCalls,
+  };
+}
+
+function assertEqual<T>(
+  actual: T,
+  expected: T,
+  label: string,
+): void {
+  if (actual !== expected) {
+    throw new Error(
+      `${label}: expected ${String(expected)}, received ${String(actual)}`,
+    );
+  }
+}
+
+function requireAvailableConfidence(
+  result: Awaited<ReturnType<typeof runCase>>["runtime"],
+) {
+  const confidence = result.engineResult.confidence;
+
+  if (confidence.availability !== "available") {
+    throw new Error(
+      `confidence: expected available, received ${confidence.availability}`,
+    );
+  }
+
+  return confidence.data;
+}
+
+async function main(): Promise<void> {
+  const applicable = await runCase({
+    macroApplicability: "applicable",
+  });
+  const applicableConfidence =
+    requireAvailableConfidence(applicable.runtime);
+
+  assertEqual(applicable.intelligenceCalls, 1, "intelligence calls");
+  assertEqual(applicable.buildMacroCalls, 1, "buildMacro calls");
+  assertEqual(applicable.getSnapshotCalls, 1, "snapshot reads");
+  assertEqual(applicable.regimeCalls, 1, "regime calculations");
+  assertEqual(applicable.persistenceCalls, 1, "persistence calls");
+  assertEqual(applicableConfidence.data.availability, "partial", "data lifecycle");
+  assertEqual(applicableConfidence.conviction.availability, "partial", "conviction lifecycle");
+
+  if (applicableConfidence.conviction.availability !== "partial") {
+    throw new Error("Applicable conviction data is unavailable.");
+  }
+
+  assertEqual(
+    applicableConfidence.conviction.data.components.macro.availability,
+    "available",
+    "applicable macro lifecycle",
+  );
+  assertEqual(
+    applicableConfidence.conviction.data.score,
+    0.75,
+    "applicable macro conviction",
+  );
+  assertEqual(
+    applicable.runtime.engineResult.technical.data,
+    technical,
+    "technical output",
+  );
+  assertEqual(applicable.runtime.engineResult.signal, signal, "signal output");
+  assertEqual(applicable.runtime.engineResult.risk, risk, "risk output");
+  assertEqual(applicable.runtime.engineResult.state.state, "opportunity", "state output");
+  assertEqual(applicable.runtime.engineResult.state.confidence, 0.3, "state confidence");
+
+  if (applicable.runtime.engineResult.regime.availability !== "available") {
+    throw new Error("Regime output is unavailable.");
+  }
+
+  assertEqual(
+    applicable.runtime.engineResult.regime.memory,
+    regimeMemory,
+    "regime output",
+  );
+
+  const notApplicable = await runCase({
+    macroApplicability: "not-applicable",
+  });
+  const notApplicableConfidence =
+    requireAvailableConfidence(notApplicable.runtime);
+
+  if (notApplicableConfidence.data.availability !== "partial") {
+    throw new Error("Not-applicable data confidence is unavailable.");
+  }
+
+  if (notApplicableConfidence.conviction.availability !== "partial") {
+    throw new Error("Not-applicable conviction is unavailable.");
+  }
+
+  assertEqual(
+    notApplicableConfidence.data.data.components.macro.availability,
+    "not-applicable",
+    "data macro applicability",
+  );
+  assertEqual(
+    notApplicableConfidence.conviction.data.components.macro.availability,
+    "not-applicable",
+    "conviction macro applicability",
+  );
+  assertEqual(
+    notApplicableConfidence.conviction.data.score,
+    1,
+    "signal-only conviction",
+  );
+
+  const invalidHistory = await runCase({
+    macroApplicability: "applicable",
+    receivedPoints: Number.NaN,
+  });
+  const invalidHistoryConfidence =
+    requireAvailableConfidence(invalidHistory.runtime);
+
+  if (invalidHistoryConfidence.data.availability !== "partial") {
+    throw new Error("Invalid-history data confidence is unavailable.");
+  }
+
+  assertEqual(
+    invalidHistoryConfidence.data.data.components.marketData.availability,
+    "unavailable",
+    "invalid history lifecycle",
+  );
+
+  let callbackError: unknown = null;
+
+  try {
+    await runCase({
+      macroApplicability: "applicable",
+      throwFromIntelligence: true,
+    });
+  } catch (error) {
+    callbackError = error;
+  }
+
+  assertEqual(
+    callbackError instanceof Error
+      ? callbackError.message
+      : null,
+    "Expected callback failure",
+    "callback error propagation",
+  );
+
+  console.log("PASS: Engine V3 runtime confidence integration");
+}
+
+void main();
