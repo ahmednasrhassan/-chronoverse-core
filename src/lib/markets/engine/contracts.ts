@@ -367,6 +367,84 @@ export type EngineMacroV3<TDetails = never> = EngineDataSection<
   EngineMacroSnapshotV3<TDetails>
 >;
 
+export type EngineCrossAssetExpectedSignV3 =
+  | "direct"
+  | "inverse";
+
+export interface EngineCrossAssetHorizonV3 {
+  readonly interval: "daily";
+  /** Number of one-day intervals in the horizon move. */
+  readonly observations: number;
+}
+
+export type EngineCrossAssetRelationshipV3 =
+  | {
+      readonly id: string;
+      readonly targetAssetId: MarketAssetId;
+      readonly referenceAssetId: MarketAssetId;
+      readonly expectedSign: EngineCrossAssetExpectedSignV3;
+      /** Positive configured model weight; this is not a correlation coefficient. */
+      readonly weight: number;
+      readonly horizon: EngineCrossAssetHorizonV3;
+      readonly availability: "available";
+      readonly referenceMoveScore: number;
+      readonly signedEvidence: number;
+      /** (weight * signedEvidence) / total configured target weight. */
+      readonly weightedContribution: number;
+      readonly observedAt?: string;
+      readonly latestTimestamp?: number;
+    }
+  | {
+      readonly id: string;
+      readonly targetAssetId: MarketAssetId;
+      readonly referenceAssetId: MarketAssetId;
+      readonly expectedSign: EngineCrossAssetExpectedSignV3;
+      readonly weight: number;
+      readonly horizon: EngineCrossAssetHorizonV3;
+      readonly availability: "unavailable";
+      readonly reason?: string;
+      readonly observedAt?: string;
+      readonly latestTimestamp?: number;
+    };
+
+export type EngineCrossAssetDataQualitySectionV3 =
+  | EngineDataSection<number>
+  | { readonly availability: "not-computed" };
+
+export interface EngineCrossAssetSnapshotV3 {
+  /** Signed conditional Cross-Asset evidence normalized to -1..1. */
+  readonly score: number;
+  /** Absolute conditional evidence strength normalized to 0..1. */
+  readonly strengthMagnitude: number;
+  /** Configured required relationship weight actually available, normalized to 0..1. */
+  readonly coverage: number;
+  readonly relationships: readonly EngineCrossAssetRelationshipV3[];
+  /** Data quality/freshness is independent from score and coverage. */
+  readonly dataQuality: EngineCrossAssetDataQualitySectionV3;
+}
+
+export type EngineCrossAssetSectionV3 =
+  | {
+      readonly availability: "available";
+      readonly data: EngineCrossAssetSnapshotV3;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineCrossAssetSnapshotV3;
+      readonly missing: readonly string[];
+    }
+  | {
+      readonly availability: "unavailable";
+      readonly reason?: string;
+    }
+  | {
+      readonly availability: "not-applicable";
+      readonly reason?: string;
+    }
+  | {
+      readonly availability: "not-computed";
+    };
+
 export type EngineRegimeV3<
   TState extends string = MarketStateResult["state"],
   TRiskLevel extends string = MarketRiskResult["level"],
@@ -407,7 +485,7 @@ export interface EngineResultV3<
   readonly state: MarketStateResult;
   readonly regime: EngineRegimeV3<TState, TRiskLevel>;
   readonly migrationDetails?: EngineSerializable<TMigrationDetails>;
-  readonly crossAsset: EngineDeferredSection;
+  readonly crossAsset: EngineCrossAssetSectionV3;
   readonly positioning: EngineDeferredSection;
   readonly scenario: EngineDeferredSection;
   readonly contradiction: EngineContradictionSectionV3;

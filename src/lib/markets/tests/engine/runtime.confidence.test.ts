@@ -357,6 +357,11 @@ async function main(): Promise<void> {
     "recommendation lifecycle",
   );
   assertEqual(
+    applicable.runtime.engineResult.crossAsset.availability,
+    "not-computed",
+    "runtime Cross-Asset lifecycle",
+  );
+  assertEqual(
     applicable.runtime.engineResult.decisionLifecycle.availability,
     "not-computed",
     "raw runtime Decision Lifecycle",

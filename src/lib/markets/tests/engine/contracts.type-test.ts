@@ -6,10 +6,21 @@ import type { MarketRiskResult } from "../../core/riskEngine";
 import type { MarketSignalResult } from "../../core/signalEngine";
 import {
   ENGINE_RESULT_VERSION,
+  type EngineCrossAssetSectionV3,
   type EngineMarketDataV3,
   type EngineRegimeV3,
   type EngineResultV3,
 } from "../../engine/contracts";
+
+const crossAssetLifecycleContract = [
+  { availability: "available", data: { score: 0, strengthMagnitude: 0, coverage: 1, relationships: [], dataQuality: { availability: "not-computed" } } },
+  { availability: "partial", data: { score: 0.5, strengthMagnitude: 0.5, coverage: 0.5, relationships: [], dataQuality: { availability: "not-computed" } }, missing: ["reference"] },
+  { availability: "unavailable", reason: "No evidence" },
+  { availability: "not-applicable", reason: "No model" },
+  { availability: "not-computed" },
+] as const satisfies readonly EngineCrossAssetSectionV3[];
+
+void crossAssetLifecycleContract;
 
 type GoldMacroCompatibility = Pick<
   NonNullable<GoldIntelligenceResult["macro"]>,
