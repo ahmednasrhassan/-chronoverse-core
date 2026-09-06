@@ -7,6 +7,11 @@ import type {
 import type {
   MarketSignalResult,
 } from "./signalEngine";
+import {
+  calculatePrimaryEvidenceAlgebraV3,
+  ENGINE_V3_EVIDENCE_POLICY,
+  type PrimaryEvidenceChannelV3,
+} from "../engine/evidenceAlgebra";
 
 export type EngineDecisionMacroInputV3<
   TDetails = never,
@@ -81,7 +86,15 @@ export function calculateEngineDecisionV3<
   }
 
   const signalScore = clampSigned(input.signal.data.score);
-  let signedBalance = signalScore;
+  const primaryChannels: PrimaryEvidenceChannelV3[] = [
+    {
+      id: "signal",
+      evidenceRole: ENGINE_V3_EVIDENCE_POLICY.signal.evidenceRole,
+      score: signalScore,
+      architecturePrior: ENGINE_V3_EVIDENCE_POLICY.signal.architecturePrior,
+      coverage: 1,
+    },
+  ];
   let isPartial =
     input.signal.availability === "partial" ||
     conviction.availability === "partial";
@@ -119,8 +132,13 @@ export function calculateEngineDecisionV3<
       const macroScore = clampSigned(macro.data.score);
       const macroCoverage = clamp01(macro.data.coverage);
 
-      signedBalance =
-        signalScore + macroCoverage * macroScore;
+      primaryChannels.push({
+        id: "macro",
+        evidenceRole: ENGINE_V3_EVIDENCE_POLICY.macro.evidenceRole,
+        score: macroScore,
+        architecturePrior: ENGINE_V3_EVIDENCE_POLICY.macro.architecturePrior,
+        coverage: macroCoverage,
+      });
 
       if (macro.availability === "partial") {
         isPartial = true;
@@ -128,6 +146,10 @@ export function calculateEngineDecisionV3<
       }
     }
   }
+
+  const signedBalance = calculatePrimaryEvidenceAlgebraV3(
+    primaryChannels,
+  ).primarySignedBalance;
 
   const decision = convictionScore === 0
     ? {

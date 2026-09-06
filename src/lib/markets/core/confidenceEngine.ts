@@ -12,6 +12,10 @@ import type {
 import type {
   MarketSignalResult,
 } from "./signalEngine";
+import {
+  calculatePrimaryEvidenceAlgebraV3,
+  ENGINE_V3_EVIDENCE_POLICY,
+} from "../engine/evidenceAlgebra";
 
 export type EngineConfidenceMacroInputV3<
   TMacroDetails = never,
@@ -186,13 +190,23 @@ export function calculateEngineConfidenceV3<
     };
   }
 
-  const rawEvidenceStrength =
-    (
-      Math.abs(signal.signedScore) +
-      macroConviction.coverage *
-        Math.abs(macroConviction.signedScore)
-    ) /
-    (1 + macroConviction.coverage);
+  const primary = calculatePrimaryEvidenceAlgebraV3([
+    {
+      id: "signal",
+      evidenceRole: ENGINE_V3_EVIDENCE_POLICY.signal.evidenceRole,
+      score: signal.signedScore,
+      architecturePrior: ENGINE_V3_EVIDENCE_POLICY.signal.architecturePrior,
+      coverage: 1,
+    },
+    {
+      id: "macro",
+      evidenceRole: ENGINE_V3_EVIDENCE_POLICY.macro.evidenceRole,
+      score: macroConviction.signedScore,
+      architecturePrior: ENGINE_V3_EVIDENCE_POLICY.macro.architecturePrior,
+      coverage: macroConviction.coverage,
+    },
+  ]);
+  const rawEvidenceStrength = primary.rawEvidenceStrength;
   const convictionScore = clamp01(
     rawEvidenceStrength - contradiction.score,
   );

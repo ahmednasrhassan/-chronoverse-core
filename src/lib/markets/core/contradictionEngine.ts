@@ -7,6 +7,10 @@ import type {
 import type {
   MarketSignalResult,
 } from "./signalEngine";
+import {
+  calculatePrimaryEvidenceAlgebraV3,
+  ENGINE_V3_EVIDENCE_POLICY,
+} from "../engine/evidenceAlgebra";
 
 export type EngineContradictionMacroInputV3<
   TMacroDetails = unknown,
@@ -99,9 +103,23 @@ export function calculateEngineContradictionV3<
   )
     ? Math.min(signalMagnitude, effectiveMacroMagnitude)
     : 0;
-  const aggregateContradiction = clamp01(
-    (2 * opposingOverlap) / (1 + macroCoverage),
-  );
+  const primary = calculatePrimaryEvidenceAlgebraV3([
+    {
+      id: "signal",
+      evidenceRole: ENGINE_V3_EVIDENCE_POLICY.signal.evidenceRole,
+      score: signalScore,
+      architecturePrior: ENGINE_V3_EVIDENCE_POLICY.signal.architecturePrior,
+      coverage: 1,
+    },
+    {
+      id: "macro",
+      evidenceRole: ENGINE_V3_EVIDENCE_POLICY.macro.evidenceRole,
+      score: macroScore,
+      architecturePrior: ENGINE_V3_EVIDENCE_POLICY.macro.architecturePrior,
+      coverage: macroCoverage,
+    },
+  ]);
+  const aggregateContradiction = primary.primaryContradiction;
 
   const conflict: EngineContradictionConflictV3 | null =
     opposingOverlap > 0
