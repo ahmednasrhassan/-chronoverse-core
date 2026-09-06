@@ -105,6 +105,9 @@ export function resolveMarketState(
     | MarketStateMacro
     | null,
 ): MarketIntelligenceState {
+  const usableMacro =
+    resolveUsableMarketStateMacro(macro);
+
   /*
    * HARD RISK OVERRIDE
    */
@@ -133,10 +136,10 @@ export function resolveMarketState(
      */
 
     if (
-      macro !== null &&
-      macro.bias ===
+      usableMacro !== null &&
+      usableMacro.bias ===
         "bullish" &&
-      calculateMacroEvidenceStrength(macro) >=
+      calculateMacroEvidenceStrength(usableMacro) >=
         0.65
     ) {
       return "caution";
@@ -163,10 +166,10 @@ export function resolveMarketState(
      */
 
     if (
-      macro !== null &&
-      macro.bias ===
+      usableMacro !== null &&
+      usableMacro.bias ===
         "bearish" &&
-      calculateMacroEvidenceStrength(macro) >=
+      calculateMacroEvidenceStrength(usableMacro) >=
         0.65
     ) {
       return "caution";
@@ -190,11 +193,14 @@ export function resolveMarketState(
  * signal = 75%
  * risk   = 25%
  *
- * With macro:
+ * With full-coverage macro:
  *
  * signal = 60%
  * risk   = 20%
  * macro  = 20%
+ *
+ * Partial Macro receives effective weight 20% * coverage,
+ * and the result is normalized by total usable weight.
  */
 export function calculateMarketStateConfidence(
   signal: MarketStateSignal,
@@ -203,22 +209,26 @@ export function calculateMarketStateConfidence(
     | MarketStateMacro
     | null,
 ): number {
+  const signalStrength =
+    clamp(signal.confidence, 0, 1);
   const riskQuality =
-    1 -
-    risk.score;
+    clamp(1 - risk.score, 0, 1);
+  const usableMacro =
+    resolveUsableMarketStateMacro(macro);
+  const baseNumerator =
+    signalStrength * 0.6 +
+    riskQuality * 0.2;
 
   /*
    * NO MACRO LAYER
    */
 
   if (
-    macro === null
+    usableMacro === null
   ) {
     const combined =
-      signal.confidence *
-        0.75 +
-      riskQuality *
-        0.25;
+      baseNumerator /
+      0.8;
 
     return Number(
       clamp(
@@ -239,19 +249,24 @@ export function calculateMarketStateConfidence(
    */
 
   const macroEvidenceStrength =
-    calculateMacroEvidenceStrength(macro);
+    calculateMacroEvidenceStrength(usableMacro);
+  const macroWeight =
+    0.2 *
+    clamp(usableMacro.coverage, 0, 1);
 
   /*
    * THREE-LAYER CONFIDENCE
    */
 
   const combined =
-    signal.confidence *
-      0.6 +
-    riskQuality *
-      0.2 +
-    macroEvidenceStrength *
-      0.2;
+    (
+      baseNumerator +
+      macroEvidenceStrength * 0.2
+    ) /
+    (
+      0.8 +
+      macroWeight
+    );
 
   return Number(
     clamp(
@@ -286,4 +301,16 @@ function calculateMacroEvidenceStrength(
     clamp(Math.abs(macro.score), 0, 1) *
     clamp(macro.coverage, 0, 1)
   );
+}
+
+/** Zero-coverage or invalid Macro is not usable state evidence. */
+function resolveUsableMarketStateMacro(
+  macro: MarketStateMacro | null,
+): MarketStateMacro | null {
+  return macro !== null &&
+    Number.isFinite(macro.score) &&
+    Number.isFinite(macro.coverage) &&
+    macro.coverage > 0
+    ? macro
+    : null;
 }

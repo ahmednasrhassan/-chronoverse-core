@@ -330,7 +330,19 @@ export function calculateGoldIntelligence(
   calculateMarketState({
     signal,
     risk,
-    macro,
+    macro:
+      macro !== null &&
+      (
+        macro.canonical.availability === "available" ||
+        macro.canonical.availability === "partial"
+      ) &&
+      macro.canonical.data.coverage > 0
+        ? {
+            bias: macro.bias,
+            score: macro.canonical.data.score,
+            coverage: macro.canonical.data.coverage,
+          }
+        : null,
   });
 
 const state =

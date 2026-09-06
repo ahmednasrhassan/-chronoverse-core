@@ -64,7 +64,7 @@ interface ParityReport {
   readonly risk: "exact";
   readonly signal: "exact";
   readonly macro: "exact";
-  readonly marketState: "exact" | "known-mismatch";
+  readonly marketState: "exact";
   readonly dataConfidence: "exact";
   readonly rawEvidenceStrength: "exact" | "not-comparable";
   readonly contradiction: "exact";
@@ -252,11 +252,35 @@ function rawEvidenceStrength(result: ComparableEngine): number | null {
   ]).rawEvidenceStrength;
 }
 
+function normalizedMarketStateConfidence(result: ComparableEngine): number {
+  const signal = Math.min(1, Math.max(0, result.signal.confidence));
+  const risk = Math.min(1, Math.max(0, 1 - result.risk.score));
+  if (result.macro.availability !== "available" && result.macro.availability !== "partial") {
+    return Number(((0.6 * signal + 0.2 * risk) / 0.8).toFixed(4));
+  }
+  const coverage = Math.min(1, Math.max(0, result.macro.data.coverage));
+  const magnitude = Math.min(1, Math.max(0, Math.abs(result.macro.data.score)));
+  return Number((
+    (0.6 * signal + 0.2 * risk + 0.2 * coverage * magnitude) /
+    (0.8 + 0.2 * coverage)
+  ).toFixed(4));
+}
+
+function oldMarketStateConfidence(result: ComparableEngine): number {
+  const signal = Math.min(1, Math.max(0, result.signal.confidence));
+  const risk = Math.min(1, Math.max(0, 1 - result.risk.score));
+  if (result.macro.availability !== "available" && result.macro.availability !== "partial") {
+    return Number((0.75 * signal + 0.25 * risk).toFixed(4));
+  }
+  const coverage = Math.min(1, Math.max(0, result.macro.data.coverage));
+  const magnitude = Math.min(1, Math.max(0, Math.abs(result.macro.data.score)));
+  return Number((0.6 * signal + 0.2 * risk + 0.2 * coverage * magnitude).toFixed(4));
+}
+
 async function compareCase(
   name: string,
   sourceObservations: readonly CanonicalMarketObservationV1[],
   macroInput: OilMacroInput,
-  expectedMarketStateParity: "exact" | "known-mismatch" = "exact",
 ): Promise<{
   readonly report: ParityReport;
   readonly generic: ComparableEngine;
@@ -331,12 +355,7 @@ async function compareCase(
       `${name} Oil public Macro compatibility reconstruction`,
     );
   }
-  if (expectedMarketStateParity === "exact") {
-    assertDeep(generic.state, legacyResult.state, `${name} Market State`);
-  } else {
-    assertEqual(generic.state.state, legacyResult.state.state, `${name} Market State classification`);
-    assertEqual(generic.state.confidence !== legacyResult.state.confidence, true, `${name} known Market State confidence gap`);
-  }
+  assertDeep(generic.state, legacyResult.state, `${name} Market State`);
   assertDeep(generic.confidence, legacyResult.confidence, `${name} Confidence`);
   assertDeep(generic.contradiction, legacyResult.contradiction, `${name} Contradiction`);
   assertDeep(generic.decision, legacyResult.decision, `${name} Decision`);
@@ -356,7 +375,7 @@ async function compareCase(
       risk: "exact",
       signal: "exact",
       macro: "exact",
-      marketState: expectedMarketStateParity,
+      marketState: "exact",
       dataConfidence: "exact",
       rawEvidenceStrength: rawEvidenceStrength(generic) === null ? "not-comparable" : "exact",
       contradiction: "exact",
@@ -390,12 +409,7 @@ async function run(): Promise<void> {
   const minimumCase = await compareCase("CASE 5 MINIMUM HISTORY", history(minimum), bullishMacro);
   const excessHistory = history(oilProfile.historyLimit + 75);
   const excess = await compareCase("CASE 6 EXCESS HISTORY", excessHistory, bullishMacro);
-  const unavailable = await compareCase(
-    "CASE 7 MACRO UNAVAILABLE",
-    normalHistory,
-    unavailableMacro,
-    "known-mismatch",
-  );
+  const unavailable = await compareCase("CASE 7 MACRO UNAVAILABLE", normalHistory, unavailableMacro);
 
   const partialCalculated = calculateOilMacro(partialMacro);
   assertEqual(partialCalculated.coverage, 0.6, "additional unavailable driver coverage");
@@ -410,11 +424,9 @@ async function run(): Promise<void> {
   assertEqual(minimumCase.generic.marketData.historicalWindow?.receivedPoints, minimum, "minimum history count");
   assertEqual(excess.generic.marketData.historicalWindow?.receivedPoints, oilProfile.historyLimit + 75, "excess source count preserved");
   assertEqual(unavailable.generic.macro.availability, "unavailable", "applicable unavailable Macro remains unavailable");
-  assertEqual(
-    unavailable.generic.state.confidence > unavailable.legacy.state.confidence,
-    true,
-    "unavailable-Macro state confidence gap direction",
-  );
+  assertEqual(unavailable.generic.state.confidence, 0.7513, "canonical unavailable-Macro state confidence");
+  assertEqual(normal.generic.state.confidence, normalizedMarketStateConfidence(normal.generic), "normal Oil normalized confidence");
+  assertEqual(partial.generic.state.confidence, normalizedMarketStateConfidence(partial.generic), "partial Oil normalized confidence");
 
   const deterministicPrepared = prepareAssetEvaluationV1(
     evaluation(excessHistory), "oil",
@@ -439,12 +451,13 @@ async function run(): Promise<void> {
     deterministicReport,
   ], null, 2));
   console.log(JSON.stringify({
-    case7MarketStateConfidence: {
-      legacy: unavailable.legacy.state.confidence,
-      generic: unavailable.generic.state.confidence,
+    oilMarketStateConfidence: {
+      normal: { old: oldMarketStateConfidence(normal.generic), normalized: normal.generic.state.confidence },
+      partial: { old: oldMarketStateConfidence(partial.generic), normalized: partial.generic.state.confidence },
+      unavailable: { old: 0.601, normalized: unavailable.generic.state.confidence },
     },
   }));
-  console.log("PASS: Oil Generic Runtime Shadow Parity V1 — comparison complete; migration gap classified");
+  console.log("PASS: Oil Generic Runtime Shadow Parity V1 — canonical analytical parity");
 }
 
 void run();

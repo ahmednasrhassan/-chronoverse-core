@@ -242,11 +242,9 @@ runCase(
  *
  * macroEvidenceStrength = |0.80| * 0.50 = 0.40
  *
- * confidence:
- * 0.60 * 0.60 +
- * 0.70 * 0.20 +
- * 0.40 * 0.20
- * = 0.58
+ * numerator = 0.60 * 0.60 + 0.70 * 0.20 + 0.40 * 0.20 = 0.58
+ * denominator = 0.80 + 0.20 * 0.50 = 0.90
+ * confidence = 0.58 / 0.90 = 0.6444
  */
 runCase(
   "macro coverage weighting",
@@ -268,7 +266,7 @@ runCase(
     },
   },
   "caution",
-  0.58,
+  0.6444,
 );
 
 /*
@@ -294,7 +292,7 @@ runCase(
     macro: { bias: "bullish", score: 0.8, coverage: 0.5 },
   },
   "caution",
-  0.58,
+  0.6444,
 );
 
 /* 10. No macro evidence uses the established macro-free path. */
@@ -328,6 +326,27 @@ runCase(
     calculateMarketState({ signal, risk, macro: macroLowLegacyConfidence }).confidence,
     calculateMarketState({ signal, risk, macro: macroHighLegacyConfidence }).confidence,
     "legacy macro confidence independence",
+  );
+}
+
+/* 12-19. Canonical availability normalization audit fixtures. */
+{
+  const signal = { direction: "bullish" as const, confidence: 0.7784 };
+  const risk = { level: "low" as const, score: 0.33 };
+  const confidence = (macro: MarketStateInput["macro"]) =>
+    calculateMarketState({ signal, risk, macro }).confidence;
+
+  assertEqual(confidence({ bias: "bullish", score: 0.8, coverage: 1 }), 0.761, "full coverage bullish");
+  assertEqual(confidence({ bias: "neutral", score: 0, coverage: 1 }), 0.601, "usable neutral Macro");
+  assertEqual(confidence({ bias: "bullish", score: 0.8, coverage: 0.5 }), 0.7567, "partial coverage normalization");
+  assertEqual(confidence(null), 0.7513, "unavailable Macro");
+  assertEqual(confidence(null), 0.7513, "not-applicable Macro");
+  assertEqual(confidence(null), 0.7513, "not-computed Macro");
+  assertEqual(confidence({ bias: "bullish", score: 0.8, coverage: 0 }), confidence(null), "coverage zero continuity");
+  assertEqual(
+    confidence({ bias: "bullish", score: 0.8, coverage: 1 }),
+    Number((0.6 * 0.7784 + 0.2 * 0.67 + 0.2 * 0.8).toFixed(4)),
+    "coverage one legacy parity",
   );
 }
 

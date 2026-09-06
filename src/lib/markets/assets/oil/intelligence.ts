@@ -86,17 +86,22 @@ export function calculateOilIntelligence(
       core.risk,
 
     macro:
-      macro === null
+      macro === null ||
+      (
+        macro.canonical.availability !== "available" &&
+        macro.canonical.availability !== "partial"
+      ) ||
+      macro.canonical.data.coverage <= 0
         ? null
         : {
             bias:
               macro.direction,
 
             score:
-              macro.score,
+              macro.canonical.data.score,
 
             coverage:
-              macro.coverage,
+              macro.canonical.data.coverage,
           },
   });
   return {
