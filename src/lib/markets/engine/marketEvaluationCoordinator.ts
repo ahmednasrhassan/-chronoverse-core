@@ -9,7 +9,6 @@ import {
   type CanonicalMarketSnapshotRequestV1,
   type CanonicalMarketSnapshotV1,
 } from "../services/canonicalMarketSnapshot";
-import type { EngineCrossAssetSectionV3 } from "./contracts";
 import {
   calculateCanonicalCrossAssetSectionsV1,
   type CalculateCanonicalCrossAssetSectionsInputV1,
@@ -17,6 +16,8 @@ import {
 } from "./crossAssetOrchestrator";
 import { CROSS_ASSET_MINIMUM_CLOSES_V1 } from "./crossAssetFeatures";
 import { activeCrossAssetRelationshipsV1 } from "./crossAssetRelationships";
+
+export { getPrecomputedCrossAssetForTargetV1 } from "./marketEvaluationHandoff";
 
 export const CANONICAL_MARKET_EVALUATION_SCHEMA_VERSION_V1 =
   "canonical-market-evaluation-v1" as const;
@@ -113,26 +114,6 @@ export async function coordinateCanonicalMarketEvaluationV1(
   } catch {
     throw new Error("Canonical market evaluation coordination failed.");
   }
-}
-
-/** Returns the exact precomputed section; it performs no calculation or fetching. */
-export function getPrecomputedCrossAssetForTargetV1(
-  evaluation: CanonicalMarketEvaluationV1,
-  targetAssetId: MarketAssetId,
-): EngineCrossAssetSectionV3 {
-  if (!evaluation.requestedTargetAssetIds.includes(targetAssetId)) {
-    throw new TypeError("Cross-Asset handoff target was not requested by this evaluation.");
-  }
-
-  const matches = evaluation.crossAssetSections.sections.filter(
-    (section) => section.targetAssetId === targetAssetId,
-  );
-
-  if (matches.length !== 1) {
-    throw new TypeError("Cross-Asset handoff target is inconsistent in this evaluation.");
-  }
-
-  return matches[0]!.crossAsset;
 }
 
 export function resolveCanonicalMarketEvaluationHistoryPolicyV1(
