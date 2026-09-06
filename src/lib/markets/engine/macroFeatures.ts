@@ -32,6 +32,9 @@ export type CanonicalMacroDriverV3 =
       readonly weight: number;
       readonly availability: "available";
       readonly score: number;
+      readonly direction: "bullish" | "bearish" | "neutral";
+      /** Contribution to total required evidence: (weight * score) / totalWeight. */
+      readonly weightedContribution: number;
       readonly observedAt?: string;
     }
   | {
@@ -147,11 +150,21 @@ export function calculateCanonicalMacroFeaturesV3(
     0,
   );
   const score = clampSigned(weightedScore / availableWeight);
+  const drivers = normalizedDrivers.map((driver): CanonicalMacroDriverV3 =>
+    driver.availability === "available"
+      ? {
+          ...driver,
+          direction: directionFromScore(driver.score),
+          weightedContribution:
+            (driver.weight * driver.score) / totalWeight,
+        }
+      : driver,
+  );
   const data: CanonicalMacroFeaturesV3 = {
     score,
     strengthMagnitude: Math.abs(score),
     coverage: clamp01(availableWeight / totalWeight),
-    drivers: normalizedDrivers,
+    drivers,
   };
   const missing = normalizedDrivers
     .filter((driver) => driver.availability === "unavailable")
@@ -164,7 +177,7 @@ export function calculateCanonicalMacroFeaturesV3(
 
 function normalizeDriver(
   driver: CanonicalMacroDriverInputV3,
-): CanonicalMacroDriverV3 {
+): CanonicalMacroDriverInputV3 {
   const id = driver.id.trim();
 
   if (driver.availability === "available") {
@@ -199,4 +212,10 @@ function clamp01(value: number): number {
 
 function compareIdentifiers(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function directionFromScore(
+  score: number,
+): "bullish" | "bearish" | "neutral" {
+  return score > 0 ? "bullish" : score < 0 ? "bearish" : "neutral";
 }

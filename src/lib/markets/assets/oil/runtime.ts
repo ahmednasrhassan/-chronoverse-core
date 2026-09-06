@@ -209,47 +209,57 @@ function buildOilEngineMacro(
     };
   }
 
-  const drivers = [
-    ["inventories", macro.drivers.inventories],
-    ["production", macro.drivers.production],
-    ["global-demand", macro.drivers.globalDemand],
-    ["usd", macro.drivers.usd],
-  ] as const;
-  const missing = drivers
-    .filter(([, driver]) => !driver.available)
-    .map(([id]) => id);
+  const canonical = macro.canonical;
+
+  if (
+    canonical.availability !== "available" &&
+    canonical.availability !== "partial"
+  ) {
+    return {
+      availability: "unavailable",
+      reason:
+        canonical.availability === "unavailable"
+          ? canonical.reason
+          : "Canonical Oil macro evidence is unavailable.",
+    };
+  }
+
   const data = {
     direction: macro.direction,
-    score: macro.score,
-    strengthMagnitude: Math.abs(macro.score),
+    score: canonical.data.score,
+    strengthMagnitude: canonical.data.strengthMagnitude,
     confidence: macro.confidence,
-    coverage: macro.coverage,
+    coverage: canonical.data.coverage,
     dataQuality: {
       availability: "not-computed" as const,
     },
-    drivers: drivers.map(([id, driver]) => ({
-      id,
-      available: driver.available,
-      direction:
-        driver.available
-          ? driver.score > 0
-            ? "bullish" as const
-            : driver.score < 0
-              ? "bearish" as const
-              : "neutral" as const
-          : undefined,
-      contribution: driver.available
-        ? driver.score
-        : null,
-      reason: driver.reason,
-    })),
+    drivers: canonical.data.drivers.map((driver) =>
+      driver.availability === "available"
+        ? {
+            id: driver.id,
+            weight: driver.weight,
+            available: true,
+            score: driver.score,
+            direction: driver.direction,
+            observedAt: driver.observedAt,
+            weightedContribution: driver.weightedContribution,
+          }
+        : {
+            id: driver.id,
+            weight: driver.weight,
+            available: false,
+            score: null,
+            weightedContribution: null,
+            reason: driver.reason,
+          },
+    ),
     reasons: macro.reasons,
     migrationDetails: {
       drivers: macro.drivers,
     },
   };
 
-  return missing.length === 0
+  return canonical.availability === "available"
     ? {
         availability: "available",
         data,
@@ -257,6 +267,6 @@ function buildOilEngineMacro(
     : {
         availability: "partial",
         data,
-        missing,
+        missing: canonical.missing,
       };
 }

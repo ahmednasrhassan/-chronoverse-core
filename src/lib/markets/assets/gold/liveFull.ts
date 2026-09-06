@@ -286,37 +286,58 @@ function buildGoldEngineMacro(
     };
   }
 
-  const drivers = [
-    ["real-yield-10y", macro.factors.realYield10Y],
-    ["nominal-yield-10y", macro.factors.nominalYield10Y],
-    ["dollar-index-proxy", macro.factors.dollarIndexProxy],
-    ["inflation-expectation-10y", macro.factors.inflationExpectation10Y],
-  ] as const;
-  const missing = drivers
-    .filter(([, value]) => value === null)
-    .map(([id]) => id);
+  const canonical = macro.canonical;
+
+  if (
+    canonical.availability !== "available" &&
+    canonical.availability !== "partial"
+  ) {
+    return {
+      availability: "unavailable",
+      reason:
+        canonical.availability === "unavailable"
+          ? canonical.reason
+          : "Canonical Gold macro evidence is unavailable.",
+    };
+  }
+
   const data = {
     direction: macro.bias,
-    score: macro.score,
-    strengthMagnitude: Math.abs(macro.score),
+    score: canonical.data.score,
+    strengthMagnitude: canonical.data.strengthMagnitude,
     strength: macro.strength,
     confidence: macro.confidence,
-    coverage: macro.coverage,
+    coverage: canonical.data.coverage,
     dataQuality: {
       availability: "not-computed" as const,
     },
-    drivers: drivers.map(([id, value]) => ({
-      id,
-      available: value !== null,
-      contribution: null,
-    })),
+    drivers: canonical.data.drivers.map((driver) =>
+      driver.availability === "available"
+        ? {
+            id: driver.id,
+            weight: driver.weight,
+            available: true,
+            score: driver.score,
+            direction: driver.direction,
+            observedAt: driver.observedAt,
+            weightedContribution: driver.weightedContribution,
+          }
+        : {
+            id: driver.id,
+            weight: driver.weight,
+            available: false,
+            score: null,
+            weightedContribution: null,
+            reason: driver.reason,
+          },
+    ),
     reasons: macro.reasons,
     migrationDetails: {
       factors: macro.factors,
     },
   };
 
-  return missing.length === 0
+  return canonical.availability === "available"
     ? {
         availability: "available",
         data,
@@ -324,6 +345,6 @@ function buildGoldEngineMacro(
     : {
         availability: "partial",
         data,
-        missing,
+        missing: canonical.missing,
       };
 }

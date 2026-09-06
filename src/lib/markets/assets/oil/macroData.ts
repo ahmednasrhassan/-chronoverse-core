@@ -5,6 +5,9 @@ import type {
 import {
   getEiaOilFundamentals,
 } from "../../providers/eia/oilFundamentalsCache";
+import type {
+  EiaOilFundamentalSnapshot,
+} from "../../providers/eia/types";
 /**
  * Chronoverse Capital
  * Oil Macro Data Adapter
@@ -22,6 +25,12 @@ export async function getOilMacroInput():
   const fundamentals =
     await getEiaOilFundamentals();
 
+  return mapOilFundamentalsToMacroInput(fundamentals);
+}
+
+export function mapOilFundamentalsToMacroInput(
+  fundamentals: EiaOilFundamentalSnapshot,
+): OilMacroInput {
   return {
     inventoriesChangePct:
       fundamentals
@@ -40,5 +49,16 @@ export async function getOilMacroInput():
 
     usdChangePct:
       null,
+
+    observedAt: {
+      inventories:
+        fundamentals.inventories.period,
+      production:
+        fundamentals.production.period,
+      globalDemand:
+        fundamentals.globalDemand.period,
+      usd:
+        null,
+    },
   };
 }

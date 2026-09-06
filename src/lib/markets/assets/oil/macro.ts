@@ -1,3 +1,9 @@
+import {
+  calculateCanonicalMacroFeaturesV3,
+  type CanonicalMacroDriverInputV3,
+  type CanonicalMacroFeaturesSectionV3,
+} from "../../engine/macroFeatures";
+
 export type OilMacroDirection =
   | "bullish"
   | "bearish"
@@ -37,6 +43,13 @@ export type OilMacroInput = {
    */
   usdChangePct:
     number | null;
+
+  observedAt?: {
+    readonly inventories?: string | null;
+    readonly production?: string | null;
+    readonly globalDemand?: string | null;
+    readonly usd?: string | null;
+  };
 };
 
 export type OilMacroDriverResult = {
@@ -70,6 +83,8 @@ export type OilMacroResult = {
   };
 
   reasons: string[];
+
+  canonical: CanonicalMacroFeaturesSectionV3;
 };
 
 /*
@@ -86,7 +101,7 @@ export type OilMacroResult = {
  * EIA / official macro data without changing the Core.
  */
 
-const OIL_MACRO_WEIGHTS = {
+export const OIL_MACRO_WEIGHTS = {
   inventories: 0.35,
   production: 0.25,
   globalDemand: 0.25,
@@ -180,61 +195,39 @@ export function calculateOilMacro(
     usd,
   };
 
-  let weightedScore = 0;
-  let availableWeight = 0;
+  const canonical = calculateCanonicalMacroFeaturesV3({
+    availability: "applicable",
+    drivers: [
+      canonicalDriver(
+        "inventories",
+        OIL_MACRO_WEIGHTS.inventories,
+        inventories,
+        input.observedAt?.inventories,
+      ),
+      canonicalDriver(
+        "production",
+        OIL_MACRO_WEIGHTS.production,
+        production,
+        input.observedAt?.production,
+      ),
+      canonicalDriver(
+        "global-demand",
+        OIL_MACRO_WEIGHTS.globalDemand,
+        globalDemand,
+        input.observedAt?.globalDemand,
+      ),
+      canonicalDriver(
+        "usd",
+        OIL_MACRO_WEIGHTS.usd,
+        usd,
+        input.observedAt?.usd,
+      ),
+    ],
+  });
 
   if (
-    inventories.available
-  ) {
-    weightedScore +=
-      inventories.score *
-      OIL_MACRO_WEIGHTS
-        .inventories;
-
-    availableWeight +=
-      OIL_MACRO_WEIGHTS
-        .inventories;
-  }
-
-  if (
-    production.available
-  ) {
-    weightedScore +=
-      production.score *
-      OIL_MACRO_WEIGHTS
-        .production;
-
-    availableWeight +=
-      OIL_MACRO_WEIGHTS
-        .production;
-  }
-
-  if (
-    globalDemand.available
-  ) {
-    weightedScore +=
-      globalDemand.score *
-      OIL_MACRO_WEIGHTS
-        .globalDemand;
-
-    availableWeight +=
-      OIL_MACRO_WEIGHTS
-        .globalDemand;
-  }
-
-  if (
-    usd.available
-  ) {
-    weightedScore +=
-      usd.score *
-      OIL_MACRO_WEIGHTS.usd;
-
-    availableWeight +=
-      OIL_MACRO_WEIGHTS.usd;
-  }
-
-  if (
-    availableWeight === 0
+    canonical.availability !== "available" &&
+    canonical.availability !== "partial"
   ) {
     return {
       score: 0,
@@ -251,23 +244,15 @@ export function calculateOilMacro(
       reasons: [
         "Insufficient macro data for Oil analysis.",
       ],
+      canonical,
     };
   }
 
   const normalizedScore =
-    clamp(
-      weightedScore /
-        availableWeight,
-      -1,
-      1,
-    );
+    canonical.data.score;
 
   const coverage =
-    clamp(
-      availableWeight,
-      0,
-      1,
-    );
+    canonical.data.coverage;
 
   const directionalAgreement =
     Math.abs(
@@ -346,7 +331,30 @@ export function calculateOilMacro(
     drivers,
 
     reasons,
+    canonical,
   };
+}
+
+function canonicalDriver(
+  id: string,
+  weight: number,
+  driver: OilMacroDriverResult,
+  observedAt: string | null | undefined,
+): CanonicalMacroDriverInputV3 {
+  return driver.available
+    ? {
+        id,
+        weight,
+        availability: "available",
+        score: driver.score,
+        ...(observedAt ? { observedAt } : {}),
+      }
+    : {
+        id,
+        weight,
+        availability: "unavailable",
+        reason: driver.reason,
+      };
 }
 
 /*

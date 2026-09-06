@@ -56,6 +56,15 @@ assertEqual(full.availability, "available", "full availability");
 assertClose(full.data.coverage, 1, "full coverage");
 assertClose(full.data.score, 0.1, "weighted conditional mean");
 assertClose(full.data.strengthMagnitude, 0.1, "absolute strength");
+assertClose(
+  full.data.drivers.reduce(
+    (sum, driver) =>
+      sum + (driver.availability === "available" ? driver.weightedContribution : 0),
+    0,
+  ),
+  full.data.coverage * full.data.score,
+  "full contribution sum invariant",
+);
 assertEqual(
   full.data.drivers[1]?.availability === "available"
     ? full.data.drivers[1].observedAt
@@ -79,6 +88,15 @@ const partial = requireUsable(
 assertEqual(partial.availability, "partial", "partial availability");
 assertClose(partial.data.coverage, 0.5, "partial coverage");
 assertClose(partial.data.score, 0.5, "partial conditional score");
+assertClose(
+  partial.data.drivers.reduce(
+    (sum, driver) =>
+      sum + (driver.availability === "available" ? driver.weightedContribution : 0),
+    0,
+  ),
+  partial.data.coverage * partial.data.score,
+  "partial contribution sum invariant",
+);
 assertEqual(
   partial.availability === "partial" ? partial.missing.join(",") : null,
   "a-missing,z-missing",

@@ -321,7 +321,15 @@ export interface EngineMacroDriverV3 {
   /** Stable canonical identifier for this normalized macro driver. */
   readonly id: string;
   readonly available: boolean;
+  /** Configured positive share of required macro evidence. */
+  readonly weight?: number;
   readonly direction?: MarketDirection;
+  /** Signed normalized driver evidence before weighting. */
+  readonly score?: number | null;
+  /** Source observation date/period when supplied upstream. */
+  readonly observedAt?: string;
+  /** (weight * score) / total configured required weight. */
+  readonly weightedContribution?: number | null;
   /**
    * @deprecated Compatibility field with asset-specific semantics.
    * Canonical driver score/weight semantics are owned by macroFeatures.

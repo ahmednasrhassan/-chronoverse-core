@@ -65,6 +65,7 @@ const previousGold =
 },
 
 reasons: [],
+canonical: { availability: "not-computed" },
       },
 
       state: "caution",
@@ -127,6 +128,7 @@ const currentGold =
   },
 
   reasons: [],
+  canonical: { availability: "not-computed" },
 },
 
       state: "opportunity",

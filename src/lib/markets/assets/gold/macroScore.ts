@@ -1,6 +1,11 @@
 import type {
   GoldMacroSnapshot,
 } from "./macro";
+import {
+  calculateCanonicalMacroFeaturesV3,
+  type CanonicalMacroDriverInputV3,
+  type CanonicalMacroFeaturesSectionV3,
+} from "../../engine/macroFeatures";
 
 export type GoldMacroBias =
   | "bullish"
@@ -28,7 +33,16 @@ export type GoldMacroScoreResult = {
   };
 
   reasons: string[];
+
+  canonical: CanonicalMacroFeaturesSectionV3;
 };
+
+export const GOLD_MACRO_WEIGHTS = {
+  realYields: 0.4,
+  nominalYields: 0.1,
+  usd: 0.3,
+  inflationExpectations: 0.2,
+} as const;
 
 /**
  * Chronoverse Capital
@@ -49,9 +63,6 @@ export type GoldMacroScoreResult = {
 export function calculateGoldMacroScore(
   snapshot: GoldMacroSnapshot,
 ): GoldMacroScoreResult {
-  let weightedScore = 0;
-  let availableWeight = 0;
-
   const reasons: string[] = [];
 
   const realYield10Y =
@@ -66,6 +77,16 @@ export function calculateGoldMacroScore(
   const inflationExpectation10Y =
     snapshot.inflationExpectation10Y?.value ??
     null;
+  const realYieldScore =
+    realYield10Y === null ? null : scoreRealYield(realYield10Y);
+  const nominalYieldScore =
+    nominalYield10Y === null ? null : scoreNominalYield(nominalYield10Y);
+  const usdScore =
+    dollarIndexProxy === null ? null : scoreDollarIndex(dollarIndexProxy);
+  const inflationExpectationScore =
+    inflationExpectation10Y === null
+      ? null
+      : scoreInflationExpectation(inflationExpectation10Y);
 
   /*
    * ======================================================
@@ -77,30 +98,20 @@ export function calculateGoldMacroScore(
    * ======================================================
    */
 
-  if (realYield10Y !== null) {
-    const weight = 0.4;
-
-    availableWeight += weight;
-
-    const factorScore =
-      scoreRealYield(realYield10Y);
-
-    weightedScore +=
-      factorScore * weight;
-
-    if (factorScore >= 0.5) {
+  if (realYieldScore !== null) {
+    if (realYieldScore >= 0.5) {
       reasons.push(
         "Low real yields provide a supportive macro backdrop for gold.",
       );
-    } else if (factorScore > 0) {
+    } else if (realYieldScore > 0) {
       reasons.push(
         "Real yields are moderately supportive for gold.",
       );
-    } else if (factorScore <= -0.5) {
+    } else if (realYieldScore <= -0.5) {
       reasons.push(
         "Elevated real yields create meaningful pressure on gold.",
       );
-    } else if (factorScore < 0) {
+    } else if (realYieldScore < 0) {
       reasons.push(
         "Real yields create moderate pressure on gold.",
       );
@@ -121,32 +132,20 @@ export function calculateGoldMacroScore(
    * ======================================================
    */
 
-  if (dollarIndexProxy !== null) {
-    const weight = 0.3;
-
-    availableWeight += weight;
-
-    const factorScore =
-      scoreDollarIndex(
-        dollarIndexProxy,
-      );
-
-    weightedScore +=
-      factorScore * weight;
-
-    if (factorScore >= 0.5) {
+  if (usdScore !== null) {
+    if (usdScore >= 0.5) {
       reasons.push(
         "A relatively soft dollar environment is supportive for gold.",
       );
-    } else if (factorScore > 0) {
+    } else if (usdScore > 0) {
       reasons.push(
         "Dollar conditions are moderately supportive for gold.",
       );
-    } else if (factorScore <= -0.5) {
+    } else if (usdScore <= -0.5) {
       reasons.push(
         "A strong dollar environment is a significant headwind for gold.",
       );
-    } else if (factorScore < 0) {
+    } else if (usdScore < 0) {
       reasons.push(
         "Dollar conditions create moderate pressure on gold.",
       );
@@ -169,29 +168,17 @@ export function calculateGoldMacroScore(
    */
 
   if (
-    inflationExpectation10Y !== null
+    inflationExpectationScore !== null
   ) {
-    const weight = 0.2;
-
-    availableWeight += weight;
-
-    const factorScore =
-      scoreInflationExpectation(
-        inflationExpectation10Y,
-      );
-
-    weightedScore +=
-      factorScore * weight;
-
-    if (factorScore >= 0.5) {
+    if (inflationExpectationScore >= 0.5) {
       reasons.push(
         "Elevated inflation expectations strengthen gold's hedge appeal.",
       );
-    } else if (factorScore > 0) {
+    } else if (inflationExpectationScore > 0) {
       reasons.push(
         "Inflation expectations provide moderate support for gold.",
       );
-    } else if (factorScore < 0) {
+    } else if (inflationExpectationScore < 0) {
       reasons.push(
         "Contained inflation expectations reduce macro hedge demand for gold.",
       );
@@ -212,24 +199,12 @@ export function calculateGoldMacroScore(
    * ======================================================
    */
 
-  if (nominalYield10Y !== null) {
-    const weight = 0.1;
-
-    availableWeight += weight;
-
-    const factorScore =
-      scoreNominalYield(
-        nominalYield10Y,
-      );
-
-    weightedScore +=
-      factorScore * weight;
-
-    if (factorScore > 0) {
+  if (nominalYieldScore !== null) {
+    if (nominalYieldScore > 0) {
       reasons.push(
         "Nominal Treasury yields remain relatively supportive for gold.",
       );
-    } else if (factorScore < 0) {
+    } else if (nominalYieldScore < 0) {
       reasons.push(
         "Elevated nominal Treasury yields create an additional gold headwind.",
       );
@@ -240,13 +215,41 @@ export function calculateGoldMacroScore(
     }
   }
 
-  /*
-   * ======================================================
-   * NO MACRO DATA
-   * ======================================================
-   */
+  const canonicalDrivers: readonly CanonicalMacroDriverInputV3[] = [
+    canonicalDriver(
+      "real-yields",
+      GOLD_MACRO_WEIGHTS.realYields,
+      realYieldScore,
+      snapshot.realYield10Y?.date,
+    ),
+    canonicalDriver(
+      "nominal-yields",
+      GOLD_MACRO_WEIGHTS.nominalYields,
+      nominalYieldScore,
+      snapshot.nominalYield10Y?.date,
+    ),
+    canonicalDriver(
+      "usd",
+      GOLD_MACRO_WEIGHTS.usd,
+      usdScore,
+      snapshot.dollarIndexProxy?.date,
+    ),
+    canonicalDriver(
+      "inflation-expectations",
+      GOLD_MACRO_WEIGHTS.inflationExpectations,
+      inflationExpectationScore,
+      snapshot.inflationExpectation10Y?.date,
+    ),
+  ];
+  const canonical = calculateCanonicalMacroFeaturesV3({
+    availability: "applicable",
+    drivers: canonicalDrivers,
+  });
 
-  if (availableWeight === 0) {
+  if (
+    canonical.availability !== "available" &&
+    canonical.availability !== "partial"
+  ) {
     return {
       score: 0,
       bias: "neutral",
@@ -265,6 +268,7 @@ export function calculateGoldMacroScore(
       reasons: [
         "Insufficient macroeconomic data for gold macro scoring.",
       ],
+      canonical,
     };
   }
 
@@ -275,12 +279,7 @@ export function calculateGoldMacroScore(
    */
 
   const normalizedScore =
-    clamp(
-      weightedScore /
-        availableWeight,
-      -1,
-      1,
-    );
+    canonical.data.score;
 
   /*
    * ======================================================
@@ -326,11 +325,7 @@ export function calculateGoldMacroScore(
    */
 
   const coverage =
-    clamp(
-      availableWeight,
-      0,
-      1,
-    );
+    canonical.data.coverage;
 
   const confidence =
     clamp(
@@ -367,7 +362,30 @@ export function calculateGoldMacroScore(
     },
 
     reasons,
+    canonical,
   };
+}
+
+function canonicalDriver(
+  id: string,
+  weight: number,
+  score: number | null,
+  observedAt: string | undefined,
+): CanonicalMacroDriverInputV3 {
+  return score === null
+    ? {
+        id,
+        weight,
+        availability: "unavailable",
+        reason: `${id} evidence is unavailable.`,
+      }
+    : {
+        id,
+        weight,
+        availability: "available",
+        score,
+        ...(observedAt ? { observedAt } : {}),
+      };
 }
 
 /**
