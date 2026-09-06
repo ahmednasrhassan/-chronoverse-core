@@ -1,7 +1,4 @@
 import type {
-  MarketTechnicalSnapshot,
-} from "../core/intelligenceEngine";
-import type {
   MarketStateResult,
 } from "../core/marketState";
 import type {
@@ -11,56 +8,25 @@ import type {
 import type {
   MarketRiskResult,
 } from "../core/riskEngine";
-import type {
-  MarketSignalResult,
-} from "../core/signalEngine";
 import {
-  calculateEngineConfidenceV3,
-} from "../core/confidenceEngine";
-import {
-  calculateEngineContradictionV3,
-} from "../core/contradictionEngine";
-import {
-  calculateEngineDecisionV3,
-} from "../core/decisionEngine";
-import type {
-  HistoricalDataWindow,
-  MarketDataProvenance,
-  MarketDataStatus,
-} from "../core/types";
-import {
-  ENGINE_RESULT_VERSION,
   type EngineAssetId,
   type EngineCrossAssetSectionV3,
   type EngineMacroV3,
-  type EngineMarketDataV3,
   type EngineResultV3,
   type EngineSerializable,
 } from "./contracts";
+import {
+  calculateEngineResultV3,
+  type EngineCalculationIntelligenceV3,
+  type EngineCalculationMarketDataV3,
+} from "./calculateEngineResult";
 
-export type EngineRuntimeMarketData = {
-  readonly provider: string | null;
-  readonly status: MarketDataStatus;
-  readonly provenance?: MarketDataProvenance;
-  readonly window?: HistoricalDataWindow;
-  readonly candles: readonly {
-    readonly time: number;
-    readonly close: number;
-  }[];
-};
+export type EngineRuntimeMarketData = EngineCalculationMarketDataV3;
 
 type EngineRuntimeIntelligence<
   TState extends MarketStateResult["state"],
   TRiskLevel extends string,
-> = {
-  readonly technical: MarketTechnicalSnapshot;
-  readonly signal: MarketSignalResult;
-  readonly risk: MarketRiskResult & {
-    readonly level: TRiskLevel;
-  };
-  readonly state: TState;
-  readonly confidence: number;
-};
+> = EngineCalculationIntelligenceV3<TState, TRiskLevel>;
 
 export type EngineRuntimeInput<
   TMacroInput,
@@ -126,16 +92,11 @@ export type EngineRuntimeOutput<
   >;
 };
 
-const NOT_COMPUTED = {
-  availability: "not-computed",
-} as const;
-
 /**
- * Shared Engine V3 runtime boundary.
+ * Legacy-compatible Engine V3 runtime boundary.
  *
- * Provider access, asset interpretation and persistence details are injected.
- * The boundary performs one analytical pass and constructs the canonical V3
- * result from that same pass.
+ * Gold/Oil Regime-history I/O remains here until those callers are migrated.
+ * Canonical result algebra is delegated to the pure calculation boundary.
  */
 export async function runEngineRuntimeV3<
   TMacroInput,
@@ -195,149 +156,30 @@ export async function runEngineRuntimeV3<
     currentSnapshot,
     previousSnapshot,
   );
-
-  const latestTimestampSeconds =
-    input.marketData.window?.lastTimestamp ??
-    input.marketData.candles.at(-1)?.time;
-  const provider = input.marketData.provider;
-  const status = input.marketData.status;
-  const marketData: EngineMarketDataV3 =
-    provider === null || status === "unavailable"
-      ? {
-          availability: "unavailable",
-          provider,
-          status: "unavailable",
-          provenance: input.marketData.provenance,
-          historicalWindow: input.marketData.window,
-          latestTimestampSeconds,
-        }
-      : {
-          availability:
-            status === "realtime" ? "available" : "partial",
-          provider,
-          status,
-          provenance: input.marketData.provenance,
-          historicalWindow: input.marketData.window,
-          latestTimestampSeconds,
-        };
-  const technical = {
-    availability: "available",
-    data: intelligence.technical,
-  } as const;
-  const signal = {
-    availability: "available",
-    data: intelligence.signal,
-  } as const;
-  const macro = input.buildMacro(intelligence);
-  const suppliedCrossAsset = input.crossAsset === undefined
-    ? undefined
-    : validateCanonicalCrossAssetSection(input.crossAsset);
-  const crossAsset = suppliedCrossAsset ?? NOT_COMPUTED;
-  const confidenceMacroInput =
-    input.macroApplicability === "not-applicable"
-      ? {
-          applicability: "not-applicable" as const,
-        }
-      : {
-          applicability: "applicable" as const,
-          section: macro,
-        };
-  const contradiction =
-    calculateEngineContradictionV3({
-      signal,
-      macro: confidenceMacroInput,
-      ...(suppliedCrossAsset === undefined
-        ? {}
-        : { crossAsset: suppliedCrossAsset }),
-    });
-  const calculatedConfidence =
-    calculateEngineConfidenceV3({
-      marketData,
-      minimumRequiredHistory:
-        input.minimumRequiredHistory,
-      technical,
-      signal,
-      macro: confidenceMacroInput,
-      contradiction,
-      ...(suppliedCrossAsset === undefined
-        ? {}
-        : { crossAsset: suppliedCrossAsset }),
-    });
-  const confidence = {
-    availability: "available",
-    data: calculatedConfidence,
-  } as const;
-  const decision =
-    calculateEngineDecisionV3({
-      signal,
-      macro: confidenceMacroInput,
-      confidence,
-    });
-
-  const engineResult: EngineResultV3<
-    TMacroDetails,
-    TMigrationDetails,
-    TState,
-    TRiskLevel
-  > = {
-    version: ENGINE_RESULT_VERSION,
+  const macro = input.macroApplicability === "not-applicable"
+    ? {
+        availability: "not-applicable" as const,
+        reason: "Macro evidence is not applicable to this asset.",
+      }
+    : input.buildMacro(intelligence);
+  const engineResult = calculateEngineResultV3({
     asset: input.asset,
     symbol: input.symbol,
     evaluatedAt,
-    marketData,
-    technical,
+    minimumRequiredHistory: input.minimumRequiredHistory,
+    marketData: input.marketData,
+    intelligence,
     macro,
-    signal: intelligence.signal,
-    risk: intelligence.risk,
-    state: {
-      state: intelligence.state,
-      confidence: intelligence.confidence,
-    },
     regime: {
       availability: "available",
       memory: regimeMemory,
     },
     migrationDetails: input.migrationDetails,
-    crossAsset,
-    positioning: NOT_COMPUTED,
-    scenario: NOT_COMPUTED,
-    contradiction,
-    confidence,
-    decision,
-    decisionLifecycle: NOT_COMPUTED,
-    recommendation: NOT_COMPUTED,
-  };
+    ...(input.crossAsset === undefined ? {} : { crossAsset: input.crossAsset }),
+  });
 
   return {
     intelligence,
     engineResult,
   };
-}
-
-function validateCanonicalCrossAssetSection(
-  section: EngineCrossAssetSectionV3,
-): EngineCrossAssetSectionV3 {
-  if (section.availability !== "available" && section.availability !== "partial") {
-    return section;
-  }
-
-  const { score, coverage } = section.data;
-
-  if (
-    !Number.isFinite(score) ||
-    score < -1 ||
-    score > 1 ||
-    !Number.isFinite(coverage) ||
-    coverage <= 0 ||
-    coverage > 1 ||
-    (section.availability === "available" && coverage !== 1) ||
-    (section.availability === "partial" && coverage >= 1)
-  ) {
-    return {
-      availability: "unavailable",
-      reason: "Canonical Cross-Asset score and coverage must be finite and normalized.",
-    };
-  }
-
-  return section;
 }

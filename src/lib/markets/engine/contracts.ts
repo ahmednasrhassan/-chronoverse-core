@@ -376,6 +376,21 @@ export type EngineMacroV3<TDetails = never> = EngineDataSection<
   EngineMacroSnapshotV3<TDetails>
 >;
 
+/**
+ * Canonical Macro lifecycle carried by EngineResultV3.
+ * Not-applicable is excluded from evidence requirements; not-computed remains
+ * a distinct deferred state for otherwise applicable future work.
+ */
+export type EngineMacroSectionV3<TDetails = never> =
+  | EngineMacroV3<TDetails>
+  | {
+      readonly availability: "not-applicable";
+      readonly reason?: string;
+    }
+  | {
+      readonly availability: "not-computed";
+    };
+
 export type EngineCrossAssetExpectedSignV3 =
   | "direct"
   | "inverse";
@@ -488,7 +503,7 @@ export interface EngineResultV3<
   readonly evaluatedAt: string;
   readonly marketData: EngineMarketDataV3;
   readonly technical: EngineDataSection<MarketTechnicalSnapshot>;
-  readonly macro: EngineMacroV3<TMacroDetails>;
+  readonly macro: EngineMacroSectionV3<TMacroDetails>;
   readonly signal: MarketSignalResult;
   readonly risk: MarketRiskResult;
   readonly state: MarketStateResult;

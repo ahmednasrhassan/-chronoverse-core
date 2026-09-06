@@ -7,6 +7,7 @@ import type { MarketSignalResult } from "../../core/signalEngine";
 import {
   ENGINE_RESULT_VERSION,
   type EngineCrossAssetSectionV3,
+  type EngineMacroSectionV3,
   type EngineMarketDataV3,
   type EngineRegimeV3,
   type EngineResultV3,
@@ -21,6 +22,14 @@ const crossAssetLifecycleContract = [
 ] as const satisfies readonly EngineCrossAssetSectionV3[];
 
 void crossAssetLifecycleContract;
+
+const macroLifecycleContract = [
+  { availability: "not-applicable", reason: "No canonical Macro model" },
+  { availability: "unavailable", reason: "Applicable Macro data is unavailable" },
+  { availability: "not-computed" },
+] as const satisfies readonly EngineMacroSectionV3[];
+
+void macroLifecycleContract;
 
 type GoldMacroCompatibility = Pick<
   NonNullable<GoldIntelligenceResult["macro"]>,
