@@ -355,6 +355,11 @@ async function main(): Promise<void> {
     "not-computed",
     "recommendation lifecycle",
   );
+  assertEqual(
+    applicable.runtime.engineResult.decisionLifecycle.availability,
+    "not-computed",
+    "raw runtime Decision Lifecycle",
+  );
   assertEqual(alignedContradiction.score, 0, "aligned contradiction score");
   assertEqual(alignedContradiction.conflicts.length, 0, "aligned conflicts");
   assertEqual(

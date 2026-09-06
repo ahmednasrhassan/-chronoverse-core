@@ -36,6 +36,7 @@ const futureLayersNotComputed = {
   contradiction: { availability: "not-computed" },
   confidence: { availability: "not-computed" },
   decision: { availability: "not-computed" },
+  decisionLifecycle: { availability: "not-computed" },
   recommendation: { availability: "not-computed" },
 } as const;
 

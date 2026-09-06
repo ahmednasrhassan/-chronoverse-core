@@ -291,6 +291,7 @@ export async function runEngineRuntimeV3<
     contradiction,
     confidence,
     decision,
+    decisionLifecycle: NOT_COMPUTED,
     recommendation: NOT_COMPUTED,
   };
 

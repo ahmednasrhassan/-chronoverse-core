@@ -6,8 +6,17 @@ import {
   runEngineRuntimeV3,
 } from "../../engine/runtime";
 
+import {
+  integrateCanonicalDecisionLifecycleV3,
+} from "../../engine/decisionLifecycleRuntime";
+
+import {
+  advanceCanonicalDecisionSnapshot,
+} from "../../persistence/decisionSnapshotRedis";
+
 import type {
   EngineMacroV3,
+  EngineResultV3,
 } from "../../engine/contracts";
 
 import type {
@@ -50,6 +59,14 @@ export type LiveOilIntelligenceResult =
   OilIntelligenceResult & {
     regimeMemory:
       OilRegimeMemoryResult;
+
+    engineResult:
+      EngineResultV3<
+        OilMacroCompatibility,
+        never,
+        OilIntelligenceResult["state"],
+        OilIntelligenceResult["risk"]["level"]
+      >;
 
     marketData: {
       provider: string | null;
@@ -129,13 +146,26 @@ export async function getLiveOilIntelligence():
         appendOilRegimeSnapshot,
     });
 
+  const decisionIntegration =
+    await integrateCanonicalDecisionLifecycleV3({
+      assetId: runtime.engineResult.asset,
+      computedAt: runtime.engineResult.evaluatedAt,
+      currentDecision: runtime.engineResult.decision,
+      advanceSnapshot:
+        advanceCanonicalDecisionSnapshot,
+    });
+  const engineResult = {
+    ...runtime.engineResult,
+    ...decisionIntegration,
+  };
+
   const intelligence =
     runtime.intelligence;
 
   const regimeMemory =
-    runtime.engineResult.regime.availability ===
+    engineResult.regime.availability ===
     "available"
-      ? runtime.engineResult.regime.memory
+      ? engineResult.regime.memory
       : null;
 
   if (regimeMemory === null) {
@@ -149,18 +179,20 @@ export async function getLiveOilIntelligence():
 
     regimeMemory,
 
+    engineResult,
+
     marketData: {
       provider:
-        runtime.engineResult.marketData.provider,
+        engineResult.marketData.provider,
 
       status:
-        runtime.engineResult.marketData.status,
+        engineResult.marketData.status,
 
       provenance:
-        runtime.engineResult.marketData.provenance,
+        engineResult.marketData.provenance,
 
       window:
-        runtime.engineResult.marketData.historicalWindow,
+        engineResult.marketData.historicalWindow,
     },
   };
 }

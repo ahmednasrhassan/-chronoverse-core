@@ -13,8 +13,17 @@ import {
   runEngineRuntimeV3,
 } from "../../engine/runtime";
 
+import {
+  integrateCanonicalDecisionLifecycleV3,
+} from "../../engine/decisionLifecycleRuntime";
+
+import {
+  advanceCanonicalDecisionSnapshot,
+} from "../../persistence/decisionSnapshotRedis";
+
 import type {
   EngineMacroV3,
+  EngineResultV3,
 } from "../../engine/contracts";
 
 import type {
@@ -49,6 +58,13 @@ export type FullLiveGoldIntelligenceResult =
   GoldIntelligenceResult & {
     regimeMemory:
       GoldRegimeMemoryResult;
+    engineResult:
+      EngineResultV3<
+        GoldMacroCompatibility,
+        never,
+        GoldIntelligenceResult["state"],
+        GoldIntelligenceResult["risk"]["level"]
+      >;
   };
 
 type GoldRuntimeIntelligence =
@@ -167,10 +183,23 @@ export async function getFullLiveGoldIntelligence():
         appendGoldRegimeSnapshot,
     });
 
+  const decisionIntegration =
+    await integrateCanonicalDecisionLifecycleV3({
+      assetId: runtime.engineResult.asset,
+      computedAt: runtime.engineResult.evaluatedAt,
+      currentDecision: runtime.engineResult.decision,
+      advanceSnapshot:
+        advanceCanonicalDecisionSnapshot,
+    });
+  const engineResult = {
+    ...runtime.engineResult,
+    ...decisionIntegration,
+  };
+
   const regimeMemory =
-    runtime.engineResult.regime.availability ===
+    engineResult.regime.availability ===
     "available"
-      ? runtime.engineResult.regime.memory
+      ? engineResult.regime.memory
       : null;
 
   if (regimeMemory === null) {
@@ -196,6 +225,7 @@ export async function getFullLiveGoldIntelligence():
     ...intelligence,
 
     regimeMemory,
+    engineResult,
   };
 }
 

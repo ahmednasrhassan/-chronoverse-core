@@ -390,5 +390,6 @@ export interface EngineResultV3<
   readonly contradiction: EngineContradictionSectionV3;
   readonly confidence: EngineConfidenceSectionV3;
   readonly decision: EngineDecisionSectionV3;
+  readonly decisionLifecycle: EngineDecisionLifecycleSectionV3;
   readonly recommendation: EngineDeferredSection;
 }
