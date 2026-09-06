@@ -41,7 +41,8 @@ export type MarketStateMacro = {
     | "neutral"
     | "bearish";
 
-  confidence: number;
+  /** Signed conditional macro evidence strength. */
+  score: number;
 
   coverage: number;
 };
@@ -135,7 +136,7 @@ export function resolveMarketState(
       macro !== null &&
       macro.bias ===
         "bullish" &&
-      macro.confidence >=
+      calculateMacroEvidenceStrength(macro) >=
         0.65
     ) {
       return "caution";
@@ -165,7 +166,7 @@ export function resolveMarketState(
       macro !== null &&
       macro.bias ===
         "bearish" &&
-      macro.confidence >=
+      calculateMacroEvidenceStrength(macro) >=
         0.65
     ) {
       return "caution";
@@ -231,15 +232,14 @@ export function calculateMarketStateConfidence(
   }
 
   /*
-   * MACRO QUALITY
+   * MACRO EVIDENCE
    *
-   * Confidence only contributes in
+   * Conditional score strength contributes in
    * proportion to actual data coverage.
    */
 
-  const macroQuality =
-    macro.confidence *
-    macro.coverage;
+  const macroEvidenceStrength =
+    calculateMacroEvidenceStrength(macro);
 
   /*
    * THREE-LAYER CONFIDENCE
@@ -250,7 +250,7 @@ export function calculateMarketStateConfidence(
       0.6 +
     riskQuality *
       0.2 +
-    macroQuality *
+    macroEvidenceStrength *
       0.2;
 
   return Number(
@@ -275,5 +275,15 @@ function clamp(
       min,
     ),
     max,
+  );
+}
+
+/** Score supplies strength; coverage scales it exactly once. */
+function calculateMacroEvidenceStrength(
+  macro: MarketStateMacro,
+): number {
+  return (
+    clamp(Math.abs(macro.score), 0, 1) *
+    clamp(macro.coverage, 0, 1)
   );
 }

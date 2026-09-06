@@ -177,9 +177,11 @@ export const goldLikeEngineResult = {
     data: {
       direction: "bullish",
       score: 0.35,
+      strengthMagnitude: 0.35,
       strength: "moderate",
       confidence: 0.65,
       coverage: 1,
+      dataQuality: { availability: "not-computed" },
       drivers: [
         { id: "real-yield-10y", available: true, contribution: 0.2 },
         { id: "dollar-index", available: true, contribution: 0.15 },
@@ -233,8 +235,10 @@ export const oilLikeEngineResult = {
     data: {
       direction: "neutral",
       score: 0,
+      strengthMagnitude: 0,
       confidence: 0.45,
       coverage: 0.75,
+      dataQuality: { availability: "not-computed" },
       drivers: [
         { id: "inventories", available: true, direction: "bearish" },
         { id: "production", available: true, direction: "neutral" },

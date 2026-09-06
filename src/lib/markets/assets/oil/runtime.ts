@@ -221,8 +221,12 @@ function buildOilEngineMacro(
   const data = {
     direction: macro.direction,
     score: macro.score,
+    strengthMagnitude: Math.abs(macro.score),
     confidence: macro.confidence,
     coverage: macro.coverage,
+    dataQuality: {
+      availability: "not-computed" as const,
+    },
     drivers: drivers.map(([id, driver]) => ({
       id,
       available: driver.available,

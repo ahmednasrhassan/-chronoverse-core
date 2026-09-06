@@ -322,19 +322,34 @@ export interface EngineMacroDriverV3 {
   readonly id: string;
   readonly available: boolean;
   readonly direction?: MarketDirection;
-  /** Signed contribution normalized to the inclusive range -1..1. */
+  /**
+   * @deprecated Compatibility field with asset-specific semantics.
+   * Canonical driver score/weight semantics are owned by macroFeatures.
+   */
   readonly contribution?: number | null;
   readonly reason?: string;
 }
 
+export type EngineMacroDataQualitySectionV3 =
+  | EngineDataSection<number>
+  | { readonly availability: "not-computed" };
+
 export interface EngineMacroSnapshotV3<TDetails = never> {
   readonly direction: MarketDirection;
+  /** Signed conditional evidence strength normalized to -1..1. */
   readonly score: number;
+  /** Absolute conditional evidence strength normalized to 0..1. */
+  readonly strengthMagnitude: number;
   readonly strength?: EngineMacroStrength;
-  /** Confidence normalized to the inclusive range 0..1. */
-  readonly confidence: number;
-  /** Available-input coverage normalized to the inclusive range 0..1. */
-  readonly coverage?: number;
+  /**
+   * @deprecated Compatibility only. This value is not canonical confidence
+   * and must not be consumed by Engine V3 calculations.
+   */
+  readonly confidence?: number;
+  /** Required weighted evidence completeness normalized to 0..1. */
+  readonly coverage: number;
+  /** Data quality/freshness is independent from score and coverage. */
+  readonly dataQuality: EngineMacroDataQualitySectionV3;
   readonly drivers: readonly EngineMacroDriverV3[];
   readonly reasons: readonly string[];
   readonly migrationDetails?: EngineSerializable<TDetails>;

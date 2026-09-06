@@ -150,7 +150,7 @@ runCase(
 
     macro: {
       bias: "bullish",
-      confidence: 0.65,
+      score: 0.65,
       coverage: 1,
     },
   },
@@ -178,7 +178,7 @@ runCase(
 
     macro: {
       bias: "bearish",
-      confidence: 0.65,
+      score: -0.65,
       coverage: 1,
     },
   },
@@ -205,7 +205,7 @@ runCase(
 
     macro: {
       bias: "bearish",
-      confidence: 0.6499,
+      score: -0.6499,
       coverage: 1,
     },
   },
@@ -240,7 +240,7 @@ runCase(
  * 8. Macro coverage must reduce its
  * contribution to combined confidence.
  *
- * macroQuality = 0.80 * 0.50 = 0.40
+ * macroEvidenceStrength = |0.80| * 0.50 = 0.40
  *
  * confidence:
  * 0.60 * 0.60 +
@@ -262,14 +262,74 @@ runCase(
     },
 
     macro: {
-      bias: "neutral",
-      confidence: 0.8,
+      bias: "bullish",
+      score: 0.8,
       coverage: 0.5,
     },
   },
   "caution",
   0.58,
 );
+
+/*
+ * 9. Coverage is applied once: the same score at half coverage
+ * contributes half as much, not one quarter as much.
+ */
+runCase(
+  "full canonical macro coverage",
+  {
+    signal: { direction: "neutral", confidence: 0.6 },
+    risk: { level: "moderate", score: 0.3 },
+    macro: { bias: "bullish", score: 0.8, coverage: 1 },
+  },
+  "caution",
+  0.66,
+);
+
+runCase(
+  "half canonical macro coverage",
+  {
+    signal: { direction: "neutral", confidence: 0.6 },
+    risk: { level: "moderate", score: 0.3 },
+    macro: { bias: "bullish", score: 0.8, coverage: 0.5 },
+  },
+  "caution",
+  0.58,
+);
+
+/* 10. No macro evidence uses the established macro-free path. */
+runCase(
+  "unavailable canonical macro",
+  {
+    signal: { direction: "neutral", confidence: 0.6 },
+    risk: { level: "moderate", score: 0.3 },
+    macro: null,
+  },
+  "caution",
+  0.625,
+);
+
+/* 11. A legacy confidence property cannot affect canonical Market State. */
+{
+  const macroLowLegacyConfidence = {
+    bias: "bullish" as const,
+    score: 0.8,
+    coverage: 0.5,
+    confidence: 0,
+  };
+  const macroHighLegacyConfidence = {
+    ...macroLowLegacyConfidence,
+    confidence: 1,
+  };
+  const signal = { direction: "neutral" as const, confidence: 0.6 };
+  const risk = { level: "moderate" as const, score: 0.3 };
+
+  assertEqual(
+    calculateMarketState({ signal, risk, macro: macroLowLegacyConfidence }).confidence,
+    calculateMarketState({ signal, risk, macro: macroHighLegacyConfidence }).confidence,
+    "legacy macro confidence independence",
+  );
+}
 
 console.log("");
 console.log(

@@ -298,9 +298,13 @@ function buildGoldEngineMacro(
   const data = {
     direction: macro.bias,
     score: macro.score,
+    strengthMagnitude: Math.abs(macro.score),
     strength: macro.strength,
     confidence: macro.confidence,
     coverage: macro.coverage,
+    dataQuality: {
+      availability: "not-computed" as const,
+    },
     drivers: drivers.map(([id, value]) => ({
       id,
       available: value !== null,

@@ -46,8 +46,9 @@ function macro(
             ? "bearish"
             : "neutral",
       score,
-      confidence: 0.01,
+      strengthMagnitude: Math.abs(score),
       coverage,
+      dataQuality: { availability: "not-computed" },
       drivers: [],
       reasons: [],
     },

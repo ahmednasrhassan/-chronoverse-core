@@ -92,8 +92,8 @@ export function calculateOilIntelligence(
             bias:
               macro.direction,
 
-            confidence:
-              macro.confidence,
+            score:
+              macro.score,
 
             coverage:
               macro.coverage,

@@ -102,8 +102,9 @@ function macro(
       data: {
         direction: score > 0 ? "bullish" : score < 0 ? "bearish" : "neutral",
         score,
-        confidence: 0.01,
+        strengthMagnitude: Math.abs(score),
         coverage,
+        dataQuality: { availability: "not-computed" },
         drivers: [],
         reasons: [],
       },
@@ -197,8 +198,9 @@ function requirePartial<T>(
         data: {
           direction: "bearish",
           score: -1,
-          confidence: 0.01,
+          strengthMagnitude: 1,
           coverage: 0.5,
+          dataQuality: { availability: "not-computed" },
           drivers: [],
           reasons: [],
         },
@@ -428,5 +430,34 @@ assertClose(
   }), "negative symmetry"),
   "bullish/bearish symmetry",
 );
+
+// 21. Macro strength does not alter Data Confidence completeness.
+{
+  const weak = requirePartial(
+    calculateEngineConfidenceV3(input({ macro: macro(0.1, 0.5) })).data,
+    "weak macro data confidence",
+  );
+  const strong = requirePartial(
+    calculateEngineConfidenceV3(input({ macro: macro(1, 0.5) })).data,
+    "strong macro data confidence",
+  );
+
+  assertEqual(weak.data.components.macro.availability, "available", "weak macro component");
+  assertEqual(strong.data.components.macro.availability, "available", "strong macro component");
+  assertEqual(
+    weak.data.components.macro.availability === "available"
+      ? weak.data.components.macro.data
+      : null,
+    0.5,
+    "weak macro coverage confidence",
+  );
+  assertEqual(
+    strong.data.components.macro.availability === "available"
+      ? strong.data.components.macro.data
+      : null,
+    0.5,
+    "strong macro coverage confidence",
+  );
+}
 
 console.log("PASS: Engine V3 confidence calculation");

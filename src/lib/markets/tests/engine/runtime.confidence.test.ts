@@ -107,8 +107,9 @@ function normalizedMacro(
   const data = {
     direction: "bullish",
     score,
-    confidence: 0.1,
+    strengthMagnitude: Math.abs(score),
     coverage,
+    dataQuality: { availability: "not-computed" },
     drivers: [],
     reasons: ["Test macro"],
   } as const;

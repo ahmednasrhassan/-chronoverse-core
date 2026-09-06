@@ -57,8 +57,9 @@ function macro(
           ? "bearish" as const
           : "neutral" as const,
     score,
-    confidence: 0.01,
+    strengthMagnitude: Math.abs(score),
     coverage,
+    dataQuality: { availability: "not-computed" as const },
     drivers: [],
     reasons: [],
   };
