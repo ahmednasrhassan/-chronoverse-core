@@ -1,4 +1,4 @@
-import { client } from "../sanity/client";
+import { client, freshClient } from "../sanity/client";
 import { urlForOptimized } from "../sanity/image";
 import { getReadingTime } from "./readingTime";
 import {
@@ -314,7 +314,7 @@ export async function getLatestSanityArticles(limit: number = 4): Promise<Conten
   const query = `*[${PUBLISHED_POST_FILTER}] | order(publishedAt desc)[0...${limit}] ${POST_PROJECTION}`;
 
   try {
-    const posts = await client.fetch<SanityRawPost[]>(query);
+    const posts = await freshClient.fetch<SanityRawPost[]>(query);
     if (posts && posts.length > 0) {
       return posts.map(mapSanityPost);
     }
@@ -462,4 +462,3 @@ export async function getAllCategories(): Promise<{ title: string; slug: string 
     return [];
   }
 }
-
