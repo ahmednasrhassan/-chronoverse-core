@@ -31,6 +31,7 @@ import type {
 import {
   ENGINE_RESULT_VERSION,
   type EngineAssetId,
+  type EngineCrossAssetSectionV3,
   type EngineMacroV3,
   type EngineMarketDataV3,
   type EngineResultV3,
@@ -105,6 +106,8 @@ export type EngineRuntimeInput<
     previous: MarketRegimeSnapshot<TState, TRiskLevel> | null,
   ) => Promise<void>;
   readonly migrationDetails?: EngineSerializable<TMigrationDetails>;
+  /** Optional already-computed evidence. This runtime never fetches or calculates it. */
+  readonly crossAsset?: EngineCrossAssetSectionV3;
 };
 
 export type EngineRuntimeOutput<
@@ -226,6 +229,10 @@ export async function runEngineRuntimeV3<
     data: intelligence.signal,
   } as const;
   const macro = input.buildMacro(intelligence);
+  const suppliedCrossAsset = input.crossAsset === undefined
+    ? undefined
+    : validateCanonicalCrossAssetSection(input.crossAsset);
+  const crossAsset = suppliedCrossAsset ?? NOT_COMPUTED;
   const confidenceMacroInput =
     input.macroApplicability === "not-applicable"
       ? {
@@ -239,6 +246,9 @@ export async function runEngineRuntimeV3<
     calculateEngineContradictionV3({
       signal,
       macro: confidenceMacroInput,
+      ...(suppliedCrossAsset === undefined
+        ? {}
+        : { crossAsset: suppliedCrossAsset }),
     });
   const calculatedConfidence =
     calculateEngineConfidenceV3({
@@ -249,6 +259,9 @@ export async function runEngineRuntimeV3<
       signal,
       macro: confidenceMacroInput,
       contradiction,
+      ...(suppliedCrossAsset === undefined
+        ? {}
+        : { crossAsset: suppliedCrossAsset }),
     });
   const confidence = {
     availability: "available",
@@ -285,7 +298,7 @@ export async function runEngineRuntimeV3<
       memory: regimeMemory,
     },
     migrationDetails: input.migrationDetails,
-    crossAsset: NOT_COMPUTED,
+    crossAsset,
     positioning: NOT_COMPUTED,
     scenario: NOT_COMPUTED,
     contradiction,
@@ -299,4 +312,32 @@ export async function runEngineRuntimeV3<
     intelligence,
     engineResult,
   };
+}
+
+function validateCanonicalCrossAssetSection(
+  section: EngineCrossAssetSectionV3,
+): EngineCrossAssetSectionV3 {
+  if (section.availability !== "available" && section.availability !== "partial") {
+    return section;
+  }
+
+  const { score, coverage } = section.data;
+
+  if (
+    !Number.isFinite(score) ||
+    score < -1 ||
+    score > 1 ||
+    !Number.isFinite(coverage) ||
+    coverage <= 0 ||
+    coverage > 1 ||
+    (section.availability === "available" && coverage !== 1) ||
+    (section.availability === "partial" && coverage >= 1)
+  ) {
+    return {
+      availability: "unavailable",
+      reason: "Canonical Cross-Asset score and coverage must be finite and normalized.",
+    };
+  }
+
+  return section;
 }

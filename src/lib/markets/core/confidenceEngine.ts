@@ -2,6 +2,7 @@ import type {
   EngineConfidenceInputV3,
   EngineConfidenceV3,
   EngineContradictionSectionV3,
+  EngineCrossAssetSectionV3,
   EngineDataSection,
   EngineMacroV3,
   EngineMarketDataV3,
@@ -38,6 +39,7 @@ export interface CalculateEngineConfidenceV3Input<
   readonly signal: EngineDataSection<MarketSignalResult>;
   readonly macro: EngineConfidenceMacroInputV3<TMacroDetails>;
   readonly contradiction: EngineContradictionSectionV3;
+  readonly crossAsset?: EngineCrossAssetSectionV3;
 }
 
 type ResolvedComponent = {
@@ -65,11 +67,13 @@ export function calculateEngineConfidenceV3<
   );
   const technical = resolveTechnical(input.technical);
   const macroData = resolveMacroData(input.macro);
+  const crossAsset = resolveCrossAsset(input.crossAsset);
 
   const dataScores = [
     marketData.score,
     technical.score,
     macroData.score,
+    crossAsset.data.score,
   ].filter(isFiniteNumber);
 
   const data = dataScores.length === 0
@@ -85,7 +89,7 @@ export function calculateEngineConfidenceV3<
             marketData: marketData.component,
             technical: technical.component,
             macro: macroData.component,
-            crossAsset: NOT_COMPUTED,
+            crossAsset: crossAsset.data.component,
             positioning: NOT_COMPUTED,
           },
         },
@@ -93,7 +97,7 @@ export function calculateEngineConfidenceV3<
           ...marketData.missing,
           ...technical.missing,
           ...macroData.missing,
-          "crossAsset",
+          ...crossAsset.data.missing,
           "positioning",
         ]),
       };
@@ -125,7 +129,7 @@ export function calculateEngineConfidenceV3<
       availability: "unavailable" as const,
       reason: "Current regime confidence is derived and not an independent measure.",
     },
-    crossAsset: NOT_COMPUTED,
+    crossAsset: crossAsset.conviction.component,
     positioning: NOT_COMPUTED,
     scenario: NOT_COMPUTED,
     contradiction: contradiction.component,
@@ -133,18 +137,28 @@ export function calculateEngineConfidenceV3<
   const deferredMissing = [
     "state",
     "regime",
-    "crossAsset",
+    ...crossAsset.conviction.missing,
     "positioning",
     "scenario",
   ];
 
   if (input.macro.applicability === "not-applicable") {
+    const convictionScore = resolveConvictionScore(
+      Math.abs(signal.signedScore),
+      contradiction,
+      isUsableCrossAsset(input.crossAsset),
+    );
+
+    if (convictionScore === null) {
+      return unavailableConviction(data);
+    }
+
     return {
       data,
       conviction: {
         availability: "partial",
         data: {
-          score: Math.abs(signal.signedScore),
+          score: convictionScore,
           components: convictionComponents,
         },
         missing: unique([
@@ -161,12 +175,22 @@ export function calculateEngineConfidenceV3<
     macroConviction.coverage === null ||
     macroConviction.coverage === 0
   ) {
+    const convictionScore = resolveConvictionScore(
+      Math.abs(signal.signedScore),
+      contradiction,
+      isUsableCrossAsset(input.crossAsset),
+    );
+
+    if (convictionScore === null) {
+      return unavailableConviction(data);
+    }
+
     return {
       data,
       conviction: {
         availability: "partial",
         data: {
-          score: Math.abs(signal.signedScore),
+          score: convictionScore,
           components: convictionComponents,
         },
         missing: unique([
@@ -225,6 +249,127 @@ export function calculateEngineConfidenceV3<
         ...contradiction.missing,
         ...deferredMissing,
       ]),
+    },
+  };
+}
+
+function resolveCrossAsset(
+  section: EngineCrossAssetSectionV3 | undefined,
+): {
+  readonly data: ResolvedComponent;
+  readonly conviction: ResolvedComponent;
+} {
+  if (section === undefined || section.availability === "not-computed") {
+    const resolved = {
+      component: NOT_COMPUTED,
+      score: null,
+      missing: ["crossAsset"],
+    };
+
+    return { data: resolved, conviction: resolved };
+  }
+
+  if (section.availability === "not-applicable") {
+    const resolved = {
+      component: {
+        availability: "not-applicable" as const,
+        reason: section.reason,
+      },
+      score: null,
+      missing: [],
+    };
+
+    return { data: resolved, conviction: resolved };
+  }
+
+  if (section.availability === "unavailable") {
+    const resolved = unavailable(
+      "crossAsset",
+      section.reason ?? "Cross-Asset evidence is unavailable.",
+    );
+
+    return { data: resolved, conviction: resolved };
+  }
+
+  const { score, coverage } = section.data;
+
+  if (
+    !isFiniteNumber(score) ||
+    score < -1 ||
+    score > 1 ||
+    !isFiniteNumber(coverage) ||
+    coverage <= 0 ||
+    coverage > 1 ||
+    (section.availability === "available" && coverage !== 1) ||
+    (section.availability === "partial" && coverage >= 1)
+  ) {
+    const resolved = unavailable(
+      "crossAsset",
+      "Valid normalized Cross-Asset score and coverage are required.",
+    );
+
+    return { data: resolved, conviction: resolved };
+  }
+
+  const capacity = coverage * Math.abs(score);
+
+  if (section.availability === "partial") {
+    return {
+      data: {
+        component: {
+          availability: "partial",
+          data: coverage,
+          missing: section.missing,
+        },
+        score: coverage,
+        missing: section.missing,
+      },
+      conviction: {
+        component: {
+          availability: "partial",
+          data: capacity,
+          missing: section.missing,
+        },
+        score: capacity,
+        missing: section.missing,
+      },
+    };
+  }
+
+  return {
+    data: available(coverage),
+    conviction: available(capacity),
+  };
+}
+
+function resolveConvictionScore(
+  rawEvidenceStrength: number,
+  contradiction: ResolvedContradiction,
+  crossAssetWasSupplied: boolean,
+): number | null {
+  if (!crossAssetWasSupplied) {
+    return rawEvidenceStrength;
+  }
+
+  return contradiction.score === null
+    ? null
+    : clamp01(rawEvidenceStrength - contradiction.score);
+}
+
+function isUsableCrossAsset(
+  section: EngineCrossAssetSectionV3 | undefined,
+): boolean {
+  return section?.availability === "available" || section?.availability === "partial";
+}
+
+function unavailableConviction(
+  data: EngineConfidenceV3["data"],
+): EngineConfidenceV3 {
+  return {
+    data,
+    conviction: {
+      availability: "unavailable",
+      reason: "Usable canonical contradiction evidence is required for market conviction.",
     },
   };
 }

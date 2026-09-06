@@ -256,6 +256,15 @@ export interface EngineContradictionV3 {
    */
   readonly score: number;
 
+  /** Primary-only contradiction before optional corroborative evidence. */
+  readonly primaryContradiction?: number;
+
+  /** Cross-Asset agreement diagnostic; never added to conviction. */
+  readonly corroborativeConfirmation?: number;
+
+  /** Cross-Asset disagreement included in the aggregate score. */
+  readonly corroborativeContradiction?: number;
+
   readonly evidence:
     readonly EngineContradictionEvidenceV3[];
 
