@@ -52,8 +52,13 @@ export type GoldRegimeMemoryResult =
     GoldIntelligenceResult["risk"]["level"]
   >;
 
-export function createGoldRegimeSnapshot(
-  intelligence: GoldIntelligenceResult,
+export function createGoldRegimeSnapshot<
+  TIntelligence extends Pick<
+    GoldIntelligenceResult,
+    "state" | "confidence" | "signal" | "macro" | "risk"
+  >,
+>(
+  intelligence: TIntelligence,
   timestamp = new Date().toISOString(),
 ): GoldRegimeSnapshot {
   return createMarketRegimeSnapshot({

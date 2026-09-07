@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 
 import {
-  getFullLiveGoldIntelligence,
-} from "@/lib/markets/assets/gold/liveFull";
+  getCanonicalLiveGoldIntelligence,
+} from "@/lib/markets/assets/gold/productionRuntime";
 
 /**
  * Chronoverse Capital
@@ -19,7 +19,7 @@ const getCachedGoldIntelligence =
   unstable_cache(
     async () => {
       const intelligence =
-        await getFullLiveGoldIntelligence();
+        await getCanonicalLiveGoldIntelligence();
 
       return {
         generatedAt:
