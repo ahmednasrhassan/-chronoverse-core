@@ -43,7 +43,7 @@ export async function getGoldMacroSnapshot(
     nominalYield10Y,
     dollarIndexProxy,
     inflationExpectation10Y,
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     provider.getLatestValue(
       GOLD_MACRO_SERIES.realYield10Y,
     ),
@@ -62,9 +62,25 @@ export async function getGoldMacroSnapshot(
   ]);
 
   return {
-    realYield10Y,
-    nominalYield10Y,
-    dollarIndexProxy,
-    inflationExpectation10Y,
+    realYield10Y:
+      settledObservation(realYield10Y),
+    nominalYield10Y:
+      settledObservation(nominalYield10Y),
+    dollarIndexProxy:
+      settledObservation(dollarIndexProxy),
+    inflationExpectation10Y:
+      settledObservation(
+        inflationExpectation10Y,
+      ),
   };
+}
+
+function settledObservation(
+  result: PromiseSettledResult<
+    FredObservation | null
+  >,
+): FredObservation | null {
+  return result.status === "fulfilled"
+    ? result.value
+    : null;
 }
