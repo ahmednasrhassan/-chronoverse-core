@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 
 import {
-  getLiveOilIntelligence,
-} from "@/lib/markets/assets/oil/runtime";
+  getCanonicalLiveOilIntelligence,
+} from "@/lib/markets/assets/oil/productionRuntime";
 
 const OIL_INTELLIGENCE_CACHE_SECONDS =
   60 * 60;
@@ -12,7 +12,7 @@ const getCachedOilIntelligence =
   unstable_cache(
     async () => {
       const intelligence =
-        await getLiveOilIntelligence();
+        await getCanonicalLiveOilIntelligence();
 
       return {
         generatedAt:
