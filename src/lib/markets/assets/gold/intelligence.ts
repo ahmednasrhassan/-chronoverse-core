@@ -352,7 +352,7 @@ const confidence =
   marketState.confidence;
 
   const warnings =
-    buildWarnings({
+    buildGoldIntelligenceWarnings({
       rsi,
 
       annualizedVolatility,
@@ -369,7 +369,7 @@ const confidence =
     });
 
   const summary =
-    buildSummary(
+    buildGoldIntelligenceSummary(
       state,
       signal,
       risk,
@@ -436,7 +436,7 @@ const confidence =
  * Creates plain-language Gold-specific
  * analytical warnings.
  */
-function buildWarnings(
+export function buildGoldIntelligenceWarnings(
   input: {
     rsi:
       | number
@@ -639,7 +639,7 @@ function buildWarnings(
  * Creates the high-level Gold intelligence
  * summary consumed by downstream layers.
  */
-function buildSummary(
+export function buildGoldIntelligenceSummary(
   state:
     GoldIntelligenceState,
   signal:
