@@ -1,5 +1,6 @@
 import {
   calculateEngineConfidenceV3,
+  ENGINE_V3_DATA_CONFIDENCE_POLICY,
   type CalculateEngineConfidenceV3Input,
 } from "../../core/confidenceEngine";
 
@@ -156,6 +157,26 @@ function requirePartial<T>(
   return section;
 }
 
+function requireAvailable<T>(
+  section:
+    | { readonly availability: "available"; readonly data: T }
+    | { readonly availability: "partial"; readonly data: T; readonly missing: readonly string[] }
+    | { readonly availability: "unavailable"; readonly reason?: string },
+  label: string,
+): Extract<typeof section, { readonly availability: "available" }> {
+  if (section.availability !== "available") {
+    throw new Error(`${label}: expected available, received ${section.availability}`);
+  }
+
+  return section;
+}
+
+assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.marketData, "required", "market data role");
+assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.technical, "required", "technical role");
+assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.macro, "conditional", "macro role");
+assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.crossAsset, "conditional", "cross-asset role");
+assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.positioning, "optional-deferred", "positioning role");
+
 // 1. Full current evidence remains partial while future evidence is deferred.
 {
   const result = calculateEngineConfidenceV3(input());
@@ -165,9 +186,10 @@ function requirePartial<T>(
   assertEqual(data.data.score, 1, "full data score");
   assertEqual(conviction.data.score, 1, "full conviction score");
   assertIncludes(data.missing, "crossAsset", "full data deferred component");
+  assertEqual(data.missing.includes("positioning"), false, "positioning excluded from data missing");
 }
 
-// 2. Intentionally disabled macro is excluded without a data penalty.
+// 2. Non-applicable evidence and deferred Positioning do not create a data penalty.
 {
   const result = calculateEngineConfidenceV3(input({
     macro: {
@@ -179,12 +201,18 @@ function requirePartial<T>(
       availability: "not-applicable",
       reason: "Disabled by profile",
     },
+    crossAsset: {
+      availability: "not-applicable",
+      reason: "No approved relationship",
+    },
   }));
-  const data = requirePartial(result.data, "technical-only data");
+  const data = requireAvailable(result.data, "technical-only data");
   const conviction = requirePartial(result.conviction, "technical-only conviction");
 
   assertEqual(data.data.score, 1, "technical-only data score");
   assertEqual(data.data.components.macro.availability, "not-applicable", "macro applicability");
+  assertEqual(data.data.components.crossAsset.availability, "not-applicable", "cross-asset applicability");
+  assertEqual(data.data.components.positioning.availability, "not-computed", "positioning remains deferred");
   assertEqual(conviction.data.score, 0.8, "signal-only conviction");
 }
 
@@ -208,13 +236,44 @@ function requirePartial<T>(
       },
     },
     contradiction: partialContradiction(2 / 3, ["globalDemand"]),
+    crossAsset: { availability: "not-applicable" },
   }));
   const data = requirePartial(result.data, "partial macro data");
   const conviction = requirePartial(result.conviction, "partial macro conviction");
 
   assertEqual(data.data.score, 0.5, "partial macro data score");
+  assertIncludes(data.missing, "globalDemand", "partial macro data missing evidence");
+  assertEqual(data.missing.includes("positioning"), false, "partial data excludes positioning");
   assertClose(conviction.data.score, 1 / 3, "coverage-scaled conviction");
   assertIncludes(conviction.missing, "globalDemand", "partial macro missing evidence");
+}
+
+// 3a. Oil-like partial Macro preserves its exact scalar and real missing evidence.
+{
+  const result = calculateEngineConfidenceV3(input({
+    macro: {
+      applicability: "applicable",
+      section: {
+        availability: "partial",
+        data: {
+          direction: "bullish",
+          score: 0.6,
+          strengthMagnitude: 0.6,
+          coverage: 0.85,
+          dataQuality: { availability: "not-computed" },
+          drivers: [],
+          reasons: [],
+        },
+        missing: ["usd"],
+      },
+    },
+    crossAsset: { availability: "not-applicable" },
+  }));
+  const data = requirePartial(result.data, "oil-like data");
+
+  assertEqual(data.data.score, 0.85, "oil-like data score");
+  assertIncludes(data.missing, "usd", "oil-like real missing evidence");
+  assertEqual(data.missing.includes("positioning"), false, "oil-like data excludes positioning");
 }
 
 // 4. Strong aligned bearish evidence has full conviction.
@@ -355,12 +414,28 @@ for (const testCase of [
       section: { availability: "unavailable", reason: "No macro" },
     },
     contradiction: { availability: "unavailable", reason: "No comparison" },
+    crossAsset: { availability: "not-applicable" },
   }));
+  const data = requirePartial(result.data, "unavailable macro data");
   const conviction = requirePartial(result.conviction, "unavailable macro");
+  assertIncludes(data.missing, "macro", "unavailable macro data missing");
+  assertEqual(data.missing.includes("positioning"), false, "unavailable macro excludes positioning");
   assertEqual(conviction.data.score, 0.8, "unavailable macro signal-only score");
   assertEqual(conviction.data.components.contradiction.availability, "unavailable", "unavailable contradiction component");
   assertIncludes(conviction.missing, "macro", "unavailable macro missing");
   assertIncludes(conviction.missing, "contradiction", "unavailable contradiction missing");
+}
+
+// 12a. Applicable unavailable Cross-Asset remains a genuine data gap.
+{
+  const result = calculateEngineConfidenceV3(input({
+    crossAsset: { availability: "unavailable", reason: "No reference data" },
+  }));
+  const data = requirePartial(result.data, "unavailable cross-asset data");
+
+  assertEqual(data.data.score, 1, "unavailable cross-asset numeric omission");
+  assertIncludes(data.missing, "crossAsset", "unavailable cross-asset missing");
+  assertEqual(data.missing.includes("positioning"), false, "unavailable cross-asset excludes positioning");
 }
 
 // 13. Zero macro coverage also falls back without fabricating contradiction zero.

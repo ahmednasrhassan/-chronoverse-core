@@ -3,6 +3,7 @@ import type {
   EngineConfidenceV3,
   EngineContradictionSectionV3,
   EngineCrossAssetSectionV3,
+  EngineDataConfidenceSnapshotV3,
   EngineDataSection,
   EngineMacroV3,
   EngineMarketDataV3,
@@ -42,6 +43,22 @@ export interface CalculateEngineConfidenceV3Input<
   readonly crossAsset?: EngineCrossAssetSectionV3;
 }
 
+export type EngineDataConfidenceRoleV3 =
+  | "required"
+  | "conditional"
+  | "optional-deferred";
+
+export const ENGINE_V3_DATA_CONFIDENCE_POLICY = Object.freeze({
+  marketData: "required",
+  technical: "required",
+  macro: "conditional",
+  crossAsset: "conditional",
+  positioning: "optional-deferred",
+} satisfies Record<
+  keyof EngineDataConfidenceSnapshotV3["components"],
+  EngineDataConfidenceRoleV3
+>);
+
 type ResolvedComponent = {
   readonly component: EngineConfidenceInputV3;
   readonly score: number | null;
@@ -75,32 +92,49 @@ export function calculateEngineConfidenceV3<
     macroData.score,
     crossAsset.data.score,
   ].filter(isFiniteNumber);
+  const dataMissing = unique([
+    ...missingForDataConfidenceRole(
+      ENGINE_V3_DATA_CONFIDENCE_POLICY.marketData,
+      marketData.missing,
+    ),
+    ...missingForDataConfidenceRole(
+      ENGINE_V3_DATA_CONFIDENCE_POLICY.technical,
+      technical.missing,
+    ),
+    ...missingForDataConfidenceRole(
+      ENGINE_V3_DATA_CONFIDENCE_POLICY.macro,
+      macroData.missing,
+    ),
+    ...missingForDataConfidenceRole(
+      ENGINE_V3_DATA_CONFIDENCE_POLICY.crossAsset,
+      crossAsset.data.missing,
+    ),
+    ...missingForDataConfidenceRole(
+      ENGINE_V3_DATA_CONFIDENCE_POLICY.positioning,
+      ["positioning"],
+    ),
+  ]);
+  const dataSnapshot = dataScores.length === 0
+    ? null
+    : {
+        score: clamp01(Math.min(...dataScores)),
+        components: {
+          marketData: marketData.component,
+          technical: technical.component,
+          macro: macroData.component,
+          crossAsset: crossAsset.data.component,
+          positioning: NOT_COMPUTED,
+        },
+      };
 
-  const data = dataScores.length === 0
+  const data: EngineConfidenceV3["data"] = dataSnapshot === null
     ? {
-        availability: "unavailable" as const,
+        availability: "unavailable",
         reason: "No usable data-confidence evidence is available.",
       }
-    : {
-        availability: "partial" as const,
-        data: {
-          score: clamp01(Math.min(...dataScores)),
-          components: {
-            marketData: marketData.component,
-            technical: technical.component,
-            macro: macroData.component,
-            crossAsset: crossAsset.data.component,
-            positioning: NOT_COMPUTED,
-          },
-        },
-        missing: unique([
-          ...marketData.missing,
-          ...technical.missing,
-          ...macroData.missing,
-          ...crossAsset.data.missing,
-          "positioning",
-        ]),
-      };
+    : dataMissing.length === 0
+      ? { availability: "available", data: dataSnapshot }
+      : { availability: "partial", data: dataSnapshot, missing: dataMissing };
 
   const signal = resolveSignal(input.signal);
   const macroConviction = resolveMacroConviction(input.macro);
@@ -683,6 +717,13 @@ function available(score: number): ResolvedComponent {
     score,
     missing: [],
   };
+}
+
+function missingForDataConfidenceRole(
+  role: EngineDataConfidenceRoleV3,
+  missing: readonly string[],
+): readonly string[] {
+  return role === "optional-deferred" ? [] : missing;
 }
 
 function unavailable(
