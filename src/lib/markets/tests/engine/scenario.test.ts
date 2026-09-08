@@ -75,6 +75,34 @@ function assert(condition: unknown, label: string): asserts condition {
   if (!condition) throw new Error(label);
 }
 
+function withMacroDataQuality(
+  dataQuality: Extract<CalculateScenarioV1Input["macro"], { availability: "available" }>["data"]["dataQuality"],
+): CalculateScenarioV1Input {
+  const baseline = input();
+  assert(baseline.macro.availability === "available", "fixture Macro is available");
+  return {
+    ...baseline,
+    macro: {
+      availability: "available",
+      data: { ...baseline.macro.data, dataQuality },
+    },
+  };
+}
+
+function withCrossAssetDataQuality(
+  dataQuality: Extract<CalculateScenarioV1Input["crossAsset"], { availability: "available" }>["data"]["dataQuality"],
+): CalculateScenarioV1Input {
+  const baseline = input();
+  assert(baseline.crossAsset.availability === "available", "fixture Cross-Asset is available");
+  return {
+    ...baseline,
+    crossAsset: {
+      availability: "available",
+      data: { ...baseline.crossAsset.data, dataQuality },
+    },
+  };
+}
+
 const original = input();
 const before = JSON.stringify(original);
 const result = calculateScenarioV1(original);
@@ -117,6 +145,86 @@ const partial = calculateScenarioV1({
 });
 assert(partial.availability === "partial", "missing optional evidence produces partial Scenario");
 assert(partial.missing.join(",") === "crossAsset,dataConfidence", "missing codes use canonical order");
+
+const macroDeferred = calculateScenarioV1(withMacroDataQuality({ availability: "not-computed" }));
+assert(macroDeferred.availability === "available", "deferred Macro data quality is neutral");
+
+const crossAssetDeferred = calculateScenarioV1(
+  withCrossAssetDataQuality({ availability: "not-computed" }),
+);
+assert(crossAssetDeferred.availability === "available", "deferred Cross-Asset data quality is neutral");
+
+for (const dataQuality of [
+  { availability: "partial" as const, data: 0.5, missing: ["timestamp"] },
+  { availability: "unavailable" as const, reason: "Quality assessment unavailable." },
+]) {
+  const assessedMacroQuality = calculateScenarioV1(withMacroDataQuality(dataQuality));
+  assert(
+    assessedMacroQuality.availability === "partial" &&
+      assessedMacroQuality.missing.includes("macroDataQuality"),
+    `assessed Macro quality ${dataQuality.availability} remains partial`,
+  );
+
+  const assessedCrossAssetQuality = calculateScenarioV1(
+    withCrossAssetDataQuality(dataQuality),
+  );
+  assert(
+    assessedCrossAssetQuality.availability === "partial" &&
+      assessedCrossAssetQuality.missing.includes("crossAssetDataQuality"),
+    `assessed Cross-Asset quality ${dataQuality.availability} remains partial`,
+  );
+}
+
+const macroMissingFixture = input();
+assert(macroMissingFixture.macro.availability === "available", "fixture Macro is available");
+const oilMacro = {
+  availability: "partial" as const,
+  data: {
+    ...macroMissingFixture.macro.data,
+    coverage: 0.85,
+    dataQuality: { availability: "not-computed" as const },
+  },
+  missing: ["usd"],
+};
+assert(oilMacro.data.coverage === 0.85, "Oil representative Macro coverage remains exactly 0.85");
+const genuineMacroMissing = calculateScenarioV1({
+  ...macroMissingFixture,
+  macro: oilMacro,
+  crossAsset: { availability: "not-applicable", reason: "No approved relationship." },
+  dataConfidence: { availability: "partial", data: 0.85, missing: ["usd"] },
+});
+assert(genuineMacroMissing.availability === "partial", "genuine Macro missing evidence remains partial");
+assert(genuineMacroMissing.missing.includes("macro"), "genuine Macro missing evidence propagates");
+assert(!genuineMacroMissing.missing.includes("macroDataQuality"), "deferred Macro quality adds no penalty");
+assert(
+  genuineMacroMissing.availability === "partial" && genuineMacroMissing.data.base !== undefined,
+  "Oil representative Scenario remains structurally computed",
+);
+
+const crossAssetMissingFixture = input();
+assert(crossAssetMissingFixture.crossAsset.availability === "available", "fixture Cross-Asset is available");
+const genuineCrossAssetMissing = calculateScenarioV1({
+  ...crossAssetMissingFixture,
+  crossAsset: {
+    availability: "partial",
+    data: {
+      ...crossAssetMissingFixture.crossAsset.data,
+      coverage: 0.5,
+      dataQuality: { availability: "not-computed" },
+    },
+    missing: ["rates"],
+  },
+});
+assert(genuineCrossAssetMissing.availability === "partial", "genuine Cross-Asset missing evidence remains partial");
+assert(genuineCrossAssetMissing.missing.includes("crossAsset"), "genuine Cross-Asset missing evidence propagates");
+assert(!genuineCrossAssetMissing.missing.includes("crossAssetDataQuality"), "deferred Cross-Asset quality adds no penalty");
+
+const goldFixture = withMacroDataQuality({ availability: "not-computed" });
+const gold = calculateScenarioV1({
+  ...goldFixture,
+  crossAsset: { availability: "not-applicable", reason: "No approved relationship." },
+});
+assert(gold.availability === "available", "Gold representative Scenario has no false Macro quality penalty");
 
 assert(
   calculateScenarioV1({ ...input(), decision: { availability: "not-computed" } }).availability === "unavailable",

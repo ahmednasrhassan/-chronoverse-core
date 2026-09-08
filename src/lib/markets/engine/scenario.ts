@@ -334,9 +334,17 @@ function collectMissing(input: CalculateScenarioV1Input): readonly EngineScenari
   if (input.decision.availability === "partial") missing.push("decision");
   if (input.signal.availability === "partial") missing.push("signal");
   if (input.macro.availability === "partial" || input.macro.availability === "unavailable" || input.macro.availability === "not-computed") missing.push("macro");
-  if ((input.macro.availability === "available" || input.macro.availability === "partial") && input.macro.data.dataQuality.availability !== "available") missing.push("macroDataQuality");
+  if (
+    (input.macro.availability === "available" || input.macro.availability === "partial") &&
+    input.macro.data.dataQuality.availability !== "available" &&
+    input.macro.data.dataQuality.availability !== "not-computed"
+  ) missing.push("macroDataQuality");
   if (input.crossAsset.availability === "partial" || input.crossAsset.availability === "unavailable" || input.crossAsset.availability === "not-computed") missing.push("crossAsset");
-  if ((input.crossAsset.availability === "available" || input.crossAsset.availability === "partial") && input.crossAsset.data.dataQuality.availability !== "available") missing.push("crossAssetDataQuality");
+  if (
+    (input.crossAsset.availability === "available" || input.crossAsset.availability === "partial") &&
+    input.crossAsset.data.dataQuality.availability !== "available" &&
+    input.crossAsset.data.dataQuality.availability !== "not-computed"
+  ) missing.push("crossAssetDataQuality");
   if (input.marketData.availability !== "available") missing.push("marketData");
   if (input.dataConfidence.availability !== "available") missing.push("dataConfidence");
   return missing;
