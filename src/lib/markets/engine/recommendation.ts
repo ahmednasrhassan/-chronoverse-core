@@ -196,7 +196,7 @@ function calculatePosture(
     input.scenario.availability === "unavailable" ||
     input.invalidation.availability === "not-computed" ||
     input.invalidation.availability === "unavailable" ||
-    input.marketData.availability === "partial" && input.marketData.status === "stale"
+    input.marketData.availability === "partial" && input.marketData.freshness === "stale"
   ) {
     posture = capPosture(posture, "watch");
   }
@@ -284,7 +284,7 @@ function buildRestraintReasons(
   if (contradiction === "not-applicable") reasons.push({ code: "CONTRADICTION_NOT_APPLICABLE", source: "contradiction" });
   if (input.marketData.availability === "partial") reasons.push({ code: "MARKET_DATA_PARTIAL", source: "marketData" });
   if (input.marketData.availability === "unavailable") reasons.push({ code: "MARKET_DATA_UNAVAILABLE", source: "marketData" });
-  if (input.marketData.availability !== "unavailable" && input.marketData.status === "stale") reasons.push({ code: "MARKET_DATA_STALE", source: "marketData" });
+  if (input.marketData.availability !== "unavailable" && input.marketData.freshness === "stale") reasons.push({ code: "MARKET_DATA_STALE", source: "marketData" });
   if (input.risk.level === "moderate") reasons.push({ code: "RISK_MODERATE", source: "risk" });
   if (input.risk.level === "high") reasons.push({ code: "RISK_HIGH", source: "risk" });
   if (input.scenario.availability === "partial") reasons.push({ code: "SCENARIO_PARTIAL", source: "scenario" });

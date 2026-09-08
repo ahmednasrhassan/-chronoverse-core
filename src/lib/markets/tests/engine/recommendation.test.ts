@@ -49,7 +49,13 @@ function input(options: {
     availability: "available" as const,
     data: { score: signalScore, direction: signalDirection, strength: "strong" as const, confidence: 0.9, reasons: [] },
   };
-  const marketData = { availability: "available" as const, provider: "fixture", status: "realtime" as const };
+  const marketData = {
+    availability: "available" as const,
+    provider: "fixture",
+    status: "realtime" as const,
+    interval: "1d" as const,
+    freshness: "within-cadence" as const,
+  };
   const macro = { availability: "not-applicable" as const, reason: "No canonical model" };
   const crossAsset = { availability: "not-applicable" as const, reason: "No canonical model" };
   const dataConfidence = { availability: "available" as const, data: dataQuality };

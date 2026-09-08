@@ -130,7 +130,10 @@ export async function getLiveOilIntelligence():
       insufficientHistoryMessage:
         (received, minimum) =>
           `[Chronoverse Oil] Insufficient price history: received ${received}, minimum required ${minimum}.`,
-      marketData,
+      marketData: {
+        ...marketData,
+        interval: oilProfile.defaultInterval,
+      },
       macroInput: macro,
       calculateIntelligence:
         calculateOilIntelligence,

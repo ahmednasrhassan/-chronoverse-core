@@ -170,12 +170,13 @@ async function runCase(options: RunOptions) {
     marketData: {
       provider: "in-memory",
       status: "realtime",
+      interval: "1d",
       window: {
         receivedPoints: options.receivedPoints ?? 1,
       },
       candles: [
         {
-          time: 1,
+          time: Math.floor(Date.now() / 1000),
           close: 100,
         },
       ],

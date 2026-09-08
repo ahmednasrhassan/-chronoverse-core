@@ -28,6 +28,8 @@ function input(
       availability: "available",
       provider: "ignored-provider",
       status: "realtime",
+      interval: "1d",
+      freshness: "within-cadence",
       historicalWindow: {
         receivedPoints: 200,
       },
@@ -326,6 +328,8 @@ assertEqual(ENGINE_V3_DATA_CONFIDENCE_POLICY.positioning, "optional-deferred", "
       availability: "unavailable",
       provider: null,
       status: "unavailable",
+      interval: "1d",
+      freshness: "unavailable",
       reason: "No history",
     },
   }));
@@ -341,6 +345,8 @@ for (const invalidInput of [
       availability: "available",
       provider: "ignored-provider",
       status: "realtime",
+      interval: "1d",
+      freshness: "within-cadence",
       historicalWindow: { receivedPoints: Number.NaN },
     },
   }),

@@ -9,6 +9,7 @@ import type { MarketStateResult } from "../core/marketState";
 import type { MarketRiskResult } from "../core/riskEngine";
 import type { MarketSignalResult } from "../core/signalEngine";
 import type {
+  CandleInterval,
   HistoricalDataWindow,
   MarketDataProvenance,
   MarketDataStatus,
@@ -28,10 +29,12 @@ import {
 import { calculateInvalidationV1 } from "./invalidation";
 import { calculateRecommendationV1 } from "./recommendation";
 import { calculateScenarioV1 } from "./scenario";
+import { classifyEngineMarketDataFreshnessV3 } from "./marketDataFreshness";
 
 export interface EngineCalculationMarketDataV3 {
   readonly provider: string | null;
   readonly status: MarketDataStatus;
+  readonly interval: CandleInterval;
   readonly provenance?: MarketDataProvenance;
   readonly window?: HistoricalDataWindow;
   readonly candles: readonly {
@@ -96,7 +99,11 @@ export function calculateEngineResultV3<
     TRiskLevel
   >,
 ): EngineResultV3<TMacroDetails, TMigrationDetails, TState, TRiskLevel> {
-  const marketData = buildEngineMarketData(input.marketData);
+  const marketData = buildEngineMarketData(
+    input.asset,
+    input.evaluatedAt,
+    input.marketData,
+  );
   const technical = {
     availability: "available",
     data: input.intelligence.technical,
@@ -220,28 +227,67 @@ function resolveMacroEvidence<TDetails>(
 }
 
 function buildEngineMarketData(
+  asset: EngineAssetId,
+  evaluatedAt: string,
   input: EngineCalculationMarketDataV3,
 ): EngineMarketDataV3 {
   const latestTimestampSeconds =
     input.window?.lastTimestamp ?? input.candles.at(-1)?.time;
+  const freshness = classifyEngineMarketDataFreshnessV3({
+    asset,
+    interval: input.interval,
+    provider: input.provider,
+    status: input.status,
+    latestTimestampSeconds,
+    evaluatedAt,
+    hasUsableData: input.candles.some(
+      (candle) =>
+        Number.isFinite(candle.time) &&
+        Number.isFinite(candle.close) &&
+        candle.close > 0,
+    ),
+  });
 
-  return input.provider === null || input.status === "unavailable"
-    ? {
-        availability: "unavailable",
-        provider: input.provider,
-        status: "unavailable",
-        provenance: input.provenance,
-        historicalWindow: input.window,
-        latestTimestampSeconds,
-      }
-    : {
-        availability: input.status === "realtime" ? "available" : "partial",
-        provider: input.provider,
-        status: input.status,
-        provenance: input.provenance,
-        historicalWindow: input.window,
-        latestTimestampSeconds,
-      };
+  if (
+    freshness === "unavailable" ||
+    input.provider === null ||
+    input.status === "unavailable"
+  ) {
+    return {
+      availability: "unavailable",
+      provider: input.provider,
+      status: "unavailable",
+      interval: input.interval,
+      freshness: "unavailable",
+      provenance: input.provenance,
+      historicalWindow: input.window,
+      latestTimestampSeconds,
+    };
+  }
+
+  if (freshness === "within-cadence") {
+    return {
+      availability: "available",
+      provider: input.provider,
+      status: input.status,
+      interval: input.interval,
+      freshness,
+      provenance: input.provenance,
+      historicalWindow: input.window,
+      latestTimestampSeconds,
+    };
+  }
+
+  return {
+    availability: "partial",
+    provider: input.provider,
+    status: input.status,
+    interval: input.interval,
+    freshness,
+    provenance: input.provenance,
+    historicalWindow: input.window,
+    latestTimestampSeconds,
+  };
 }
 
 function validateCanonicalCrossAssetSection(

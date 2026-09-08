@@ -90,6 +90,7 @@ export function runGenericAssetRuntimeV1<TDetails = never>(
     marketData: {
       provider: prepared.targetHistory.provenance?.provider ?? null,
       status: prepared.targetHistory.status,
+      interval: prepared.targetHistory.interval,
       ...mapMarketDataProvenance(prepared.targetHistory.provenance),
       window: {
         firstTimestamp: prepared.targetHistory.observations.at(0)?.timestamp,

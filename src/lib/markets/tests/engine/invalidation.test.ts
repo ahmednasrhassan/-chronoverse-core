@@ -59,7 +59,13 @@ function input(reverse = false): CalculateInvalidationV1Input {
         dataQuality: { availability: "available", data: 1 },
       },
     },
-    marketData: { availability: "available", provider: "fixture", status: "realtime" },
+    marketData: {
+      availability: "available",
+      provider: "fixture",
+      status: "realtime",
+      interval: "1d",
+      freshness: "within-cadence",
+    },
     dataConfidence: { availability: "available", data: 1 },
     risk: { score: 0.2, level: "low", reasons: [] },
   };

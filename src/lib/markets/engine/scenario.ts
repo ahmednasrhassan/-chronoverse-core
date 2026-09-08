@@ -194,7 +194,7 @@ function buildWeakeningConditions(
     {
       code: "MARKET_DATA_STALE",
       reference: { kind: "marketData", section: "marketData" },
-      status: input.marketData.availability !== "unavailable" && input.marketData.status === "stale"
+      status: input.marketData.availability !== "unavailable" && input.marketData.freshness === "stale"
         ? "met"
         : "unmet",
     },

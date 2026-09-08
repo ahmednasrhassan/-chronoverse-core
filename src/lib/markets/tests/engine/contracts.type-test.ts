@@ -201,6 +201,8 @@ export const goldLikeEngineResult = {
     availability: "available",
     provider: "configured-quote-provider",
     status: "realtime",
+    interval: "1d",
+    freshness: "within-cadence",
     provenance: {
       provider: "configured-quote-provider",
       fetchedAt: 1_767_225_600_000,
@@ -270,6 +272,8 @@ export const oilLikeEngineResult = {
     availability: "partial",
     provider: "configured-history-provider",
     status: "delayed",
+    interval: "1d",
+    freshness: "unknown",
     latestTimestampSeconds: 1_767_225_600,
   },
   technical: { availability: "available", data: technical },
@@ -316,6 +320,8 @@ export const unavailableLayersEngineResult = {
     availability: "unavailable",
     provider: null,
     status: "unavailable",
+    interval: "1d",
+    freshness: "unavailable",
     reason: "No market data available",
   },
   technical: { availability: "unavailable", reason: "No price history" },
@@ -332,6 +338,8 @@ const invalidAvailableStatus: EngineMarketDataV3 = {
   availability: "available",
   provider: "provider",
   status: "unavailable",
+  interval: "1d",
+  freshness: "within-cadence",
 };
 
 // @ts-expect-error Unavailable market data must have unavailable status.
@@ -339,6 +347,8 @@ const invalidUnavailableStatus: EngineMarketDataV3 = {
   availability: "unavailable",
   provider: "provider",
   status: "realtime",
+  interval: "1d",
+  freshness: "unavailable",
 };
 
 // @ts-expect-error Available market data requires a provider.
@@ -346,6 +356,17 @@ const invalidAvailableProvider: EngineMarketDataV3 = {
   availability: "available",
   provider: null,
   status: "realtime",
+  interval: "1d",
+  freshness: "within-cadence",
+};
+
+// @ts-expect-error Available market data must be within cadence.
+const invalidAvailableFreshness: EngineMarketDataV3 = {
+  availability: "available",
+  provider: "provider",
+  status: "realtime",
+  interval: "1d",
+  freshness: "stale",
 };
 
 // @ts-expect-error Available regime cannot duplicate memory.current.
@@ -358,4 +379,5 @@ const invalidAvailableRegime: EngineRegimeV3 = {
 void invalidAvailableStatus;
 void invalidUnavailableStatus;
 void invalidAvailableProvider;
+void invalidAvailableFreshness;
 void invalidAvailableRegime;

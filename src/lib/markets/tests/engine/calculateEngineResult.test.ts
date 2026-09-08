@@ -6,10 +6,17 @@ import type {
 import {
   calculateEngineResultV3,
   type CalculateEngineResultV3Input,
+  type EngineCalculationMarketDataV3,
 } from "../../engine/calculateEngineResult";
 import type { MarketSignalResult } from "../../core/signalEngine";
 
 const evaluatedAt = "2026-09-06T12:00:00.000Z";
+const latestTimestampSeconds =
+  Date.parse("2026-09-04T20:00:00.000Z") / 1000;
+
+function timestamp(value: string): number {
+  return Date.parse(value) / 1000;
+}
 const technical = Object.freeze({
   price: 100,
   emaFast: 99,
@@ -72,10 +79,14 @@ function crossAsset(
 const marketData = Object.freeze({
   provider: "prepared-fixture",
   status: "realtime" as const,
-  window: Object.freeze({ receivedPoints: 200, lastTimestamp: 1_700_000_199 }),
+  interval: "1d" as const,
+  window: Object.freeze({
+    receivedPoints: 200,
+    lastTimestamp: latestTimestampSeconds,
+  }),
   candles: Object.freeze(
     Array.from({ length: 200 }, (_, index) => Object.freeze({
-      time: 1_700_000_000 + index,
+      time: latestTimestampSeconds - (199 - index) * 86_400,
       close: 100 + index / 100,
     })),
   ),
@@ -99,6 +110,7 @@ function calculate(
     readonly macro?: EngineMacroSectionV3;
     readonly crossAsset?: EngineCrossAssetSectionV3;
     readonly includeCrossAsset?: boolean;
+    readonly marketData?: EngineCalculationMarketDataV3;
   } = {},
 ) {
   const intelligence: PreparedIntelligence = Object.freeze({
@@ -119,7 +131,7 @@ function calculate(
     symbol: "SI=F",
     evaluatedAt,
     minimumRequiredHistory: 200,
-    marketData,
+    marketData: options.marketData ?? marketData,
     intelligence,
     macro: options.macro ?? Object.freeze({
       availability: "not-applicable",
@@ -204,6 +216,8 @@ const signalOnly = calculate({
   crossAsset: Object.freeze({ availability: "not-applicable", reason: "No model" }),
 });
 assertEqual(signalOnly.result.evaluatedAt, evaluatedAt, "explicit evaluation time");
+assertEqual(signalOnly.result.marketData.availability, "available", "cadence-aware Market Data lifecycle");
+assertEqual(signalOnly.result.marketData.freshness, "within-cadence", "weekend-aware daily freshness");
 assertEqual(signalOnly.result.macro, signalOnly.input.macro, "exact Macro section");
 assertEqual(signalOnly.result.macro.availability, "not-applicable", "Macro lifecycle");
 assertEqual(signalOnly.result.crossAsset.availability, "not-applicable", "Cross-Asset lifecycle");
@@ -223,6 +237,54 @@ assertEqual(signalOnly.result.decisionLifecycle.availability, "not-computed", "r
 assertEqual(signalOnly.result.scenario.availability, "partial", "Scenario is calculated conservatively");
 assertEqual(signalOnly.result.invalidation.availability, "partial", "Invalidation is calculated conservatively");
 assertEqual(signalOnly.result.recommendation.availability, "partial", "Recommendation is calculated conservatively");
+
+const staleMarketData = calculate({
+  marketData: Object.freeze({
+    ...marketData,
+    window: Object.freeze({
+      receivedPoints: 200,
+      lastTimestamp: timestamp("2026-08-01T20:00:00.000Z"),
+    }),
+    candles: Object.freeze(
+      marketData.candles.map((candle, index) => Object.freeze({
+        ...candle,
+        time: timestamp("2026-08-01T20:00:00.000Z") - (199 - index) * 86_400,
+      })),
+    ),
+  }),
+});
+assertEqual(staleMarketData.result.marketData.availability, "partial", "stale Market Data is partial");
+assertEqual(staleMarketData.result.marketData.freshness, "stale", "daily cadence detects stale data");
+if (
+  staleMarketData.result.scenario.availability !== "partial" ||
+  staleMarketData.result.invalidation.availability !== "partial" ||
+  staleMarketData.result.recommendation.availability !== "partial"
+) {
+  throw new Error("Expected stale Market Data to propagate through usable synthesis sections.");
+}
+assertEqual(
+  staleMarketData.result.scenario.data.base.weakeningConditions.some(
+    ({ code, status }) => code === "MARKET_DATA_STALE" && status === "met",
+  ),
+  true,
+  "Scenario observes normalized stale freshness",
+);
+assertEqual(
+  staleMarketData.result.invalidation.data.weakensWhen.some(
+    ({ predicate }) =>
+      predicate.kind === "market-data-freshness-equal" && predicate.freshness === "stale",
+  ),
+  true,
+  "Invalidation exposes a normalized freshness predicate",
+);
+assertEqual(staleMarketData.result.recommendation.data.posture, "watch", "stale data caps Recommendation posture");
+assertEqual(
+  staleMarketData.result.recommendation.data.restraintReasons.some(
+    ({ code }) => code === "MARKET_DATA_STALE",
+  ),
+  true,
+  "Recommendation explains stale Market Data restraint",
+);
 
 if (
   signalOnly.result.scenario.availability !== "partial" ||

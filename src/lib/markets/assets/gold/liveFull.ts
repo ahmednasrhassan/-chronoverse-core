@@ -167,7 +167,10 @@ export async function getFullLiveGoldIntelligence():
       insufficientHistoryMessage:
         () =>
           "[Chronoverse Gold] No live gold price history available.",
-      marketData,
+      marketData: {
+        ...marketData,
+        interval: goldProfile.defaultInterval,
+      },
       macroInput: macro,
       calculateIntelligence:
         calculateGoldRuntimeIntelligence,

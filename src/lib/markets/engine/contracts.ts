@@ -10,10 +10,12 @@ import type {
 import type { MarketRiskResult } from "../core/riskEngine";
 import type { MarketSignalResult } from "../core/signalEngine";
 import type {
+  CandleInterval,
   HistoricalDataWindow,
   MarketDataProvenance,
   MarketDataStatus,
 } from "../core/types";
+import type { EngineMarketDataFreshnessV3 } from "./marketDataFreshness";
 
 export const ENGINE_RESULT_VERSION = "3" as const;
 export type EngineResultVersion = typeof ENGINE_RESULT_VERSION;
@@ -350,8 +352,8 @@ export type EngineInvalidationPredicateV1 =
       readonly availability: "partial" | "unavailable";
     }
   | {
-      readonly kind: "market-data-status-equal";
-      readonly status: "stale";
+      readonly kind: "market-data-freshness-equal";
+      readonly freshness: "stale";
     };
 
 export type EngineInvalidationTriggerCodeV1 =
@@ -778,9 +780,23 @@ export type EngineContradictionSectionV3 =
 type AvailableMarketDataStatus = Exclude<MarketDataStatus, "unavailable">;
 
 type EngineAvailableMarketDataV3 = {
-  readonly availability: "available" | "partial";
+  readonly availability: "available";
   readonly provider: string;
   readonly status: AvailableMarketDataStatus;
+  readonly interval: CandleInterval;
+  readonly freshness: "within-cadence";
+  readonly provenance?: MarketDataProvenance;
+  readonly historicalWindow?: HistoricalDataWindow;
+  /** Unix timestamp in seconds for the newest normalized market observation. */
+  readonly latestTimestampSeconds?: number;
+};
+
+type EnginePartialMarketDataV3 = {
+  readonly availability: "partial";
+  readonly provider: string;
+  readonly status: AvailableMarketDataStatus;
+  readonly interval: CandleInterval;
+  readonly freshness: Extract<EngineMarketDataFreshnessV3, "unknown" | "stale">;
   readonly provenance?: MarketDataProvenance;
   readonly historicalWindow?: HistoricalDataWindow;
   /** Unix timestamp in seconds for the newest normalized market observation. */
@@ -791,6 +807,8 @@ type EngineUnavailableMarketDataV3 = {
   readonly availability: "unavailable";
   readonly provider: string | null;
   readonly status: "unavailable";
+  readonly interval: CandleInterval;
+  readonly freshness: "unavailable";
   readonly reason?: string;
   readonly provenance?: MarketDataProvenance;
   readonly historicalWindow?: HistoricalDataWindow;
@@ -800,6 +818,7 @@ type EngineUnavailableMarketDataV3 = {
 
 export type EngineMarketDataV3 =
   | EngineAvailableMarketDataV3
+  | EnginePartialMarketDataV3
   | EngineUnavailableMarketDataV3;
 
 export type EngineMacroStrength = "weak" | "moderate" | "strong";

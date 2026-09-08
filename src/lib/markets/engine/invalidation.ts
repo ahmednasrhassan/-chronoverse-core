@@ -172,7 +172,7 @@ function buildWeakeningTriggers(
     {
       code: "MARKET_DATA_STALE",
       effect: "weakens",
-      predicate: { kind: "market-data-status-equal", status: "stale" },
+      predicate: { kind: "market-data-freshness-equal", freshness: "stale" },
     },
   );
   return triggers;

@@ -311,6 +311,7 @@ async function compareCase(
     marketData: {
       provider: prepared.targetHistory.provenance?.provider ?? null,
       status: prepared.targetHistory.status,
+      interval: prepared.targetHistory.interval,
       provenance: {
         provider: prepared.targetHistory.provenance!.provider!,
         fetchedAt: prepared.targetHistory.provenance!.fetchedAt!,
