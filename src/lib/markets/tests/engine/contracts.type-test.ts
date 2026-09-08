@@ -9,9 +9,24 @@ import {
   type EngineCrossAssetSectionV3,
   type EngineMacroSectionV3,
   type EngineMarketDataV3,
+  type EngineInvalidationSectionV1,
   type EngineRegimeV3,
   type EngineResultV3,
+  type EngineScenarioSectionV1,
 } from "../../engine/contracts";
+
+const scenarioLifecycleContract = [
+  { availability: "not-computed" },
+  { availability: "unavailable", reasonCode: "DECISION_NOT_COMPUTED" },
+] as const satisfies readonly EngineScenarioSectionV1[];
+
+const invalidationLifecycleContract = [
+  { availability: "not-computed" },
+  { availability: "unavailable", reasonCode: "SIGNAL_UNAVAILABLE" },
+] as const satisfies readonly EngineInvalidationSectionV1[];
+
+void scenarioLifecycleContract;
+void invalidationLifecycleContract;
 
 const crossAssetLifecycleContract = [
   { availability: "available", data: { score: 0, strengthMagnitude: 0, coverage: 1, relationships: [], dataQuality: { availability: "not-computed" } } },
@@ -53,6 +68,7 @@ const futureLayersNotComputed = {
   crossAsset: { availability: "not-computed" },
   positioning: { availability: "unavailable", reason: "No source configured" },
   scenario: { availability: "not-computed" },
+  invalidation: { availability: "not-computed" },
   contradiction: { availability: "not-computed" },
   confidence: { availability: "not-computed" },
   decision: { availability: "not-computed" },

@@ -140,6 +140,309 @@ export type EngineDecisionSectionV3 =
       readonly reason?: string;
     };
 
+export type EngineScenarioStanceV1 = EngineDecisionStanceV3;
+
+export type EngineScenarioRelationToDecisionV1 =
+  | "current"
+  | "aligned"
+  | "counterfactual";
+
+export type EngineEvidenceRelationV1 =
+  | "supports"
+  | "opposes"
+  | "neutral"
+  | "unknown"
+  | "not-applicable";
+
+export type EngineScenarioEvidenceRelationV1 = EngineEvidenceRelationV1;
+
+export type EngineScenarioConditionStatusV1 =
+  | "met"
+  | "unmet"
+  | "unknown"
+  | "not-applicable";
+
+export type EngineEvidenceReferenceV1 =
+  | {
+      readonly kind: "channel";
+      readonly channel: "signal" | "macro";
+      readonly role: "primary";
+    }
+  | {
+      readonly kind: "channel";
+      readonly channel: "crossAsset";
+      readonly role: "corroborative";
+    }
+  | {
+      readonly kind: "driver";
+      readonly channel: "macro";
+      readonly id: string;
+      readonly role: "explanatory";
+    }
+  | {
+      readonly kind: "relationship";
+      readonly channel: "crossAsset";
+      readonly id: string;
+      readonly role: "explanatory";
+    };
+
+export type EngineScenarioEvidenceReferenceV1 = EngineEvidenceReferenceV1;
+
+export type EngineCanonicalSignalSectionV1 =
+  | { readonly availability: "available"; readonly data: MarketSignalResult }
+  | {
+      readonly availability: "partial";
+      readonly data: MarketSignalResult;
+      readonly missing: readonly string[];
+    }
+  | { readonly availability: "unavailable"; readonly reason?: string }
+  | { readonly availability: "not-computed" };
+
+export type EngineScenarioConditionReferenceV1 =
+  | EngineScenarioEvidenceReferenceV1
+  | {
+      readonly kind: "risk";
+      readonly section: "risk";
+    }
+  | {
+      readonly kind: "dataQuality";
+      readonly section: "confidence.data";
+    }
+  | {
+      readonly kind: "marketData";
+      readonly section: "marketData";
+    };
+
+export interface EngineScenarioEvidenceObservationV1 {
+  readonly reference: EngineScenarioEvidenceReferenceV1;
+  readonly relation: EngineScenarioEvidenceRelationV1;
+}
+
+export type EngineScenarioConditionCodeV1 =
+  | "TARGET_DIRECTION_SUPPORTED"
+  | "EVIDENCE_BECOMES_SUPPORTIVE"
+  | "PRIMARY_SIGNAL_CEASES_SUPPORT"
+  | "SUPPORTING_MACRO_DRIVER_CEASES_SUPPORT"
+  | "SUPPORTING_MACRO_DRIVER_REVERSES"
+  | "CORROBORATIVE_RELATIONSHIP_CEASES_SUPPORT"
+  | "CORROBORATIVE_RELATIONSHIP_REVERSES"
+  | "SUPPORTING_EVIDENCE_BECOMES_UNAVAILABLE"
+  | "RELEVANT_DATA_CONFIDENCE_PARTIAL"
+  | "RELEVANT_DATA_CONFIDENCE_UNAVAILABLE"
+  | "MARKET_DATA_STALE"
+  | "RISK_LEVEL_HIGH";
+
+export interface EngineScenarioConditionV1 {
+  readonly code: EngineScenarioConditionCodeV1;
+  readonly reference: EngineScenarioConditionReferenceV1;
+  readonly expectedRelation?: "supports" | "opposes" | "neutral";
+  readonly status: EngineScenarioConditionStatusV1;
+}
+
+export interface EngineScenarioCaseV1 {
+  readonly id: "base" | "bullish" | "bearish";
+  readonly targetStance: EngineScenarioStanceV1;
+  readonly relationToDecision: EngineScenarioRelationToDecisionV1;
+  readonly supportingEvidence:
+    readonly EngineScenarioEvidenceObservationV1[];
+  readonly opposingEvidence:
+    readonly EngineScenarioEvidenceObservationV1[];
+  readonly neutralEvidence:
+    readonly EngineScenarioEvidenceObservationV1[];
+  readonly notApplicableEvidence:
+    readonly EngineScenarioEvidenceObservationV1[];
+  readonly unknownEvidence:
+    readonly EngineScenarioEvidenceObservationV1[];
+  readonly dominantSupportingDrivers:
+    readonly EngineScenarioEvidenceReferenceV1[];
+  readonly strengtheningConditions:
+    readonly EngineScenarioConditionV1[];
+  readonly weakeningConditions:
+    readonly EngineScenarioConditionV1[];
+}
+
+type EngineDirectionalScenarioCaseV1<
+  TId extends "bullish" | "bearish",
+> = Omit<
+  EngineScenarioCaseV1,
+  "id" | "targetStance" | "relationToDecision"
+> & {
+  readonly id: TId;
+  readonly targetStance: TId;
+  readonly relationToDecision: "aligned" | "counterfactual";
+};
+
+export interface EngineScenarioV1 {
+  readonly semantic: "conditional-evidence-configurations-v1";
+  readonly base: EngineScenarioCaseV1 & {
+    readonly id: "base";
+    readonly relationToDecision: "current";
+  };
+  readonly bullish: EngineDirectionalScenarioCaseV1<"bullish">;
+  readonly bearish: EngineDirectionalScenarioCaseV1<"bearish">;
+}
+
+export type EngineFoundationMissingCodeV1 =
+  | "decision"
+  | "signal"
+  | "macro"
+  | "crossAsset"
+  | "marketData"
+  | "dataConfidence"
+  | "macroDataQuality"
+  | "crossAssetDataQuality";
+
+export type EngineScenarioMissingCodeV1 = EngineFoundationMissingCodeV1;
+
+export type EngineScenarioUnavailableReasonCodeV1 =
+  | "DECISION_NOT_COMPUTED"
+  | "DECISION_UNAVAILABLE"
+  | "SIGNAL_NOT_COMPUTED"
+  | "SIGNAL_UNAVAILABLE"
+  | "INVALID_CANONICAL_INPUT";
+
+export type EngineScenarioSectionV1 =
+  | { readonly availability: "not-computed" }
+  | {
+      readonly availability: "unavailable";
+      readonly reasonCode: EngineScenarioUnavailableReasonCodeV1;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineScenarioV1;
+      readonly missing: readonly EngineScenarioMissingCodeV1[];
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineScenarioV1;
+    };
+
+export type EngineInvalidationPredicateV1 =
+  | {
+      readonly kind: "decision-stance-not-equal";
+      readonly stance: EngineDecisionStanceV3;
+    }
+  | {
+      readonly kind: "decision-availability-equal";
+      readonly availability: "unavailable";
+    }
+  | {
+      readonly kind: "evidence-relation-not-equal";
+      readonly reference: EngineEvidenceReferenceV1;
+      readonly relation: "supports";
+    }
+  | {
+      readonly kind: "evidence-relation-equal";
+      readonly reference: EngineEvidenceReferenceV1;
+      readonly relation: "opposes";
+    }
+  | {
+      readonly kind: "evidence-availability-equal";
+      readonly reference: EngineEvidenceReferenceV1;
+      readonly availability: "unavailable";
+    }
+  | {
+      readonly kind: "risk-level-equal";
+      readonly level: "high";
+    }
+  | {
+      readonly kind: "data-confidence-availability-equal";
+      readonly availability: "partial" | "unavailable";
+    }
+  | {
+      readonly kind: "market-data-status-equal";
+      readonly status: "stale";
+    };
+
+export type EngineInvalidationTriggerCodeV1 =
+  | "DECISION_STANCE_NO_LONGER_MATCHES_THESIS"
+  | "DECISION_BECOMES_UNAVAILABLE"
+  | "PRIMARY_SIGNAL_CEASES_SUPPORT"
+  | "SUPPORTING_MACRO_DRIVER_CEASES_SUPPORT"
+  | "SUPPORTING_MACRO_DRIVER_REVERSES"
+  | "CORROBORATIVE_RELATIONSHIP_CEASES_SUPPORT"
+  | "CORROBORATIVE_RELATIONSHIP_REVERSES"
+  | "SUPPORTING_EVIDENCE_BECOMES_UNAVAILABLE"
+  | "RELEVANT_DATA_CONFIDENCE_PARTIAL"
+  | "RELEVANT_DATA_CONFIDENCE_UNAVAILABLE"
+  | "MARKET_DATA_STALE"
+  | "RISK_LEVEL_HIGH";
+
+interface EngineInvalidationTriggerBaseV1 {
+  readonly predicate: EngineInvalidationPredicateV1;
+}
+
+export type EngineInvalidatingTriggerV1 = EngineInvalidationTriggerBaseV1 & {
+  readonly code:
+    | "DECISION_STANCE_NO_LONGER_MATCHES_THESIS"
+    | "PRIMARY_SIGNAL_CEASES_SUPPORT";
+  readonly effect: "invalidates";
+};
+
+export type EngineWeakeningTriggerV1 = EngineInvalidationTriggerBaseV1 & {
+  readonly code:
+    | "SUPPORTING_MACRO_DRIVER_CEASES_SUPPORT"
+    | "SUPPORTING_MACRO_DRIVER_REVERSES"
+    | "CORROBORATIVE_RELATIONSHIP_CEASES_SUPPORT"
+    | "CORROBORATIVE_RELATIONSHIP_REVERSES"
+    | "RELEVANT_DATA_CONFIDENCE_PARTIAL"
+    | "MARKET_DATA_STALE"
+    | "RISK_LEVEL_HIGH";
+  readonly effect: "weakens";
+};
+
+export type EngineAssessmentUnavailableTriggerV1 = EngineInvalidationTriggerBaseV1 & {
+  readonly code:
+    | "DECISION_BECOMES_UNAVAILABLE"
+    | "SUPPORTING_EVIDENCE_BECOMES_UNAVAILABLE"
+    | "RELEVANT_DATA_CONFIDENCE_UNAVAILABLE";
+  readonly effect: "assessment-unavailable";
+};
+
+export type EngineInvalidationTriggerV1 =
+  | EngineInvalidatingTriggerV1
+  | EngineWeakeningTriggerV1
+  | EngineAssessmentUnavailableTriggerV1;
+
+export interface EngineInvalidationV1 {
+  readonly semantic: "decision-anchored-transition-predicates-v1";
+  readonly thesis: {
+    readonly stance: EngineDecisionStanceV3;
+    readonly source: "decision";
+  };
+  readonly invalidatesWhen:
+    readonly [EngineInvalidatingTriggerV1, ...EngineInvalidatingTriggerV1[]];
+  readonly weakensWhen:
+    readonly EngineWeakeningTriggerV1[];
+  readonly assessmentFailsWhen:
+    readonly EngineAssessmentUnavailableTriggerV1[];
+  readonly currentFragilities:
+    readonly EngineEvidenceReferenceV1[];
+}
+
+export type EngineInvalidationUnavailableReasonCodeV1 =
+  | "DECISION_NOT_COMPUTED"
+  | "DECISION_UNAVAILABLE"
+  | "SIGNAL_NOT_COMPUTED"
+  | "SIGNAL_UNAVAILABLE"
+  | "INVALID_CANONICAL_INPUT";
+
+export type EngineInvalidationSectionV1 =
+  | { readonly availability: "not-computed" }
+  | {
+      readonly availability: "unavailable";
+      readonly reasonCode: EngineInvalidationUnavailableReasonCodeV1;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineInvalidationV1;
+      readonly missing: readonly EngineFoundationMissingCodeV1[];
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineInvalidationV1;
+    };
+
 export type EngineDecisionConvictionChangeV3 =
   | "increased"
   | "decreased"
@@ -511,7 +814,8 @@ export interface EngineResultV3<
   readonly migrationDetails?: EngineSerializable<TMigrationDetails>;
   readonly crossAsset: EngineCrossAssetSectionV3;
   readonly positioning: EngineDeferredSection;
-  readonly scenario: EngineDeferredSection;
+  readonly scenario: EngineScenarioSectionV1;
+  readonly invalidation: EngineInvalidationSectionV1;
   readonly contradiction: EngineContradictionSectionV3;
   readonly confidence: EngineConfidenceSectionV3;
   readonly decision: EngineDecisionSectionV3;

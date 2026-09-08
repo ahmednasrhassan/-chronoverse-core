@@ -147,6 +147,7 @@ export function calculateEngineResultV3<
     crossAsset,
     positioning: NOT_COMPUTED,
     scenario: NOT_COMPUTED,
+    invalidation: NOT_COMPUTED,
     contradiction,
     confidence,
     decision,
