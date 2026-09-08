@@ -11,6 +11,7 @@ import {
   type EngineMarketDataV3,
   type EngineInvalidationSectionV1,
   type EngineRegimeV3,
+  type EngineRecommendationSectionV1,
   type EngineResultV3,
   type EngineScenarioSectionV1,
 } from "../../engine/contracts";
@@ -27,6 +28,13 @@ const invalidationLifecycleContract = [
 
 void scenarioLifecycleContract;
 void invalidationLifecycleContract;
+
+const recommendationLifecycleContract = [
+  { availability: "not-computed" },
+  { availability: "unavailable", reasonCode: "DECISION_NOT_COMPUTED" },
+] as const satisfies readonly EngineRecommendationSectionV1[];
+
+void recommendationLifecycleContract;
 
 const crossAssetLifecycleContract = [
   { availability: "available", data: { score: 0, strengthMagnitude: 0, coverage: 1, relationships: [], dataQuality: { availability: "not-computed" } } },

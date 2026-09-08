@@ -443,6 +443,181 @@ export type EngineInvalidationSectionV1 =
       readonly data: EngineInvalidationV1;
     };
 
+export type EngineRecommendationPostureV1 =
+  | "act"
+  | "selective"
+  | "watch"
+  | "stand-aside";
+
+export type EngineRecommendationStrengthBandV1 =
+  | "strong"
+  | "moderate"
+  | "weak";
+
+export type EngineRecommendationContradictionBandV1 =
+  | "low"
+  | "material"
+  | "high"
+  | "severe"
+  | "not-applicable";
+
+export type EngineRecommendationDataQualityBandV1 =
+  | "adequate"
+  | "limited";
+
+export type EngineRecommendationDominantReasonV1 =
+  | { readonly code: "DECISION_DIRECTIONAL"; readonly source: "decision" }
+  | { readonly code: "DECISION_NEUTRAL"; readonly source: "decision" };
+
+export type EngineRecommendationSupportingReasonV1 =
+  | { readonly code: "DECISION_DIRECTIONAL"; readonly source: "decision" }
+  | { readonly code: "CONVICTION_STRONG"; readonly source: "confidence.conviction" }
+  | { readonly code: "CONVICTION_MODERATE"; readonly source: "confidence.conviction" }
+  | { readonly code: "CONTRADICTION_LOW"; readonly source: "contradiction" };
+
+export type EngineRecommendationOpposingReasonV1 =
+  | { readonly code: "CONTRADICTION_MATERIAL"; readonly source: "contradiction" }
+  | { readonly code: "CONTRADICTION_HIGH"; readonly source: "contradiction" }
+  | { readonly code: "CONTRADICTION_SEVERE"; readonly source: "contradiction" }
+  | { readonly code: "SCENARIO_HAS_OPPOSING_EVIDENCE"; readonly source: "scenario" };
+
+export type EngineRecommendationRestraintReasonV1 =
+  | { readonly code: "DECISION_NEUTRAL"; readonly source: "decision" }
+  | { readonly code: "CONVICTION_WEAK"; readonly source: "confidence.conviction" }
+  | { readonly code: "CONTRADICTION_NOT_APPLICABLE"; readonly source: "contradiction" }
+  | { readonly code: "CONTRADICTION_MATERIAL"; readonly source: "contradiction" }
+  | { readonly code: "CONTRADICTION_HIGH"; readonly source: "contradiction" }
+  | { readonly code: "CONTRADICTION_SEVERE"; readonly source: "contradiction" }
+  | { readonly code: "DATA_QUALITY_LIMITED"; readonly source: "confidence.data" }
+  | { readonly code: "DATA_CONFIDENCE_PARTIAL"; readonly source: "confidence.data" }
+  | { readonly code: "DECISION_PARTIAL"; readonly source: "decision" }
+  | { readonly code: "CONVICTION_PARTIAL"; readonly source: "confidence.conviction" }
+  | { readonly code: "CONTRADICTION_PARTIAL"; readonly source: "contradiction" }
+  | { readonly code: "MARKET_DATA_PARTIAL"; readonly source: "marketData" }
+  | { readonly code: "MARKET_DATA_UNAVAILABLE"; readonly source: "marketData" }
+  | { readonly code: "MARKET_DATA_STALE"; readonly source: "marketData" }
+  | { readonly code: "RISK_MODERATE"; readonly source: "risk" }
+  | { readonly code: "RISK_HIGH"; readonly source: "risk" }
+  | { readonly code: "SCENARIO_PARTIAL"; readonly source: "scenario" }
+  | { readonly code: "SCENARIO_NOT_COMPUTED"; readonly source: "scenario" }
+  | { readonly code: "SCENARIO_UNAVAILABLE"; readonly source: "scenario" }
+  | { readonly code: "SCENARIO_HAS_OPPOSING_EVIDENCE"; readonly source: "scenario" }
+  | { readonly code: "INVALIDATION_PARTIAL"; readonly source: "invalidation" }
+  | { readonly code: "INVALIDATION_NOT_COMPUTED"; readonly source: "invalidation" }
+  | { readonly code: "INVALIDATION_UNAVAILABLE"; readonly source: "invalidation" }
+  | { readonly code: "INVALIDATION_HAS_CURRENT_FRAGILITIES"; readonly source: "invalidation" };
+
+export type EngineRecommendationReasonV1 =
+  | EngineRecommendationDominantReasonV1
+  | EngineRecommendationSupportingReasonV1
+  | EngineRecommendationOpposingReasonV1
+  | EngineRecommendationRestraintReasonV1;
+
+export type EngineRecommendationScenarioProjectionV1 =
+  | { readonly availability: "not-computed" }
+  | {
+      readonly availability: "unavailable";
+      readonly reasonCode: EngineScenarioUnavailableReasonCodeV1;
+    }
+  | {
+      readonly availability: "available";
+      readonly base: "base";
+      readonly aligned: "bullish" | "bearish" | null;
+      readonly counterfactual: readonly ("bullish" | "bearish")[];
+    }
+  | {
+      readonly availability: "partial";
+      readonly missing: readonly EngineScenarioMissingCodeV1[];
+      readonly base: "base";
+      readonly aligned: "bullish" | "bearish" | null;
+      readonly counterfactual: readonly ("bullish" | "bearish")[];
+    };
+
+export type EngineRecommendationInvalidationProjectionV1 =
+  | { readonly availability: "not-computed" }
+  | {
+      readonly availability: "unavailable";
+      readonly reasonCode: EngineInvalidationUnavailableReasonCodeV1;
+    }
+  | {
+      readonly availability: "available";
+      readonly invalidatesWhen: EngineInvalidationV1["invalidatesWhen"];
+      readonly weakensWhen: EngineInvalidationV1["weakensWhen"];
+      readonly assessmentFailsWhen: EngineInvalidationV1["assessmentFailsWhen"];
+    }
+  | {
+      readonly availability: "partial";
+      readonly missing: readonly EngineFoundationMissingCodeV1[];
+      readonly invalidatesWhen: EngineInvalidationV1["invalidatesWhen"];
+      readonly weakensWhen: EngineInvalidationV1["weakensWhen"];
+      readonly assessmentFailsWhen: EngineInvalidationV1["assessmentFailsWhen"];
+    };
+
+export interface EngineRecommendationV1 {
+  readonly semantic: "canonical-operational-synthesis-v1";
+  readonly stance: EngineDecisionStanceV3;
+  readonly posture: EngineRecommendationPostureV1;
+  readonly strength: {
+    readonly source: "confidence.conviction";
+    readonly canonicalScore: number;
+    readonly band: EngineRecommendationStrengthBandV1;
+  };
+  readonly contradiction: {
+    readonly source: "contradiction";
+    readonly canonicalScore: number | null;
+    readonly band: EngineRecommendationContradictionBandV1;
+  };
+  readonly dataQuality: {
+    readonly source: "confidence.data";
+    readonly canonicalScore: number;
+    readonly band: EngineRecommendationDataQualityBandV1;
+  };
+  readonly dominantReason: EngineRecommendationDominantReasonV1;
+  readonly supportingReasons: readonly EngineRecommendationSupportingReasonV1[];
+  readonly opposingReasons: readonly EngineRecommendationOpposingReasonV1[];
+  readonly restraintReasons: readonly EngineRecommendationRestraintReasonV1[];
+  readonly dominantSupportingEvidence: readonly EngineEvidenceReferenceV1[];
+  readonly opposingEvidence: readonly EngineEvidenceReferenceV1[];
+  readonly scenario: EngineRecommendationScenarioProjectionV1;
+  readonly invalidation: EngineRecommendationInvalidationProjectionV1;
+}
+
+export type EngineRecommendationMissingCodeV1 =
+  | "decision"
+  | "conviction"
+  | "dataConfidence"
+  | "contradiction"
+  | "marketData"
+  | "scenario"
+  | "invalidation";
+
+export type EngineRecommendationUnavailableReasonCodeV1 =
+  | "DECISION_NOT_COMPUTED"
+  | "DECISION_UNAVAILABLE"
+  | "CONFIDENCE_NOT_COMPUTED"
+  | "CONFIDENCE_UNAVAILABLE"
+  | "CONVICTION_UNAVAILABLE"
+  | "DATA_CONFIDENCE_UNAVAILABLE"
+  | "CONTRADICTION_NOT_COMPUTED"
+  | "CONTRADICTION_UNAVAILABLE"
+  | "INVALID_CANONICAL_INPUT";
+
+export type EngineRecommendationSectionV1 =
+  | { readonly availability: "not-computed" }
+  | {
+      readonly availability: "unavailable";
+      readonly reasonCode: EngineRecommendationUnavailableReasonCodeV1;
+    }
+  | {
+      readonly availability: "partial";
+      readonly data: EngineRecommendationV1;
+      readonly missing: readonly EngineRecommendationMissingCodeV1[];
+    }
+  | {
+      readonly availability: "available";
+      readonly data: EngineRecommendationV1;
+    };
+
 export type EngineDecisionConvictionChangeV3 =
   | "increased"
   | "decreased"
@@ -820,5 +995,5 @@ export interface EngineResultV3<
   readonly confidence: EngineConfidenceSectionV3;
   readonly decision: EngineDecisionSectionV3;
   readonly decisionLifecycle: EngineDecisionLifecycleSectionV3;
-  readonly recommendation: EngineDeferredSection;
+  readonly recommendation: EngineRecommendationSectionV1;
 }

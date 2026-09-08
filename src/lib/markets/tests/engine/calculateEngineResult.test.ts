@@ -220,6 +220,9 @@ assertEqual(
 assertEqual(signalOnly.result.contradiction.availability, "not-applicable", "signal-only contradiction");
 assertEqual(signalOnly.result.regime.availability, "unavailable", "pure Regime lifecycle");
 assertEqual(signalOnly.result.decisionLifecycle.availability, "not-computed", "raw lifecycle");
+assertEqual(signalOnly.result.scenario.availability, "not-computed", "Scenario foundation remains deferred");
+assertEqual(signalOnly.result.invalidation.availability, "not-computed", "Invalidation foundation remains deferred");
+assertEqual(signalOnly.result.recommendation.availability, "not-computed", "Recommendation foundation remains deferred");
 
 const applicableMacro = calculate({ macro: macro() });
 assertEqual(applicableMacro.result.macro, applicableMacro.input.macro, "applicable Macro identity");
