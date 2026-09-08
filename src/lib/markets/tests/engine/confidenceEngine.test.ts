@@ -291,7 +291,7 @@ for (const invalidInput of [
   assertEqual(data.data.components.marketData.availability, "unavailable", "invalid history lifecycle");
 }
 
-// 10. Future components remain deferred while contradiction is canonical.
+// 10. Contextual and deferred components have distinct missing-evidence semantics.
 {
   const result = calculateEngineConfidenceV3(input());
   const data = requirePartial(result.data, "deferred data");
@@ -300,9 +300,16 @@ for (const invalidInput of [
   assertEqual(data.data.components.crossAsset.availability, "not-computed", "data crossAsset");
   assertEqual(data.data.components.positioning.availability, "not-computed", "data positioning");
   assertEqual(conviction.data.components.crossAsset.availability, "not-computed", "conviction crossAsset");
+  assertEqual(conviction.data.components.state.availability, "not-applicable", "conviction state context");
+  assertEqual(conviction.data.components.regime.availability, "not-applicable", "conviction regime context");
   assertEqual(conviction.data.components.positioning.availability, "not-computed", "conviction positioning");
   assertEqual(conviction.data.components.scenario.availability, "not-computed", "conviction scenario");
   assertEqual(conviction.data.components.contradiction.availability, "available", "conviction contradiction");
+  assertEqual(conviction.missing.includes("state"), false, "state is not missing evidence");
+  assertEqual(conviction.missing.includes("regime"), false, "regime is not missing evidence");
+  assertEqual(conviction.missing.includes("scenario"), false, "scenario is not missing evidence");
+  assertEqual(conviction.missing.includes("positioning"), true, "positioning remains missing evidence");
+  assertEqual(conviction.availability, "partial", "positioning keeps conviction partial");
 }
 
 function requireConvictionScore(

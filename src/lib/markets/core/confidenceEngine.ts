@@ -122,12 +122,12 @@ export function calculateEngineConfidenceV3<
     signal: signal.component,
     macro: macroConviction.component,
     state: {
-      availability: "unavailable" as const,
-      reason: "State confidence is derived and not independent conviction evidence.",
+      availability: "not-applicable" as const,
+      reason: "State is derived context and not independent conviction evidence.",
     },
     regime: {
-      availability: "unavailable" as const,
-      reason: "Current regime confidence is derived and not an independent measure.",
+      availability: "not-applicable" as const,
+      reason: "Regime is derived context and not independent conviction evidence.",
     },
     crossAsset: crossAsset.conviction.component,
     positioning: NOT_COMPUTED,
@@ -135,11 +135,8 @@ export function calculateEngineConfidenceV3<
     contradiction: contradiction.component,
   };
   const deferredMissing = [
-    "state",
-    "regime",
     ...crossAsset.conviction.missing,
     "positioning",
-    "scenario",
   ];
 
   if (input.macro.applicability === "not-applicable") {
