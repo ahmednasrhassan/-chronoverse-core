@@ -242,6 +242,9 @@ async function main(): Promise<void> {
   assertEqual(minimumResult.engineResult.evaluatedAt, CUTOVER_COMPUTED_AT, "canonical evaluatedAt");
   assertEqual(minimumResult.regimeMemory.current.timestamp, CUTOVER_COMPUTED_AT, "Regime timestamp");
   assertEqual(minimumResult.engineResult.crossAsset.availability, "not-applicable", "Oil Cross-Asset");
+  assertEqual(minimumResult.engineResult.scenario.availability, "partial", "Oil Scenario synthesis");
+  assertEqual(minimumResult.engineResult.invalidation.availability, "partial", "Oil Invalidation synthesis");
+  assertEqual(minimumResult.engineResult.recommendation.availability, "partial", "Oil Recommendation synthesis");
 
   const excessCalls = counters();
   const excessResult = await getCanonicalLiveOilIntelligence(

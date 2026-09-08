@@ -220,9 +220,45 @@ assertEqual(
 assertEqual(signalOnly.result.contradiction.availability, "not-applicable", "signal-only contradiction");
 assertEqual(signalOnly.result.regime.availability, "unavailable", "pure Regime lifecycle");
 assertEqual(signalOnly.result.decisionLifecycle.availability, "not-computed", "raw lifecycle");
-assertEqual(signalOnly.result.scenario.availability, "not-computed", "Scenario foundation remains deferred");
-assertEqual(signalOnly.result.invalidation.availability, "not-computed", "Invalidation foundation remains deferred");
-assertEqual(signalOnly.result.recommendation.availability, "not-computed", "Recommendation foundation remains deferred");
+assertEqual(signalOnly.result.scenario.availability, "partial", "Scenario is calculated conservatively");
+assertEqual(signalOnly.result.invalidation.availability, "partial", "Invalidation is calculated conservatively");
+assertEqual(signalOnly.result.recommendation.availability, "partial", "Recommendation is calculated conservatively");
+
+if (
+  signalOnly.result.scenario.availability !== "partial" ||
+  signalOnly.result.invalidation.availability !== "partial" ||
+  signalOnly.result.recommendation.availability !== "partial" ||
+  signalOnly.result.confidence.availability !== "available" ||
+  signalOnly.result.confidence.data.conviction.availability === "unavailable"
+) {
+  throw new Error("Expected usable partial synthesis and Conviction sections.");
+}
+
+assertEqual(
+  signalOnly.result.scenario.data.base.targetStance,
+  decision(signalOnly.result).stance,
+  "Scenario remains anchored to Decision",
+);
+assertEqual(
+  signalOnly.result.invalidation.data.thesis.stance,
+  decision(signalOnly.result).stance,
+  "Invalidation remains anchored to Decision",
+);
+assertEqual(
+  signalOnly.result.recommendation.data.scenario.availability,
+  signalOnly.result.scenario.availability,
+  "Recommendation receives computed Scenario lifecycle",
+);
+assertEqual(
+  signalOnly.result.recommendation.data.invalidation.availability,
+  signalOnly.result.invalidation.availability,
+  "Recommendation receives computed Invalidation lifecycle",
+);
+assertEqual(
+  signalOnly.result.confidence.data.conviction.data.components.scenario.availability,
+  "not-computed",
+  "Conviction Scenario component remains deferred",
+);
 
 const applicableMacro = calculate({ macro: macro() });
 assertEqual(applicableMacro.result.macro, applicableMacro.input.macro, "applicable Macro identity");

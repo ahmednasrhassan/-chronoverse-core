@@ -422,6 +422,9 @@ async function main(): Promise<void> {
   assertEqual(capture.decisionTimestamp, CUTOVER_COMPUTED_AT, "Gold Decision timestamp");
   assertEqual(filled.generatedAt, "2026-09-07T12:00:01.000Z", "Gold generatedAt");
   assertEqual(filled.intelligence.engineResult.crossAsset.availability, "not-applicable", "Gold Cross-Asset");
+  assertEqual(filled.intelligence.engineResult.scenario.availability, "partial", "Gold Scenario synthesis");
+  assertEqual(filled.intelligence.engineResult.invalidation.availability, "partial", "Gold Invalidation synthesis");
+  assertEqual(filled.intelligence.engineResult.recommendation.availability, "partial", "Gold Recommendation synthesis");
   assertDeep(Object.keys(filled.intelligence).sort(), [
     "confidence",
     "engineResult",

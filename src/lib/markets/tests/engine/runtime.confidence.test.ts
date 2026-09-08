@@ -353,8 +353,23 @@ async function main(): Promise<void> {
   assertDecisionMatchesConviction(applicable.runtime, "applicable");
   assertEqual(
     applicable.runtime.engineResult.recommendation.availability,
-    "not-computed",
+    "partial",
     "recommendation lifecycle",
+  );
+  assertEqual(
+    applicable.runtime.engineResult.scenario.availability,
+    "partial",
+    "scenario lifecycle",
+  );
+  assertEqual(
+    applicable.runtime.engineResult.invalidation.availability,
+    "partial",
+    "invalidation lifecycle",
+  );
+  assertEqual(
+    applicableConfidence.conviction.data.components.scenario.availability,
+    "not-computed",
+    "Conviction Scenario component remains deferred",
   );
   assertEqual(
     applicable.runtime.engineResult.crossAsset.availability,

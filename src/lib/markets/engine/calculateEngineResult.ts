@@ -16,6 +16,8 @@ import type {
 import {
   ENGINE_RESULT_VERSION,
   type EngineAssetId,
+  type EngineConfidenceInputV3,
+  type EngineConfidenceV3,
   type EngineCrossAssetSectionV3,
   type EngineMacroSectionV3,
   type EngineMarketDataV3,
@@ -23,6 +25,9 @@ import {
   type EngineResultV3,
   type EngineSerializable,
 } from "./contracts";
+import { calculateInvalidationV1 } from "./invalidation";
+import { calculateRecommendationV1 } from "./recommendation";
+import { calculateScenarioV1 } from "./scenario";
 
 export interface EngineCalculationMarketDataV3 {
   readonly provider: string | null;
@@ -127,6 +132,27 @@ export function calculateEngineResultV3<
     macro: macroEvidence,
     confidence,
   });
+  const dataConfidence = projectDataConfidenceInput(confidence.data.data);
+  const synthesisEvidence = {
+    decision,
+    signal,
+    macro: input.macro,
+    crossAsset,
+    marketData,
+    dataConfidence,
+    risk: input.intelligence.risk,
+  } as const;
+  const scenario = calculateScenarioV1(synthesisEvidence);
+  const invalidation = calculateInvalidationV1(synthesisEvidence);
+  const recommendation = calculateRecommendationV1({
+    decision,
+    confidence,
+    contradiction,
+    risk: input.intelligence.risk,
+    marketData,
+    scenario,
+    invalidation,
+  });
 
   return {
     version: ENGINE_RESULT_VERSION,
@@ -146,14 +172,28 @@ export function calculateEngineResultV3<
     migrationDetails: input.migrationDetails,
     crossAsset,
     positioning: NOT_COMPUTED,
-    scenario: NOT_COMPUTED,
-    invalidation: NOT_COMPUTED,
+    scenario,
+    invalidation,
     contradiction,
     confidence,
     decision,
     decisionLifecycle: NOT_COMPUTED,
-    recommendation: NOT_COMPUTED,
+    recommendation,
   };
+}
+
+function projectDataConfidenceInput(
+  section: EngineConfidenceV3["data"],
+): EngineConfidenceInputV3 {
+  if (section.availability === "unavailable") {
+    return section;
+  }
+
+  const data = section.data.score;
+
+  return section.availability === "available"
+    ? { availability: "available", data }
+    : { availability: "partial", data, missing: section.missing };
 }
 
 function resolveMacroEvidence<TDetails>(
