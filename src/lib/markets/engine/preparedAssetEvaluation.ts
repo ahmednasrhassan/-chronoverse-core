@@ -214,14 +214,8 @@ function validateCanonicalAssetBoundary(
   symbol: string,
   interval: CandleInterval,
 ): void {
-  const registrySymbol = assetRegistry[profile.id].providerSymbols.yahoo;
-
-  if (
-    symbol !== profile.symbol ||
-    registrySymbol === undefined ||
-    symbol !== registrySymbol
-  ) {
-    throw new TypeError("Prepared target symbol is inconsistent with canonical configuration.");
+  if (symbol !== profile.symbol) {
+    throw new TypeError("Prepared target product identity is inconsistent with its profile.");
   }
 
   if (interval !== profile.defaultInterval) {

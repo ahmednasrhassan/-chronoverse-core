@@ -9,6 +9,7 @@ import {
 } from "../../services/canonicalMarketSnapshot";
 import { calculateCrossAssetReferenceMoveV1 } from "../../engine/crossAssetFeatures";
 import type { MarketAssetId } from "../../core/assets";
+import { normalizeCanonicalObservationSeriesV1 } from "../../services/canonicalObservationSeries";
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -185,6 +186,11 @@ assertEqual(gold?.earliestTimestamp, candles().at(0)?.time, "earliest timestamp"
 assertEqual(gold?.latestTimestamp, candles().at(-1)?.time, "latest timestamp");
 assertEqual(gold?.provenance?.source, "fallback-live", "fallback provenance");
 assertEqual(gold?.provenance?.requestedSymbol, "GC=F", "requested symbol provenance");
+assertEqual(
+  JSON.stringify(gold?.observations),
+  JSON.stringify(candles().map((candle) => ({ timestamp: candle.time, close: candle.close }))),
+  "existing candle path remains identical",
+);
 assertEqual(ethereum?.availability, "unavailable", "isolated asset failure");
 assertEqual(ethereum?.reason, "Historical market data request failed.", "sanitized failure reason");
 assertEqual(JSON.stringify(snapshot).includes("provider secret"), false, "provider error is not exposed");
@@ -226,6 +232,71 @@ const allAvailable = await createCanonicalMarketSnapshotV1(
 );
 
 assertEqual(allAvailable.availability, "available", "all-success snapshot availability");
+
+const officialSeries = normalizeCanonicalObservationSeriesV1({
+  observations: candles().map((candle) => ({
+    timestamp: candle.time,
+    value: candle.close,
+  })),
+  metadata: {
+    provider: "official-test-provider",
+    source: "official-test-publisher",
+    seriesId: "OFFICIAL.WTI.SPOT",
+    requestedProductId: "official-wti-code",
+    canonicalProductId: "oil",
+    interval: "1d",
+    fetchedAt: 1_800_000_000,
+    sourceTimestamp: candles().at(-1)?.time,
+    status: "end_of_day",
+    unit: "USD/barrel",
+    seriesKind: "spot-price",
+  },
+});
+const observationSnapshot = await createCanonicalMarketSnapshotV1(
+  {
+    assetIds: ["oil"],
+    interval: "1d",
+    history: { kind: "range", range: "1y", minimumObservationCount: 61 },
+  },
+  {
+    loadHistoricalMarketData: async () => officialSeries,
+    now: () => new Date("2026-09-06T12:00:00.000Z"),
+  },
+);
+const officialOil = observationSnapshot.assets[0];
+assertEqual(officialOil?.availability, "available", "observation-series snapshot availability");
+assertEqual(officialOil?.observations[0]?.close, officialSeries.observations[0]?.value, "value maps directly to close");
+assertEqual(officialOil?.provenance?.source, "official-test-publisher", "series source provenance");
+assertEqual(officialOil?.provenance?.provider, "official-test-provider", "series provider provenance");
+assertEqual(officialOil?.provenance?.seriesId, "OFFICIAL.WTI.SPOT", "series identifier provenance");
+assertEqual(officialOil?.provenance?.requestedProductId, "official-wti-code", "requested product provenance");
+assertEqual(officialOil?.provenance?.canonicalProductId, "oil", "canonical product provenance");
+assertEqual(officialOil?.provenance?.unit, "USD/barrel", "unit provenance");
+assertEqual(officialOil?.provenance?.seriesKind, "spot-price", "series-kind provenance");
+assertEqual("open" in officialOil!.observations[0]!, false, "snapshot does not synthesize open");
+assertEqual("high" in officialOil!.observations[0]!, false, "snapshot does not synthesize high");
+assertEqual("low" in officialOil!.observations[0]!, false, "snapshot does not synthesize low");
+
+const wrongProduct = await createCanonicalMarketSnapshotV1(
+  {
+    assetIds: ["oil"],
+    interval: "1d",
+    history: { kind: "range", range: "1y" },
+  },
+  {
+    loadHistoricalMarketData: async () => normalizeCanonicalObservationSeriesV1({
+      observations: [{ timestamp: 100, value: 70 }],
+      metadata: { ...officialSeries.metadata, canonicalProductId: "gold" },
+    }),
+    now: () => new Date("2026-09-06T12:00:00.000Z"),
+  },
+);
+assertEqual(wrongProduct.assets[0]?.availability, "unavailable", "wrong canonical product rejected");
+assertEqual(
+  wrongProduct.assets[0]?.reason,
+  "Observation series identity is inconsistent with the canonical request.",
+  "provider-neutral identity rejection reason",
+);
 
 let emptyCalls = 0;
 const empty = await createCanonicalMarketSnapshotV1(

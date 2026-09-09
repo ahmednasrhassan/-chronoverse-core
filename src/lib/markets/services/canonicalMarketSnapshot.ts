@@ -10,6 +10,12 @@ import type {
 } from "../core/types";
 import { activeCrossAssetRelationshipsV1 } from "../engine/crossAssetRelationships";
 import {
+  isCanonicalObservationSeriesV1,
+  normalizeCanonicalObservationSeriesV1,
+  type CanonicalObservationSeriesKindV1,
+  type CanonicalObservationSeriesV1,
+} from "./canonicalObservationSeries";
+import {
   getHistoricalMarketData,
   type HistoricalMarketResult,
 } from "./historicalMarketData";
@@ -54,12 +60,17 @@ export interface NormalizedCanonicalMarketSnapshotRequestV1 {
 }
 
 export interface CanonicalMarketSnapshotProvenanceV1 {
-  readonly source: HistoricalMarketResult["source"];
+  readonly source: string;
   readonly provider: string | null;
   readonly requestedSymbol: string;
   readonly interval: CandleInterval;
   readonly fetchedAt?: number;
   readonly sourceTimestamp?: number;
+  readonly seriesId?: string;
+  readonly requestedProductId?: string;
+  readonly canonicalProductId?: string;
+  readonly unit?: string;
+  readonly seriesKind?: CanonicalObservationSeriesKindV1;
 }
 
 export interface CanonicalMarketSnapshotAssetV1 {
@@ -86,12 +97,19 @@ export interface CanonicalMarketSnapshotV1 {
   readonly reason?: string;
 }
 
-export type CanonicalHistoricalMarketDataLoaderV1 = (
+export type CanonicalMarketSourceResultV1 =
+  | HistoricalMarketResult
+  | CanonicalObservationSeriesV1;
+
+export type CanonicalMarketDataLoaderV1 = (
   symbol: string,
   range: string,
   interval: CandleInterval,
   assetClass: AssetClass,
-) => Promise<HistoricalMarketResult>;
+) => Promise<CanonicalMarketSourceResultV1>;
+
+/** Retained for compatibility with existing genuine-candle loader consumers. */
+export type CanonicalHistoricalMarketDataLoaderV1 = CanonicalMarketDataLoaderV1;
 
 export interface CanonicalMarketSnapshotDependenciesV1 {
   readonly loadHistoricalMarketData?: CanonicalHistoricalMarketDataLoaderV1;
@@ -238,7 +256,7 @@ export async function createCanonicalMarketSnapshotV1(
 async function loadAsset(
   assetId: MarketAssetId,
   request: NormalizedCanonicalMarketSnapshotRequestV1,
-  loader: CanonicalHistoricalMarketDataLoaderV1,
+  loader: CanonicalMarketDataLoaderV1,
 ): Promise<CanonicalMarketSnapshotAssetV1> {
   const profile = marketAssetProfiles[assetId];
   const common = {
@@ -248,7 +266,7 @@ async function loadAsset(
     interval: request.interval,
   } as const;
 
-  let result: HistoricalMarketResult;
+  let result: CanonicalMarketSourceResultV1;
 
   try {
     result = await loader(
@@ -261,7 +279,53 @@ async function loadAsset(
     return unavailableAsset(common, "Historical market data request failed.");
   }
 
-  const provenance = freezeProvenance(result, profile.symbol, request.interval);
+  if (isCanonicalObservationSeriesV1(result)) {
+    let series: CanonicalObservationSeriesV1;
+
+    try {
+      series = normalizeCanonicalObservationSeriesV1(result);
+    } catch {
+      return unavailableAsset(
+        common,
+        "Observation series contains invalid or conflicting data.",
+      );
+    }
+
+    const provenance = freezeObservationSeriesProvenance(series, profile.symbol);
+
+    if (
+      series.metadata.canonicalProductId !== assetId ||
+      series.metadata.interval !== request.interval
+    ) {
+      return unavailableAsset(
+        common,
+        "Observation series identity is inconsistent with the canonical request.",
+        provenance,
+        series.metadata.status,
+      );
+    }
+
+    if (series.metadata.status === "unavailable") {
+      return unavailableAsset(
+        common,
+        "Historical market data is unavailable.",
+        provenance,
+      );
+    }
+
+    return createAssetFromObservations(
+      common,
+      series.observations.map((observation) => ({
+        timestamp: observation.timestamp,
+        close: observation.value,
+      })),
+      request.minimumObservationCount,
+      provenance,
+      series.metadata.status,
+    );
+  }
+
+  const provenance = freezeHistoricalProvenance(result, profile.symbol, request.interval);
 
   if (result.status === "unavailable") {
     return unavailableAsset(
@@ -271,43 +335,13 @@ async function loadAsset(
     );
   }
 
-  let observations: readonly CanonicalMarketObservationV1[];
-
-  try {
-    observations = normalizeCanonicalMarketObservationsV1(
-      result.candles.map((candle) => ({ timestamp: candle.time, close: candle.close })),
-    );
-  } catch {
-    return unavailableAsset(
-      common,
-      "Historical market data contains invalid or conflicting observations.",
-      provenance,
-      result.status,
-    );
-  }
-
-  if (observations.length < request.minimumObservationCount) {
-    return Object.freeze({
-      ...common,
-      observations,
-      observationCount: observations.length,
-      ...observationBounds(observations),
-      provenance,
-      availability: "unavailable",
-      status: result.status,
-      reason: `At least ${request.minimumObservationCount} observations are required.`,
-    });
-  }
-
-  return Object.freeze({
-    ...common,
-    observations,
-    observationCount: observations.length,
-    ...observationBounds(observations),
+  return createAssetFromObservations(
+    common,
+    result.candles.map((candle) => ({ timestamp: candle.time, close: candle.close })),
+    request.minimumObservationCount,
     provenance,
-    availability: "available",
-    status: result.status,
-  });
+    result.status,
+  );
 }
 
 function defaultHistoricalLoader(
@@ -339,7 +373,51 @@ function unavailableAsset(
   });
 }
 
-function freezeProvenance(
+function createAssetFromObservations(
+  common: Pick<CanonicalMarketSnapshotAssetV1, "assetId" | "symbol" | "assetClass" | "interval">,
+  sourceObservations: readonly CanonicalMarketObservationV1[],
+  minimumObservationCount: number,
+  provenance: CanonicalMarketSnapshotProvenanceV1,
+  status: MarketDataStatus,
+): CanonicalMarketSnapshotAssetV1 {
+  let observations: readonly CanonicalMarketObservationV1[];
+
+  try {
+    observations = normalizeCanonicalMarketObservationsV1(sourceObservations);
+  } catch {
+    return unavailableAsset(
+      common,
+      "Historical market data contains invalid or conflicting observations.",
+      provenance,
+      status,
+    );
+  }
+
+  if (observations.length < minimumObservationCount) {
+    return Object.freeze({
+      ...common,
+      observations,
+      observationCount: observations.length,
+      ...observationBounds(observations),
+      provenance,
+      availability: "unavailable",
+      status,
+      reason: `At least ${minimumObservationCount} observations are required.`,
+    });
+  }
+
+  return Object.freeze({
+    ...common,
+    observations,
+    observationCount: observations.length,
+    ...observationBounds(observations),
+    provenance,
+    availability: "available",
+    status,
+  });
+}
+
+function freezeHistoricalProvenance(
   result: HistoricalMarketResult,
   requestedSymbol: string,
   interval: CandleInterval,
@@ -355,6 +433,27 @@ function freezeProvenance(
     ...(result.provenance?.sourceTimestamp === undefined
       ? {}
       : { sourceTimestamp: result.provenance.sourceTimestamp }),
+  });
+}
+
+function freezeObservationSeriesProvenance(
+  series: CanonicalObservationSeriesV1,
+  requestedSymbol: string,
+): CanonicalMarketSnapshotProvenanceV1 {
+  return Object.freeze({
+    source: series.metadata.source,
+    provider: series.metadata.provider,
+    requestedSymbol,
+    interval: series.metadata.interval,
+    fetchedAt: series.metadata.fetchedAt,
+    ...(series.metadata.sourceTimestamp === undefined
+      ? {}
+      : { sourceTimestamp: series.metadata.sourceTimestamp }),
+    seriesId: series.metadata.seriesId,
+    requestedProductId: series.metadata.requestedProductId,
+    canonicalProductId: series.metadata.canonicalProductId,
+    unit: series.metadata.unit,
+    seriesKind: series.metadata.seriesKind,
   });
 }
 

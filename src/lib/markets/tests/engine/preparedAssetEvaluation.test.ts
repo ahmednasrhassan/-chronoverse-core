@@ -1,4 +1,4 @@
-import type { MarketAssetId } from "../../core/assets";
+import { assetRegistry, type MarketAssetId } from "../../core/assets";
 import { marketAssetProfiles } from "../../core/assetProfiles";
 import type { EngineCrossAssetSectionV3, EngineMacroV3 } from "../../engine/contracts";
 import type { CanonicalMarketEvaluationV1 } from "../../engine/marketEvaluationCoordinator";
@@ -129,10 +129,32 @@ assertEqual(prepared.crossAsset, crossAsset, "exact Cross-Asset object preserved
 assertEqual(prepared.macro, notApplicable, "not-applicable Macro preserved");
 assertEqual(JSON.stringify(source), sourceBefore, "input not mutated");
 
+const originalYahooSymbol = assetRegistry.sp500.providerSymbols.yahoo;
+Object.defineProperty(assetRegistry.sp500.providerSymbols, "yahoo", {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  value: "PROVIDER-ONLY-SP500",
+});
+try {
+  assertEqual(
+    prepareAssetEvaluationV1(source, "sp500", notApplicable).availability,
+    "ready",
+    "prepared identity does not depend on Yahoo provider symbol",
+  );
+} finally {
+  Object.defineProperty(assetRegistry.sp500.providerSymbols, "yahoo", {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: originalYahooSymbol,
+  });
+}
+
 assertThrows(() => prepareAssetEvaluationV1(source, "silver", notApplicable), "not requested", "target not requested");
 assertThrows(() => prepareAssetEvaluationV1(
   evaluation("sp500", asset("sp500", minimum, { symbol: "SPX" })), "sp500", notApplicable,
-), "symbol", "symbol mismatch");
+), "product identity", "canonical product identity mismatch");
 assertThrows(() => prepareAssetEvaluationV1(
   evaluation("sp500", asset("gold", minimum)), "sp500", notApplicable,
 ), "history is inconsistent", "asset mismatch");
@@ -173,5 +195,16 @@ if (goldPrepared.availability !== "ready") throw new Error("expected Gold prepar
 assertEqual(goldPrepared.macro, applicable, "applicable Macro preserved");
 if (goldPrepared.macro.applicability !== "applicable") throw new Error("expected applicable Macro");
 assertEqual(goldPrepared.macro.section, macroSection, "exact applicable Macro section preserved");
+
+const oilProfile = marketAssetProfiles.oil;
+const oilMinimum = calculateMinimumTechnicalObservationCountV1(oilProfile);
+const oilPrepared = prepareAssetEvaluationV1(
+  evaluation("oil", asset("oil", oilMinimum)),
+  "oil",
+  applicable,
+);
+if (oilPrepared.availability !== "ready") throw new Error("expected Oil preparation ready");
+assertEqual(oilPrepared.targetHistory.symbol, oilProfile.symbol, "Oil symbol unchanged");
+assertEqual(oilPrepared.targetHistory.interval, oilProfile.defaultInterval, "Oil interval unchanged");
 
 console.log("PASS: Prepared Asset Evaluation V1");
