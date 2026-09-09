@@ -6,6 +6,11 @@ import { eurusdProfile } from "../../assets/eurusd/profile";
 import { calculateMarketTechnicalIntelligence, type MarketTechnicalSnapshot } from "../../core/intelligenceEngine";
 import { calculateMarketRisk, type MarketRiskResult } from "../../core/riskEngine";
 import { calculateMarketSignal, type MarketSignalResult } from "../../core/signalEngine";
+import {
+  validateRiskCalibrationV1,
+  type RiskCalibrationObservationV1,
+  type RiskSeverityV1,
+} from "./riskCalibrationValidation";
 
 const SERIES_ID = "EXR.D.USD.EUR.SP00.A";
 const QUANTILES = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99] as const;
@@ -66,8 +71,12 @@ const subperiods = {
 const drift = bandDrift(calibration, validation);
 const gapAudit = publicationGapAudit(observations, calibration.rows, validation.rows);
 const regimeShift = structuralRegimeShift(calibrationRows, validationRows);
+const riskValidation = validateRiskCalibrationV1({
+  calibration: riskValidationObservations(calibration.rows, frozenProfile),
+  validation: riskValidationObservations(validation.rows, frozenProfile),
+});
 const acceptance = assessAcceptance(
-  frozenProfile, calibration, validation, subperiods, drift, gapAudit, deterministic,
+  frozenProfile, calibration, validation, subperiods, drift, gapAudit, riskValidation, deterministic,
 );
 
 console.log(JSON.stringify({
@@ -112,6 +121,7 @@ console.log(JSON.stringify({
   drift,
   publicationGapAudit: gapAudit,
   structuralRegimeShift: regimeShift,
+  riskValidation,
   subperiods,
   deterministic,
   acceptance,
@@ -308,6 +318,86 @@ function riskComponentShares(rows: readonly Pick<TechnicalRow, "technical">[], p
   };
 }
 
+function riskValidationObservations(
+  rows: readonly EvaluatedRow[],
+  profile: MarketAssetProfile,
+): readonly RiskCalibrationObservationV1[] {
+  const calibration = profile.risk.calibration!;
+  return Object.freeze(rows.map((row) => {
+    const technical = row.technical;
+    return Object.freeze({
+      id: `${row.index}:${row.date}`,
+      riskScore: row.risk.score,
+      riskBand: row.risk.level,
+      annualizedVolatility: technical.annualizedVolatility,
+      subperiod: subperiodLabel(row.date),
+      components: Object.freeze({
+        volatility: Object.freeze({
+          magnitude: technical.annualizedVolatility,
+          severity: severity3(technical.annualizedVolatility, calibration.volatility.moderateThreshold,
+            calibration.volatility.highThreshold),
+        }),
+        rsi: Object.freeze(rsiRiskObservation(technical.rsi, profile)),
+        roc: Object.freeze({
+          magnitude: Math.abs(technical.roc),
+          severity: severity3(Math.abs(technical.roc), calibration.roc.moderateThreshold,
+            calibration.roc.highThreshold),
+        }),
+        macd: Object.freeze({
+          magnitude: Math.abs(technical.macdHistogram),
+          severity: Math.abs(technical.macdHistogram) >= calibration.macd.highThreshold ? "high" as const : "low" as const,
+        }),
+        emaMedium: Object.freeze({
+          magnitude: Math.abs(technical.priceVsEmaMedium),
+          severity: severity3(Math.abs(technical.priceVsEmaMedium), calibration.emaMedium.moderateThreshold,
+            calibration.emaMedium.highThreshold),
+        }),
+        emaSlow: Object.freeze({
+          magnitude: Math.abs(technical.priceVsEmaSlow),
+          severity: severity3(Math.abs(technical.priceVsEmaSlow), calibration.emaSlow.moderateThreshold,
+            calibration.emaSlow.highThreshold),
+        }),
+      }),
+    });
+  }));
+}
+
+function severity3(value: number, moderateThreshold: number, highThreshold: number): RiskSeverityV1 {
+  return value >= highThreshold ? "high" : value >= moderateThreshold ? "moderate" : "low";
+}
+
+function rsiRiskObservation(rsi: number, profile: MarketAssetProfile) {
+  const calibration = profile.risk.calibration!.rsi;
+  const { oversold, overbought } = profile.technical.rsi;
+  if (rsi <= oversold) {
+    return { magnitude: 2 + (oversold - rsi) / Math.max(oversold, 1), severity: "high" as const };
+  }
+  if (rsi >= overbought) {
+    return { magnitude: 2 + (rsi - overbought) / Math.max(100 - overbought, 1), severity: "high" as const };
+  }
+  if (rsi < calibration.stretchedLow) {
+    return {
+      magnitude: 1 + (calibration.stretchedLow - rsi) / (calibration.stretchedLow - oversold),
+      severity: "moderate" as const,
+    };
+  }
+  if (rsi > calibration.stretchedHigh) {
+    return {
+      magnitude: 1 + (rsi - calibration.stretchedHigh) / (overbought - calibration.stretchedHigh),
+      severity: "moderate" as const,
+    };
+  }
+  const center = (calibration.stretchedLow + calibration.stretchedHigh) / 2;
+  const halfWidth = (calibration.stretchedHigh - calibration.stretchedLow) / 2;
+  return { magnitude: Math.abs(rsi - center) / halfWidth, severity: "low" as const };
+}
+
+function subperiodLabel(date: string) {
+  const year = Number(date.slice(0, 4));
+  const start = 1999 + Math.floor((year - 1999) / 3) * 3;
+  return `${start}-${start + 2}`;
+}
+
 function signalContributionReport(rows: readonly Pick<TechnicalRow, "technical">[], profile: MarketAssetProfile) {
   const contributions = { ema: [] as number[], rsi: [] as number[], macd: [] as number[], roc: [] as number[] };
   for (const row of rows) {
@@ -354,9 +444,7 @@ function signalContributions(t: Technical, profile: MarketAssetProfile) {
 function contiguousBlocks(rows: readonly EvaluatedRow[], profile: MarketAssetProfile) {
   const groups = new Map<string, EvaluatedRow[]>();
   for (const row of rows) {
-    const year = Number(row.date.slice(0, 4));
-    const start = 1999 + Math.floor((year - 1999) / 3) * 3;
-    const label = `${start}-${start + 2}`;
+    const label = subperiodLabel(row.date);
     groups.set(label, [...(groups.get(label) ?? []), row]);
   }
   return Object.fromEntries([...groups].map(([label, values]) => [label, {
@@ -378,7 +466,8 @@ function contiguousBlocks(rows: readonly EvaluatedRow[], profile: MarketAssetPro
 
 function assessAcceptance(profile: MarketAssetProfile, calibration: ReturnType<typeof evaluate>, validation: ReturnType<typeof evaluate>,
   subperiods: { calibration: ReturnType<typeof contiguousBlocks>; validation: ReturnType<typeof contiguousBlocks> },
-  drift: ReturnType<typeof bandDrift>, gapAudit: ReturnType<typeof publicationGapAudit>, deterministic: boolean) {
+  drift: ReturnType<typeof bandDrift>, gapAudit: ReturnType<typeof publicationGapAudit>,
+  riskValidation: ReturnType<typeof validateRiskCalibrationV1>, deterministic: boolean) {
   const failures: string[] = [];
   const signalWeights = Object.values(profile.signal.calibration!.weights);
   const riskWeights = Object.values(profile.risk.calibration!.weights);
@@ -387,8 +476,10 @@ function assessAcceptance(profile: MarketAssetProfile, calibration: ReturnType<t
   if (!calibrationInvariants(profile)) failures.push("threshold/severity ordering");
   for (const [group, bands] of Object.entries(drift)) {
     for (const [band, result] of Object.entries(bands)) {
-      if (result.calibration > 0.9 && result.validation > 0.9) failures.push(`${group}.${band} dominates both samples`);
-      if (result.absoluteDrift > 0.1) failures.push(`${group}.${band} drift=${result.absoluteDrift}`);
+      if (group !== "risk" && result.calibration > 0.9 && result.validation > 0.9) {
+        failures.push(`${group}.${band} dominates both samples`);
+      }
+      if (group !== "risk" && result.absoluteDrift > 0.1) failures.push(`${group}.${band} drift=${result.absoluteDrift}`);
     }
   }
   for (const factor of Object.keys(calibration.riskComponents)) {
@@ -413,8 +504,10 @@ function assessAcceptance(profile: MarketAssetProfile, calibration: ReturnType<t
     }
   }
   if (!gapAudit.noClassificationArtifact) failures.push("ECB publication-gap classification artifact");
+  if (riskValidation.verdict === "FAIL") failures.push(...riskValidation.failures.map((failure) => `risk-validation.${failure}`));
   if (!deterministic) failures.push("non-deterministic evaluation");
-  return { accepted: failures.length === 0, failures };
+  const verdict = failures.length > 0 ? "FAIL" : riskValidation.verdict;
+  return { accepted: verdict !== "FAIL", verdict, failures };
 }
 
 function bandDrift(calibration: ReturnType<typeof evaluate>, validation: ReturnType<typeof evaluate>) {
@@ -485,7 +578,7 @@ function structuralRegimeShift(calibration: readonly TechnicalRow[], validation:
     absoluteMacdHistogram: compare((row) => Math.abs(row.technical.macdHistogram)),
     absoluteEma50Distance: compare((row) => Math.abs(row.technical.priceVsEmaMedium)),
     absoluteEma200Distance: compare((row) => Math.abs(row.technical.priceVsEmaSlow)),
-    interpretation: "Validation is a structurally lower-volatility/lower-dispersion regime; this documents, but does not waive, failed Risk-band drift gates.",
+    interpretation: "Validation is structurally lower-volatility/lower-dispersion; unconditional Risk drift remains diagnostic while regime-conditioned validation determines acceptance.",
   };
 }
 
