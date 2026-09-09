@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+
 import {
   calculateOilMacro,
   type OilMacroInput,
 } from "../../assets/oil/macro";
 import {
+  OIL_CANONICAL_PRODUCT_ID,
   oilProfile,
 } from "../../assets/oil/profile";
 import {
@@ -23,6 +26,9 @@ import type {
   CanonicalMarketEvaluationV1,
   CanonicalMarketEvaluationRequestV1,
 } from "../../engine/marketEvaluationCoordinator";
+import {
+  normalizeCanonicalObservationSeriesV1,
+} from "../../services/canonicalObservationSeries";
 import {
   CUTOVER_COMPUTED_AT,
   assertDeep,
@@ -53,6 +59,30 @@ const unavailableMacroInput: OilMacroInput = Object.freeze({
   globalDemandChangePct: null,
   usdChangePct: null,
 });
+
+function officialWtiSeries(count: number) {
+  const history = cutoverHistory(count, 65);
+
+  return normalizeCanonicalObservationSeriesV1({
+    observations: history.map((observation) => ({
+      timestamp: observation.timestamp,
+      value: observation.close,
+    })),
+    metadata: {
+      provider: "eia",
+      source: "U.S. Energy Information Administration",
+      seriesId: "PET.RWTC.D",
+      requestedProductId: "RWTC",
+      canonicalProductId: "oil",
+      interval: "1d",
+      fetchedAt: 1_800_000_000,
+      sourceTimestamp: history.at(-1)?.timestamp,
+      status: "end_of_day",
+      unit: "USD/barrel",
+      seriesKind: "spot-price",
+    },
+  });
+}
 
 interface Counters {
   coordinator: number;
@@ -185,7 +215,88 @@ function assertHistoryShortCircuit(calls: Counters, label: string): void {
   assertEqual(calls.mapper, 0, `${label} mapper`);
 }
 
+function assertOfficialSourceContract(): void {
+  const production = readFileSync(
+    "src/lib/markets/assets/oil/productionRuntime.ts",
+    "utf8",
+  );
+  const cache = readFileSync(
+    "src/lib/markets/providers/eia/wtiPriceSeriesCache.ts",
+    "utf8",
+  );
+
+  assertEqual(production.includes("getEiaWtiPriceSeriesV1"), true, "official WTI loader active");
+  assertEqual(production.includes("createCanonicalMarketSnapshotV1"), true, "observation snapshot active");
+  assertEqual(production.includes("historicalMarketData"), false, "historical service absent");
+  assertEqual(production.includes("getHistoricalMarketData"), false, "historical loader absent");
+  assertEqual(production.includes("Yahoo"), false, "Yahoo absent from Oil production");
+  assertEqual(production.includes("CL=F"), false, "CL=F absent from Oil production");
+  assertEqual(cache.includes("unstable_cache"), true, "shared server cache configured");
+  assertEqual(cache.includes("6 * 60 * 60"), true, "six-hour EIA WTI cache cadence");
+  assertEqual(
+    cache.match(/loadEiaWtiPriceSeriesV1\(\)/g)?.length,
+    1,
+    "one upstream adapter call per cache fill",
+  );
+}
+
 async function main(): Promise<void> {
+  assertOfficialSourceContract();
+
+  const officialCalls = counters();
+  let primarySeriesCalls = 0;
+  const officialResult = await getCanonicalLiveOilIntelligence({
+    ...productionDependencies(
+      cutoverEvaluation("oil", cutoverHistory(200, 65)),
+      availableMacroInput,
+      officialCalls,
+    ),
+    coordinateMarketEvaluation: undefined,
+    loadPrimaryMarketSeries: async () => {
+      primarySeriesCalls += 1;
+      return officialWtiSeries(200);
+    },
+  });
+  assertEqual(primarySeriesCalls, 1, "official primary series loaded once");
+  assertEqual(officialCalls.coordinator, 0, "test coordinator bypassed by production path");
+  assertEqual(officialResult.engineResult.symbol, OIL_CANONICAL_PRODUCT_ID, "canonical WTI product identity");
+  assertEqual(officialResult.marketData.provider, "eia", "production EIA provider");
+  assertEqual(officialResult.marketData.status, "end_of_day", "production daily delivery status");
+  assertEqual(officialResult.marketData.provenance?.provider, "eia", "production EIA provenance");
+  assertEqual(officialResult.macro.coverage, 0.85, "official path Macro coverage unchanged");
+  assertEqual(officialResult.macro.canonical.availability, "partial", "official path Macro partiality");
+  if (officialResult.macro.canonical.availability !== "partial") {
+    throw new Error("Expected partial Oil Macro on the official WTI path.");
+  }
+  assertEqual(officialResult.macro.canonical.missing.join(","), "usd", "official path USD remains missing");
+  assertEqual(
+    officialResult.engineResult.confidence.availability === "unavailable",
+    false,
+    "genuine partial Macro retains usable Data Confidence",
+  );
+
+  const primaryFailureCalls = counters();
+  let failedPrimaryCalls = 0;
+  await expectFailure(
+    () => getCanonicalLiveOilIntelligence({
+      ...productionDependencies(
+        cutoverEvaluation("oil", cutoverHistory(200, 65)),
+        availableMacroInput,
+        primaryFailureCalls,
+      ),
+      coordinateMarketEvaluation: undefined,
+      loadPrimaryMarketSeries: async () => {
+        failedPrimaryCalls += 1;
+        throw new Error("Injected EIA WTI failure.");
+      },
+    }),
+    "EIA WTI failure rejects without fallback",
+  );
+  assertEqual(failedPrimaryCalls, 1, "failed EIA primary attempted once");
+  assertEqual(primaryFailureCalls.coordinator, 0, "no alternate coordinator fallback");
+  assertEqual(primaryFailureCalls.macroLoader, 0, "primary failure short-circuits Macro");
+  assertEqual(primaryFailureCalls.genericRuntime, 0, "primary failure short-circuits Engine");
+
   const unavailableCalls = counters();
   await expectFailure(
     () => getCanonicalLiveOilIntelligence(

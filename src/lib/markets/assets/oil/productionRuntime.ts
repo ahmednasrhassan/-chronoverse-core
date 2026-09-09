@@ -3,6 +3,7 @@ import {
 } from "../../engine/decisionLifecycleRuntime";
 import {
   coordinateCanonicalMarketEvaluationV1,
+  type CanonicalMarketEvaluationRequestV1,
 } from "../../engine/marketEvaluationCoordinator";
 import {
   calculateMinimumTechnicalObservationCountV1,
@@ -14,6 +15,15 @@ import {
 import {
   advanceCanonicalDecisionSnapshot,
 } from "../../persistence/decisionSnapshotRedis";
+import {
+  getEiaWtiPriceSeriesV1,
+} from "../../providers/eia/wtiPriceSeriesCache";
+import {
+  createCanonicalMarketSnapshotV1,
+} from "../../services/canonicalMarketSnapshot";
+import type {
+  CanonicalObservationSeriesV1,
+} from "../../services/canonicalObservationSeries";
 import {
   calculateOilMacro,
 } from "./macro";
@@ -42,6 +52,8 @@ const OIL_HISTORY_RANGE = "5y";
 export interface OilProductionRuntimeDependenciesV1 {
   readonly coordinateMarketEvaluation?:
     typeof coordinateCanonicalMarketEvaluationV1;
+  readonly loadPrimaryMarketSeries?:
+    () => Promise<CanonicalObservationSeriesV1>;
   readonly loadMacroInput?: typeof getOilMacroInput;
   readonly calculateMacro?: typeof calculateOilMacro;
   readonly evaluatePrepared?: typeof evaluatePreparedOilV1;
@@ -63,7 +75,10 @@ export async function getCanonicalLiveOilIntelligence(
 ): Promise<OilCompatibilityResultV1> {
   const coordinateMarketEvaluation =
     dependencies.coordinateMarketEvaluation ??
-    coordinateCanonicalMarketEvaluationV1;
+    ((request) => coordinateOfficialOilMarketEvaluationV1(
+      request,
+      dependencies.loadPrimaryMarketSeries ?? getEiaWtiPriceSeriesV1,
+    ));
   const minimumRequiredHistory =
     calculateMinimumTechnicalObservationCountV1(oilProfile);
   const evaluation = await coordinateMarketEvaluation({
@@ -129,6 +144,28 @@ export async function getCanonicalLiveOilIntelligence(
     engineResult,
     macro,
     regimeMemory: regimeEnrichment.regimeMemory,
+  });
+}
+
+async function coordinateOfficialOilMarketEvaluationV1(
+  request: CanonicalMarketEvaluationRequestV1,
+  loadPrimaryMarketSeries: () => Promise<CanonicalObservationSeriesV1>,
+) {
+  return coordinateCanonicalMarketEvaluationV1(request, {
+    createSnapshot: async (snapshotRequest) => {
+      if (
+        snapshotRequest.assetIds.length !== 1 ||
+        snapshotRequest.assetIds[0] !== "oil"
+      ) {
+        throw new TypeError(
+          "Official Oil production requires an Oil-only market snapshot.",
+        );
+      }
+
+      return createCanonicalMarketSnapshotV1(snapshotRequest, {
+        loadHistoricalMarketData: async () => loadPrimaryMarketSeries(),
+      });
+    },
   });
 }
 

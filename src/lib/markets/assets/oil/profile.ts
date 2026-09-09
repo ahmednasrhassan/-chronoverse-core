@@ -2,11 +2,14 @@ import {
   defineMarketAssetProfile,
 } from "../../core/assetProfile";
 
+export const OIL_CANONICAL_PRODUCT_ID =
+  "WTI-CUSHING-SPOT" as const;
+
 export const oilProfile =
   defineMarketAssetProfile({
     id: "oil",
 
-    symbol: "CL=F",
+    symbol: OIL_CANONICAL_PRODUCT_ID,
 
     displayName: "WTI Crude Oil",
 
