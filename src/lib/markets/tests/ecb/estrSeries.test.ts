@@ -64,7 +64,12 @@ async function assertRejects(
   assertEqual(rejected, true, label);
 }
 
-function row(dataType: "WT" | "RP" | "CM", overrides: CsvOverrides = {}): string {
+function row(
+  dataType: "WT" | "RP" | "CM",
+  overrides: CsvOverrides = {},
+  headers: readonly string[] = ECB_ESTR_FULL_CSV_HEADERS_V1,
+  additionalValues: Readonly<Record<string, string>> = {},
+): string {
   const defaults: CsvOverrides = {
     KEY: {
       WT: ECB_ESTR_SERIES_ID_V1,
@@ -84,9 +89,13 @@ function row(dataType: "WT" | "RP" | "CM", overrides: CsvOverrides = {}): string
     UNIT_MEASURE: dataType === "WT" ? "PC" : "_Z",
     UNIT_MULT: "0",
   };
-  const values = { ...defaults, ...overrides };
+  const values: Readonly<Record<string, string | undefined>> = {
+    ...defaults,
+    ...overrides,
+    ...additionalValues,
+  };
 
-  return ECB_ESTR_FULL_CSV_HEADERS_V1.map((header) =>
+  return headers.map((header) =>
     escapeCsv(values[header] ?? "")).join(",");
 }
 
@@ -129,6 +138,68 @@ function valueOn(series: EcbEstrSeriesV1, period: string): number | undefined {
 }
 
 async function main(): Promise<void> {
+  const exactSchemaObservations = parseEcbEstrCsvV1(csv(
+    triplet("2026-09-09", "2.189"),
+  ));
+  assertEqual(exactSchemaObservations.length, 3,
+    "original 29-column schema accepted");
+
+  const reorderedHeaders = [...ECB_ESTR_FULL_CSV_HEADERS_V1].reverse();
+  const reorderedObservations = parseEcbEstrCsvV1(csv([
+    row("WT", { OBS_VALUE: "2.189" }, reorderedHeaders),
+    row("RP", { OBS_VALUE: "1" }, reorderedHeaders),
+    row("CM", { OBS_VALUE: "0" }, reorderedHeaders),
+  ], reorderedHeaders));
+  assertDeepEqual(reorderedObservations.map((item) => [
+    item.dataType,
+    item.seriesId,
+    item.value,
+    item.unitMeasure,
+  ]), [
+    ["WT", ECB_ESTR_SERIES_ID_V1, "2.189", "PC"],
+    ["RP", ECB_ESTR_PUBLICATION_TYPE_SERIES_ID_V1, "1", "_Z"],
+    ["CM", ECB_ESTR_CALCULATION_METHOD_SERIES_ID_V1, "0", "_Z"],
+  ], "reordered columns retain named WT, RP, and CM extraction");
+
+  const oneAdditionalHeader = [
+    ...ECB_ESTR_FULL_CSV_HEADERS_V1,
+    "OPTIONAL_NOTE",
+  ];
+  const oneAdditionalColumn = parseEcbEstrCsvV1(csv([
+    row("WT", {}, oneAdditionalHeader, { OPTIONAL_NOTE: "headline" }),
+  ], oneAdditionalHeader));
+  assertEqual(oneAdditionalColumn[0]?.dataType, "WT",
+    "one additional unique optional column accepted");
+
+  const multipleAdditionalHeaders = [
+    "OPTIONAL_PREFIX",
+    ...ECB_ESTR_FULL_CSV_HEADERS_V1,
+    "OPTIONAL_SUFFIX",
+  ];
+  const multipleAdditionalColumns = parseEcbEstrCsvV1(csv([
+    row("RP", {}, multipleAdditionalHeaders, {
+      OPTIONAL_PREFIX: "prefix",
+      OPTIONAL_SUFFIX: "suffix",
+    }),
+  ], multipleAdditionalHeaders));
+  assertEqual(multipleAdditionalColumns[0]?.dataType, "RP",
+    "multiple additional unique optional columns accepted");
+
+  assertThrows(() => parseEcbEstrCsvV1(csv([
+    row("WT"),
+  ], ECB_ESTR_FULL_CSV_HEADERS_V1.slice(0, -1))),
+  "missing required expected header rejected");
+  const duplicateHeaders = [
+    ...ECB_ESTR_FULL_CSV_HEADERS_V1,
+    "KEY",
+  ];
+  assertThrows(() => parseEcbEstrCsvV1(csv([
+    row("WT", {}, duplicateHeaders),
+  ], duplicateHeaders)), "duplicate header rejected");
+  assertThrows(() => parseEcbEstrCsvV1(csv([
+    `${row("WT")},unexpected`,
+  ])), "malformed row width rejected");
+
   const domainRows = [
     ...triplet("2026-09-07", "-0.125"),
     ...triplet("2026-09-08", "0"),
@@ -220,9 +291,6 @@ async function main(): Promise<void> {
   assertThrows(() => parseEcbEstrCsvV1(""), "empty response rejected");
   assertThrows(() => parseEcbEstrCsvV1("KEY\n\"unterminated"),
     "malformed CSV rejected");
-  assertThrows(() => parseEcbEstrCsvV1(csv(triplet("2026-09-09", "2.189"),
-    ECB_ESTR_FULL_CSV_HEADERS_V1.slice(0, -1))), "unexpected schema rejected");
-
   for (const publication of ["0", "1"] as const) {
     const item = normalize(triplet("2026-09-09", "2.189", publication))
       .observationMetadata[0]!;

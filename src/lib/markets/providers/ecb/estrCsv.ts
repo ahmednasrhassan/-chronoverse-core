@@ -33,8 +33,8 @@ export function parseEcbEstrCsvV1(
   const headers = normalizeEcbCsvHeaders(records[0]!);
 
   if (
-    headers.length !== ECB_ESTR_FULL_CSV_HEADERS_V1.length ||
-    headers.some((header, index) => header !== ECB_ESTR_FULL_CSV_HEADERS_V1[index])
+    ECB_ESTR_FULL_CSV_HEADERS_V1.some((requiredHeader) =>
+      !headers.includes(requiredHeader))
   ) {
     throw new TypeError("[Chronoverse ECB €STR] CSV schema is invalid.");
   }
