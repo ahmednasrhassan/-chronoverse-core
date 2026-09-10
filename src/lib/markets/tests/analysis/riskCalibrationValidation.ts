@@ -1,32 +1,73 @@
-export type RiskBandV1 = "low" | "moderate" | "high";
-export type RiskSeverityV1 = "low" | "moderate" | "high";
-export type RiskRegimeBucketV1 = "LOW-DISPERSION" | "NORMAL-DISPERSION" | "HIGH-DISPERSION";
-export type RiskValidationVerdictV1 = "PASS" | "PASS_WITH_LIMITED_EVIDENCE" | "FAIL";
-export type RiskBucketVerdictV1 = "PASS" | "FAIL" | "INSUFFICIENT_EVIDENCE";
+export type RiskBandV2 = "low" | "moderate" | "high";
+export type RiskSeverityV2 = "low" | "moderate" | "high";
+export type RiskRegimeBucketV2 = "LOW-DISPERSION" | "NORMAL-DISPERSION" | "HIGH-DISPERSION";
+export type RiskValidationVerdictV2 = "PASS" | "PASS_WITH_LIMITED_EVIDENCE" | "FAIL";
+export type RiskGateVerdictV2 = "PASS" | "FAIL" | "INSUFFICIENT_EVIDENCE";
 
-export interface RiskComponentObservationV1 {
+// V1 observation names remain aliases so existing analysis studies can adopt
+// the V2 verdict semantics without changing their fixture/evaluation contracts.
+export type RiskBandV1 = RiskBandV2;
+export type RiskSeverityV1 = RiskSeverityV2;
+export type RiskRegimeBucketV1 = RiskRegimeBucketV2;
+export type RiskValidationVerdictV1 = RiskValidationVerdictV2;
+export type RiskBucketVerdictV1 = RiskGateVerdictV2;
+
+export interface RiskComponentObservationV2 {
   readonly magnitude: number;
-  readonly severity: RiskSeverityV1;
+  readonly severity: RiskSeverityV2;
 }
 
-export interface RiskCalibrationObservationV1 {
+export type RiskComponentObservationV1 = RiskComponentObservationV2;
+
+export interface RiskCalibrationObservationV2 {
   readonly id: string;
   readonly riskScore: number;
-  readonly riskBand: RiskBandV1;
+  readonly riskBand: RiskBandV2;
   readonly annualizedVolatility: number;
-  readonly components: Readonly<Record<string, RiskComponentObservationV1>>;
+  readonly components: Readonly<Record<string, RiskComponentObservationV2>>;
   readonly subperiod?: string;
 }
 
-export interface RiskCalibrationValidationInputV1 {
-  readonly calibration: readonly RiskCalibrationObservationV1[];
-  readonly validation: readonly RiskCalibrationObservationV1[];
+export type RiskCalibrationObservationV1 = RiskCalibrationObservationV2;
+
+export interface RiskBandSharesV2 {
+  readonly low: number;
+  readonly moderate: number;
+  readonly high: number;
 }
 
-export const RISK_CALIBRATION_VALIDATION_V1_POLICY = Object.freeze({
+export interface RiskHistoricalBlockSummaryV2 {
+  readonly label: string;
+  readonly sampleSize: number;
+  readonly meanAnnualizedVolatility: number;
+  readonly meanRiskScore: number;
+  readonly upperRiskQuantile: number;
+  readonly bandShares: RiskBandSharesV2;
+  readonly sufficientEvidence: boolean;
+  /**
+   * Caller-computed classifications after moving both operative final Risk cut
+   * points by the fixed V2 neighborhood. Scores and block membership stay fixed.
+   */
+  readonly thresholdSensitivity: {
+    readonly loweredCutPointsBandShares: RiskBandSharesV2;
+    readonly raisedCutPointsBandShares: RiskBandSharesV2;
+  };
+}
+
+export interface RiskCalibrationValidationInputV2 {
+  readonly calibration: readonly RiskCalibrationObservationV2[];
+  readonly validation: readonly RiskCalibrationObservationV2[];
+  /** Predeclared contiguous blocks; omission is limited evidence, never PASS. */
+  readonly historicalBlocks?: readonly RiskHistoricalBlockSummaryV2[];
+}
+
+export type RiskCalibrationValidationInputV1 = RiskCalibrationValidationInputV2;
+
+export const RISK_CALIBRATION_VALIDATION_V2_POLICY = Object.freeze({
   lowerQuantile: 0.25,
   upperQuantile: 0.75,
   minimumBucketSize: 100,
+  minimumHistoricalBlockCount: 3,
   monotonicScoreTolerance: 0.02,
   monotonicHighBandTolerance: 0.05,
   matchedMeanTolerance: 0.1,
@@ -34,72 +75,88 @@ export const RISK_CALIBRATION_VALIDATION_V1_POLICY = Object.freeze({
   matchedBandShareTolerance: 0.2,
   matchedThresholdCrossingTolerance: 0.2,
   pathologicalCollapseShare: 0.98,
+  thresholdCutPointNeighborhood: 0.025,
+  comparisonDecimalPlaces: 6,
 } as const);
 
-interface RiskBandSharesV1 {
-  readonly low: number;
-  readonly moderate: number;
-  readonly high: number;
-}
+export const RISK_CALIBRATION_VALIDATION_V1_POLICY =
+  RISK_CALIBRATION_VALIDATION_V2_POLICY;
 
-interface RiskBucketSummaryV1 {
+interface RiskBucketSummaryV2 {
   readonly observations: number;
   readonly finiteRiskScores: number;
   readonly meanRiskScore: number | null;
   readonly medianRiskScore: number | null;
-  readonly bandShares: RiskBandSharesV1;
+  readonly bandShares: RiskBandSharesV2;
   readonly moderateOrHigherShare: number;
   readonly highShare: number;
   readonly subperiodCounts: Readonly<Record<string, number>>;
-  readonly componentSeverityShares: Readonly<Record<string, RiskBandSharesV1>>;
+  readonly componentSeverityShares: Readonly<Record<string, RiskBandSharesV2>>;
 }
 
-interface MatchedRegimeResultV1 {
-  readonly verdict: RiskBucketVerdictV1;
+interface MatchedRegimeDiagnosticV2 {
+  readonly verdict: RiskGateVerdictV2;
+  readonly acceptanceCritical: false;
   readonly calibrationCount: number;
   readonly validationCount: number;
   readonly meanDifference: number | null;
   readonly medianDifference: number | null;
-  readonly bandShareDrift: RiskBandSharesV1 | null;
+  readonly bandShareDrift: RiskBandSharesV2 | null;
   readonly moderateOrHigherCrossingDrift: number | null;
   readonly highCrossingDrift: number | null;
   readonly failures: readonly string[];
 }
 
-interface MonotonicSampleResultV1 {
-  readonly verdict: RiskBucketVerdictV1;
-  readonly means: Readonly<Record<RiskRegimeBucketV1, number | null>>;
-  readonly highBandShares: Readonly<Record<RiskRegimeBucketV1, number>>;
+interface MonotonicSampleResultV2 {
+  readonly verdict: RiskGateVerdictV2;
+  readonly means: Readonly<Record<RiskRegimeBucketV2, number | null>>;
+  readonly highBandShares: Readonly<Record<RiskRegimeBucketV2, number>>;
   readonly failures: readonly string[];
 }
 
-interface ComponentMonotonicityResultV1 {
+interface ComponentMonotonicityResultV2 {
   readonly observations: number;
   readonly distinctMagnitudes: number;
-  readonly severityShares: RiskBandSharesV1;
+  readonly severityShares: RiskBandSharesV2;
   readonly violations: number;
   readonly passed: boolean;
 }
 
-interface NonDegeneracyBucketResultV1 {
-  readonly verdict: RiskBucketVerdictV1;
+interface NonDegeneracyBucketResultV2 {
+  readonly verdict: RiskGateVerdictV2;
   readonly dominantBandShare: number;
   readonly activeComponentCount: number;
   readonly failures: readonly string[];
 }
 
-export type RiskCalibrationValidationResultV1 =
+interface HistoricalRobustnessResultV2 {
+  readonly verdict: RiskGateVerdictV2;
+  readonly sufficientBlockCount: number;
+  readonly orderedBlocks: readonly string[];
+  readonly failures: readonly string[];
+}
+
+interface ThresholdSensitivityResultV2 {
+  readonly verdict: RiskGateVerdictV2;
+  readonly cutPointNeighborhood: 0.025;
+  readonly scenarios: readonly ["lowered-cut-points", "raised-cut-points"];
+  readonly failures: readonly string[];
+}
+
+export type RiskCalibrationValidationResultV2 =
   | {
-      readonly methodologyVersion: "risk-calibration-validation-v1";
+      readonly methodologyVersion: "risk-calibration-validation-v2";
+      readonly applicableScope: "positive-price-reference-series";
       readonly inputValid: false;
       readonly verdict: "FAIL";
       readonly failures: readonly string[];
       readonly regimeThresholds: null;
     }
   | {
-      readonly methodologyVersion: "risk-calibration-validation-v1";
+      readonly methodologyVersion: "risk-calibration-validation-v2";
+      readonly applicableScope: "positive-price-reference-series";
       readonly inputValid: true;
-      readonly verdict: RiskValidationVerdictV1;
+      readonly verdict: RiskValidationVerdictV2;
       readonly failures: readonly string[];
       readonly regimeThresholds: {
         readonly basis: "annualized-volatility";
@@ -108,60 +165,68 @@ export type RiskCalibrationValidationResultV1 =
         readonly lowNormalBoundary: number;
         readonly normalHighBoundary: number;
         readonly derivedFrom: "calibration-only";
+        readonly acceptanceRole: "diagnostic-and-aggregate-monotonicity-only";
       };
       readonly samples: {
-        readonly calibration: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>;
-        readonly validation: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>;
+        readonly calibration: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>;
+        readonly validation: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>;
       };
       readonly unconditionalDiagnostics: {
-        readonly calibrationBandShares: RiskBandSharesV1;
-        readonly validationBandShares: RiskBandSharesV1;
-        readonly bandShareDrift: RiskBandSharesV1;
+        readonly calibrationBandShares: RiskBandSharesV2;
+        readonly validationBandShares: RiskBandSharesV2;
+        readonly bandShareDrift: RiskBandSharesV2;
         readonly meanRiskScoreDifference: number;
         readonly medianRiskScoreDifference: number;
         readonly wassersteinLikeScoreDistance: number;
         readonly acceptanceCritical: false;
       };
-      readonly matchedRegimes: Readonly<Record<RiskRegimeBucketV1, MatchedRegimeResultV1>>;
+      readonly matchedRegimes: Readonly<Record<RiskRegimeBucketV2, MatchedRegimeDiagnosticV2>>;
       readonly monotonicRiskResponse: {
-        readonly calibration: MonotonicSampleResultV1;
-        readonly validation: MonotonicSampleResultV1;
+        readonly calibration: MonotonicSampleResultV2;
+        readonly validation: MonotonicSampleResultV2;
         readonly passed: boolean;
       };
       readonly componentMonotonicity: {
-        readonly components: Readonly<Record<string, ComponentMonotonicityResultV1>>;
+        readonly components: Readonly<Record<string, ComponentMonotonicityResultV2>>;
         readonly passed: boolean;
       };
       readonly nonDegeneracy: {
-        readonly calibration: Readonly<Record<RiskRegimeBucketV1, NonDegeneracyBucketResultV1>>;
-        readonly validation: Readonly<Record<RiskRegimeBucketV1, NonDegeneracyBucketResultV1>>;
+        readonly calibration: Readonly<Record<RiskRegimeBucketV2, NonDegeneracyBucketResultV2>>;
+        readonly validation: Readonly<Record<RiskRegimeBucketV2, NonDegeneracyBucketResultV2>>;
         readonly passed: boolean;
       };
+      readonly historicalRobustness: HistoricalRobustnessResultV2;
+      readonly thresholdSensitivity: ThresholdSensitivityResultV2;
     };
 
-const BUCKETS: readonly RiskRegimeBucketV1[] = Object.freeze([
+export type RiskCalibrationValidationResultV1 = RiskCalibrationValidationResultV2;
+
+const BUCKETS: readonly RiskRegimeBucketV2[] = Object.freeze([
   "LOW-DISPERSION",
   "NORMAL-DISPERSION",
   "HIGH-DISPERSION",
 ]);
-const BANDS: readonly RiskBandV1[] = Object.freeze(["low", "moderate", "high"]);
-const SEVERITY_RANK: Readonly<Record<RiskSeverityV1, number>> = Object.freeze({ low: 0, moderate: 1, high: 2 });
+const BANDS: readonly RiskBandV2[] = Object.freeze(["low", "moderate", "high"]);
+const SEVERITY_RANK: Readonly<Record<RiskSeverityV2, number>> = Object.freeze({
+  low: 0,
+  moderate: 1,
+  high: 2,
+});
 
 /**
- * Analysis-only, causal Risk calibration validation.
- *
- * Quartiles are deliberately used instead of thirds: the middle 50% forms a
- * broad normal regime, while the outer quarters retain enough observations for
- * stable matched-regime comparisons. Both cut points are frozen from the
- * calibration sample before any validation observation is assigned.
+ * Analysis-only semantic Risk calibration validation for positive price and
+ * reference-price series. Calibration-frozen volatility buckets are retained
+ * for diagnostics and aggregate monotonicity; cross-era distribution equality
+ * inside those buckets is deliberately not an acceptance gate.
  */
-export function validateRiskCalibrationV1(
-  input: RiskCalibrationValidationInputV1,
-): RiskCalibrationValidationResultV1 {
+export function validateRiskCalibrationV2(
+  input: RiskCalibrationValidationInputV2,
+): RiskCalibrationValidationResultV2 {
   const inputFailures = validateInput(input);
   if (inputFailures.length > 0) {
     return Object.freeze({
-      methodologyVersion: "risk-calibration-validation-v1",
+      methodologyVersion: "risk-calibration-validation-v2",
+      applicableScope: "positive-price-reference-series",
       inputValid: false,
       verdict: "FAIL",
       failures: Object.freeze(inputFailures),
@@ -170,50 +235,65 @@ export function validateRiskCalibrationV1(
   }
 
   const calibrationVolatility = input.calibration.map((item) => item.annualizedVolatility);
-  const lowNormalBoundary = quantile(calibrationVolatility, RISK_CALIBRATION_VALIDATION_V1_POLICY.lowerQuantile);
-  const normalHighBoundary = quantile(calibrationVolatility, RISK_CALIBRATION_VALIDATION_V1_POLICY.upperQuantile);
   const thresholds = Object.freeze({
     basis: "annualized-volatility" as const,
     lowerQuantile: 0.25 as const,
     upperQuantile: 0.75 as const,
-    lowNormalBoundary: rounded(lowNormalBoundary),
-    normalHighBoundary: rounded(normalHighBoundary),
+    lowNormalBoundary: rounded(quantile(
+      calibrationVolatility,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.lowerQuantile,
+    )),
+    normalHighBoundary: rounded(quantile(
+      calibrationVolatility,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.upperQuantile,
+    )),
     derivedFrom: "calibration-only" as const,
+    acceptanceRole: "diagnostic-and-aggregate-monotonicity-only" as const,
   });
 
-  const calibrationBuckets = bucketObservations(input.calibration, thresholds);
-  const validationBuckets = bucketObservations(input.validation, thresholds);
-  const calibrationSummaries = summarizeBuckets(calibrationBuckets);
-  const validationSummaries = summarizeBuckets(validationBuckets);
-  const matchedRegimes = matchedRegimeResults(calibrationSummaries, validationSummaries);
+  const calibrationSummaries = summarizeBuckets(bucketObservations(input.calibration, thresholds));
+  const validationSummaries = summarizeBuckets(bucketObservations(input.validation, thresholds));
+  const matchedRegimes = matchedRegimeDiagnostics(calibrationSummaries, validationSummaries);
   const calibrationMonotonicity = monotonicSampleResult(calibrationSummaries);
   const validationMonotonicity = monotonicSampleResult(validationSummaries);
-  const componentMonotonicity = componentMonotonicityResult([...input.calibration, ...input.validation]);
+  const componentMonotonicity = componentMonotonicityResult([
+    ...input.calibration,
+    ...input.validation,
+  ]);
   const calibrationNonDegeneracy = nonDegeneracyResults(calibrationSummaries);
   const validationNonDegeneracy = nonDegeneracyResults(validationSummaries);
+  const historicalRobustness = historicalRobustnessResult(input.historicalBlocks ?? []);
+  const thresholdSensitivity = thresholdSensitivityResult(input.historicalBlocks ?? []);
 
   const failures: string[] = [];
   for (const bucket of BUCKETS) {
-    if (matchedRegimes[bucket].verdict === "FAIL") failures.push(`matched-regime.${bucket}`);
-    if (calibrationNonDegeneracy[bucket].verdict === "FAIL") failures.push(`non-degeneracy.calibration.${bucket}`);
-    if (validationNonDegeneracy[bucket].verdict === "FAIL") failures.push(`non-degeneracy.validation.${bucket}`);
+    if (calibrationNonDegeneracy[bucket].verdict === "FAIL") {
+      failures.push(`non-degeneracy.calibration.${bucket}`);
+    }
+    if (validationNonDegeneracy[bucket].verdict === "FAIL") {
+      failures.push(`non-degeneracy.validation.${bucket}`);
+    }
   }
   if (calibrationMonotonicity.verdict === "FAIL") failures.push("monotonic-risk-response.calibration");
   if (validationMonotonicity.verdict === "FAIL") failures.push("monotonic-risk-response.validation");
   if (!componentMonotonicity.passed) failures.push("component-severity-monotonicity");
+  if (historicalRobustness.verdict === "FAIL") failures.push("historical-robustness");
+  if (thresholdSensitivity.verdict === "FAIL") failures.push("threshold-sensitivity");
 
   const limitedEvidence = BUCKETS.some((bucket) =>
-    matchedRegimes[bucket].verdict === "INSUFFICIENT_EVIDENCE" ||
     calibrationNonDegeneracy[bucket].verdict === "INSUFFICIENT_EVIDENCE" ||
     validationNonDegeneracy[bucket].verdict === "INSUFFICIENT_EVIDENCE") ||
     calibrationMonotonicity.verdict === "INSUFFICIENT_EVIDENCE" ||
-    validationMonotonicity.verdict === "INSUFFICIENT_EVIDENCE";
-  const verdict: RiskValidationVerdictV1 = failures.length > 0
+    validationMonotonicity.verdict === "INSUFFICIENT_EVIDENCE" ||
+    historicalRobustness.verdict === "INSUFFICIENT_EVIDENCE" ||
+    thresholdSensitivity.verdict === "INSUFFICIENT_EVIDENCE";
+  const verdict: RiskValidationVerdictV2 = failures.length > 0
     ? "FAIL"
     : limitedEvidence ? "PASS_WITH_LIMITED_EVIDENCE" : "PASS";
 
   return Object.freeze({
-    methodologyVersion: "risk-calibration-validation-v1",
+    methodologyVersion: "risk-calibration-validation-v2",
+    applicableScope: "positive-price-reference-series",
     inputValid: true,
     verdict,
     failures: Object.freeze(failures),
@@ -230,28 +310,39 @@ export function validateRiskCalibrationV1(
     nonDegeneracy: Object.freeze({
       calibration: calibrationNonDegeneracy,
       validation: validationNonDegeneracy,
-      passed: BUCKETS.every((bucket) => calibrationNonDegeneracy[bucket].verdict !== "FAIL" &&
+      passed: BUCKETS.every((bucket) =>
+        calibrationNonDegeneracy[bucket].verdict !== "FAIL" &&
         validationNonDegeneracy[bucket].verdict !== "FAIL"),
     }),
+    historicalRobustness,
+    thresholdSensitivity,
   });
 }
 
-export function assignRiskRegimeV1(
+// Existing studies keep compiling while resolving to the V2 methodology.
+export const validateRiskCalibrationV1 = validateRiskCalibrationV2;
+
+export function assignRiskRegimeV2(
   annualizedVolatility: number,
   thresholds: { readonly lowNormalBoundary: number; readonly normalHighBoundary: number },
-): RiskRegimeBucketV1 {
+): RiskRegimeBucketV2 {
   if (annualizedVolatility <= thresholds.lowNormalBoundary) return "LOW-DISPERSION";
   if (annualizedVolatility >= thresholds.normalHighBoundary) return "HIGH-DISPERSION";
   return "NORMAL-DISPERSION";
 }
 
-function validateInput(input: RiskCalibrationValidationInputV1): string[] {
+export const assignRiskRegimeV1 = assignRiskRegimeV2;
+
+function validateInput(input: RiskCalibrationValidationInputV2): string[] {
   const failures: string[] = [];
   if (input.calibration.length === 0) failures.push("calibration sample is empty");
   if (input.validation.length === 0) failures.push("validation sample is empty");
   const expectedComponents = input.calibration[0] === undefined
     ? [] : Object.keys(input.calibration[0].components).sort();
-  for (const [sample, observations] of [["calibration", input.calibration], ["validation", input.validation]] as const) {
+  for (const [sample, observations] of [
+    ["calibration", input.calibration],
+    ["validation", input.validation],
+  ] as const) {
     for (let index = 0; index < observations.length; index += 1) {
       const item = observations[index]!;
       if (!Number.isFinite(item.riskScore) || item.riskScore < 0 || item.riskScore > 1) {
@@ -272,26 +363,60 @@ function validateInput(input: RiskCalibrationValidationInputV1): string[] {
       }
     }
   }
+  validateHistoricalBlocks(input.historicalBlocks ?? [], failures);
   return failures;
 }
 
+function validateHistoricalBlocks(blocks: readonly RiskHistoricalBlockSummaryV2[], failures: string[]) {
+  const labels = new Set<string>();
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index]!;
+    if (block.label.length === 0 || labels.has(block.label)) failures.push(`historicalBlocks[${index}].label`);
+    labels.add(block.label);
+    if (!Number.isInteger(block.sampleSize) || block.sampleSize < 0) failures.push(`historicalBlocks[${index}].sampleSize`);
+    if (!Number.isFinite(block.meanAnnualizedVolatility) || block.meanAnnualizedVolatility < 0) {
+      failures.push(`historicalBlocks[${index}].meanAnnualizedVolatility`);
+    }
+    if (!unitInterval(block.meanRiskScore)) failures.push(`historicalBlocks[${index}].meanRiskScore`);
+    if (!unitInterval(block.upperRiskQuantile)) failures.push(`historicalBlocks[${index}].upperRiskQuantile`);
+    if (block.sufficientEvidence && block.sampleSize < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumBucketSize) {
+      failures.push(`historicalBlocks[${index}].sufficientEvidence`);
+    }
+    validateBandShares(block.bandShares, `historicalBlocks[${index}].bandShares`, failures);
+    validateBandShares(block.thresholdSensitivity.loweredCutPointsBandShares,
+      `historicalBlocks[${index}].thresholdSensitivity.loweredCutPointsBandShares`, failures);
+    validateBandShares(block.thresholdSensitivity.raisedCutPointsBandShares,
+      `historicalBlocks[${index}].thresholdSensitivity.raisedCutPointsBandShares`, failures);
+  }
+}
+
+function validateBandShares(sharesValue: RiskBandSharesV2, path: string, failures: string[]) {
+  const values = BANDS.map((band) => sharesValue[band]);
+  if (values.some((value) => !unitInterval(value)) ||
+    rounded(values.reduce((sum, value) => sum + value, 0)) !== 1) failures.push(path);
+}
+
+function unitInterval(value: number) {
+  return Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
 function bucketObservations(
-  observations: readonly RiskCalibrationObservationV1[],
+  observations: readonly RiskCalibrationObservationV2[],
   thresholds: { readonly lowNormalBoundary: number; readonly normalHighBoundary: number },
 ) {
-  const result: Record<RiskRegimeBucketV1, RiskCalibrationObservationV1[]> = {
+  const result: Record<RiskRegimeBucketV2, RiskCalibrationObservationV2[]> = {
     "LOW-DISPERSION": [], "NORMAL-DISPERSION": [], "HIGH-DISPERSION": [],
   };
-  for (const item of observations) result[assignRiskRegimeV1(item.annualizedVolatility, thresholds)].push(item);
+  for (const item of observations) result[assignRiskRegimeV2(item.annualizedVolatility, thresholds)].push(item);
   return result;
 }
 
-function summarizeBuckets(buckets: Record<RiskRegimeBucketV1, RiskCalibrationObservationV1[]>) {
+function summarizeBuckets(buckets: Record<RiskRegimeBucketV2, RiskCalibrationObservationV2[]>) {
   return Object.freeze(Object.fromEntries(BUCKETS.map((bucket) => [bucket, summarize(buckets[bucket])]))) as
-    Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>;
+    Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>;
 }
 
-function summarize(observations: readonly RiskCalibrationObservationV1[]): RiskBucketSummaryV1 {
+function summarize(observations: readonly RiskCalibrationObservationV2[]): RiskBucketSummaryV2 {
   const scores = observations.map((item) => item.riskScore);
   const componentNames = observations[0] === undefined ? [] : Object.keys(observations[0].components).sort();
   const subperiodCounts = new Map<string, number>();
@@ -307,23 +432,25 @@ function summarize(observations: readonly RiskCalibrationObservationV1[]): RiskB
     bandShares,
     moderateOrHigherShare: rounded(bandShares.moderate + bandShares.high),
     highShare: bandShares.high,
-    subperiodCounts: Object.freeze(Object.fromEntries([...subperiodCounts].sort(([left], [right]) => left.localeCompare(right)))),
+    subperiodCounts: Object.freeze(Object.fromEntries([...subperiodCounts]
+      .sort(([left], [right]) => left.localeCompare(right)))),
     componentSeverityShares: Object.freeze(Object.fromEntries(componentNames.map((name) => [name,
       shares(observations.map((item) => item.components[name]!.severity)),
     ]))),
   });
 }
 
-function matchedRegimeResults(
-  calibration: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>,
-  validation: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>,
+function matchedRegimeDiagnostics(
+  calibration: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>,
+  validation: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>,
 ) {
   return Object.freeze(Object.fromEntries(BUCKETS.map((bucket) => {
     const left = calibration[bucket], right = validation[bucket];
-    if (left.observations < RISK_CALIBRATION_VALIDATION_V1_POLICY.minimumBucketSize ||
-      right.observations < RISK_CALIBRATION_VALIDATION_V1_POLICY.minimumBucketSize) {
+    if (left.observations < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumBucketSize ||
+      right.observations < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumBucketSize) {
       return [bucket, Object.freeze({
         verdict: "INSUFFICIENT_EVIDENCE" as const,
+        acceptanceCritical: false as const,
         calibrationCount: left.observations,
         validationCount: right.observations,
         meanDifference: null,
@@ -339,20 +466,27 @@ function matchedRegimeResults(
     const bandShareDrift = drift(left.bandShares, right.bandShares);
     const moderateOrHigherCrossingDrift = Math.abs(left.moderateOrHigherShare - right.moderateOrHigherShare);
     const highCrossingDrift = Math.abs(left.highShare - right.highShare);
-    const failures: string[] = [];
-    if (meanDifference > RISK_CALIBRATION_VALIDATION_V1_POLICY.matchedMeanTolerance) failures.push("mean Risk score drift");
-    if (medianDifference > RISK_CALIBRATION_VALIDATION_V1_POLICY.matchedMedianTolerance) failures.push("median Risk score drift");
-    if (BANDS.some((band) => bandShareDrift[band] > RISK_CALIBRATION_VALIDATION_V1_POLICY.matchedBandShareTolerance)) {
-      failures.push("Risk band-share drift");
+    const diagnosticFailures: string[] = [];
+    if (exceedsTolerance(meanDifference, RISK_CALIBRATION_VALIDATION_V2_POLICY.matchedMeanTolerance)) {
+      diagnosticFailures.push("mean Risk score drift");
     }
-    if (moderateOrHigherCrossingDrift > RISK_CALIBRATION_VALIDATION_V1_POLICY.matchedThresholdCrossingTolerance) {
-      failures.push("moderate threshold-crossing drift");
+    if (exceedsTolerance(medianDifference, RISK_CALIBRATION_VALIDATION_V2_POLICY.matchedMedianTolerance)) {
+      diagnosticFailures.push("median Risk score drift");
     }
-    if (highCrossingDrift > RISK_CALIBRATION_VALIDATION_V1_POLICY.matchedThresholdCrossingTolerance) {
-      failures.push("high threshold-crossing drift");
+    if (BANDS.some((band) => exceedsTolerance(
+      bandShareDrift[band], RISK_CALIBRATION_VALIDATION_V2_POLICY.matchedBandShareTolerance,
+    ))) diagnosticFailures.push("Risk band-share drift");
+    if (exceedsTolerance(moderateOrHigherCrossingDrift,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.matchedThresholdCrossingTolerance)) {
+      diagnosticFailures.push("moderate threshold-crossing drift");
+    }
+    if (exceedsTolerance(highCrossingDrift,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.matchedThresholdCrossingTolerance)) {
+      diagnosticFailures.push("high threshold-crossing drift");
     }
     return [bucket, Object.freeze({
-      verdict: failures.length === 0 ? "PASS" as const : "FAIL" as const,
+      verdict: diagnosticFailures.length === 0 ? "PASS" as const : "FAIL" as const,
+      acceptanceCritical: false as const,
       calibrationCount: left.observations,
       validationCount: right.observations,
       meanDifference: rounded(meanDifference),
@@ -360,39 +494,44 @@ function matchedRegimeResults(
       bandShareDrift,
       moderateOrHigherCrossingDrift: rounded(moderateOrHigherCrossingDrift),
       highCrossingDrift: rounded(highCrossingDrift),
-      failures: Object.freeze(failures),
+      failures: Object.freeze(diagnosticFailures),
     })];
-  }))) as Readonly<Record<RiskRegimeBucketV1, MatchedRegimeResultV1>>;
+  }))) as Readonly<Record<RiskRegimeBucketV2, MatchedRegimeDiagnosticV2>>;
 }
 
 function monotonicSampleResult(
-  summaries: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>,
-): MonotonicSampleResultV1 {
-  const means = Object.freeze(Object.fromEntries(BUCKETS.map((bucket) => [bucket, summaries[bucket].meanRiskScore]))) as
-    Readonly<Record<RiskRegimeBucketV1, number | null>>;
-  const highBandShares = Object.freeze(Object.fromEntries(BUCKETS.map((bucket) => [bucket, summaries[bucket].highShare]))) as
-    Readonly<Record<RiskRegimeBucketV1, number>>;
-  if (BUCKETS.some((bucket) => summaries[bucket].observations < RISK_CALIBRATION_VALIDATION_V1_POLICY.minimumBucketSize)) {
+  summaries: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>,
+): MonotonicSampleResultV2 {
+  const means = Object.freeze(Object.fromEntries(BUCKETS.map((bucket) =>
+    [bucket, summaries[bucket].meanRiskScore]))) as Readonly<Record<RiskRegimeBucketV2, number | null>>;
+  const highBandShares = Object.freeze(Object.fromEntries(BUCKETS.map((bucket) =>
+    [bucket, summaries[bucket].highShare]))) as Readonly<Record<RiskRegimeBucketV2, number>>;
+  if (BUCKETS.some((bucket) =>
+    summaries[bucket].observations < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumBucketSize)) {
     return Object.freeze({ verdict: "INSUFFICIENT_EVIDENCE", means, highBandShares, failures: Object.freeze([]) });
   }
   const failures: string[] = [];
-  if (means["LOW-DISPERSION"]! > means["NORMAL-DISPERSION"]! + RISK_CALIBRATION_VALIDATION_V1_POLICY.monotonicScoreTolerance ||
-    means["NORMAL-DISPERSION"]! > means["HIGH-DISPERSION"]! + RISK_CALIBRATION_VALIDATION_V1_POLICY.monotonicScoreTolerance) {
+  if (exceedsTolerance(means["LOW-DISPERSION"]! - means["NORMAL-DISPERSION"]!,
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance) ||
+    exceedsTolerance(means["NORMAL-DISPERSION"]! - means["HIGH-DISPERSION"]!,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance)) {
     failures.push("mean Risk score is not monotonic by volatility regime");
   }
-  if (highBandShares["LOW-DISPERSION"] > highBandShares["NORMAL-DISPERSION"] +
-      RISK_CALIBRATION_VALIDATION_V1_POLICY.monotonicHighBandTolerance ||
-    highBandShares["NORMAL-DISPERSION"] > highBandShares["HIGH-DISPERSION"] +
-      RISK_CALIBRATION_VALIDATION_V1_POLICY.monotonicHighBandTolerance) {
+  if (exceedsTolerance(highBandShares["LOW-DISPERSION"] - highBandShares["NORMAL-DISPERSION"],
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance) ||
+    exceedsTolerance(highBandShares["NORMAL-DISPERSION"] - highBandShares["HIGH-DISPERSION"],
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance)) {
     failures.push("high-band tendency decreases materially in a higher-volatility regime");
   }
   return Object.freeze({
     verdict: failures.length === 0 ? "PASS" : "FAIL",
-    means, highBandShares, failures: Object.freeze(failures),
+    means,
+    highBandShares,
+    failures: Object.freeze(failures),
   });
 }
 
-function componentMonotonicityResult(observations: readonly RiskCalibrationObservationV1[]) {
+function componentMonotonicityResult(observations: readonly RiskCalibrationObservationV2[]) {
   const componentNames = Object.keys(observations[0]!.components).sort();
   const components = Object.fromEntries(componentNames.map((name) => {
     const values = observations.map((item) => item.components[name]!).sort((left, right) =>
@@ -408,7 +547,7 @@ function componentMonotonicityResult(observations: readonly RiskCalibrationObser
       ranksByMagnitude.set(value.magnitude, ranks);
     }
     for (const ranks of ranksByMagnitude.values()) if (ranks.size > 1) violations += ranks.size - 1;
-    const result: ComponentMonotonicityResultV1 = Object.freeze({
+    const result: ComponentMonotonicityResultV2 = Object.freeze({
       observations: values.length,
       distinctMagnitudes: ranksByMagnitude.size,
       severityShares: shares(values.map((value) => value.severity)),
@@ -423,10 +562,10 @@ function componentMonotonicityResult(observations: readonly RiskCalibrationObser
   });
 }
 
-function nonDegeneracyResults(summaries: Readonly<Record<RiskRegimeBucketV1, RiskBucketSummaryV1>>) {
+function nonDegeneracyResults(summaries: Readonly<Record<RiskRegimeBucketV2, RiskBucketSummaryV2>>) {
   return Object.freeze(Object.fromEntries(BUCKETS.map((bucket) => {
     const summary = summaries[bucket];
-    if (summary.observations < RISK_CALIBRATION_VALIDATION_V1_POLICY.minimumBucketSize) {
+    if (summary.observations < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumBucketSize) {
       return [bucket, Object.freeze({
         verdict: "INSUFFICIENT_EVIDENCE" as const,
         dominantBandShare: Math.max(...Object.values(summary.bandShares)),
@@ -439,23 +578,114 @@ function nonDegeneracyResults(summaries: Readonly<Record<RiskRegimeBucketV1, Ris
     const dominantBandShare = Math.max(...Object.values(summary.bandShares));
     const failures: string[] = [];
     if (summary.finiteRiskScores !== summary.observations) failures.push("non-finite Risk score");
-    if (dominantBandShare > RISK_CALIBRATION_VALIDATION_V1_POLICY.pathologicalCollapseShare) {
+    if (exceedsTolerance(dominantBandShare, RISK_CALIBRATION_VALIDATION_V2_POLICY.pathologicalCollapseShare)) {
       failures.push("pathological final Risk-band collapse");
     }
     if (activeComponentCount === 0) failures.push("no component severity activation");
-    const result: NonDegeneracyBucketResultV1 = Object.freeze({
+    const result: NonDegeneracyBucketResultV2 = Object.freeze({
       verdict: failures.length === 0 ? "PASS" : "FAIL",
       dominantBandShare: rounded(dominantBandShare),
       activeComponentCount,
       failures: Object.freeze(failures),
     });
     return [bucket, result];
-  }))) as Readonly<Record<RiskRegimeBucketV1, NonDegeneracyBucketResultV1>>;
+  }))) as Readonly<Record<RiskRegimeBucketV2, NonDegeneracyBucketResultV2>>;
+}
+
+function historicalRobustnessResult(blocks: readonly RiskHistoricalBlockSummaryV2[]): HistoricalRobustnessResultV2 {
+  const ordered = sufficientBlocks(blocks);
+  if (ordered.length < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumHistoricalBlockCount) {
+    return Object.freeze({
+      verdict: "INSUFFICIENT_EVIDENCE",
+      sufficientBlockCount: ordered.length,
+      orderedBlocks: Object.freeze(ordered.map((block) => block.label)),
+      failures: Object.freeze([]),
+    });
+  }
+  const failures = [
+    ...orderedBlockFailures(ordered, (block) => block.meanRiskScore,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance, "mean Risk score"),
+    ...orderedBlockFailures(ordered, (block) => block.upperRiskQuantile,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance, "upper Risk quantile"),
+    ...orderedBlockFailures(ordered, (block) => block.bandShares.high,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance, "high-band share"),
+  ];
+  for (const block of ordered) {
+    if (isPathologicallyCollapsed(block.bandShares)) {
+      failures.push(`${block.label}: pathological base Risk-band collapse`);
+    }
+  }
+  return Object.freeze({
+    verdict: failures.length === 0 ? "PASS" : "FAIL",
+    sufficientBlockCount: ordered.length,
+    orderedBlocks: Object.freeze(ordered.map((block) => block.label)),
+    failures: Object.freeze(failures),
+  });
+}
+
+function thresholdSensitivityResult(blocks: readonly RiskHistoricalBlockSummaryV2[]): ThresholdSensitivityResultV2 {
+  const ordered = sufficientBlocks(blocks);
+  if (ordered.length < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumHistoricalBlockCount) {
+    return Object.freeze({
+      verdict: "INSUFFICIENT_EVIDENCE",
+      cutPointNeighborhood: 0.025,
+      scenarios: Object.freeze(["lowered-cut-points", "raised-cut-points"] as const),
+      failures: Object.freeze([]),
+    });
+  }
+  const failures: string[] = [];
+  for (const [scenario, select] of [
+    ["lowered-cut-points", (block: RiskHistoricalBlockSummaryV2) =>
+      block.thresholdSensitivity.loweredCutPointsBandShares],
+    ["raised-cut-points", (block: RiskHistoricalBlockSummaryV2) =>
+      block.thresholdSensitivity.raisedCutPointsBandShares],
+  ] as const) {
+    failures.push(...orderedBlockFailures(ordered, (block) => select(block).high,
+      RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance,
+      `${scenario} high-band share`));
+    for (const block of ordered) {
+      if (isPathologicallyCollapsed(select(block))) {
+        failures.push(`${block.label}: ${scenario} pathological Risk-band collapse`);
+      }
+    }
+  }
+  return Object.freeze({
+    verdict: failures.length === 0 ? "PASS" : "FAIL",
+    cutPointNeighborhood: 0.025,
+    scenarios: Object.freeze(["lowered-cut-points", "raised-cut-points"] as const),
+    failures: Object.freeze(failures),
+  });
+}
+
+function sufficientBlocks(blocks: readonly RiskHistoricalBlockSummaryV2[]) {
+  return [...blocks].filter((block) => block.sufficientEvidence).sort((left, right) =>
+    left.meanAnnualizedVolatility - right.meanAnnualizedVolatility || left.label.localeCompare(right.label));
+}
+
+function orderedBlockFailures(
+  ordered: readonly RiskHistoricalBlockSummaryV2[],
+  select: (block: RiskHistoricalBlockSummaryV2) => number,
+  tolerance: number,
+  metric: string,
+) {
+  const failures: string[] = [];
+  for (let index = 1; index < ordered.length; index += 1) {
+    const calmer = ordered[index - 1]!, stressed = ordered[index]!;
+    if (exceedsTolerance(select(calmer) - select(stressed), tolerance)) {
+      failures.push(`${calmer.label}->${stressed.label}: materially reversed ${metric}`);
+    }
+  }
+  return failures;
+}
+
+function isPathologicallyCollapsed(value: RiskBandSharesV2) {
+  return exceedsTolerance(Math.max(...Object.values(value)),
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.pathologicalCollapseShare);
 }
 
 function unconditionalDiagnostics(
-  calibration: readonly RiskCalibrationObservationV1[],
-  validation: readonly RiskCalibrationObservationV1[],
+  calibration: readonly RiskCalibrationObservationV2[],
+  validation: readonly RiskCalibrationObservationV2[],
 ) {
   const calibrationScores = calibration.map((item) => item.riskScore);
   const validationScores = validation.map((item) => item.riskScore);
@@ -466,13 +696,14 @@ function unconditionalDiagnostics(
     validationBandShares,
     bandShareDrift: drift(calibrationBandShares, validationBandShares),
     meanRiskScoreDifference: rounded(Math.abs(mean(calibrationScores) - mean(validationScores))),
-    medianRiskScoreDifference: rounded(Math.abs(quantile(calibrationScores, 0.5) - quantile(validationScores, 0.5))),
+    medianRiskScoreDifference: rounded(Math.abs(
+      quantile(calibrationScores, 0.5) - quantile(validationScores, 0.5))),
     wassersteinLikeScoreDistance: rounded(wassersteinLikeDistance(calibrationScores, validationScores)),
     acceptanceCritical: false as const,
   });
 }
 
-function shares(values: readonly RiskBandV1[] | readonly RiskSeverityV1[]): RiskBandSharesV1 {
+function shares(values: readonly RiskBandV2[] | readonly RiskSeverityV2[]): RiskBandSharesV2 {
   const denominator = values.length === 0 ? 1 : values.length;
   return Object.freeze({
     low: rounded(values.filter((value) => value === "low").length / denominator),
@@ -481,7 +712,7 @@ function shares(values: readonly RiskBandV1[] | readonly RiskSeverityV1[]): Risk
   });
 }
 
-function drift(left: RiskBandSharesV1, right: RiskBandSharesV1): RiskBandSharesV1 {
+function drift(left: RiskBandSharesV2, right: RiskBandSharesV2): RiskBandSharesV2 {
   return Object.freeze({
     low: rounded(Math.abs(left.low - right.low)),
     moderate: rounded(Math.abs(left.moderate - right.moderate)),
@@ -498,6 +729,10 @@ function wassersteinLikeDistance(left: readonly number[], right: readonly number
   return total / 101;
 }
 
+function exceedsTolerance(value: number, tolerance: number) {
+  return rounded(value) > rounded(tolerance);
+}
+
 function mean(values: readonly number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
@@ -510,5 +745,5 @@ function quantile(values: readonly number[], q: number) {
 }
 
 function rounded(value: number) {
-  return Number(value.toFixed(6));
+  return Number(value.toFixed(RISK_CALIBRATION_VALIDATION_V2_POLICY.comparisonDecimalPlaces));
 }
