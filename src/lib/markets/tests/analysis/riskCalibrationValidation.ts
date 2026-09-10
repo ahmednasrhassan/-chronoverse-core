@@ -68,6 +68,7 @@ export const RISK_CALIBRATION_VALIDATION_V2_POLICY = Object.freeze({
   upperQuantile: 0.75,
   minimumBucketSize: 100,
   minimumHistoricalBlockCount: 3,
+  minimumEndpointTierSize: 2,
   monotonicScoreTolerance: 0.02,
   monotonicHighBandTolerance: 0.05,
   matchedMeanTolerance: 0.1,
@@ -133,6 +134,13 @@ interface HistoricalRobustnessResultV2 {
   readonly verdict: RiskGateVerdictV2;
   readonly sufficientBlockCount: number;
   readonly orderedBlocks: readonly string[];
+  readonly tierConstruction: HistoricalTierConstructionV2;
+  readonly endpointSummaries: {
+    readonly low: HistoricalEndpointSummaryV2 | null;
+    readonly high: HistoricalEndpointSummaryV2 | null;
+  };
+  readonly blockDiagnostics: readonly HistoricalBlockDiagnosticV2[];
+  readonly localReversalDiagnostics: readonly string[];
   readonly failures: readonly string[];
 }
 
@@ -140,7 +148,43 @@ interface ThresholdSensitivityResultV2 {
   readonly verdict: RiskGateVerdictV2;
   readonly cutPointNeighborhood: 0.025;
   readonly scenarios: readonly ["lowered-cut-points", "raised-cut-points"];
+  readonly tierConstruction: HistoricalTierConstructionV2;
+  readonly endpointHighBandShares: {
+    readonly loweredCutPoints: HistoricalEndpointHighBandSharesV2 | null;
+    readonly raisedCutPoints: HistoricalEndpointHighBandSharesV2 | null;
+  };
   readonly failures: readonly string[];
+}
+
+interface HistoricalTierConstructionV2 {
+  readonly descriptor: "mean-annualized-volatility";
+  readonly roundingPolicy: "floor-sufficient-block-count-divided-by-three";
+  readonly endpointTierSize: number;
+  readonly lowEndpointBlocks: readonly string[];
+  readonly middleBlocks: readonly string[];
+  readonly highEndpointBlocks: readonly string[];
+}
+
+interface HistoricalEndpointSummaryV2 {
+  readonly blockCount: number;
+  readonly averageMeanRiskScore: number;
+  readonly averageUpperRiskQuantile: number;
+  readonly averageHighBandShare: number;
+}
+
+interface HistoricalEndpointHighBandSharesV2 {
+  readonly low: number;
+  readonly high: number;
+}
+
+interface HistoricalBlockDiagnosticV2 {
+  readonly label: string;
+  readonly sampleSize: number;
+  readonly sufficientEvidence: boolean;
+  readonly meanAnnualizedVolatility: number;
+  readonly meanRiskScore: number;
+  readonly upperRiskQuantile: number;
+  readonly highBandShare: number;
 }
 
 export type RiskCalibrationValidationResultV2 =
@@ -594,15 +638,10 @@ function nonDegeneracyResults(summaries: Readonly<Record<RiskRegimeBucketV2, Ris
 
 function historicalRobustnessResult(blocks: readonly RiskHistoricalBlockSummaryV2[]): HistoricalRobustnessResultV2 {
   const ordered = sufficientBlocks(blocks);
-  if (ordered.length < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumHistoricalBlockCount) {
-    return Object.freeze({
-      verdict: "INSUFFICIENT_EVIDENCE",
-      sufficientBlockCount: ordered.length,
-      orderedBlocks: Object.freeze(ordered.map((block) => block.label)),
-      failures: Object.freeze([]),
-    });
-  }
-  const failures = [
+  const tiers = historicalEndpointTiers(ordered);
+  const tierConstruction = historicalTierConstruction(tiers);
+  const blockDiagnostics = historicalBlockDiagnostics(blocks);
+  const localReversalDiagnostics = [
     ...orderedBlockFailures(ordered, (block) => block.meanRiskScore,
       RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance, "mean Risk score"),
     ...orderedBlockFailures(ordered, (block) => block.upperRiskQuantile,
@@ -610,6 +649,33 @@ function historicalRobustnessResult(blocks: readonly RiskHistoricalBlockSummaryV
     ...orderedBlockFailures(ordered, (block) => block.bandShares.high,
       RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance, "high-band share"),
   ];
+  if (!hasSufficientEndpointEvidence(tiers)) {
+    return Object.freeze({
+      verdict: "INSUFFICIENT_EVIDENCE",
+      sufficientBlockCount: ordered.length,
+      orderedBlocks: Object.freeze(ordered.map((block) => block.label)),
+      tierConstruction,
+      endpointSummaries: Object.freeze({ low: null, high: null }),
+      blockDiagnostics,
+      localReversalDiagnostics: Object.freeze(localReversalDiagnostics),
+      failures: Object.freeze([]),
+    });
+  }
+  const low = historicalEndpointSummary(tiers.low);
+  const high = historicalEndpointSummary(tiers.high);
+  const failures: string[] = [];
+  if (exceedsTolerance(
+    low.averageMeanRiskScore - high.averageMeanRiskScore,
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance,
+  )) failures.push("high-dispersion endpoint tier materially reverses mean Risk score");
+  if (exceedsTolerance(
+    low.averageUpperRiskQuantile - high.averageUpperRiskQuantile,
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicScoreTolerance,
+  )) failures.push("high-dispersion endpoint tier materially reverses upper Risk quantile");
+  if (exceedsTolerance(
+    low.averageHighBandShare - high.averageHighBandShare,
+    RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance,
+  )) failures.push("high-dispersion endpoint tier materially reverses high-band share");
   for (const block of ordered) {
     if (isPathologicallyCollapsed(block.bandShares)) {
       failures.push(`${block.label}: pathological base Risk-band collapse`);
@@ -619,30 +685,53 @@ function historicalRobustnessResult(blocks: readonly RiskHistoricalBlockSummaryV
     verdict: failures.length === 0 ? "PASS" : "FAIL",
     sufficientBlockCount: ordered.length,
     orderedBlocks: Object.freeze(ordered.map((block) => block.label)),
+    tierConstruction,
+    endpointSummaries: Object.freeze({ low, high }),
+    blockDiagnostics,
+    localReversalDiagnostics: Object.freeze(localReversalDiagnostics),
     failures: Object.freeze(failures),
   });
 }
 
 function thresholdSensitivityResult(blocks: readonly RiskHistoricalBlockSummaryV2[]): ThresholdSensitivityResultV2 {
   const ordered = sufficientBlocks(blocks);
-  if (ordered.length < RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumHistoricalBlockCount) {
+  const tiers = historicalEndpointTiers(ordered);
+  const tierConstruction = historicalTierConstruction(tiers);
+  if (!hasSufficientEndpointEvidence(tiers)) {
     return Object.freeze({
       verdict: "INSUFFICIENT_EVIDENCE",
       cutPointNeighborhood: 0.025,
       scenarios: Object.freeze(["lowered-cut-points", "raised-cut-points"] as const),
+      tierConstruction,
+      endpointHighBandShares: Object.freeze({
+        loweredCutPoints: null,
+        raisedCutPoints: null,
+      }),
       failures: Object.freeze([]),
     });
   }
   const failures: string[] = [];
+  const endpointHighBandShares: {
+    loweredCutPoints: HistoricalEndpointHighBandSharesV2 | null;
+    raisedCutPoints: HistoricalEndpointHighBandSharesV2 | null;
+  } = { loweredCutPoints: null, raisedCutPoints: null };
   for (const [scenario, select] of [
     ["lowered-cut-points", (block: RiskHistoricalBlockSummaryV2) =>
       block.thresholdSensitivity.loweredCutPointsBandShares],
     ["raised-cut-points", (block: RiskHistoricalBlockSummaryV2) =>
       block.thresholdSensitivity.raisedCutPointsBandShares],
   ] as const) {
-    failures.push(...orderedBlockFailures(ordered, (block) => select(block).high,
+    const low = rounded(mean(tiers.low.map((block) => select(block).high)));
+    const high = rounded(mean(tiers.high.map((block) => select(block).high)));
+    if (scenario === "lowered-cut-points") {
+      endpointHighBandShares.loweredCutPoints = Object.freeze({ low, high });
+    } else {
+      endpointHighBandShares.raisedCutPoints = Object.freeze({ low, high });
+    }
+    if (exceedsTolerance(
+      low - high,
       RISK_CALIBRATION_VALIDATION_V2_POLICY.monotonicHighBandTolerance,
-      `${scenario} high-band share`));
+    )) failures.push(`${scenario}: high-dispersion endpoint tier materially reverses high-band share`);
     for (const block of ordered) {
       if (isPathologicallyCollapsed(select(block))) {
         failures.push(`${block.label}: ${scenario} pathological Risk-band collapse`);
@@ -653,6 +742,8 @@ function thresholdSensitivityResult(blocks: readonly RiskHistoricalBlockSummaryV
     verdict: failures.length === 0 ? "PASS" : "FAIL",
     cutPointNeighborhood: 0.025,
     scenarios: Object.freeze(["lowered-cut-points", "raised-cut-points"] as const),
+    tierConstruction,
+    endpointHighBandShares: Object.freeze(endpointHighBandShares),
     failures: Object.freeze(failures),
   });
 }
@@ -660,6 +751,65 @@ function thresholdSensitivityResult(blocks: readonly RiskHistoricalBlockSummaryV
 function sufficientBlocks(blocks: readonly RiskHistoricalBlockSummaryV2[]) {
   return [...blocks].filter((block) => block.sufficientEvidence).sort((left, right) =>
     left.meanAnnualizedVolatility - right.meanAnnualizedVolatility || left.label.localeCompare(right.label));
+}
+
+function historicalEndpointTiers(ordered: readonly RiskHistoricalBlockSummaryV2[]) {
+  const endpointTierSize = Math.floor(ordered.length / 3);
+  return Object.freeze({
+    endpointTierSize,
+    low: Object.freeze(ordered.slice(0, endpointTierSize)),
+    middle: Object.freeze(ordered.slice(endpointTierSize, ordered.length - endpointTierSize)),
+    high: Object.freeze(ordered.slice(ordered.length - endpointTierSize)),
+  });
+}
+
+function hasSufficientEndpointEvidence(
+  tiers: ReturnType<typeof historicalEndpointTiers>,
+) {
+  const sufficientBlockCount = tiers.low.length + tiers.middle.length + tiers.high.length;
+  return sufficientBlockCount >= RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumHistoricalBlockCount &&
+    tiers.low.length >= RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumEndpointTierSize &&
+    tiers.high.length >= RISK_CALIBRATION_VALIDATION_V2_POLICY.minimumEndpointTierSize;
+}
+
+function historicalTierConstruction(
+  tiers: ReturnType<typeof historicalEndpointTiers>,
+): HistoricalTierConstructionV2 {
+  return Object.freeze({
+    descriptor: "mean-annualized-volatility",
+    roundingPolicy: "floor-sufficient-block-count-divided-by-three",
+    endpointTierSize: tiers.endpointTierSize,
+    lowEndpointBlocks: Object.freeze(tiers.low.map((block) => block.label)),
+    middleBlocks: Object.freeze(tiers.middle.map((block) => block.label)),
+    highEndpointBlocks: Object.freeze(tiers.high.map((block) => block.label)),
+  });
+}
+
+function historicalEndpointSummary(
+  blocks: readonly RiskHistoricalBlockSummaryV2[],
+): HistoricalEndpointSummaryV2 {
+  return Object.freeze({
+    blockCount: blocks.length,
+    averageMeanRiskScore: rounded(mean(blocks.map((block) => block.meanRiskScore))),
+    averageUpperRiskQuantile: rounded(mean(blocks.map((block) => block.upperRiskQuantile))),
+    averageHighBandShare: rounded(mean(blocks.map((block) => block.bandShares.high))),
+  });
+}
+
+function historicalBlockDiagnostics(
+  blocks: readonly RiskHistoricalBlockSummaryV2[],
+) {
+  return Object.freeze([...blocks].sort((left, right) =>
+    left.meanAnnualizedVolatility - right.meanAnnualizedVolatility ||
+    left.label.localeCompare(right.label)).map((block) => Object.freeze({
+      label: block.label,
+      sampleSize: block.sampleSize,
+      sufficientEvidence: block.sufficientEvidence,
+      meanAnnualizedVolatility: block.meanAnnualizedVolatility,
+      meanRiskScore: block.meanRiskScore,
+      upperRiskQuantile: block.upperRiskQuantile,
+      highBandShare: block.bandShares.high,
+    }))) as readonly HistoricalBlockDiagnosticV2[];
 }
 
 function orderedBlockFailures(
