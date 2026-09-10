@@ -18,8 +18,10 @@ import {
   type MarketSignalResult,
 } from "../../core/signalEngine";
 import {
-  validateRiskCalibrationV1,
+  RISK_CALIBRATION_VALIDATION_V2_POLICY,
+  validateRiskCalibrationV2,
   type RiskCalibrationObservationV1,
+  type RiskHistoricalBlockSummaryV2,
   type RiskSeverityV1,
 } from "./riskCalibrationValidation";
 
@@ -103,9 +105,14 @@ export function runEcbFxCalibrationStudyV1(input: {
   const validation = evaluate(validationTechnical, frozenProfile);
   const repeatedValidation = evaluate(validationTechnical, frozenProfile);
   const deterministic = JSON.stringify(validation) === JSON.stringify(repeatedValidation);
-  const riskValidation = validateRiskCalibrationV1({
+  const robustnessBlocks = threeYearRobustnessBlocks(
+    [...calibration.rows, ...validation.rows],
+    frozenProfile,
+  );
+  const riskValidation = validateRiskCalibrationV2({
     calibration: riskValidationObservations(calibration.rows, frozenProfile),
     validation: riskValidationObservations(validation.rows, frozenProfile),
+    historicalBlocks: riskValidationHistoricalBlocks(robustnessBlocks),
   });
   const signalValidation = validateSignalCalibration(
     calibration,
@@ -116,9 +123,6 @@ export function runEcbFxCalibrationStudyV1(input: {
     observations,
     calibration.rows,
     validation.rows,
-  );
-  const robustnessBlocks = threeYearRobustnessBlocks(
-    [...calibration.rows, ...validation.rows],
   );
   const robustness = assessRobustness(robustnessBlocks);
   const finiteAfterWarmup = [...calibration.rows, ...validation.rows].every(
@@ -604,7 +608,10 @@ function publicationGapAudit(
   });
 }
 
-function threeYearRobustnessBlocks(rows: readonly EvaluatedRow[]) {
+function threeYearRobustnessBlocks(
+  rows: readonly EvaluatedRow[],
+  profile: MarketAssetProfile,
+) {
   const groups = new Map<string, EvaluatedRow[]>();
   for (const row of rows) {
     const label = subperiodLabel(row.date);
@@ -612,18 +619,61 @@ function threeYearRobustnessBlocks(rows: readonly EvaluatedRow[]) {
   }
   return Object.freeze(Object.fromEntries([...groups].map(([label, values]) => [
     label,
-    Object.freeze({
-      observations: values.length,
-      status: values.length >= FX_MINIMUM_SPLIT_OBSERVATIONS_V1
-        ? "sufficient" as const : "partial" as const,
-      range: Object.freeze([values[0]!.date, values.at(-1)!.date]),
-      meanAnnualizedVolatility: rounded(mean(values.map(
-        (row) => row.technical.annualizedVolatility)), 0.000001),
-      meanRiskScore: rounded(mean(values.map((row) => row.risk.score)), 0.000001),
-      risk: shares(values.map((row) => row.risk.level)),
-      signal: shares(values.map((row) => row.signal.direction)),
-    }),
+    (() => {
+      const scores = values.map((row) => row.risk.score);
+      return Object.freeze({
+        observations: values.length,
+        status: values.length >= FX_MINIMUM_SPLIT_OBSERVATIONS_V1
+          ? "sufficient" as const : "partial" as const,
+        range: Object.freeze([values[0]!.date, values.at(-1)!.date]),
+        meanAnnualizedVolatility: rounded(mean(values.map(
+          (row) => row.technical.annualizedVolatility)), 0.000001),
+        meanRiskScore: rounded(mean(scores), 0.000001),
+        upperRiskQuantile: rounded(quantile(scores, 0.75), 0.000001),
+        risk: riskBandShares(scores, profile.risk.moderate, profile.risk.high),
+        thresholdSensitivity: Object.freeze({
+          cutPointNeighborhood:
+            RISK_CALIBRATION_VALIDATION_V2_POLICY.thresholdCutPointNeighborhood,
+          loweredCutPointsBandShares: riskBandShares(
+            scores,
+            profile.risk.moderate -
+              RISK_CALIBRATION_VALIDATION_V2_POLICY.thresholdCutPointNeighborhood,
+            profile.risk.high -
+              RISK_CALIBRATION_VALIDATION_V2_POLICY.thresholdCutPointNeighborhood,
+          ),
+          raisedCutPointsBandShares: riskBandShares(
+            scores,
+            profile.risk.moderate +
+              RISK_CALIBRATION_VALIDATION_V2_POLICY.thresholdCutPointNeighborhood,
+            profile.risk.high +
+              RISK_CALIBRATION_VALIDATION_V2_POLICY.thresholdCutPointNeighborhood,
+          ),
+        }),
+        signal: shares(values.map((row) => row.signal.direction)),
+      });
+    })(),
   ])));
+}
+
+function riskValidationHistoricalBlocks(
+  blocks: ReturnType<typeof threeYearRobustnessBlocks>,
+): readonly RiskHistoricalBlockSummaryV2[] {
+  return Object.freeze(Object.entries(blocks).map(([label, block]) =>
+    Object.freeze({
+      label,
+      sampleSize: block.observations,
+      meanAnnualizedVolatility: block.meanAnnualizedVolatility,
+      meanRiskScore: block.meanRiskScore,
+      upperRiskQuantile: block.upperRiskQuantile,
+      bandShares: block.risk,
+      sufficientEvidence: block.status === "sufficient",
+      thresholdSensitivity: Object.freeze({
+        loweredCutPointsBandShares:
+          block.thresholdSensitivity.loweredCutPointsBandShares,
+        raisedCutPointsBandShares:
+          block.thresholdSensitivity.raisedCutPointsBandShares,
+      }),
+    })));
 }
 
 function assessRobustness(blocks: ReturnType<typeof threeYearRobustnessBlocks>) {
@@ -657,7 +707,7 @@ function assessAcceptance(input: {
   readonly finiteAfterWarmup: boolean;
   readonly deterministic: boolean;
   readonly signalValidation: ReturnType<typeof validateSignalCalibration>;
-  readonly riskValidation: ReturnType<typeof validateRiskCalibrationV1>;
+  readonly riskValidation: ReturnType<typeof validateRiskCalibrationV2>;
   readonly gapAudit: ReturnType<typeof publicationGapAudit>;
 }) {
   const failures: string[] = [];
@@ -944,6 +994,26 @@ function shares(values: readonly string[]): Readonly<Record<string, number>> {
   return Object.freeze(Object.fromEntries([...counts]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, count]) => [key, rounded(count / values.length, 0.0001)])));
+}
+
+function riskBandShares(
+  scores: readonly number[],
+  moderateCutPoint: number,
+  highCutPoint: number,
+) {
+  const counts = { low: 0, moderate: 0, high: 0 };
+  for (const score of scores) {
+    const band = score >= highCutPoint ? "high"
+      : score >= moderateCutPoint ? "moderate" : "low";
+    counts[band] += 1;
+  }
+  const low = rounded(counts.low / scores.length, 0.000001);
+  const moderate = rounded(counts.moderate / scores.length, 0.000001);
+  return Object.freeze({
+    low,
+    moderate,
+    high: rounded(1 - low - moderate, 0.000001),
+  });
 }
 
 function subperiodLabel(date: string) {

@@ -69,6 +69,26 @@ export function runEcbFxFamilyCalibrationStudyV1() {
   const allGapAuditsPass = studies.every(
     (study) => study.publicationGapAudit.noClassificationArtifact,
   );
+  const allSignalValidationsPass = studies.every(
+    (study) => study.signalValidation.verdict === "PASS",
+  );
+  const allRiskV2ValidationsPass = studies.every(
+    (study) => study.riskValidation.inputValid &&
+      study.riskValidation.methodologyVersion ===
+        "risk-calibration-validation-v2" &&
+      study.riskValidation.verdict === "PASS",
+  );
+  const allEndpointTierRobustnessPass = studies.every(
+    (study) => study.riskValidation.inputValid &&
+      study.riskValidation.historicalRobustness.verdict === "PASS",
+  );
+  const allThresholdSensitivityPass = studies.every(
+    (study) => study.riskValidation.inputValid &&
+      study.riskValidation.thresholdSensitivity.verdict === "PASS",
+  );
+  const allCalibrationsReady = studies.every(
+    (study) => study.acceptance.verdict === "PASS",
+  );
   const allCandidatesIdentical = studies.slice(1).every((study) =>
     JSON.stringify(study.frozenCandidate) ===
       JSON.stringify(studies[0]!.frozenCandidate));
@@ -92,6 +112,16 @@ export function runEcbFxFamilyCalibrationStudyV1() {
     studies: Object.freeze(studies),
     familyAnalysis: Object.freeze({
       comparedWith: "accepted EUR/USD Calibration Study V1 and calibrated EUR/USD profile",
+      riskValidationMethodology: "risk-calibration-validation-v2" as const,
+      allSignalValidationsPass,
+      allRiskV2ValidationsPass,
+      allEndpointTierRobustnessPass,
+      allThresholdSensitivityPass,
+      allCalibrationsReady,
+      calibrationReadiness: Object.freeze(Object.fromEntries(studies.map(
+        (study) => [study.productId, study.acceptance.verdict === "PASS"
+          ? "CALIBRATION READY" as const : "NOT READY" as const],
+      ))),
       technicalWindowVerdict: allTechnicalWindowsUsable
         ? "EMA 20/50/200, RSI 14, MACD 12/26/9, ROC 10, volatility 20, and 252 annualization are usable FX-family defaults."
         : "At least one pair has a structural Technical-window blocker.",

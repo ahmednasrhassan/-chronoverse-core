@@ -22,28 +22,60 @@ const expectedEvidence = Object.freeze({
     signal: Object.freeze([0.8, -0.8, 0.3, 0.0002, 0.0035, 1.2, 3.2, 0.6, 0.85]),
     risk: Object.freeze([0.2, 0.25, 0.5, 12.5, 18.5, 41, 61, 2.1, 4.1, 0.4325, 2.2, 4.4, 5.1, 9.5]),
     regime: Object.freeze([7.645678, 13.314382]),
-    acceptance: "FAIL",
+    acceptance: "PASS",
     signalVerdict: "PASS",
-    riskVerdict: "FAIL",
-    riskFailures: Object.freeze(["matched-regime.HIGH-DISPERSION"]),
+    riskVerdict: "PASS",
+    riskFailures: Object.freeze([]),
+    endpointTiers: Object.freeze([
+      Object.freeze(["2017-2019", "2005-2007"]),
+      Object.freeze(["2020-2022", "2023-2025", "2002-2004", "2014-2016"]),
+      Object.freeze(["2011-2013", "2008-2010"]),
+    ]),
+    localReversalCount: 0,
+    matchedDiagnosticFailures: Object.freeze([
+      Object.freeze(["HIGH-DISPERSION", Object.freeze([
+        "mean Risk score drift",
+        "Risk band-share drift",
+        "high threshold-crossing drift",
+      ])]),
+    ]),
   }),
   eurgbp: Object.freeze({
     signal: Object.freeze([0.8, -0.8, 0.3, 0.0001, 0.0001, 0.8, 2.1, 0.6, 0.85]),
     risk: Object.freeze([0.2, 0.25, 0.5, 8.5, 12, 40, 60, 1.5, 2.7, 0.0015, 1.5, 2.9, 3.1, 6.1]),
     regime: Object.freeze([5.222135, 8.920078]),
-    acceptance: "FAIL",
+    acceptance: "PASS",
     signalVerdict: "PASS",
-    riskVerdict: "FAIL",
-    riskFailures: Object.freeze(["matched-regime.NORMAL-DISPERSION"]),
+    riskVerdict: "PASS",
+    riskFailures: Object.freeze([]),
+    endpointTiers: Object.freeze([
+      Object.freeze(["2023-2025", "2005-2007"]),
+      Object.freeze(["2002-2004", "2011-2013", "2017-2019", "2020-2022"]),
+      Object.freeze(["2014-2016", "2008-2010"]),
+    ]),
+    localReversalCount: 2,
+    matchedDiagnosticFailures: Object.freeze([
+      Object.freeze(["NORMAL-DISPERSION", Object.freeze([
+        "Risk band-share drift",
+        "moderate threshold-crossing drift",
+      ])]),
+    ]),
   }),
   eurchf: Object.freeze({
     signal: Object.freeze([0.75, -0.8, 0.3, 0.0001, 0.0001, 0.4, 1.2, 0.55, 0.85]),
     risk: Object.freeze([0.2, 0.25, 0.45, 5, 10, 40, 59, 0.8, 1.8, 0.002, 0.8, 2, 1.8, 4.4]),
     regime: Object.freeze([2.572445, 5.424139]),
-    acceptance: "FAIL",
+    acceptance: "PASS",
     signalVerdict: "PASS",
-    riskVerdict: "FAIL",
-    riskFailures: Object.freeze(["matched-regime.HIGH-DISPERSION"]),
+    riskVerdict: "PASS",
+    riskFailures: Object.freeze([]),
+    endpointTiers: Object.freeze([
+      Object.freeze(["2005-2007", "2002-2004"]),
+      Object.freeze(["2017-2019", "2023-2025", "2020-2022", "2014-2016"]),
+      Object.freeze(["2011-2013", "2008-2010"]),
+    ]),
+    localReversalCount: 3,
+    matchedDiagnosticFailures: Object.freeze([]),
   }),
 } as const);
 
@@ -95,8 +127,34 @@ for (const [index, study] of first.studies.entries()) {
     `${study.productId} Signal deterministic`);
   assert(study.riskValidation.inputValid,
     `${study.productId} Risk validation input valid`);
+  assert(study.riskValidation.methodologyVersion ===
+    "risk-calibration-validation-v2",
+  `${study.productId} current Risk methodology`);
   assert(study.riskValidation.regimeThresholds.derivedFrom === "calibration-only",
     `${study.productId} Risk regime boundaries are causal`);
+  assert(study.riskValidation.historicalRobustness.verdict === "PASS" &&
+    study.riskValidation.historicalRobustness.sufficientBlockCount === 8,
+  `${study.productId} endpoint-tier historical robustness`);
+  assert(study.riskValidation.thresholdSensitivity.verdict === "PASS" &&
+    study.riskValidation.thresholdSensitivity.cutPointNeighborhood === 0.025,
+  `${study.productId} fixed-neighborhood threshold sensitivity`);
+  assert(study.riskValidation.historicalRobustness.tierConstruction.endpointTierSize === 2,
+    `${study.productId} minimum endpoint-tier evidence`);
+  assert(study.riskValidation.historicalRobustness.localReversalDiagnostics.length ===
+    expectedEvidence[study.productId].localReversalCount,
+  `${study.productId} local reversals remain diagnostic`);
+  assert(Object.values(study.riskValidation.matchedRegimes).every(
+    (diagnostic) => diagnostic.acceptanceCritical === false),
+  `${study.productId} matched regimes remain diagnostic only`);
+  assert(study.unconditionalRiskDriftDiagnostic?.acceptanceCritical === false,
+    `${study.productId} unconditional drift remains diagnostic only`);
+  assert(study.unconditionalRiskDriftDiagnostic !== null &&
+    Number.isFinite(study.unconditionalRiskDriftDiagnostic.meanRiskScoreDifference) &&
+    Number.isFinite(study.unconditionalRiskDriftDiagnostic.medianRiskScoreDifference) &&
+    Number.isFinite(
+      study.unconditionalRiskDriftDiagnostic.wassersteinLikeScoreDistance,
+    ),
+  `${study.productId} unconditional Risk diagnostics retained`);
   const candidate = study.frozenCandidate;
   const evidence = {
     signal: [
@@ -134,6 +192,16 @@ for (const [index, study] of first.studies.entries()) {
     signalVerdict: study.signalValidation.verdict,
     riskVerdict: study.riskValidation.verdict,
     riskFailures: study.riskValidation.failures,
+    endpointTiers: [
+      study.riskValidation.historicalRobustness.tierConstruction.lowEndpointBlocks,
+      study.riskValidation.historicalRobustness.tierConstruction.middleBlocks,
+      study.riskValidation.historicalRobustness.tierConstruction.highEndpointBlocks,
+    ],
+    localReversalCount:
+      study.riskValidation.historicalRobustness.localReversalDiagnostics.length,
+    matchedDiagnosticFailures: Object.entries(study.riskValidation.matchedRegimes)
+      .filter(([, diagnostic]) => diagnostic.failures.length > 0)
+      .map(([bucket, diagnostic]) => [bucket, diagnostic.failures]),
   };
   assert(JSON.stringify(evidence) ===
     JSON.stringify(expectedEvidence[study.productId]),
@@ -159,5 +227,10 @@ assert(!source.includes("yahoo"), "study has no Yahoo dependency");
 assert(!source.includes("synthetic ohlc"), "study creates no synthetic OHLC");
 assert(first.familyAnalysis.productionChangesAuthorized === false,
   "analysis does not authorize production changes");
+assert(first.familyAnalysis.riskValidationMethodology ===
+  "risk-calibration-validation-v2",
+"family summary uses current Risk validation methodology");
+assert(first.familyAnalysis.allCalibrationsReady,
+  "all family calibrations ready under corrected Risk semantics");
 
 console.log("PASS: ECB FX Family Calibration Study V1 deterministic invariants");
