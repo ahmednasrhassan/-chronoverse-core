@@ -1,0 +1,60 @@
+export const ECB_ESTR_DATAFLOW_V1 = "ECB/EST/1.0" as const;
+export const ECB_ESTR_SHORT_FLOW_V1 = "EST" as const;
+export const ECB_ESTR_BENCHMARK_ITEM_V1 = "EU000A2X2A25" as const;
+export const ECB_ESTR_SERIES_KEY_V1 = "B.EU000A2X2A25.WT" as const;
+export const ECB_ESTR_SERIES_ID_V1 =
+  "EST.B.EU000A2X2A25.WT" as const;
+export const ECB_ESTR_PUBLICATION_TYPE_SERIES_ID_V1 =
+  "EST.B.EU000A2X2A25.RP" as const;
+export const ECB_ESTR_CALCULATION_METHOD_SERIES_ID_V1 =
+  "EST.B.EU000A2X2A25.CM" as const;
+
+const ECB_ESTR_DATA_API_BASE_URL =
+  "https://data-api.ecb.europa.eu/service/data/EST";
+const ECB_ESTR_QUERY_KEY = "B.EU000A2X2A25.WT+RP+CM";
+const ECB_ESTR_QUERY = "format=csvdata&detail=full";
+
+export const ECB_ESTR_PRODUCTION_DATA_URL_V1 =
+  `${ECB_ESTR_DATA_API_BASE_URL}/${ECB_ESTR_QUERY_KEY}` +
+  `?${ECB_ESTR_QUERY}&lastNObservations=2`;
+
+export const ECB_ESTR_BOOTSTRAP_DATA_URL_V1 =
+  `${ECB_ESTR_DATA_API_BASE_URL}/${ECB_ESTR_QUERY_KEY}?${ECB_ESTR_QUERY}`;
+
+export const ECB_ESTR_EXPECTED_SERIES_IDS_V1 = Object.freeze([
+  ECB_ESTR_SERIES_ID_V1,
+  ECB_ESTR_PUBLICATION_TYPE_SERIES_ID_V1,
+  ECB_ESTR_CALCULATION_METHOD_SERIES_ID_V1,
+] as const);
+
+export const ECB_ESTR_FULL_CSV_HEADERS_V1 = Object.freeze([
+  "KEY",
+  "FREQ",
+  "BENCHMARK_ITEM",
+  "DATA_TYPE_EST",
+  "TIME_PERIOD",
+  "OBS_VALUE",
+  "OBS_STATUS",
+  "CONF_STATUS",
+  "PRE_BREAK_VALUE",
+  "COMMENT_OBS",
+  "CALCUL_START_DATE",
+  "CALCUL_END_DATE",
+  "TIME_FORMAT",
+  "BREAKS",
+  "COMMENT_TS",
+  "COMPILING_ORG",
+  "COVERAGE",
+  "DATA_COMP",
+  "DECIMALS",
+  "DISS_ORG",
+  "PUBL_ECB",
+  "PUBL_MU",
+  "PUBL_PUBLIC",
+  "TIME_PER_COLLECT",
+  "TITLE",
+  "TITLE_COMPL",
+  "UNIT_INDEX_BASE",
+  "UNIT_MEASURE",
+  "UNIT_MULT",
+] as const);

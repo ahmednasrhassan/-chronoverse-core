@@ -2,6 +2,17 @@ import type {
   EcbFxReferenceDataResultV1,
   EcbFxReferenceRawObservationV1,
 } from "./types";
+import {
+  normalizeEcbCsvHeaders,
+  parseEcbCsv,
+  requireEcbCsvHeader,
+} from "./csv";
+import {
+  ECB_ESTR_BOOTSTRAP_DATA_URL_V1,
+  ECB_ESTR_PRODUCTION_DATA_URL_V1,
+} from "./estrContract";
+import { parseEcbEstrCsvV1 } from "./estrCsv";
+import type { EcbEstrDataResultV1 } from "./estrTypes";
 
 const ECB_DATA_API_BASE_URL =
   "https://data-api.ecb.europa.eu/service/data/EXR";
@@ -36,20 +47,46 @@ export class EcbClientV1 {
   async getFxReferenceRates(
     requestedSeriesIds: readonly string[],
   ): Promise<EcbFxReferenceDataResultV1> {
+    const expectedSeriesIds = normalizeRequestedSeriesIds(requestedSeriesIds);
+    const observations = parseFxReferenceCsv(
+      await this.#getCsv(ECB_FX_REFERENCE_DATA_URL_V1),
+      new Set(expectedSeriesIds),
+    );
+
+    return Object.freeze({
+      provider: "ecb" as const,
+      requestedSeriesIds: Object.freeze(expectedSeriesIds),
+      observations,
+    });
+  }
+
+  async getEstrReferenceRate(): Promise<EcbEstrDataResultV1> {
+    return this.#getEstr(ECB_ESTR_PRODUCTION_DATA_URL_V1);
+  }
+
+  async getEstrReferenceRateHistory(): Promise<EcbEstrDataResultV1> {
+    return this.#getEstr(ECB_ESTR_BOOTSTRAP_DATA_URL_V1);
+  }
+
+  async #getEstr(url: string): Promise<EcbEstrDataResultV1> {
+    return Object.freeze({
+      provider: "ecb" as const,
+      observations: parseEcbEstrCsvV1(await this.#getCsv(url)),
+    });
+  }
+
+  async #getCsv(url: string): Promise<string> {
     if (typeof window !== "undefined") {
       throw new Error("[Chronoverse ECB] Provider access is server-only.");
     }
 
-    const expectedSeriesIds = normalizeRequestedSeriesIds(requestedSeriesIds);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.#timeoutMs);
 
     try {
-      const response = await this.#fetchImpl(ECB_FX_REFERENCE_DATA_URL_V1, {
+      const response = await this.#fetchImpl(url, {
         method: "GET",
-        headers: {
-          Accept: ECB_CSV_MIME,
-        },
+        headers: { Accept: ECB_CSV_MIME },
         signal: controller.signal,
       });
 
@@ -65,16 +102,7 @@ export class EcbClientV1 {
         throw new TypeError("[Chronoverse ECB] Response content type is invalid.");
       }
 
-      const observations = parseFxReferenceCsv(
-        await response.text(),
-        new Set(expectedSeriesIds),
-      );
-
-      return Object.freeze({
-        provider: "ecb" as const,
-        requestedSeriesIds: Object.freeze(expectedSeriesIds),
-        observations,
-      });
+      return response.text();
     } finally {
       clearTimeout(timeout);
     }
@@ -104,17 +132,16 @@ function parseFxReferenceCsv(
   payload: string,
   expectedSeriesIds: ReadonlySet<string>,
 ): readonly EcbFxReferenceRawObservationV1[] {
-  const records = parseCsv(payload);
+  const records = parseEcbCsv(payload);
 
   if (records.length < 2) {
     throw new TypeError("[Chronoverse ECB] CSV response contains no data.");
   }
 
-  const headers = records[0]!.map((header, index) =>
-    (index === 0 ? header.replace(/^\uFEFF/, "") : header).trim());
-  const keyIndex = requireUniqueHeader(headers, "KEY");
-  const periodIndex = requireUniqueHeader(headers, "TIME_PERIOD");
-  const valueIndex = requireUniqueHeader(headers, "OBS_VALUE");
+  const headers = normalizeEcbCsvHeaders(records[0]!);
+  const keyIndex = requireEcbCsvHeader(headers, "KEY");
+  const periodIndex = requireEcbCsvHeader(headers, "TIME_PERIOD");
+  const valueIndex = requireEcbCsvHeader(headers, "OBS_VALUE");
   const observations: EcbFxReferenceRawObservationV1[] = [];
 
   for (const record of records.slice(1)) {
@@ -140,72 +167,6 @@ function parseFxReferenceCsv(
   }
 
   return Object.freeze(observations);
-}
-
-function requireUniqueHeader(headers: readonly string[], name: string): number {
-  const matches = headers.flatMap((header, index) =>
-    header === name ? [index] : []);
-
-  if (matches.length !== 1) {
-    throw new TypeError(`[Chronoverse ECB] CSV ${name} header is invalid.`);
-  }
-
-  return matches[0]!;
-}
-
-function parseCsv(payload: string): readonly (readonly string[])[] {
-  const records: string[][] = [];
-  let record: string[] = [];
-  let field = "";
-  let quoted = false;
-
-  for (let index = 0; index < payload.length; index += 1) {
-    const character = payload[index]!;
-
-    if (quoted) {
-      if (character === "\"") {
-        if (payload[index + 1] === "\"") {
-          field += "\"";
-          index += 1;
-        } else {
-          quoted = false;
-        }
-      } else {
-        field += character;
-      }
-
-      continue;
-    }
-
-    if (character === "\"") {
-      if (field.length !== 0) {
-        throw new TypeError("[Chronoverse ECB] CSV quoting is invalid.");
-      }
-
-      quoted = true;
-    } else if (character === ",") {
-      record.push(field);
-      field = "";
-    } else if (character === "\n") {
-      record.push(field.replace(/\r$/, ""));
-      records.push(record);
-      record = [];
-      field = "";
-    } else {
-      field += character;
-    }
-  }
-
-  if (quoted) {
-    throw new TypeError("[Chronoverse ECB] CSV quote is unterminated.");
-  }
-
-  if (field.length > 0 || record.length > 0) {
-    record.push(field.replace(/\r$/, ""));
-    records.push(record);
-  }
-
-  return Object.freeze(records.map((item) => Object.freeze(item)));
 }
 
 export const ecbClientV1 = new EcbClientV1();
