@@ -9,3 +9,4 @@ export * from "./rsi";
 export * from "./macd";
 export * from "./momentum";
 export * from "./volatility";
+export * from "./rateFeatures";
