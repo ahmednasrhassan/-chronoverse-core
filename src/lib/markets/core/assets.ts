@@ -14,6 +14,9 @@ export type MarketAssetId =
   | "copper"
   | "naturalGas"
   | "eurusd"
+  | "eurjpy"
+  | "eurgbp"
+  | "eurchf"
   | "ethereum";
 
 export interface AssetDefinition {
@@ -138,6 +141,30 @@ export const assetRegistry = {
     providerSymbols: {
       yahoo: "EURUSD=X",
     },
+  },
+
+  eurjpy: {
+    id: "eurjpy",
+    displayName: "EUR/JPY",
+    displaySymbol: "EUR/JPY",
+    assetClass: "forex",
+    providerSymbols: {},
+  },
+
+  eurgbp: {
+    id: "eurgbp",
+    displayName: "EUR/GBP",
+    displaySymbol: "EUR/GBP",
+    assetClass: "forex",
+    providerSymbols: {},
+  },
+
+  eurchf: {
+    id: "eurchf",
+    displayName: "EUR/CHF",
+    displaySymbol: "EUR/CHF",
+    assetClass: "forex",
+    providerSymbols: {},
   },
 
   ethereum: {

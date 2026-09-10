@@ -40,6 +40,15 @@ import {
   eurusdProfile,
 } from "../assets/eurusd/profile";
 import {
+  eurjpyProfile,
+} from "../assets/eurjpy/profile";
+import {
+  eurgbpProfile,
+} from "../assets/eurgbp/profile";
+import {
+  eurchfProfile,
+} from "../assets/eurchf/profile";
+import {
   ethereumProfile,
 } from "../assets/ethereum/profile";
 
@@ -55,6 +64,9 @@ export const marketAssetProfiles = {
   copper: copperProfile,
   naturalGas: naturalGasProfile,
   eurusd: eurusdProfile,
+  eurjpy: eurjpyProfile,
+  eurgbp: eurgbpProfile,
+  eurchf: eurchfProfile,
   ethereum: ethereumProfile,
 } satisfies Record<
   MarketAssetId,
