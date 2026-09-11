@@ -88,19 +88,6 @@ export const resolveAccessV1: AccessResolverV1 = createAccessResolverV1(
   },
 );
 
-export async function requireAuthenticatedV1(): Promise<AuthenticatedAccessV1> {
-  const access = await resolveAccessV1();
-
-  if (!access.isAuthenticated) {
-    throw new AccessResolutionErrorV1(
-      "trusted-access-missing",
-      "A verified authenticated identity is required.",
-    );
-  }
-
-  return access;
-}
-
 function parseTrustedAccessV1(
   authSubject: string,
   value: unknown,
