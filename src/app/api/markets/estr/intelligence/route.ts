@@ -1,13 +1,8 @@
 import {
-  handleEstrIntelligenceGetV1,
-} from "@/lib/markets/assets/estr/apiResponse";
-import {
-  getCanonicalProductResultV1,
-} from "@/lib/markets/services/canonicalProductResults";
+  getFiveProductVipDeepResponseV1,
+} from "@/lib/markets/services/vipDeepDelivery";
 
-/** Server-side €STR endpoint backed by the shared canonical result owner. */
+/** Returns VIP Deep only after trusted access authorization. */
 export async function GET(): Promise<Response> {
-  return handleEstrIntelligenceGetV1(
-    () => getCanonicalProductResultV1("estr"),
-  );
+  return getFiveProductVipDeepResponseV1("estr");
 }

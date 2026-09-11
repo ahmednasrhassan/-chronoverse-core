@@ -207,10 +207,11 @@ async function main(): Promise<void> {
     "runtime does not synthesize OHLC or volume");
   assertEqual(resultServiceSource.includes("getCanonicalLiveEurUsdIntelligence"),
     true, "canonical result owner consumes production runtime");
-  assertEqual(routeSource.includes("getCanonicalProductResultV1"), true,
-    "API consumes canonical result owner");
-  assertEqual(routeSource.includes("getCanonicalProductResultV1(\"eurusd\")"),
-    true, "API requests exact EUR/USD canonical result");
+  assertEqual(routeSource.includes("getCanonicalProductResultV1"), false,
+    "route cannot read canonical data before authorization");
+  assertEqual(routeSource.includes(
+    "getFiveProductVipDeepResponseV1(\"eurusd\")",
+  ), true, "API requests exact protected VIP EUR/USD product");
   assertEqual(routeSource.includes("unstable_cache"), false,
     "route owns no redundant final-result cache");
   assertEqual(routeSource.includes("stale: false"), false,

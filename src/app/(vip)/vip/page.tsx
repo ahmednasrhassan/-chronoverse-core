@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+import { requireVipV1 } from "@/lib/auth/guards";
+import { enforceVipPageAccessV1 } from "@/lib/auth/vipPageAccess";
 
 export const metadata: Metadata = {
   title: "Chronoverse VIP | Institutional Intelligence",
@@ -14,7 +18,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function VipOverviewPage() {
+export default async function VipOverviewPage() {
+  await enforceVipPageAccessV1(requireVipV1, redirect);
+
   return (
     <section className="space-y-8">
       {/* =========================================================

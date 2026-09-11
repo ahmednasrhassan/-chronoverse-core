@@ -326,8 +326,11 @@ function auditProductionOwnership(): void {
     "one atomic FX source-bundle cache remains");
   assertEqual(estrSourceCache.match(/= unstable_cache\(/g)?.length, 1,
     "one \u20acSTR full-history source cache remains");
-  assertEqual(estrRouteSource.includes("getCanonicalProductResultV1"), true,
-    "\u20acSTR API consumes shared canonical result owner");
+  assertEqual(estrRouteSource.includes("getCanonicalProductResultV1"), false,
+    "\u20acSTR route cannot read canonical data before authorization");
+  assertEqual(estrRouteSource.includes(
+    "getFiveProductVipDeepResponseV1(\"estr\")",
+  ), true, "\u20acSTR API requests exact protected VIP product");
 
   const runtimeSelections = {
     eurusd: "getCanonicalLiveEurUsdIntelligence",

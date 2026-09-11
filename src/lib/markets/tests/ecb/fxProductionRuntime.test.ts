@@ -411,10 +411,11 @@ function auditProductionSources(): void {
       `${productId} runtime selects exact product`);
     assertEqual(resultServiceSource.includes(runtimeExport), true,
       `${productId} canonical owner selects correct production runtime`);
-    assertEqual(routeSource.includes("getCanonicalProductResultV1"), true,
-      `${productId} API consumes canonical result owner`);
-    assertEqual(routeSource.includes(`getCanonicalProductResultV1(\"${productId}\")`),
-      true, `${productId} route requests exact canonical product`);
+    assertEqual(routeSource.includes("getCanonicalProductResultV1"), false,
+      `${productId} route cannot read canonical data before authorization`);
+    assertEqual(routeSource.includes(
+      `getFiveProductVipDeepResponseV1(\"${productId}\")`,
+    ), true, `${productId} route requests exact protected VIP product`);
     assertEqual(routeSource.includes("unstable_cache"), false,
       `${productId} route owns no redundant final-result cache`);
     assertEqual(routeSource.includes("stale: false"), false,

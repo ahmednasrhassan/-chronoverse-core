@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+import { requireVipV1 } from "@/lib/auth/guards";
+import { enforceVipPageAccessV1 } from "@/lib/auth/vipPageAccess";
 
 export const metadata: Metadata = {
   title: "VIP Markets | Chronoverse Capital",
@@ -41,7 +45,9 @@ const marketPanels = [
   },
 ];
 
-export default function VipMarketsPage() {
+export default async function VipMarketsPage() {
+  await enforceVipPageAccessV1(requireVipV1, redirect);
+
   return (
     <section className="space-y-8">
       {/* =========================================================

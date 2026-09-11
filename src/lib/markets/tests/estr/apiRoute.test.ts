@@ -230,8 +230,13 @@ async function main(): Promise<void> {
   const responseSource = readFileSync(responsePath, "utf8");
   const routeLower = routeSource.toLowerCase();
 
-  assertEqual(routeSource.match(/handleEstrIntelligenceGetV1\(/g)?.length, 1,
-    "route invokes one runtime-backed handler");
+  assertEqual(
+    routeSource.match(/getFiveProductVipDeepResponseV1\("estr"\)/g)?.length,
+    1,
+    "route invokes one protected VIP Deep adapter",
+  );
+  assertEqual(routeSource.includes("getCanonicalProductResultV1"), false,
+    "route cannot read canonical data before authorization");
   assertEqual(routeLower.includes("provider"), false,
     "route has no provider dependency");
   assertEqual(routeLower.includes("ecb"), false,
