@@ -1,37 +1,24 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
 import {
-  getCanonicalLiveEurJpyIntelligence,
-} from "@/lib/markets/assets/eurjpy/productionRuntime";
-import {
-  ECB_FX_REFERENCE_CACHE_SECONDS_V1,
-} from "@/lib/markets/providers/ecb/fxReferenceSeriesCache";
+  getCanonicalProductResultV1,
+} from "@/lib/markets/services/canonicalProductResults";
 
-const getCachedEurJpyIntelligence = unstable_cache(
-  async () => ({
-    generatedAt: new Date().toISOString(),
-    intelligence: await getCanonicalLiveEurJpyIntelligence(),
-  }),
-  ["chronoverse", "markets", "eurjpy", "intelligence"],
-  {
-    revalidate: ECB_FX_REFERENCE_CACHE_SECONDS_V1,
-    tags: ["eurjpy-intelligence"],
-  },
-);
-
-/** Daily final cache aligned with the official once-daily ECB source cache. */
+/** Reads the shared daily canonical result; this route owns no result cache. */
 export async function GET() {
   try {
-    const result = await getCachedEurJpyIntelligence();
+    const intelligence = await getCanonicalProductResultV1("eurjpy");
+    const freshness = intelligence.engineResult.marketData.freshness;
 
     return NextResponse.json({
       ok: true,
       asset: "eurjpy",
-      generatedAt: result.generatedAt,
+      generatedAt: intelligence.engineResult.evaluatedAt,
       cached: true,
-      stale: false,
-      intelligence: result.intelligence,
+      stale: freshness === "stale"
+        ? true
+        : freshness === "within-cadence" ? false : null,
+      intelligence,
     });
   } catch (error) {
     console.error("[Chronoverse EUR/JPY Intelligence API]", error);

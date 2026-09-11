@@ -1,5 +1,4 @@
 import {
-  getEstrProductionRuntimeV1,
   type EstrProductionRuntimeResultV1,
 } from "./runtime";
 import type { EstrRateEngineV3EvidenceV1 } from "./engineAdapter";
@@ -56,7 +55,7 @@ export type EstrIntelligenceApiResponseV1 =
 
 /** Builds the stable public response while keeping the runtime authoritative. */
 export async function handleEstrIntelligenceGetV1(
-  loadRuntime: EstrRuntimeLoader = getEstrProductionRuntimeV1,
+  loadRuntime: EstrRuntimeLoader,
 ): Promise<Response> {
   try {
     const runtime = await loadRuntime();

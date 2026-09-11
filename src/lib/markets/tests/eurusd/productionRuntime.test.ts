@@ -189,6 +189,11 @@ async function main(): Promise<void> {
   ));
   const runtimeSource = readFileSync(runtimePath, "utf8");
   const routeSource = readFileSync(routePath, "utf8");
+  const resultServicePath = fileURLToPath(new URL(
+    "../../services/canonicalProductResults.ts",
+    import.meta.url,
+  ));
+  const resultServiceSource = readFileSync(resultServicePath, "utf8");
   const productionPathSource = `${runtimeSource}\n${routeSource}`.toLowerCase();
   const eurUsdFiles = readdirSync(eurUsdDirectory).sort();
 
@@ -200,12 +205,16 @@ async function main(): Promise<void> {
     "runtime uses Generic Engine V3 path");
   assertEqual(/\b(open|high|low|volume)\s*:/.test(runtimeSource), false,
     "runtime does not synthesize OHLC or volume");
-  assertEqual(routeSource.includes("getCanonicalLiveEurUsdIntelligence"), true,
-    "API consumes production runtime");
-  assertEqual(routeSource.includes("ECB_FX_REFERENCE_CACHE_SECONDS_V1"), true,
-    "final cache cadence is aligned to shared ECB cache");
-  assertEqual(routeSource.match(/unstable_cache\(/g)?.length, 1,
-    "one final-result cache only");
+  assertEqual(resultServiceSource.includes("getCanonicalLiveEurUsdIntelligence"),
+    true, "canonical result owner consumes production runtime");
+  assertEqual(routeSource.includes("getCanonicalProductResultV1"), true,
+    "API consumes canonical result owner");
+  assertEqual(routeSource.includes("getCanonicalProductResultV1(\"eurusd\")"),
+    true, "API requests exact EUR/USD canonical result");
+  assertEqual(routeSource.includes("unstable_cache"), false,
+    "route owns no redundant final-result cache");
+  assertEqual(routeSource.includes("stale: false"), false,
+    "route has no hard-coded freshness claim");
   assertEqual(productionPathSource.includes("yahoo"), false,
     "no Yahoo production dependency");
   assertEqual(

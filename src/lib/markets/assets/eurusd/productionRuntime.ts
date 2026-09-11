@@ -47,8 +47,8 @@ export interface EurUsdProductionRuntimeDependenciesV1 {
 }
 
 /**
- * Fresh EUR/USD production computation. The route owns the final-result cache,
- * while the injected default reuses the single shared daily ECB bundle cache.
+ * Fresh EUR/USD production computation. The shared result-delivery service owns
+ * final-result caching, while the default loader reuses the daily ECB bundle.
  */
 export async function getCanonicalLiveEurUsdIntelligence(
   dependencies: EurUsdProductionRuntimeDependenciesV1 = {},

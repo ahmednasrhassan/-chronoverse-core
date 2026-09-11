@@ -373,6 +373,10 @@ function auditProductionSources(): void {
     `${providerDirectory}fxReferenceSeriesCache.ts`,
     "utf8",
   );
+  const resultServiceSource = readFileSync(
+    `${marketsDirectory}services/canonicalProductResults.ts`,
+    "utf8",
+  );
 
   assertEqual(testsDirectory.endsWith("tests\\") ||
     testsDirectory.endsWith("tests/"), true, "test path resolved");
@@ -405,12 +409,16 @@ function auditProductionSources(): void {
     `${productId} has no pair-specific ECB client/cache`);
     assertEqual(runtimeSource.includes(`\"${productId}\"`), true,
       `${productId} runtime selects exact product`);
-    assertEqual(routeSource.includes(runtimeExport), true,
-      `${productId} API consumes correct production runtime`);
-    assertEqual(routeSource.includes("ECB_FX_REFERENCE_CACHE_SECONDS_V1"), true,
-      `${productId} final cache uses daily cadence`);
-    assertEqual(routeSource.match(/unstable_cache\(/g)?.length, 1,
-      `${productId} has one final-result cache`);
+    assertEqual(resultServiceSource.includes(runtimeExport), true,
+      `${productId} canonical owner selects correct production runtime`);
+    assertEqual(routeSource.includes("getCanonicalProductResultV1"), true,
+      `${productId} API consumes canonical result owner`);
+    assertEqual(routeSource.includes(`getCanonicalProductResultV1(\"${productId}\")`),
+      true, `${productId} route requests exact canonical product`);
+    assertEqual(routeSource.includes("unstable_cache"), false,
+      `${productId} route owns no redundant final-result cache`);
+    assertEqual(routeSource.includes("stale: false"), false,
+      `${productId} route has no hard-coded freshness claim`);
     assertEqual(routeSource.includes("\"use client\""), false,
       `${productId} API is server-only`);
     assertEqual(productionPath.includes("yahoo"), false,
@@ -435,7 +443,7 @@ async function main(): Promise<void> {
   }
 
   assertEqual(ECB_FX_REFERENCE_CACHE_SECONDS_V1, 86_400,
-    "shared and final FX cache cadence is 24 hours");
+    "shared FX source cache cadence is 24 hours");
   auditProductionSources();
 
   console.log(
