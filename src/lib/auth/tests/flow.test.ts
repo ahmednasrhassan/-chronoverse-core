@@ -1,3 +1,5 @@
+import { AuthSessionMissingError } from "@supabase/supabase-js";
+
 import {
   handleAuthConfirmationV1,
   requestEmailOtpV1,
@@ -97,7 +99,10 @@ async function verifySignOut(): Promise<void> {
 
 async function verifyAccountStates(): Promise<void> {
   const anonymous = await loadAccountShellStateV1({
-    loadIdentity: async () => ({ data: { user: null }, error: null }),
+    loadIdentity: async () => ({
+      data: { user: null },
+      error: new AuthSessionMissingError(),
+    }),
     resolveAccess: async () => ({
       state: "anonymous_free",
       isAuthenticated: false,
@@ -111,6 +116,25 @@ async function verifyAccountStates(): Promise<void> {
     "anonymous Account state is signed out");
   assertEqual(anonymous.accessState, "anonymous_free",
     "anonymous Account state remains Free");
+
+  const providerFailure = await loadAccountShellStateV1({
+    loadIdentity: async () => ({
+      data: { user: null },
+      error: new Error("auth provider unavailable"),
+    }),
+    resolveAccess: async () => ({
+      state: "anonymous_free",
+      isAuthenticated: false,
+      authSubject: null,
+      userId: null,
+      role: null,
+      canAccessVip: false,
+    }),
+  });
+  assertEqual(providerFailure.identityStatus, "unavailable",
+    "genuine auth provider failure remains unavailable");
+  assertEqual(providerFailure.accessState, "anonymous_free",
+    "auth provider failure does not fabricate elevated access");
 
   const authenticated = await loadAccountShellStateV1({
     loadIdentity: async () => ({

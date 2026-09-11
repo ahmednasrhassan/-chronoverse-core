@@ -1,3 +1,5 @@
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
+
 import type { AccessResultV1, AccessState } from "./types";
 
 export type AccountIdentityStatusV1 =
@@ -32,9 +34,14 @@ export async function loadAccountShellStateV1(
     dependencies.loadIdentity(),
     dependencies.resolveAccess(),
   ]);
-  const identity = identityResult.status === "fulfilled" &&
-      !identityResult.value.error
-    ? identityResult.value.data.user
+  const identityResponse = identityResult.status === "fulfilled"
+    ? identityResult.value
+    : undefined;
+  const isMissingSession = identityResponse?.data.user === null &&
+    isAuthSessionMissingError(identityResponse.error);
+  const identity = identityResponse &&
+      (!identityResponse.error || isMissingSession)
+    ? identityResponse.data.user
     : undefined;
   const access = accessResult.status === "fulfilled"
     ? accessResult.value
