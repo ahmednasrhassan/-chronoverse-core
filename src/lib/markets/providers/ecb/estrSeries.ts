@@ -39,7 +39,7 @@ export async function loadEcbEstrSeriesV1(
   return normalizeEcbEstrSeriesV1(result, dependencies.now);
 }
 
-/** Explicit one-off bootstrap path; ordinary production requests must not use it. */
+/** Full-history path; production callers must reuse it through the daily cache. */
 export async function loadEcbEstrHistoryV1(
   dependencies: EcbEstrSeriesDependenciesV1 = {},
 ): Promise<EcbEstrSeriesV1> {

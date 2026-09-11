@@ -4,6 +4,7 @@ import {
   calculateEstrRateRiskV1,
   type EstrRateRiskLevelV1,
   type EstrRateRiskRequiredFeatureV1,
+  type EstrRateRiskResultV1,
 } from "./risk";
 import {
   classifyEstrRateLevelRegimeV1,
@@ -15,6 +16,7 @@ import {
   calculateEstrRateSignalV1,
   type EstrRateSignalDirectionV1,
   type EstrRateSignalRequiredFeatureV1,
+  type EstrRateSignalResultV1,
   type EstrRateSignalStrengthV1,
 } from "./signal";
 
@@ -49,15 +51,22 @@ export type EstrRateMarketStateResultV1 =
       readonly missing: readonly EstrRateMarketStateMissingFieldV1[];
     };
 
+export interface EstrRateMarketStateComputationsV1 {
+  /** Results must come from the same feature snapshot passed to the builder. */
+  readonly signal: EstrRateSignalResultV1;
+  readonly risk: EstrRateRiskResultV1;
+}
+
 /**
  * Builds the production V1 rate-market state from one prepared feature snapshot.
  * The dimensions remain independent; no composite state score is introduced.
  */
 export function calculateEstrRateMarketStateV1(
   features: RateFeatureSnapshotV1,
+  computations?: EstrRateMarketStateComputationsV1,
 ): EstrRateMarketStateResultV1 {
-  const signal = calculateEstrRateSignalV1(features);
-  const risk = calculateEstrRateRiskV1(features);
+  const signal = computations?.signal ?? calculateEstrRateSignalV1(features);
+  const risk = computations?.risk ?? calculateEstrRateRiskV1(features);
   const levelRegime = classifyEstrRateLevelRegimeV1(features.currentRate);
   const volatilityRegime = classifyEstrRateVolatilityRegimeV1(
     features.dailyBpVolatility,
