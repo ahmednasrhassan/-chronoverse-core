@@ -17,6 +17,26 @@ function assertIncludes(source: string, expected: string, label: string): void {
   assertEqual(source.includes(expected), true, label);
 }
 
+function assertMatches(
+  source: string,
+  expected: RegExp,
+  label: string,
+): void {
+  assertEqual(expected.test(source), true, label);
+}
+
+function tableDefinition(source: string, table: string): string {
+  const startMarker = `create table app_private.${table} (`;
+  const start = source.indexOf(startMarker);
+  const end = source.indexOf("\n);", start);
+
+  if (start < 0 || end < 0) {
+    throw new Error(`Could not isolate app_private.${table}.`);
+  }
+
+  return source.slice(start, end + 3);
+}
+
 function auditLemonPersistence(): void {
   const repositoryRoot = fileURLToPath(new URL("../../../../", import.meta.url));
   const migrationPath = `${repositoryRoot}supabase/migrations/` +
@@ -28,6 +48,9 @@ function auditLemonPersistence(): void {
   const identityMigration = readFileSync(identityMigrationPath, "utf8")
     .replace(/\r\n/g, "\n");
   const guards = readFileSync(guardsPath, "utf8");
+  const customers = tableDefinition(migration, "lemon_customers");
+  const subscriptions = tableDefinition(migration, "lemon_subscriptions");
+  const receipts = tableDefinition(migration, "lemon_webhook_receipts");
 
   for (const table of [
     "lemon_customers",
@@ -42,45 +65,69 @@ function auditLemonPersistence(): void {
     assertIncludes(migration,
       `alter table app_private.${table} force row level security`,
       `${table} forces RLS`);
+    assertEqual(migration.includes(
+      `alter table app_private.${table} disable row level security`,
+    ), false, `${table} never disables RLS`);
     assertIncludes(migration,
       `revoke all privileges on table app_private.${table}\n` +
         "  from public, anon, authenticated",
       `${table} revokes direct application-role privileges`);
   }
 
-  assertIncludes(migration, "references app_private.users (id)",
-    "commercial identity maps to app_private.users.id");
-  assertEqual((migration.match(
-    /id uuid primary key default gen_random_uuid\(\)/g,
-  ) ?? []).length, 3, "all commercial tables have independent UUID PKs");
-  assertIncludes(migration, "constraint lemon_customers_user_fk",
-    "customer linkage has an explicit user FK");
-  assertIncludes(migration,
-    "references app_private.lemon_customers (store_id, lemon_customer_id)",
-    "subscription customer FK preserves upstream store identity");
-  assertIncludes(migration,
-    "references app_private.lemon_webhook_receipts (id)",
-    "subscription records their last applied webhook receipt");
-  assertIncludes(migration,
-    "constraint lemon_customers_lemon_customer_id_key\n" +
-      "    unique (lemon_customer_id)",
-    "Lemon customer identity is unique");
-  assertIncludes(migration,
-    "constraint lemon_customers_user_store_mode_key\n" +
-      "    unique (user_id, store_id, test_mode)",
+  for (const [table, definition] of [
+    ["lemon_customers", customers],
+    ["lemon_subscriptions", subscriptions],
+    ["lemon_webhook_receipts", receipts],
+  ] as const) {
+    assertMatches(definition,
+      /\bid uuid primary key default gen_random_uuid\(\)/,
+      `${table} has an independent UUID PK`);
+  }
+
+  assertMatches(customers,
+    /constraint lemon_customers_user_fk\s+foreign key \(user_id\)\s+references app_private\.users \(id\)\s+on delete restrict/,
+    "customer identity maps directly to app_private.users.id");
+  assertMatches(customers,
+    /constraint lemon_customers_vendor_identity_key\s+unique \(store_id, test_mode, lemon_customer_id\)/,
+    "customer vendor identity is scoped by store and mode");
+  assertEqual(/unique \(lemon_customer_id\)/.test(customers), false,
+    "unscoped customer identity uniqueness is absent");
+  assertEqual(/unique \(store_id, lemon_customer_id\)/.test(customers), false,
+    "customer identity never omits test mode");
+  assertMatches(customers,
+    /constraint lemon_customers_user_store_mode_key\s+unique \(user_id, store_id, test_mode\)/,
     "one user linkage exists per store and mode");
-  assertIncludes(migration,
-    "constraint lemon_subscriptions_lemon_subscription_id_key\n" +
-      "    unique (lemon_subscription_id)",
-    "Lemon subscription identity is unique");
-  assertIncludes(migration,
-    "constraint lemon_webhook_receipts_idempotency_key_key\n" +
-      "    unique (idempotency_key)",
-    "webhook event identity is unique");
-  assertIncludes(migration,
-    "idempotency_key text generated always as\n" +
-      "    (event_type || ':' || payload_sha256) stored",
-    "idempotency identity is deterministic");
+
+  assertMatches(subscriptions,
+    /constraint lemon_subscriptions_vendor_identity_key\s+unique \(store_id, test_mode, lemon_subscription_id\)/,
+    "subscription vendor identity is scoped by store and mode");
+  assertEqual(/unique \(lemon_subscription_id\)/.test(subscriptions), false,
+    "unscoped subscription identity uniqueness is absent");
+  assertMatches(subscriptions,
+    /constraint lemon_subscriptions_customer_fk\s+foreign key \(store_id, test_mode, lemon_customer_id\)\s+references app_private\.lemon_customers \(\s*store_id,\s*test_mode,\s*lemon_customer_id\s*\)\s+on delete restrict/,
+    "subscription customer FK enforces store and mode integrity");
+
+  assertIncludes(receipts, "store_id text not null",
+    "webhook receipts persist store scope");
+  assertIncludes(receipts, "test_mode boolean not null",
+    "webhook receipts persist test/live scope");
+  assertIncludes(receipts, "idempotency_key text not null",
+    "logical idempotency key is independently supplied");
+  assertIncludes(receipts, "payload_sha256 text not null",
+    "payload digest remains a replay fingerprint");
+  assertEqual(receipts.includes("generated always as"), false,
+    "logical idempotency is not a generated body hash");
+  assertEqual(receipts.includes("event_type || ':' || payload_sha256"), false,
+    "event identity is independent from body serialization");
+  assertMatches(receipts,
+    /constraint lemon_webhook_receipts_idempotency_key_key\s+unique \(store_id, test_mode, idempotency_key\)/,
+    "webhook idempotency is scoped by store and mode");
+  assertMatches(receipts,
+    /constraint lemon_webhook_receipts_scope_id_key\s+unique \(store_id, test_mode, id\)/,
+    "receipt UUID can participate in a scoped FK");
+  assertMatches(subscriptions,
+    /constraint lemon_subscriptions_last_webhook_receipt_fk\s+foreign key \(store_id, test_mode, last_webhook_receipt_id\)\s+references app_private\.lemon_webhook_receipts \(store_id, test_mode, id\)\s+on delete restrict/,
+    "last receipt provenance cannot cross store or mode");
 
   assertEqual((migration.match(/on delete restrict/g) ?? []).length, 3,
     "all three commercial-history FKs use restrictive deletion");
@@ -110,7 +157,11 @@ function auditLemonPersistence(): void {
   }
 
   for (const receiptField of [
+    "store_id text not null",
+    "test_mode boolean not null",
     "event_type text not null",
+    "idempotency_key text not null",
+    "payload_sha256 text not null",
     "received_at timestamptz not null",
     "processed_at timestamptz",
     "processing_status text not null",
@@ -131,11 +182,21 @@ function auditLemonPersistence(): void {
     "lemon_subscriptions_lifecycle_idx",
     "lemon_subscriptions_upstream_updated_at_idx",
     "lemon_webhook_receipts_processing_idx",
+    "lemon_webhook_receipts_stale_processing_idx",
     "lemon_webhook_receipts_upstream_object_idx",
   ]) {
     assertIncludes(migration, `create index ${index}`,
       `${index} is defined`);
   }
+  assertMatches(migration,
+    /create index lemon_webhook_receipts_stale_processing_idx\s+on app_private\.lemon_webhook_receipts \(\s*store_id,\s*test_mode,\s*last_attempt_at\s*\)\s+where processing_status = 'processing'/,
+    "stale processing claims are indexed by environment and attempt time");
+  assertMatches(receipts,
+    /constraint lemon_webhook_receipts_processed_at_required\s+check \(processing_status <> 'processed' or processed_at is not null\)/,
+    "processed receipts require a completion timestamp");
+  assertMatches(receipts,
+    /constraint lemon_webhook_receipts_incomplete_at_check\s+check \(\s*processing_status not in \('pending', 'processing'\)\s+or processed_at is null\s*\)/,
+    "incomplete receipts cannot claim a completion timestamp");
 
   for (const forbidden of [
     "email",
@@ -150,6 +211,10 @@ function auditLemonPersistence(): void {
     "raw_payload",
     "jsonb",
     "secret",
+    "is_vip",
+    "can_access_vip",
+    "entitlement_active",
+    "effective_access",
   ]) {
     assertEqual(migration.includes(forbidden), false,
       `migration contains no ${forbidden}`);

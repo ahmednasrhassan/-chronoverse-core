@@ -15,10 +15,8 @@ create table app_private.lemon_customers (
     foreign key (user_id)
     references app_private.users (id)
     on delete restrict,
-  constraint lemon_customers_lemon_customer_id_key
-    unique (lemon_customer_id),
-  constraint lemon_customers_store_customer_key
-    unique (store_id, lemon_customer_id),
+  constraint lemon_customers_vendor_identity_key
+    unique (store_id, test_mode, lemon_customer_id),
   constraint lemon_customers_user_store_mode_key
     unique (user_id, store_id, test_mode),
   constraint lemon_customers_store_id_not_empty
@@ -29,10 +27,11 @@ create table app_private.lemon_customers (
 
 create table app_private.lemon_webhook_receipts (
   id uuid primary key default gen_random_uuid(),
+  store_id text not null,
+  test_mode boolean not null,
   event_type text not null,
+  idempotency_key text not null,
   payload_sha256 text not null,
-  idempotency_key text generated always as
-    (event_type || ':' || payload_sha256) stored,
   upstream_object_type text,
   upstream_object_id text,
   upstream_event_at timestamptz,
@@ -42,10 +41,16 @@ create table app_private.lemon_webhook_receipts (
   processing_outcome text,
   attempt_count integer not null default 0,
   last_attempt_at timestamptz,
+  constraint lemon_webhook_receipts_scope_id_key
+    unique (store_id, test_mode, id),
   constraint lemon_webhook_receipts_idempotency_key_key
-    unique (idempotency_key),
+    unique (store_id, test_mode, idempotency_key),
+  constraint lemon_webhook_receipts_store_id_not_empty
+    check (length(btrim(store_id)) > 0),
   constraint lemon_webhook_receipts_event_type_not_empty
     check (length(btrim(event_type)) > 0),
+  constraint lemon_webhook_receipts_idempotency_key_not_empty
+    check (length(btrim(idempotency_key)) > 0),
   constraint lemon_webhook_receipts_payload_sha256_format
     check (payload_sha256 ~ '^[0-9a-f]{64}$'),
   constraint lemon_webhook_receipts_processing_status_check
@@ -56,6 +61,13 @@ create table app_private.lemon_webhook_receipts (
       'failed',
       'ignored'
     )),
+  constraint lemon_webhook_receipts_processed_at_required
+    check (processing_status <> 'processed' or processed_at is not null),
+  constraint lemon_webhook_receipts_incomplete_at_check
+    check (
+      processing_status not in ('pending', 'processing')
+      or processed_at is null
+    ),
   constraint lemon_webhook_receipts_attempt_count_check
     check (attempt_count >= 0)
 );
@@ -87,15 +99,19 @@ create table app_private.lemon_subscriptions (
   created_at timestamptz not null default statement_timestamp(),
   updated_at timestamptz not null default statement_timestamp(),
   constraint lemon_subscriptions_customer_fk
-    foreign key (store_id, lemon_customer_id)
-    references app_private.lemon_customers (store_id, lemon_customer_id)
+    foreign key (store_id, test_mode, lemon_customer_id)
+    references app_private.lemon_customers (
+      store_id,
+      test_mode,
+      lemon_customer_id
+    )
     on delete restrict,
   constraint lemon_subscriptions_last_webhook_receipt_fk
-    foreign key (last_webhook_receipt_id)
-    references app_private.lemon_webhook_receipts (id)
+    foreign key (store_id, test_mode, last_webhook_receipt_id)
+    references app_private.lemon_webhook_receipts (store_id, test_mode, id)
     on delete restrict,
-  constraint lemon_subscriptions_lemon_subscription_id_key
-    unique (lemon_subscription_id),
+  constraint lemon_subscriptions_vendor_identity_key
+    unique (store_id, test_mode, lemon_subscription_id),
   constraint lemon_subscriptions_subscription_id_not_empty
     check (length(btrim(lemon_subscription_id)) > 0),
   constraint lemon_subscriptions_store_id_not_empty
@@ -128,17 +144,35 @@ create index lemon_customers_user_id_idx
   on app_private.lemon_customers (user_id);
 
 create index lemon_subscriptions_customer_idx
-  on app_private.lemon_subscriptions (store_id, lemon_customer_id);
+  on app_private.lemon_subscriptions (
+    store_id,
+    test_mode,
+    lemon_customer_id
+  );
 create index lemon_subscriptions_lifecycle_idx
   on app_private.lemon_subscriptions (status, renews_at, ends_at);
 create index lemon_subscriptions_upstream_updated_at_idx
   on app_private.lemon_subscriptions (upstream_updated_at);
 
 create index lemon_webhook_receipts_processing_idx
-  on app_private.lemon_webhook_receipts (processing_status, received_at)
+  on app_private.lemon_webhook_receipts (
+    store_id,
+    test_mode,
+    processing_status,
+    received_at
+  )
   where processing_status in ('pending', 'failed');
+create index lemon_webhook_receipts_stale_processing_idx
+  on app_private.lemon_webhook_receipts (
+    store_id,
+    test_mode,
+    last_attempt_at
+  )
+  where processing_status = 'processing';
 create index lemon_webhook_receipts_upstream_object_idx
   on app_private.lemon_webhook_receipts (
+    store_id,
+    test_mode,
     upstream_object_type,
     upstream_object_id,
     upstream_event_at
@@ -160,6 +194,12 @@ comment on table app_private.lemon_subscriptions is
 comment on table app_private.lemon_webhook_receipts is
   'Webhook replay and processing metadata without raw request payloads.';
 comment on column app_private.lemon_webhook_receipts.idempotency_key is
-  'Unique event type plus verified request-body digest for duplicate detection.';
+  'Logical event key supplied by a future verified handler; independent of body hashing.';
+comment on column app_private.lemon_webhook_receipts.payload_sha256 is
+  'Secondary request-body fingerprint for replay diagnostics, not event identity.';
 comment on column app_private.lemon_webhook_receipts.upstream_event_at is
-  'Provider object event/update time used to reject stale processing later.';
+  'Provider event/update time; equal or missing values require later reconciliation.';
+comment on column app_private.lemon_webhook_receipts.received_at is
+  'Local arrival time only; never authoritative upstream chronology.';
+comment on column app_private.lemon_subscriptions.last_webhook_receipt_id is
+  'Same-environment processing provenance, not chronological ordering.';
