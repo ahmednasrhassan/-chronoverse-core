@@ -1,0 +1,138 @@
+import type { Metadata } from "next";
+
+import { loadAccountShellStateV1 } from "@/lib/auth/account";
+import { resolveAccessV1 } from "@/lib/auth/access";
+import { createSupabaseServerClientV1 } from "@/lib/auth/supabase/server";
+
+import EmailOtpForm from "./EmailOtpForm";
+import { signOutActionV1 } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Account",
+  description: "Chronoverse Capital account identity and access status.",
+};
+
+interface AccountPageProps {
+  readonly searchParams: Promise<{
+    readonly authError?: string | string[];
+  }>;
+}
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
+  const [params, state] = await Promise.all([
+    searchParams,
+    loadAccountShellStateV1({
+      loadIdentity: async () => {
+        const supabase = await createSupabaseServerClientV1();
+        return supabase.auth.getUser();
+      },
+      resolveAccess: resolveAccessV1,
+    }),
+  ]);
+  const authError = Array.isArray(params.authError)
+    ? params.authError[0]
+    : params.authError;
+  const errorMessage = authError === "callback"
+    ? "That sign-in link could not be confirmed. Please request a new one."
+    : authError === "signout"
+    ? "We could not complete sign-out. Please try again."
+    : null;
+
+  return (
+    <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+      <div className="rounded-xl border border-border bg-card p-6 sm:p-10">
+        <p className="font-mono text-xs uppercase tracking-[0.22em] text-mauve">
+          Identity & access
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-primary">
+          Account
+        </h1>
+        <p className="mt-3 max-w-2xl text-secondary">
+          Your verified identity and current Chronoverse access state.
+        </p>
+
+        {errorMessage ? (
+          <p
+            role="alert"
+            className="mt-6 rounded-md border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <dl className="mt-8 divide-y divide-border border-y border-border">
+          <StatusRow
+            label="Session"
+            value={formatIdentityStatus(state.identityStatus)}
+          />
+          {state.email ? <StatusRow label="Email" value={state.email} /> : null}
+          <StatusRow
+            label="Access"
+            value={formatAccessState(state.accessState)}
+          />
+        </dl>
+
+        {state.accessState === "unavailable" ? (
+          <p className="mt-5 text-sm text-secondary" role="status">
+            Trusted access is currently unavailable. No elevated access has
+            been granted.
+          </p>
+        ) : null}
+
+        {state.identityStatus === "signed_in" ? (
+          <form action={signOutActionV1} className="mt-8">
+            <button
+              type="submit"
+              className="rounded-md border border-purple-border px-5 py-3 text-sm font-semibold text-mauve transition hover:bg-raised"
+            >
+              Sign out
+            </button>
+          </form>
+        ) : state.identityStatus === "signed_out" ? (
+          <>
+            <h2 className="mt-8 text-xl font-semibold text-primary">
+              Sign in without a password
+            </h2>
+            <p className="mt-2 text-sm text-secondary">
+              We will send a secure, single-use sign-in link to your email.
+            </p>
+            <EmailOtpForm />
+          </>
+        ) : (
+          <p className="mt-8 text-sm text-secondary">
+            Account identity is temporarily unavailable. Please retry shortly.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function StatusRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 py-4 sm:grid-cols-[10rem_1fr] sm:gap-4">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="break-words text-sm font-medium text-primary">{value}</dd>
+    </div>
+  );
+}
+
+function formatIdentityStatus(
+  status: "signed_in" | "signed_out" | "unavailable",
+): string {
+  if (status === "signed_in") return "Signed in";
+  if (status === "signed_out") return "Signed out";
+  return "Unavailable";
+}
+
+function formatAccessState(state: string): string {
+  const labels: Record<string, string> = {
+    anonymous_free: "Free — anonymous",
+    authenticated_free: "Free — authenticated",
+    admin: "Administrator",
+    owner: "Owner",
+    unavailable: "Unavailable",
+  };
+
+  return labels[state] ?? "Unavailable";
+}
