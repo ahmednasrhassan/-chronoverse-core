@@ -1,10 +1,8 @@
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
-import type {
-  FiveProductFreeLiteProjectionMapV1,
-} from "@/lib/markets/services/canonicalProductResults";
-import type {
-  MarketProductFreeLiteProjectionV1,
-} from "@/lib/markets/projections/types";
+import type { MarketProductFreeLiteProjectionV1 } from
+  "@/lib/markets/projections/types";
+import type { FiveProductFreeLiteProjectionMapV1 } from
+  "@/lib/markets/services/canonicalProductResults";
 
 interface FreeMarketSurfaceProps {
   readonly projections: FiveProductFreeLiteProjectionMapV1;
@@ -15,6 +13,73 @@ type AvailableFreeProjectionV1 = Extract<
   { readonly availability: "available" }
 >;
 
+export function MarketIntelligenceBoard({
+  projections,
+}: FreeMarketSurfaceProps) {
+  return (
+    <aside
+      aria-label="Free market intelligence board"
+      className="relative overflow-hidden border border-[#6F4C91]/55 bg-[#0D0D11] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)] sm:p-6"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#C8A7E8] to-transparent opacity-80"
+      />
+      <div className="flex items-center justify-between gap-4 border-b border-[#6F4C91]/35 pb-4">
+        <div>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[#C8A7E8]">
+            Market intelligence board
+          </p>
+          <p className="mt-1 text-xs text-[#91889A]">Free Lite · five-market view</p>
+        </div>
+        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#CFC5B8]">
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#C8A7E8]" />
+          Canonical
+        </span>
+      </div>
+
+      <ol className="divide-y divide-[#6F4C91]/25">
+        {LAUNCH_MARKETS_V1.map((market, index) => {
+          const projection = projections[market.productId];
+
+          return (
+            <li
+              key={market.productId}
+              className="grid grid-cols-[1.6rem_minmax(0,0.8fr)_minmax(0,1fr)] items-center gap-3 py-3.5"
+            >
+              <span className="font-mono text-[10px] tabular-nums text-[#6F4C91]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="font-mono text-xs font-semibold tracking-[0.08em] text-[#F3EBDD]">
+                {market.label}
+              </span>
+              {isAvailable(projection) ? (
+                <span className="min-w-0 text-right">
+                  <span className="block font-mono text-sm font-semibold tabular-nums text-[#F3EBDD]">
+                    {formatCurrentValue(projection)}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[10px] uppercase tracking-[0.1em] text-[#91889A]">
+                    {formatBoardState(projection)}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-right text-[10px] uppercase tracking-[0.12em] text-[#91889A]">
+                  Unavailable
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      <p className="border-t border-[#6F4C91]/35 pt-4 text-[10px] leading-4 text-[#91889A]">
+        Reference observations, not a live trading feed. Availability and
+        reference dates remain source-authoritative.
+      </p>
+    </aside>
+  );
+}
+
 export default function FreeMarketSurface({
   projections,
 }: FreeMarketSurfaceProps) {
@@ -23,60 +88,70 @@ export default function FreeMarketSurface({
   return (
     <>
       <section
-        aria-labelledby="free-markets-title"
-        className="border-y border-border bg-card/40"
+        aria-labelledby="market-pulse-title"
+        className="border-y border-[#6F4C91]/35 bg-[#0D0D11]"
       >
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(18rem,0.45fr)] md:items-end md:justify-between">
             <div>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-                Free Lite projections
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
+                Market pulse · Free Lite
               </p>
               <h2
-                id="free-markets-title"
-                className="mt-2 text-2xl font-semibold text-primary"
+                id="market-pulse-title"
+                className="mt-3 text-3xl leading-tight text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif] sm:text-4xl"
               >
-                The complete launch universe
+                The launch universe, at a glance.
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-muted">
-              Five public snapshots, assembled from the same canonical market
-              results used by the deeper VIP tier.
+            <p className="text-sm leading-6 text-[#91889A] md:text-right">
+              A compact reading of the five markets shared by Free and VIP.
+              No simulated movement. No secondary product set.
             </p>
           </div>
 
-          <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {LAUNCH_MARKETS_V1.map((market) => {
+          <ol className="mt-8 grid gap-px overflow-hidden border border-[#6F4C91]/40 bg-[#6F4C91]/30 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-5">
+            {LAUNCH_MARKETS_V1.map((market, index) => {
               const projection = projections[market.productId];
+              const isFeatured = market.productId === "eurusd";
 
               return (
                 <li
                   key={market.productId}
-                  className="min-w-0 rounded-xl border border-border bg-card p-4"
+                  className={`relative min-w-0 p-5 lg:col-span-2 xl:col-span-1 ${
+                    index === 3 ? "lg:col-start-2 xl:col-start-auto" : ""
+                  } ${isFeatured ? "bg-[#15131A]" : "bg-[#050506]"}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-semibold text-primary">{market.label}</h3>
-                    <span className="rounded border border-border bg-raised px-1.5 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
-                      Lite
+                  {isFeatured ? (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-0 top-0 h-px bg-[#C8A7E8]"
+                    />
+                  ) : null}
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-mono text-xs font-semibold tracking-[0.1em] text-[#F3EBDD]">
+                      {market.label}
+                    </h3>
+                    <span className="text-[9px] uppercase tracking-[0.16em] text-[#91889A]">
+                      {isFeatured ? "Featured" : "Lite"}
                     </span>
                   </div>
+
                   {isAvailable(projection) ? (
                     <>
-                      <p className="mt-5 text-2xl font-semibold tabular-nums text-primary">
+                      <p className="mt-7 font-mono text-2xl font-medium tabular-nums text-[#F3EBDD] xl:text-[1.7rem]">
                         {formatCurrentValue(projection)}
                       </p>
-                      <p className="mt-1 truncate text-xs text-muted">
+                      <p className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-[#91889A]">
                         {projection.currentValue.unit}
                       </p>
-                      <dl className="mt-5 space-y-2 border-t border-border pt-4 text-xs">
+                      <dl className="mt-6 space-y-2.5 border-t border-[#6F4C91]/25 pt-4 text-[11px]">
                         <CompactMetric
                           label="Direction"
                           value={formatToken(projection.details.direction)}
                         />
                         <CompactMetric
-                          label={projection.details.kind === "rate"
-                            ? "Level"
-                            : "State"}
+                          label={projection.details.kind === "rate" ? "Regime" : "State"}
                           value={projection.details.kind === "rate"
                             ? formatToken(projection.details.levelRegime)
                             : formatToken(projection.details.marketState)}
@@ -85,13 +160,11 @@ export default function FreeMarketSurface({
                           label="Volatility"
                           value={projection.details.kind === "rate"
                             ? formatToken(projection.details.volatilityRegime)
-                            : formatPercentage(
-                              projection.details.annualizedVolatility,
-                            )}
+                            : formatPercentage(projection.details.annualizedVolatility)}
                         />
                       </dl>
-                      <p className="mt-4 text-[10px] uppercase tracking-[0.12em] text-muted">
-                        Reference {projection.referenceDate}
+                      <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.12em] text-[#91889A]">
+                        Ref. {projection.referenceDate}
                       </p>
                     </>
                   ) : (
@@ -100,108 +173,142 @@ export default function FreeMarketSurface({
                 </li>
               );
             })}
-          </ul>
+          </ol>
         </div>
       </section>
 
       <section
         aria-labelledby="featured-eurusd-title"
-        className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.75fr)] lg:px-8 lg:py-24"
+        className="relative overflow-hidden bg-[#050506]"
       >
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 lg:p-10">
-          <div className="flex flex-col gap-4 border-b border-border pb-7 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-                Featured Free market
-              </p>
-              <h2
-                id="featured-eurusd-title"
-                className="mt-3 text-3xl font-semibold text-primary"
-              >
-                EUR/USD
-              </h2>
+        <div
+          aria-hidden="true"
+          className="absolute left-1/4 top-0 h-64 w-64 rounded-full bg-[#6F4C91]/10 blur-3xl"
+        />
+        <div className="relative mx-auto grid max-w-7xl gap-0 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(19rem,0.85fr)] xl:py-24">
+          <div className="border border-[#6F4C91]/45 bg-[#0D0D11] p-6 sm:p-9 lg:p-12">
+            <div className="flex flex-col gap-5 border-b border-[#6F4C91]/35 pb-8 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
+                  Featured intelligence canvas
+                </p>
+                <h2
+                  id="featured-eurusd-title"
+                  className="mt-3 text-4xl text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif] sm:text-5xl"
+                >
+                  EUR/USD
+                </h2>
+              </div>
+              <span className="w-fit border border-[#6F4C91] bg-[#15131A] px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C8A7E8]">
+                Free Lite
+              </span>
             </div>
-            <span className="w-fit rounded-md border border-purple-border bg-raised px-3 py-2 text-xs font-semibold text-mauve">
-              Free Lite
-            </span>
+
+            {isAvailable(eurUsd) && eurUsd.details.kind === "fx" ? (
+              <div className="pt-9">
+                <div className="grid gap-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#91889A]">
+                      Current reference value
+                    </p>
+                    <p className="mt-3 font-mono text-5xl font-medium tracking-[-0.04em] tabular-nums text-[#F3EBDD] sm:text-7xl">
+                      {formatCurrentValue(eurUsd)}
+                    </p>
+                    <p className="mt-3 text-xs text-[#CFC5B8]">
+                      {eurUsd.currentValue.unit} · Reference {eurUsd.referenceDate}
+                    </p>
+                  </div>
+                  <p className="border-l border-[#6F4C91]/50 pl-4 text-xs leading-5 text-[#91889A]">
+                    Source date<br />
+                    <span className="text-[#CFC5B8]">
+                      {formatTimestamp(eurUsd.sourceTimestamp)}
+                    </span>
+                  </p>
+                </div>
+
+                <div
+                  aria-label="EUR/USD state and signal band"
+                  className="mt-12 border-y border-[#6F4C91]/40"
+                >
+                  <dl className="grid sm:grid-cols-2 xl:grid-cols-4">
+                    <SignalCell
+                      index="01"
+                      label="Market state"
+                      value={formatToken(eurUsd.details.marketState)}
+                    />
+                    <SignalCell
+                      index="02"
+                      label="Basic trend"
+                      value={formatToken(eurUsd.details.direction)}
+                    />
+                    <SignalCell
+                      index="03"
+                      label="Annualized volatility"
+                      value={formatPercentage(eurUsd.details.annualizedVolatility)}
+                    />
+                    <SignalCell
+                      index="04"
+                      label="Projection status"
+                      value={formatToken(eurUsd.status)}
+                    />
+                  </dl>
+                </div>
+
+                <div className="mt-7 flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.13em] text-[#91889A]">
+                  <span>Availability · Verified projection</span>
+                  <span>Freshness · Not assessed</span>
+                </div>
+              </div>
+            ) : (
+              <div className="py-16">
+                <p className="text-xl text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]">
+                  EUR/USD projection unavailable
+                </p>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-[#CFC5B8]">
+                  No verified Free Lite result is available for this render.
+                  The remaining market projections continue independently.
+                </p>
+              </div>
+            )}
           </div>
 
-          {isAvailable(eurUsd) && eurUsd.details.kind === "fx" ? (
-            <div className="pt-9">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted">
-                Current reference value
-              </p>
-              <p className="mt-3 text-5xl font-semibold tracking-tight tabular-nums text-primary sm:text-6xl">
-                {formatCurrentValue(eurUsd)}
-              </p>
-              <p className="mt-3 text-sm text-secondary">
-                {eurUsd.currentValue.unit} · Reference {eurUsd.referenceDate}
-              </p>
+          <aside className="border border-t-0 border-[#6F4C91]/45 bg-[#15131A] p-6 sm:p-9 xl:border-l-0 xl:border-t xl:p-10">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
+              Intelligence boundary
+            </p>
+            <h2 className="mt-4 text-3xl leading-tight text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]">
+              Useful now.<br />Deeper in VIP.
+            </h2>
+            <p className="mt-5 text-sm leading-6 text-[#CFC5B8]">
+              Free establishes the observed state. VIP adds the analytical
+              layers required to challenge and contextualize it.
+            </p>
 
-              <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
-                <FeaturedMetric
-                  label="Market state"
-                  value={formatToken(eurUsd.details.marketState)}
-                />
-                <FeaturedMetric
-                  label="Basic trend"
-                  value={formatToken(eurUsd.details.direction)}
-                />
-                <FeaturedMetric
-                  label="Annualized volatility"
-                  value={formatPercentage(eurUsd.details.annualizedVolatility)}
-                />
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted">
-                <span>{formatToken(eurUsd.status)}</span>
-                <span>Freshness not assessed</span>
-                <span>Source time {formatTimestamp(eurUsd.sourceTimestamp)}</span>
-              </div>
+            <div className="mt-9 space-y-8">
+              <BoundaryList
+                title="Free intelligence"
+                items={[
+                  "Current state",
+                  "Basic trend",
+                  "Volatility",
+                  "Reference and freshness",
+                  "Availability context",
+                ]}
+              />
+              <BoundaryList
+                title="VIP intelligence"
+                items={[
+                  "Macro drivers",
+                  "Cross-market confirmation",
+                  "Regime intelligence",
+                  "Scenarios and conviction",
+                  "Invalidation",
+                  "Historical context",
+                ]}
+              />
             </div>
-          ) : (
-            <div className="py-14">
-              <p className="text-lg font-medium text-primary">
-                EUR/USD projection unavailable
-              </p>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-secondary">
-                No verified Free Lite result is available for this render.
-                Other market projections remain independently visible.
-              </p>
-            </div>
-          )}
+          </aside>
         </div>
-
-        <aside className="self-start rounded-2xl border border-border bg-raised p-6 sm:p-8">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-            Intelligence boundary
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-primary">
-            Useful now. Deeper in VIP.
-          </h2>
-          <div className="mt-7 space-y-7">
-            <BoundaryList
-              title="Free"
-              items={[
-                "Current state",
-                "Basic trend",
-                "Volatility",
-                "Reference date",
-                "Availability context",
-              ]}
-            />
-            <BoundaryList
-              title="VIP"
-              items={[
-                "Macro drivers",
-                "Cross-market confirmation",
-                "Regime intelligence",
-                "Scenarios and conviction",
-                "Invalidation and historical context",
-              ]}
-            />
-          </div>
-        </aside>
       </section>
     </>
   );
@@ -213,29 +320,46 @@ function isAvailable(
   return projection?.availability === "available";
 }
 
+function formatBoardState(projection: AvailableFreeProjectionV1): string {
+  return projection.details.kind === "rate"
+    ? `${formatToken(projection.details.direction)} · ${formatToken(projection.details.levelRegime)}`
+    : `${formatToken(projection.details.direction)} · ${formatToken(projection.details.marketState)}`;
+}
+
 function CompactMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className="truncate text-right font-medium text-secondary">{value}</dd>
+      <dt className="text-[#91889A]">{label}</dt>
+      <dd className="truncate text-right font-medium text-[#CFC5B8]">{value}</dd>
     </div>
   );
 }
 
-function FeaturedMetric({ label, value }: { label: string; value: string }) {
+function SignalCell({
+  index,
+  label,
+  value,
+}: {
+  index: string;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="bg-card p-4 sm:p-5">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="mt-2 text-sm font-semibold text-primary">{value}</dd>
+    <div className="border-[#6F4C91]/30 py-5 sm:odd:border-r sm:even:pl-5 xl:border-r xl:px-5 xl:first:pl-0 xl:last:border-r-0 xl:last:pr-0">
+      <dt className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[#91889A]">
+        <span className="text-[#6F4C91]">{index}</span>
+        {label}
+      </dt>
+      <dd className="mt-3 text-sm font-semibold text-[#F3EBDD]">{value}</dd>
     </div>
   );
 }
 
 function UnavailableMarket() {
   return (
-    <div className="mt-8 border-t border-border pt-4">
-      <p className="text-sm font-medium text-secondary">Unavailable</p>
-      <p className="mt-2 text-xs leading-5 text-muted">
+    <div className="mt-8 border-t border-[#6F4C91]/25 pt-4">
+      <p className="text-sm font-medium text-[#CFC5B8]">Unavailable</p>
+      <p className="mt-2 text-xs leading-5 text-[#91889A]">
         No verified Free Lite projection is available.
       </p>
     </div>
@@ -250,12 +374,14 @@ function BoundaryList({
   items: readonly string[];
 }) {
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-primary">{title}</h3>
-      <ul className="mt-3 space-y-2 text-sm leading-5 text-secondary">
+    <div className="border-t border-[#6F4C91]/40 pt-5">
+      <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C8A7E8]">
+        {title}
+      </h3>
+      <ul className="mt-4 space-y-2.5 text-sm leading-5 text-[#CFC5B8]">
         {items.map((item) => (
-          <li key={item} className="flex gap-2">
-            <span aria-hidden="true" className="text-mauve">—</span>
+          <li key={item} className="grid grid-cols-[0.75rem_1fr] gap-2">
+            <span aria-hidden="true" className="text-[#6F4C91]">—</span>
             <span>{item}</span>
           </li>
         ))}

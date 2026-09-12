@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import NewsletterForm from "@/components/NewsLetterForm";
-import FreeMarketSurface from "@/components/home/FreeMarketSurface";
-import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+import FreeMarketSurface, {
+  MarketIntelligenceBoard,
+} from "@/components/home/FreeMarketSurface";
 import { siteConfig } from "@/config/siteConfig";
-import { calculateReadTime, getLatestSanityArticles } from "@/lib/content";
+import {
+  calculateReadTime,
+  getLatestSanityArticles,
+  type ContentItem,
+} from "@/lib/content";
+import type { FiveProductFreeLiteProjectionMapV1 } from
+  "@/lib/markets/services/canonicalProductResults";
 import { getFiveProductFreeLiteProjectionMapV1 } from
   "@/lib/markets/services/canonicalProductResults";
 
@@ -19,13 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
+const PRIMARY_CTA_CLASS =
+  "inline-flex items-center justify-center border border-[#A77BD8] bg-[#A77BD8] px-5 py-3 text-sm font-semibold text-[#050506] transition-colors hover:border-[#C8A7E8] hover:bg-[#C8A7E8] hover:text-[#050506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
+
+const SECONDARY_CTA_CLASS =
+  "inline-flex items-center justify-center border border-[#6F4C91] bg-transparent px-5 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[#C8A7E8] hover:bg-[#15131A] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
+
+const EDITORIAL_HEADING_CLASS =
+  "text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]";
+
 export default function HomePage() {
   return (
-    <div className="bg-page text-primary">
-      <Hero />
-
-      <Suspense fallback={<MarketSurfaceFallback />}>
-        <FreeMarketIntelligence />
+    <div className="bg-[#050506] text-[#F3EBDD]">
+      <Suspense fallback={<MarketExperienceFallback />}>
+        <FreeMarketExperience />
       </Suspense>
 
       <VipConversion />
@@ -34,85 +49,96 @@ export default function HomePage() {
         <LatestResearch />
       </Suspense>
 
-      <ResearchAndMembership />
+      <MembershipAndResearch />
       <Newsletter />
       <TrustStrip />
     </div>
   );
 }
 
-function Hero() {
+async function FreeMarketExperience() {
+  const projections = await getFiveProductFreeLiteProjectionMapV1();
+
   return (
-    <section className="relative overflow-hidden border-b border-border">
+    <>
+      <Hero projections={projections} />
+      <FreeMarketSurface projections={projections} />
+    </>
+  );
+}
+
+function Hero({
+  projections,
+}: {
+  projections: FiveProductFreeLiteProjectionMapV1;
+}) {
+  return (
+    <section className="relative isolate overflow-hidden border-b border-[#6F4C91]/35 bg-[#050506]">
       <div
         aria-hidden="true"
-        className="absolute inset-y-0 right-0 hidden w-1/2 bg-[linear-gradient(135deg,transparent_0%,rgba(111,76,145,0.08)_100%)] lg:block"
+        className="absolute -right-32 -top-48 h-[36rem] w-[36rem] rounded-full bg-[#6F4C91]/15 blur-3xl"
       />
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:px-8 lg:py-32">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(111,76,145,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(111,76,145,0.1)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_right,transparent,black_70%)]"
+      />
+
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)] xl:items-center xl:py-24">
         <div className="max-w-3xl">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.22em] text-mauve">
-            Free Market Intelligence
-          </p>
-          <h1 className="mt-5 text-4xl font-semibold tracking-[-0.03em] text-primary sm:text-5xl lg:text-6xl">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="h-px w-8 bg-[#C8A7E8]" />
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.26em] text-[#C8A7E8]">
+              Free Market Intelligence
+            </p>
+          </div>
+          <h1 className={`mt-7 max-w-[13ch] text-[clamp(2.75rem,5.25vw,4.5rem)] leading-[0.98] tracking-[-0.035em] ${EDITORIAL_HEADING_CLASS}`}>
             Five markets. One intelligence system.
           </h1>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-secondary sm:text-lg">
-            Follow the complete Chronoverse launch universe through clear Free
-            Lite projections. VIP examines the same five markets with deeper
-            regime, macro, scenario, and conviction intelligence.
+          <p className="mt-7 max-w-2xl text-base leading-8 text-[#CFC5B8] sm:text-lg">
+            A precise public reading of Europe&apos;s core currency complex and
+            benchmark short-term rate. Free Lite establishes what is happening;
+            VIP develops the deeper intelligence around it.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/markets"
-              className="rounded-md border border-mauve bg-mauve px-5 py-3 text-center text-sm font-semibold text-page hover:border-purple-brand hover:bg-purple-brand hover:text-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
-            >
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Link href="/markets" className={PRIMARY_CTA_CLASS}>
               Explore Markets
+              <span aria-hidden="true" className="ml-3">→</span>
             </Link>
-            <Link
-              href="/pricing"
-              className="rounded-md border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-primary hover:border-purple-border hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
-            >
-              See VIP Difference
+            <Link href="/pricing" className={SECONDARY_CTA_CLASS}>
+              See the VIP Difference
             </Link>
+          </div>
+          <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-[#6F4C91]/30 pt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-[#91889A]">
+            <span>Five canonical products</span>
+            <span>Server-assembled</span>
+            <span>Source-dated</span>
           </div>
         </div>
 
-        <aside className="self-end border-l border-purple-border pl-6 sm:pl-8">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">
-            Shared product universe
-          </p>
-          <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-secondary">
-            {LAUNCH_MARKETS_V1.map((market) => (
-              <li key={market.productId}>{market.label}</li>
-            ))}
-          </ul>
-          <div className="mt-7 grid grid-cols-2 gap-4 border-t border-border pt-5 text-xs">
-            <p>
-              <span className="block font-semibold text-primary">Free</span>
-              <span className="mt-1 block text-muted">Lite projection</span>
-            </p>
-            <p>
-              <span className="block font-semibold text-primary">VIP</span>
-              <span className="mt-1 block text-muted">Deep projection</span>
-            </p>
-          </div>
-        </aside>
+        <MarketIntelligenceBoard projections={projections} />
       </div>
     </section>
   );
 }
 
-async function FreeMarketIntelligence() {
-  const projections = await getFiveProductFreeLiteProjectionMapV1();
-
-  return <FreeMarketSurface projections={projections} />;
-}
-
-function MarketSurfaceFallback() {
+function MarketExperienceFallback() {
   return (
-    <section className="border-y border-border bg-card/40" aria-label="Loading Free market intelligence">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <p className="text-sm text-secondary">Loading verified Free Lite projections…</p>
+    <section
+      aria-label="Loading Free market intelligence"
+      className="border-b border-[#6F4C91]/35 bg-[#050506]"
+    >
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)] xl:py-24">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#C8A7E8]">
+            Free Market Intelligence
+          </p>
+          <p className={`mt-7 max-w-[13ch] text-[clamp(2.75rem,5.25vw,4.5rem)] leading-none ${EDITORIAL_HEADING_CLASS}`}>
+            Five markets. One intelligence system.
+          </p>
+        </div>
+        <div className="border border-[#6F4C91]/40 bg-[#0D0D11] p-6 text-sm text-[#91889A]">
+          Loading verified Free Lite projections…
+        </div>
       </div>
     </section>
   );
@@ -120,53 +146,66 @@ function MarketSurfaceFallback() {
 
 function VipConversion() {
   const vipCapabilities = [
-    "Deeper regime analysis",
-    "Macro drivers",
-    "Cross-market confirmation",
-    "Scenarios and conviction",
+    "Regime",
+    "Macro",
+    "Cross-market",
+    "Scenarios",
+    "Conviction",
     "Invalidation",
     "Historical context",
     "Proprietary intelligence",
   ] as const;
 
   return (
-    <section className="border-y border-border bg-raised">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:px-8 lg:py-24">
-        <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-            Chronoverse VIP
+    <section className="relative overflow-hidden border-y border-[#6F4C91]/40 bg-[#15131A]">
+      <div
+        aria-hidden="true"
+        className="absolute inset-y-0 left-1/2 w-px bg-linear-to-b from-transparent via-[#6F4C91]/50 to-transparent"
+      />
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:gap-20 xl:py-24">
+        <div className="self-center">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
+            The deeper layer
           </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-primary sm:text-4xl">
-            Same markets. A deeper view.
+          <h2 className={`mt-5 max-w-[12ch] text-4xl leading-[1.05] sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}>
+            Same five markets. A deeper intelligence layer.
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-7 text-secondary">
-            Move from a concise public reading to the deeper analytical context
-            available to verified VIP members—without changing the market
-            universe.
+          <p className="mt-6 max-w-xl text-base leading-7 text-[#CFC5B8]">
+            Free tells you what is happening. VIP helps explain why, how
+            strongly, what could happen next, and what breaks the thesis.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/vip"
-              className="rounded-md border border-mauve bg-mauve px-5 py-3 text-center text-sm font-semibold text-page hover:bg-purple-brand hover:text-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-            >
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/vip" className={PRIMARY_CTA_CLASS}>
               Explore VIP
+              <span aria-hidden="true" className="ml-3">→</span>
             </Link>
-            <Link
-              href="/pricing"
-              className="rounded-md border border-border px-5 py-3 text-center text-sm font-semibold text-primary hover:border-mauve hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-            >
-              Compare Free and VIP
+            <Link href="/pricing" className={SECONDARY_CTA_CLASS}>
+              Compare Access
             </Link>
           </div>
         </div>
 
-        <ul className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
-          {vipCapabilities.map((capability) => (
-            <li key={capability} className="bg-card px-5 py-4 text-sm text-secondary">
-              {capability}
-            </li>
-          ))}
-        </ul>
+        <div className="border-y border-[#6F4C91]/50 py-2">
+          <div className="flex items-center justify-between border-b border-[#6F4C91]/30 py-4 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
+            <span>VIP depth map</span>
+            <span>Conceptual layers</span>
+          </div>
+          <ol className="grid sm:grid-cols-2">
+            {vipCapabilities.map((capability, index) => (
+              <li
+                key={capability}
+                className="group flex items-center gap-4 border-b border-[#6F4C91]/25 py-4 sm:odd:border-r sm:odd:pr-5 sm:even:pl-5"
+              >
+                <span className="font-mono text-[10px] text-[#6F4C91]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="text-sm font-medium text-[#F3EBDD]">
+                  {capability}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
@@ -174,149 +213,312 @@ function VipConversion() {
 
 async function LatestResearch() {
   const articles = await getLatestSanityArticles(3);
+  const [featuredArticle, ...secondaryArticles] = articles;
 
   return (
-    <section aria-labelledby="latest-research-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-            Editorial authority
-          </p>
-          <h2 id="latest-research-title" className="mt-3 text-3xl font-semibold text-primary">
-            Latest research
-          </h2>
+    <section
+      aria-labelledby="latest-research-title"
+      className="bg-[#050506]"
+    >
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="flex flex-col gap-5 border-b border-[#6F4C91]/35 pb-7 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
+              Research desk
+            </p>
+            <h2
+              id="latest-research-title"
+              className={`mt-3 text-4xl sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}
+            >
+              Latest research
+            </h2>
+          </div>
+          <Link
+            href="/reports"
+            className="w-fit border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+          >
+            View all research →
+          </Link>
         </div>
-        <Link
-          href="/reports"
-          className="w-fit rounded-sm text-sm font-semibold text-mauve hover:text-purple-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-        >
-          View all research →
-        </Link>
-      </div>
 
-      {articles.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-border bg-card p-8 text-sm text-secondary">
-          No published research is available right now.
-        </div>
-      ) : (
-        <div className="mt-8 grid gap-5 lg:grid-cols-3">
-          {articles.map((article) => (
-            <article key={article.slug} className="border-t border-purple-border pt-5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                <span>{article.category}</span>
-                <span aria-hidden="true">·</span>
-                <time dateTime={article.date}>{article.date}</time>
-                <span aria-hidden="true">·</span>
-                <span>
-                  {calculateReadTime(article.bodyContent || article.content || "")} min read
-                </span>
-              </div>
-              <h3 className="mt-4 text-xl font-semibold leading-7 text-primary">
-                <Link
-                  href={`/${article.slug}`}
-                  className="rounded-sm text-primary hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-                >
-                  {article.title}
-                </Link>
-              </h3>
-              {article.seoDescription ? (
-                <p className="mt-3 line-clamp-3 text-sm leading-6 text-secondary">
-                  {article.seoDescription}
-                </p>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      )}
+        {!featuredArticle ? (
+          <div className="mt-8 border border-[#6F4C91]/35 bg-[#0D0D11] p-8 text-sm text-[#CFC5B8]">
+            No published research is available right now.
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
+            <FeaturedArticle article={featuredArticle} />
+            <div className="divide-y divide-[#6F4C91]/35 border-y border-[#6F4C91]/35">
+              {secondaryArticles.map((article, index) => (
+                <SecondaryArticle
+                  key={article.slug}
+                  article={article}
+                  index={index + 2}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </section>
+  );
+}
+
+function FeaturedArticle({ article }: { article: ContentItem }) {
+  return (
+    <article className="group grid min-w-0 gap-0 border border-[#6F4C91]/40 bg-[#0D0D11] sm:grid-cols-[minmax(0,1.1fr)_minmax(17rem,0.9fr)]">
+      <EditorialImage article={article} featured />
+      <div className="flex flex-col justify-between p-6 sm:p-8">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#C8A7E8]">
+            Featured · {article.category}
+          </p>
+          <h3 className={`mt-5 text-3xl leading-tight ${EDITORIAL_HEADING_CLASS}`}>
+            <Link
+              href={`/${article.slug}`}
+              className="text-[#F3EBDD] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+            >
+              {article.title}
+            </Link>
+          </h3>
+          {article.seoDescription ? (
+            <p className="mt-5 line-clamp-4 text-sm leading-6 text-[#CFC5B8]">
+              {article.seoDescription}
+            </p>
+          ) : null}
+        </div>
+        <ArticleMeta article={article} className="mt-8" />
+      </div>
+    </article>
+  );
+}
+
+function SecondaryArticle({
+  article,
+  index,
+}: {
+  article: ContentItem;
+  index: number;
+}) {
+  return (
+    <article className="grid gap-5 py-6 first:pt-0 last:pb-0 sm:grid-cols-[7.5rem_minmax(0,1fr)] lg:grid-cols-[10rem_minmax(0,1fr)] lg:py-8 xl:grid-cols-[8.5rem_minmax(0,1fr)]">
+      <EditorialImage article={article} />
+      <div className="min-w-0">
+        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#91889A]">
+          0{index} · {article.category}
+        </p>
+        <h3 className={`mt-3 text-xl leading-snug ${EDITORIAL_HEADING_CLASS}`}>
+          <Link
+            href={`/${article.slug}`}
+            className="text-[#F3EBDD] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+          >
+            {article.title}
+          </Link>
+        </h3>
+        {article.seoDescription ? (
+          <p className="mt-3 line-clamp-2 text-xs leading-5 text-[#91889A]">
+            {article.seoDescription}
+          </p>
+        ) : null}
+        <ArticleMeta article={article} className="mt-4" />
+      </div>
+    </article>
+  );
+}
+
+function EditorialImage({
+  article,
+  featured = false,
+}: {
+  article: ContentItem;
+  featured?: boolean;
+}) {
+  const visualClass = featured
+    ? "relative aspect-[16/10] overflow-hidden border-b border-[#6F4C91]/35 sm:aspect-auto sm:border-b-0 sm:border-r"
+    : "relative aspect-[4/3] overflow-hidden border border-[#6F4C91]/35";
+
+  return (
+    <div className={`${visualClass} bg-[#15131A]`}>
+      {article.imageUrl ? (
+        <Image
+          src={article.imageUrl}
+          alt={article.title}
+          fill
+          sizes={featured
+            ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 36vw"
+            : "(max-width: 640px) 30vw, 136px"}
+          className="object-cover opacity-75 grayscale-[20%]"
+        />
+      ) : (
+        <div
+          aria-label="Editorial image unavailable"
+          className="absolute inset-0 [background-image:linear-gradient(135deg,rgba(111,76,145,0.42),rgba(13,13,17,0.35)_45%,rgba(5,5,6,0.95))]"
+        />
+      )}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-linear-to-t from-[#050506]/90 via-transparent to-transparent"
+      />
+    </div>
+  );
+}
+
+function ArticleMeta({
+  article,
+  className,
+}: {
+  article: ContentItem;
+  className: string;
+}) {
+  return (
+    <div className={`flex flex-wrap gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[#91889A] ${className}`}>
+      <time dateTime={article.date}>{article.date}</time>
+      <span aria-hidden="true">·</span>
+      <span>
+        {calculateReadTime(article.bodyContent || article.content || "")} min read
+      </span>
+    </div>
   );
 }
 
 function ResearchFallback() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24" aria-label="Loading research">
-      <p className="text-sm text-secondary">Loading published research…</p>
+    <section
+      aria-label="Loading research"
+      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
+    >
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#91889A]">
+        Loading published research…
+      </p>
     </section>
   );
 }
 
-function ResearchAndMembership() {
+function MembershipAndResearch() {
   return (
-    <section className="border-y border-border bg-card/40">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="max-w-2xl">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-            Research &amp; Membership
+    <section className="border-y border-[#6F4C91]/35 bg-[#0D0D11]">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-end">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
+              Membership &amp; Research
+            </p>
+            <h2 className={`mt-4 text-4xl leading-tight ${EDITORIAL_HEADING_CLASS}`}>
+              Two ways to go further.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm leading-6 text-[#CFC5B8] lg:justify-self-end lg:text-right">
+            Choose ongoing five-market intelligence or standalone research.
+            Each has a distinct role and access model.
           </p>
-          <h2 className="mt-3 text-3xl font-semibold text-primary">
-            Choose the format that fits the work.
-          </h2>
         </div>
 
-        <div className="mt-9 grid gap-5 lg:grid-cols-2">
-          <article className="rounded-xl border border-border bg-card p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-              Lemon Squeezy · Membership role
-            </p>
-            <h3 className="mt-4 text-xl font-semibold text-primary">
-              Chronoverse VIP Membership
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-secondary">
-              Ongoing access to the deeper view of the same five-market
-              intelligence system. Secure authenticated checkout is not yet
-              initiated from this page.
-            </p>
-            <Link
-              href="/pricing"
-              className="mt-6 inline-block rounded-sm text-sm font-semibold text-mauve hover:text-purple-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-            >
-              Review membership access →
-            </Link>
-          </article>
-
-          <article className="rounded-xl border border-border bg-card p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-              Gumroad · Standalone research role
-            </p>
-            <h3 className="mt-4 text-xl font-semibold text-primary">
-              Premium Research Dossiers
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-secondary">
-              One-off research products remain separate from recurring VIP
-              membership and do not grant application access.
-            </p>
-            <a
-              href={siteConfig.commerce.gumroadResearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-block rounded-sm text-sm font-semibold text-mauve hover:text-purple-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-            >
-              Browse standalone research →
-            </a>
-          </article>
+        <div className="mt-10 grid border border-[#6F4C91]/40 xl:grid-cols-2">
+          <ServiceCard
+            index="01"
+            eyebrow="Recurring intelligence membership"
+            title="Chronoverse VIP"
+            description="The Deep Intelligence layer for the same five-market universe, designed for ongoing analytical context and decision support."
+            href="/vip"
+            cta="Explore VIP"
+          />
+          <ServiceCard
+            index="02"
+            eyebrow="Standalone premium research"
+            title="Premium Dossiers"
+            description="Focused research products for readers who need a discrete institutional brief without application membership authority."
+            href={siteConfig.commerce.gumroadResearchUrl}
+            cta="Browse Dossiers"
+            external
+          />
         </div>
       </div>
     </section>
   );
 }
 
+function ServiceCard({
+  index,
+  eyebrow,
+  title,
+  description,
+  href,
+  cta,
+  external = false,
+}: {
+  index: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  external?: boolean;
+}) {
+  const content = (
+    <>
+      {cta}
+      <span aria-hidden="true" className="ml-3">→</span>
+    </>
+  );
+
+  return (
+    <article className="relative min-h-72 border-[#6F4C91]/40 p-6 first:border-b sm:p-9 xl:first:border-b-0 xl:first:border-r">
+      <span className="font-mono text-xs text-[#6F4C91]">{index}</span>
+      <p className="mt-8 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
+        {eyebrow}
+      </p>
+      <h3 className={`mt-3 text-3xl ${EDITORIAL_HEADING_CLASS}`}>{title}</h3>
+      <p className="mt-4 max-w-xl text-sm leading-6 text-[#CFC5B8]">{description}</p>
+      {external ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 inline-flex items-center border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+        >
+          {content}
+        </a>
+      ) : (
+        <Link
+          href={href}
+          className="mt-8 inline-flex items-center border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+        >
+          {content}
+        </Link>
+      )}
+    </article>
+  );
+}
+
 function Newsletter() {
   return (
-    <section aria-labelledby="newsletter-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-      <div className="grid gap-8 rounded-2xl border border-border bg-card p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.75fr)] lg:items-center">
-        <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
-            Chronoverse Dispatch
-          </p>
-          <h2 id="newsletter-title" className="mt-3 text-3xl font-semibold text-primary">
-            Stay ahead of the next move.
-          </h2>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-secondary">
-            Receive new market research and analytical updates through the
-            existing Chronoverse newsletter service.
-          </p>
+    <section
+      aria-labelledby="newsletter-title"
+      className="relative overflow-hidden bg-[#050506]"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-y-0 right-0 w-1/2 bg-[linear-gradient(135deg,transparent,rgba(111,76,145,0.16))]"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="grid gap-10 border-y border-[#6F4C91]/45 py-10 xl:grid-cols-[minmax(0,0.82fr)_minmax(22rem,1.18fr)] xl:items-center xl:gap-20">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
+              Chronoverse Dispatch
+            </p>
+            <h2
+              id="newsletter-title"
+              className={`mt-4 text-4xl leading-tight sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}
+            >
+              Stay ahead of the next move.
+            </h2>
+            <p className="mt-5 max-w-lg text-sm leading-6 text-[#CFC5B8]">
+              New market research and analytical updates, delivered through
+              the existing Chronoverse dispatch service.
+            </p>
+          </div>
+          <NewsletterForm />
         </div>
-        <NewsletterForm />
       </div>
     </section>
   );
@@ -331,15 +533,24 @@ function TrustStrip() {
   ] as const;
 
   return (
-    <section aria-label="Institutional disclosures" className="border-t border-border bg-raised">
-      <div className="mx-auto grid max-w-7xl gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
-        {links.map((link) => (
+    <section
+      aria-label="Institutional disclosures"
+      className="border-t border-[#6F4C91]/35 bg-[#0D0D11]"
+    >
+      <div className="mx-auto grid max-w-7xl sm:grid-cols-2 lg:grid-cols-4">
+        {links.map((link, index) => (
           <Link
             key={link.href}
             href={link.href}
-            className="bg-raised px-5 py-5 text-sm font-medium text-secondary hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mauve"
+            className="group flex items-center justify-between gap-4 border-b border-[#6F4C91]/25 px-5 py-5 text-xs font-medium text-[#CFC5B8] hover:bg-[#15131A] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C8A7E8] sm:odd:border-r lg:border-b-0 lg:border-r lg:last:border-r-0"
           >
-            {link.label}
+            <span>
+              <span className="mr-3 font-mono text-[9px] text-[#6F4C91]">
+                0{index + 1}
+              </span>
+              {link.label}
+            </span>
+            <span aria-hidden="true" className="text-[#6F4C91] group-hover:text-[#C8A7E8]">↗</span>
           </Link>
         ))}
       </div>

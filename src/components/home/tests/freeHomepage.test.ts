@@ -24,12 +24,16 @@ assert.deepEqual(
   ["EUR/USD", "EUR/JPY", "EUR/GBP", "EUR/CHF", "€STR"],
   "homepage scope must contain exactly the five launch labels in shared order",
 );
-assert.match(homepageSource, /LAUNCH_MARKETS_V1\.map/);
 assert.match(marketSurfaceSource, /LAUNCH_MARKETS_V1\.map/);
 assert.match(
   homepageSource,
   /getFiveProductFreeLiteProjectionMapV1\(\)/,
   "homepage must load the server-owned Free Lite projection map",
+);
+assert.equal(
+  homepageSource.match(/getFiveProductFreeLiteProjectionMapV1\(\)/g)?.length,
+  1,
+  "hero and market surface must share exactly one projection-map read",
 );
 assert.match(projectionServiceSource, /Promise\.allSettled/);
 assert.match(projectionServiceSource, /getCachedCanonicalFxResultBundleV1\(\)/);
@@ -71,6 +75,8 @@ assert.match(
   /getLatestSanityArticles\(3\)/,
   "research preview must use exactly three real Sanity articles",
 );
+assert.match(homepageSource, /FeaturedArticle article=\{featuredArticle\}/);
+assert.match(homepageSource, /secondaryArticles\.map/);
 assert.doesNotMatch(
   marketSurfaceSource,
   /details\.(macro|crossAsset|positioning|conviction|scenario|invalidation|historical|recommendation|engine)/,
@@ -80,6 +86,46 @@ assert.doesNotMatch(
   marketSurfaceSource.toLowerCase(),
   /€str[\s\S]{0,120}\b(bullish|bearish)\b|\b(bullish|bearish)\b[\s\S]{0,120}€str/,
   "€STR presentation must not use FX directional terminology",
+);
+assert.doesNotMatch(
+  combinedHomepageSource,
+  /<canvas|<svg|sparkline|historicalSeries|priceHistory/i,
+  "homepage must not imply or fabricate a historical chart series",
+);
+
+assert.match(
+  homepageSource,
+  /const PRIMARY_CTA_CLASS[\s\S]{0,500}bg-\[#A77BD8\][\s\S]{0,500}text-\[#050506\]/,
+  "primary CTA contract must explicitly pair purple with near-black text",
+);
+assert.match(
+  homepageSource,
+  /const SECONDARY_CTA_CLASS[\s\S]{0,500}border-\[#6F4C91\][\s\S]{0,500}text-\[#F3EBDD\]/,
+  "secondary CTA contract must explicitly retain cream text contrast",
+);
+assert.match(newsletterSource, /bg-\[#A77BD8\]/);
+assert.match(newsletterSource, /text-\[#050506\]/);
+assert.match(
+  homepageSource,
+  /text-\[clamp\(2\.75rem,5\.25vw,4\.5rem\)\]/,
+  "hero heading must scale fluidly across laptop and mobile viewports",
+);
+assert.match(
+  homepageSource,
+  /xl:grid-cols-\[minmax\(0,1\.35fr\)_minmax\(22rem,0\.85fr\)\]/,
+  "hero must remain stacked through 1024 and become asymmetric at desktop width",
+);
+assert.match(marketSurfaceSource, /lg:grid-cols-6 xl:grid-cols-5/);
+assert.match(marketSurfaceSource, /lg:col-start-2 xl:col-start-auto/);
+assert.match(
+  marketSurfaceSource,
+  /xl:grid-cols-\[minmax\(0,1\.65fr\)_minmax\(19rem,0\.85fr\)\]/,
+  "EUR/USD canvas must stack at tablet widths and split at desktop width",
+);
+assert.doesNotMatch(
+  homepageSource,
+  /min-h-screen|min-h-\[100vh\]|h-screen/,
+  "homepage must not force a viewport-height hero",
 );
 
 assert.equal(

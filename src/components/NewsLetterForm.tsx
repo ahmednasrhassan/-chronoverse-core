@@ -44,7 +44,10 @@ export default function NewsletterForm() {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3 sm:flex-row">
+      <form
+        onSubmit={handleSubmit}
+        className="grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+      >
         <input
           type="email"
           aria-label="Email address"
@@ -52,23 +55,23 @@ export default function NewsletterForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="min-w-0 flex-1 rounded-md border border-border bg-page px-4 py-3 text-primary placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+          className="min-w-0 border border-[#6F4C91] bg-[#0D0D11] px-4 py-3.5 text-sm text-[#F3EBDD] placeholder:text-[#91889A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="cursor-pointer whitespace-nowrap rounded-md bg-mauve px-6 py-3 font-semibold text-page transition-colors hover:bg-purple-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-60"
+          className="cursor-pointer whitespace-nowrap border border-[#A77BD8] bg-[#A77BD8] px-7 py-3.5 text-sm font-semibold text-[#050506] transition-colors hover:border-[#C8A7E8] hover:bg-[#C8A7E8] hover:text-[#050506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === "loading" ? "Submitting…" : "Subscribe"}
         </button>
       </form>
 
-      <div className="mt-3 min-h-6">
+      <div className="mt-3 min-h-6 border-l border-[#6F4C91]/40 pl-3">
         {feedback ? (
           <p
             role="status"
             aria-live="polite"
-            className={`text-sm ${
+            className={`text-xs ${
               status === "success" ? "text-emerald-400" : "text-red-400"
             }`}
           >
