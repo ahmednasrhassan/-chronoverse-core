@@ -88,6 +88,20 @@ a:hover {
   color: var(--accent-purple);
 }
 
+/*
+ * Primary CTA links need an unlayered, class-scoped color contract so the
+ * global anchor palette cannot override their dark-on-purple foreground.
+ */
+a.chronoverse-primary-cta {
+  background-color: #a77bd8;
+  color: #050506;
+}
+
+a.chronoverse-primary-cta:hover {
+  background-color: #c8a7e8;
+  color: #050506;
+}
+
 ::selection {
   background-color: rgba(167, 123, 216, 0.32);
   color: var(--text-primary);

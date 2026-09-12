@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 const PRIMARY_CTA_CLASS =
-  "inline-flex items-center justify-center border border-[#A77BD8] bg-[#A77BD8] px-5 py-3 text-sm font-semibold text-[#050506] transition-colors hover:border-[#C8A7E8] hover:bg-[#C8A7E8] hover:text-[#050506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
+  "chronoverse-primary-cta inline-flex items-center justify-center border border-[#A77BD8] px-5 py-3 text-sm font-semibold transition-colors hover:border-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
 
 const SECONDARY_CTA_CLASS =
   "inline-flex items-center justify-center border border-[#6F4C91] bg-transparent px-5 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[#C8A7E8] hover:bg-[#15131A] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";

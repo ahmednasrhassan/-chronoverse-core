@@ -16,6 +16,7 @@ const marketSurfaceSource = readSource(
 const newsletterSource = readSource("src/components/NewsLetterForm.tsx");
 const headerSource = readSource("src/components/navigation/Header.tsx");
 const footerSource = readSource("src/components/navigation/Footer.tsx");
+const globalStylesSource = readSource("src/app/globals.css");
 const projectionServiceSource = readSource(
   "src/lib/markets/services/canonicalProductResults.ts",
 );
@@ -103,8 +104,30 @@ assert.doesNotMatch(
 
 assert.match(
   homepageSource,
-  /const PRIMARY_CTA_CLASS[\s\S]{0,500}bg-\[#A77BD8\][\s\S]{0,500}text-\[#050506\]/,
-  "primary CTA contract must explicitly pair purple with near-black text",
+  /const PRIMARY_CTA_CLASS[\s\S]{0,300}chronoverse-primary-cta/,
+  "homepage primary actions must use the scoped CTA color contract",
+);
+assert.equal(
+  headerSource.match(/chronoverse-primary-cta/g)?.length,
+  2,
+  "desktop and mobile Early Access must use the scoped CTA color contract",
+);
+const primaryCtaRule = globalStylesSource.match(
+  /a\.chronoverse-primary-cta\s*\{([\s\S]*?)\}/,
+)?.[1];
+const primaryCtaHoverRule = globalStylesSource.match(
+  /a\.chronoverse-primary-cta:hover\s*\{([\s\S]*?)\}/,
+)?.[1];
+assert.ok(primaryCtaRule, "primary CTA base color rule must exist");
+assert.ok(primaryCtaHoverRule, "primary CTA hover color rule must exist");
+assert.match(primaryCtaRule, /background-color:\s*#a77bd8/i);
+assert.match(primaryCtaRule, /color:\s*#050506/i);
+assert.match(primaryCtaHoverRule, /background-color:\s*#c8a7e8/i);
+assert.match(primaryCtaHoverRule, /color:\s*#050506/i);
+assert.doesNotMatch(
+  `${primaryCtaRule}\n${primaryCtaHoverRule}`,
+  /background-color:\s*(?:white|#fff(?:fff)?|#f3ebdd)/i,
+  "primary CTA must not use a white or cream background",
 );
 assert.match(
   homepageSource,
