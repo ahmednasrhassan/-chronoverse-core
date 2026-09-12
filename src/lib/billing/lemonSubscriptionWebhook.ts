@@ -2,6 +2,9 @@ import "server-only";
 
 import { createSupabaseAdminClientV1 } from "../auth/supabase/admin";
 import { parseUntrustedLemonCommercialIdentityV1 } from "./commercialIdentity";
+import {
+  processVerifiedLemonSubscriptionRefundV1,
+} from "./lemonSubscriptionRefund";
 
 export const LEMON_SUBSCRIPTION_WEBHOOK_EVENTS_V1 = [
   "subscription_created",
@@ -125,6 +128,10 @@ export function parseVerifiedLemonSubscriptionWebhookV1(
 export async function processVerifiedLemonWebhookV1(
   input: VerifiedLemonWebhookProcessingInputV1,
 ): Promise<LemonWebhookProcessingResultV1> {
+  if (input.eventName === "subscription_payment_refunded") {
+    return processVerifiedLemonSubscriptionRefundV1(input);
+  }
+
   const parsed = parseVerifiedLemonSubscriptionWebhookV1(input);
   const client = createSupabaseAdminClientV1();
   const { data, error } = await client.rpc(
