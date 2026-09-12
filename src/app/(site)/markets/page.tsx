@@ -1,46 +1,68 @@
-import React from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
 
-export default function MarketsShopPage() {
+import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+
+export const metadata: Metadata = {
+  title: "Markets",
+  description: "The five-market Chronoverse launch coverage universe.",
+};
+
+export default function MarketsPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 space-y-10 font-mono">
-      
-      {/* Header */}
-      <header className="border-b border-border pb-8 space-y-3 text-center">
-        <span className="bg-[#C8A7E8]/15 text-[#C8A7E8] px-3.5 py-1 rounded-md text-xs font-semibold border border-[#C8A7E8]/30 inline-block">
-          MARKET DOSSIERS &amp; RESEARCH
-        </span>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-[#F3EBDD]">
-          Chronoverse <span className="text-[#C8A7E8]">Shop</span>
+    <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <header className="max-w-3xl border-b border-border pb-10">
+        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
+          Launch coverage
+        </p>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-primary sm:text-4xl">
+          Five markets. Two analytical depths.
         </h1>
-        <p className="text-[#CFC5B8] text-sm font-sans max-w-2xl mx-auto">
-          Tactical field reports, economic case studies, and single-purchase wealth preservation frameworks.
+        <p className="mt-5 text-base leading-7 text-secondary">
+          Free and VIP use the same focused market universe. Free presents the
+          Lite projection; verified VIP access presents the Deep projection.
         </p>
       </header>
 
-      {/* Store Banner Callout */}
-      <div className="bg-[#050506] border border-border p-8 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-xl">
-        <div className="space-y-2 text-center md:text-left">
-          <h2 className="text-2xl font-bold text-[#F3EBDD]">&gt; Individual Intelligence Dossiers</h2>
-          <p className="text-xs text-[#CFC5B8] max-w-xl font-sans">
-            Browse our complete catalog of specialized financial studies, historical models, and tactical asset guides processed safely through Gumroad, Inc.
-          </p>
-        </div>
+      <section className="mt-10" aria-labelledby="market-coverage-title">
+        <h2 id="market-coverage-title" className="text-lg font-semibold text-primary">
+          Market coverage
+        </h2>
+        <ul className="mt-5 divide-y divide-border rounded-xl border border-border bg-card">
+          {LAUNCH_MARKETS_V1.map((market) => (
+            <li
+              key={market.productId}
+              className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6"
+            >
+              <span className="font-medium text-primary">{market.label}</span>
+              <span className="text-xs uppercase tracking-[0.16em] text-muted">
+                {market.kind === "rate" ? "Reference rate" : "FX reference"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <a
-          href="https://shop.chronoversecapital.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-raised hover:bg-[#C8A7E8] text-[#F3EBDD] hover:text-black font-bold px-8 py-4 rounded-xl text-xs transition-colors border border-purple-border hover:border-[#C8A7E8] whitespace-nowrap uppercase tracking-wider"
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/"
+          className="rounded-md border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-primary hover:border-purple-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
         >
-          BROWSE SHOP CATALOG ➔
-        </a>
+          View Free
+        </Link>
+        <Link
+          href="/vip"
+          className="rounded-md border border-purple-border bg-raised px-5 py-3 text-center text-sm font-semibold text-primary hover:border-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+        >
+          Enter VIP
+        </Link>
+        <Link
+          href="/methodology"
+          className="rounded-md px-5 py-3 text-center text-sm font-medium text-mauve hover:text-purple-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+        >
+          Review methodology
+        </Link>
       </div>
-
-      {/* Info Notice */}
-      <div className="border-t border-border pt-8 text-center text-xs text-muted">
-        Merchant of Record: Gumroad, Inc. // Instant Digital Delivery Upon Order
-      </div>
-
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
 import { requireVipV1 } from "@/lib/auth/guards";
 import { enforceVipPageAccessV1 } from "@/lib/auth/vipPageAccess";
 
@@ -17,33 +18,6 @@ export const metadata: Metadata = {
     },
   },
 };
-
-const marketPanels = [
-  {
-    title: "Global Equities",
-    description:
-      "Monitor major equity benchmarks, risk appetite, breadth, momentum, and regime transitions.",
-    status: "Preview",
-  },
-  {
-    title: "Precious Metals",
-    description:
-      "Institutional monitoring for gold, silver, macro hedging demand, and monetary stress signals.",
-    status: "Preview",
-  },
-  {
-    title: "Energy Complex",
-    description:
-      "Track crude oil, refined products, volatility, macro demand, and geopolitical risk transmission.",
-    status: "Preview",
-  },
-  {
-    title: "Digital Assets",
-    description:
-      "Private monitoring of Bitcoin, crypto liquidity, momentum structure, and cross-market positioning.",
-    status: "Preview",
-  },
-];
 
 export default async function VipMarketsPage() {
   await enforceVipPageAccessV1(requireVipV1, redirect);
@@ -63,8 +37,8 @@ export default async function VipMarketsPage() {
         </h1>
 
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[#CFC5B8]">
-          Cross-asset market intelligence, institutional monitoring, and
-          private analytical infrastructure across major global asset classes.
+          Deep projections for the same five-market universe available on the
+          Free surface, reserved for verified VIP access.
         </p>
       </div>
 
@@ -128,11 +102,11 @@ export default async function VipMarketsPage() {
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#91889A]">
-              Cross-Asset Intelligence
+              Launch Market Intelligence
             </p>
 
             <h2 className="mt-2 text-xl font-bold text-[#F3EBDD]">
-              Market Modules
+              Five-market deep coverage
             </h2>
           </div>
 
@@ -142,9 +116,9 @@ export default async function VipMarketsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {marketPanels.map((panel) => (
+          {LAUNCH_MARKETS_V1.map((market) => (
             <article
-              key={panel.title}
+              key={market.productId}
               className="rounded-2xl border border-[#292432] bg-[#0D0D11] p-5 transition-all hover:border-[#6F4C91]/70"
             >
               <div className="flex items-start justify-between gap-4">
@@ -154,17 +128,19 @@ export default async function VipMarketsPage() {
                   </p>
 
                   <h3 className="mt-3 text-base font-bold text-[#F3EBDD]">
-                    {panel.title}
+                    {market.label}
                   </h3>
                 </div>
 
                 <span className="rounded-md border border-[#6F4C91]/40 bg-[#6F4C91]/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#C8A7E8]">
-                  {panel.status}
+                  Deep projection
                 </span>
               </div>
 
               <p className="mt-4 text-xs leading-6 text-[#CFC5B8]">
-                {panel.description}
+                {market.kind === "rate"
+                  ? "Rate-specific analytical semantics for the €STR reference rate."
+                  : "Deep foreign-exchange projection for verified VIP access."}
               </p>
 
               <div className="mt-5 border-t border-[#211F29] pt-4">

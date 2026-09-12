@@ -44,15 +44,15 @@ const STATIC_ROUTES: Array<{
   { path: "dmca", changeFrequency: "yearly", priority: 0.3 },
   { path: "editorial-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "faq", changeFrequency: "monthly", priority: 0.4 },
-  { path: "intelligence", changeFrequency: "weekly", priority: 0.7 },
+  { path: "data-sources", changeFrequency: "monthly", priority: 0.5 },
+  { path: "freshness", changeFrequency: "monthly", priority: 0.5 },
   { path: "manifesto", changeFrequency: "monthly", priority: 0.5 },
   { path: "markets", changeFrequency: "weekly", priority: 0.7 },
-  { path: "premium", changeFrequency: "weekly", priority: 0.6 },
+  { path: "methodology", changeFrequency: "monthly", priority: 0.6 },
+  { path: "pricing", changeFrequency: "weekly", priority: 0.6 },
   { path: "privacy-policy", changeFrequency: "yearly", priority: 0.3 },
-  { path: "products", changeFrequency: "weekly", priority: 0.6 },
   { path: "reports", changeFrequency: "weekly", priority: 0.9 },
   { path: "terms-of-service", changeFrequency: "yearly", priority: 0.3 },
-  { path: "sponsors", changeFrequency: "monthly", priority: 0.5 },
 ];
 
 /**

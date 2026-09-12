@@ -1,115 +1,111 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import MarketTicker from '@/components/charts/MarketTicker';
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+
+import {
+  PUBLIC_ACCOUNT_NAV_V1,
+  PUBLIC_PRIMARY_NAV_V1,
+} from "@/config/institutionalNavigation";
+
+const NAV_LINK_CLASS =
+  "rounded-md px-3 py-2 text-sm font-medium text-secondary transition-colors hover:bg-raised hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <>
-      {/* Proprietary Market Ticker Strip — fully unbranded, sourced from
-          the internal "/api/market-data" gateway. Replaces the previous
-          ticker tape widget. */}
-      <MarketTicker />
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-page/95 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          aria-label="Chronoverse Capital home"
+          className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+        >
+          <Image
+            src="/logo.svg"
+            alt=""
+            width={36}
+            height={36}
+            priority
+            className="h-9 w-9 shrink-0 rounded-full"
+          />
+          <span className="truncate text-sm font-bold tracking-[0.12em] text-primary sm:text-base">
+            CHRONOVERSE <span className="text-mauve">CAPITAL</span>
+          </span>
+        </Link>
 
-      {/* Main Header */}
-      <header className="w-full bg-[#050506]/95 border-b border-border/80 sticky top-0 z-50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
-          {/* Logo & Domain */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <Image
-              src="/logo.svg"
-              alt="Chronoverse Capital logo"
-              width={40}
-              height={40}
-              priority
-             className="rounded-full shrink-0"
-            />
-            <div className="flex flex-col justify-center">
-              <span className="text-xl font-extrabold tracking-wider text-primary transition-colors group-hover:text-purple-brand">
-                CHRONOVERSE <span className="text-[#C8A7E8]">CAPITAL</span>
-              </span>
-              <span className="text-[10px] text-secondary font-mono tracking-widest group-hover:text-[#C8A7E8]/80 transition-colors">
-                www.chronoversecapital.com
-              </span>
-            </div>
+        <nav
+          aria-label="Primary navigation"
+          className="hidden items-center gap-1 xl:flex"
+        >
+          {PUBLIC_PRIMARY_NAV_V1.map((item) => (
+            <Link key={item.label} href={item.href} className={NAV_LINK_CLASS}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden shrink-0 items-center gap-2 xl:flex">
+          <Link href="/account" className={NAV_LINK_CLASS}>
+            Account
           </Link>
-
-          {/* Desktop Links */}
-          <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium text-secondary">
-            <Link href="/" className="hover:text-[#C8A7E8] transition-colors">
-              Home
-            </Link>
-            <Link href="/reports" className="hover:text-[#C8A7E8] transition-colors flex items-center space-x-1 group">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1.5 group-hover:bg-[#C8A7E8] transition-colors"></span>
-              Terminal & Reports
-            </Link>
-            <Link href="/intelligence" className="hover:text-[#C8A7E8] transition-colors">
-              Macro Echoes
-            </Link>
-            <Link href="/archive" className="hover:text-[#C8A7E8] transition-colors">
-             Alpha Insights
-            </Link>
-          </nav>
-
-          {/* Mobile Hamburger */}
-          <div className="lg:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              type="button"
-              className="text-muted hover:text-purple-brand focus:outline-none p-2 rounded-md bg-[#15131A] border border-border"
-              aria-label="Toggle Menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+          <Link
+            href="/account"
+            aria-label="Sign in for early access"
+            className="rounded-md border border-purple-border bg-raised px-4 py-2 text-sm font-semibold text-primary transition-colors hover:border-mauve hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+          >
+            Early Access
+          </Link>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden bg-[#050506] border-b border-border px-4 pt-4 pb-6 space-y-3">
-            <Link
-              href="/"
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-md text-sm font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8]"
-            >
-              Home
-            </Link>
-            <Link
-              href="/reports"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center px-3 py-2.5 rounded-md text-sm font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8]"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
-              Terminal & Reports
-            </Link>
-            <Link
-              href="/intelligence"
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-md text-sm font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8]"
-            >
-              Macro Echoes
-            </Link>
-            <Link
-              href="/archive"
-              onClick={() => setIsMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-md text-sm font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8]"
-            >
-              Alpha Insights
-            </Link>
+        <button
+          type="button"
+          aria-label="Toggle primary navigation"
+          aria-controls="public-mobile-navigation"
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((open) => !open)}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-card text-primary transition-colors hover:border-purple-border hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page xl:hidden"
+        >
+          <svg
+            aria-hidden="true"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {isMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {isMenuOpen ? (
+        <nav
+          id="public-mobile-navigation"
+          aria-label="Mobile navigation"
+          className="border-t border-border bg-page px-4 py-4 sm:px-6 xl:hidden"
+        >
+          <div className="mx-auto grid max-w-7xl gap-1">
+            {[...PUBLIC_PRIMARY_NAV_V1, ...PUBLIC_ACCOUNT_NAV_V1].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setIsMenuOpen(false)}
+                className={item.label === "Early Access"
+                  ? "mt-2 rounded-md border border-purple-border bg-raised px-3 py-3 text-center text-sm font-semibold text-primary hover:border-mauve hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+                  : NAV_LINK_CLASS}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
-        )}
-      </header>
-    </>
+        </nav>
+      ) : null}
+    </header>
   );
 }

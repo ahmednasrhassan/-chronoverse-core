@@ -27,20 +27,8 @@ const vipNav = [
     href: "/vip/markets",
   },
   {
-    label: "Intelligence",
-    href: "/vip/intelligence",
-  },
-  {
-    label: "Portfolio",
-    href: "/vip/portfolio",
-  },
-  {
-    label: "Watchlist",
-    href: "/vip/watchlist",
-  },
-  {
     label: "Account",
-    href: "/vip/account",
+    href: "/account",
   },
 ];
 
