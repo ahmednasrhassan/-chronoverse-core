@@ -16,6 +16,7 @@ interface ReceiptHarnessV1 {
   readonly dependencies: LemonWebhookIngressDependenciesV1;
   readonly receipts: LemonWebhookReceiptInputV1[];
   readonly persistenceCalls: () => number;
+  readonly processingCalls: () => number;
 }
 
 function createReceiptHarness(
@@ -23,11 +24,14 @@ function createReceiptHarness(
 ): ReceiptHarnessV1 {
   const receipts: LemonWebhookReceiptInputV1[] = [];
   const identities = new Set<string>();
+  const finalizedIdentities = new Set<string>();
   let calls = 0;
+  let processingCalls = 0;
 
   return {
     receipts,
     persistenceCalls: () => calls,
+    processingCalls: () => processingCalls,
     dependencies: {
       getWebhookSecret,
       persistReceipt: async (receipt) => {
@@ -45,6 +49,23 @@ function createReceiptHarness(
 
         identities.add(scopedIdentity);
         return "inserted";
+      },
+      processVerifiedEvent: async (input) => {
+        processingCalls += 1;
+        const scopedIdentity = JSON.stringify([
+          input.storeId,
+          input.testMode,
+          input.idempotencyKey,
+        ]);
+
+        if (finalizedIdentities.has(scopedIdentity)) {
+          return "duplicate";
+        }
+
+        finalizedIdentities.add(scopedIdentity);
+        return input.eventName === "future_signed_event"
+          ? "ignored"
+          : "processed";
       },
     },
   };
@@ -135,6 +156,8 @@ async function verifySignatureFailuresDoNotPersist(): Promise<void> {
     assertEqual(response.status, 401, `${label} signature is unauthorized`);
     assertEqual(harness.persistenceCalls(), 0,
       `${label} signature cannot reach persistence`);
+    assertEqual(harness.processingCalls(), 0,
+      `${label} signature cannot reach commercial processing`);
     assertEqual((await responseBody(response)).error, "invalid-signature",
       `${label} signature receives a deterministic response`);
   }
@@ -161,6 +184,8 @@ async function verifyJsonParsingFollowsSignature(): Promise<void> {
     "verified malformed JSON has a deterministic response");
   assertEqual(harness.persistenceCalls(), 0,
     "malformed JSON cannot reach persistence");
+  assertEqual(harness.processingCalls(), 0,
+    "malformed JSON cannot reach commercial processing");
 }
 
 async function verifyUnsafeEnvelopeFailsClosed(): Promise<void> {
@@ -187,6 +212,8 @@ async function verifyUnsafeEnvelopeFailsClosed(): Promise<void> {
     "unsafe logical identity has a deterministic response");
   assertEqual(harness.persistenceCalls(), 0,
     "unsafe logical identity cannot fall back to payload hashing");
+  assertEqual(harness.processingCalls(), 0,
+    "unsafe logical identity cannot reach commercial processing");
 }
 
 async function verifyAcceptedReceiptPreservesMetadata(): Promise<void> {
@@ -203,10 +230,12 @@ async function verifyAcceptedReceiptPreservesMetadata(): Promise<void> {
   );
 
   assertEqual(response.status, 200, "valid signed event is accepted");
-  assertEqual((await responseBody(response)).status, "accepted",
-    "first receipt is reported as accepted");
+  assertEqual((await responseBody(response)).status, "ignored",
+    "unknown signed event is safely finalized as ignored");
   assertEqual(harness.persistenceCalls(), 1,
     "valid signed event attempts one receipt insertion");
+  assertEqual(harness.processingCalls(), 1,
+    "verified event is processed only after receipt insertion");
 
   const receipt = harness.receipts[0];
   assertEqual(receipt.storeId, "17", "store_id is preserved");
@@ -269,7 +298,7 @@ async function verifyScopedIdentityAndConfigurationFailure(): Promise<void> {
       request(rawBody, signature(rawBody)),
       harness.dependencies,
     );
-    assertEqual((await responseBody(response)).status, "accepted",
+    assertEqual((await responseBody(response)).status, "processed",
       "store and mode scope prevent cross-environment collisions");
   }
 
@@ -300,6 +329,7 @@ async function verifyPersistenceFailureIsGeneric(): Promise<void> {
       persistReceipt: async () => {
         throw new Error("private database details");
       },
+      processVerifiedEvent: async () => "processed",
     },
   );
   const body = await responseBody(response);
@@ -309,6 +339,27 @@ async function verifyPersistenceFailureIsGeneric(): Promise<void> {
     "database failure response is generic");
   assertEqual(JSON.stringify(body).includes("private database details"), false,
     "database details are not exposed");
+}
+
+async function verifyProcessingFailureIsGeneric(): Promise<void> {
+  const rawBody = payload();
+  const response = await handleLemonWebhookIngressV1(
+    request(rawBody, signature(rawBody)),
+    {
+      getWebhookSecret: () => SECRET,
+      persistReceipt: async () => "inserted",
+      processVerifiedEvent: async () => {
+        throw new Error("private processing details");
+      },
+    },
+  );
+  const body = await responseBody(response);
+
+  assertEqual(response.status, 500, "trusted processing failure returns 500");
+  assertEqual(body.error, "persistence-unavailable",
+    "processing infrastructure failure is generic");
+  assertEqual(JSON.stringify(body).includes("private processing details"), false,
+    "processing details are not exposed");
 }
 
 function auditIngressSecurityAndIsolation(): void {
@@ -333,6 +384,9 @@ function auditIngressSecurityAndIsolation(): void {
     "parseLemonWebhookEnvelopeV1(parsedBody.value)",
   );
   const persistAt = ingressSource.indexOf("dependencies.persistReceipt(");
+  const processAt = ingressSource.indexOf(
+    "const processingResult = await dependencies.processVerifiedEvent(",
+  );
 
   assertEqual(arrayBufferAt >= 0 && arrayBufferAt < signatureAt, true,
     "route boundary reads raw bytes before the signature header");
@@ -342,6 +396,8 @@ function auditIngressSecurityAndIsolation(): void {
     "signature verification precedes JSON and envelope parsing");
   assertEqual(envelopeAt < persistAt, true,
     "validated envelope precedes receipt persistence");
+  assertEqual(persistAt < processAt, true,
+    "receipt persistence precedes commercial processing");
   assertEqual(ingressSource.includes('import "server-only"'), true,
     "ingress and secret access are server-only");
   assertEqual(ingressSource.includes("LEMON_SQUEEZY_WEBHOOK_SECRET"), true,
@@ -395,6 +451,7 @@ async function main(): Promise<void> {
   await verifyDuplicateReceiptIsSuccessful();
   await verifyScopedIdentityAndConfigurationFailure();
   await verifyPersistenceFailureIsGeneric();
+  await verifyProcessingFailureIsGeneric();
   auditIngressSecurityAndIsolation();
 
   console.log("PASS: Lemon webhook ingress and receipt intake");

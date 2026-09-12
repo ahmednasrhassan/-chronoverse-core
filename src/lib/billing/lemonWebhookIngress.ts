@@ -3,6 +3,11 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { createSupabaseAdminClientV1 } from "../auth/supabase/admin";
+import {
+  processVerifiedLemonWebhookV1,
+  type LemonWebhookProcessingResultV1,
+  type VerifiedLemonWebhookProcessingInputV1,
+} from "./lemonSubscriptionWebhook";
 import { verifyLemonWebhookSignatureV1 } from "./lemonWebhookSignature";
 
 const LEMON_WEBHOOK_RECEIPT_RPC_V1 = "ingest_lemon_webhook_receipt_v1";
@@ -37,17 +42,21 @@ export interface LemonWebhookIngressDependenciesV1 {
   readonly persistReceipt: (
     receipt: LemonWebhookReceiptInputV1,
   ) => Promise<LemonWebhookReceiptInsertResultV1>;
+  readonly processVerifiedEvent: (
+    input: VerifiedLemonWebhookProcessingInputV1,
+  ) => Promise<LemonWebhookProcessingResultV1>;
 }
 
 const PRODUCTION_DEPENDENCIES_V1: LemonWebhookIngressDependenciesV1 =
   Object.freeze({
     getWebhookSecret: () => process.env.LEMON_SQUEEZY_WEBHOOK_SECRET,
     persistReceipt: persistLemonWebhookReceiptV1,
+    processVerifiedEvent: processVerifiedLemonWebhookV1,
   });
 
 /**
- * Accepts a verified Lemon event as pending work without processing commercial
- * state. Raw bytes are authenticated before any JSON parsing.
+ * Authenticates raw bytes, records the receipt, then processes only the
+ * already-verified in-memory event.
  */
 export async function handleLemonWebhookIngressV1(
   request: Request,
@@ -104,7 +113,7 @@ export async function handleLemonWebhookIngressV1(
   const payloadSha256 = createHash("sha256").update(rawBody).digest("hex");
 
   try {
-    const insertResult = await dependencies.persistReceipt(Object.freeze({
+    await dependencies.persistReceipt(Object.freeze({
       storeId: envelope.storeId,
       testMode: envelope.testMode,
       eventType: envelope.eventName,
@@ -115,9 +124,22 @@ export async function handleLemonWebhookIngressV1(
       upstreamEventAt: envelope.upstreamEventAt,
     }));
 
+    const processingResult = await dependencies.processVerifiedEvent(
+      Object.freeze({
+        payload: parsedBody.value,
+        eventName: envelope.eventName,
+        objectType: envelope.objectType,
+        objectId: envelope.objectId,
+        storeId: envelope.storeId,
+        testMode: envelope.testMode,
+        upstreamEventAt: envelope.upstreamEventAt,
+        idempotencyKey,
+      }),
+    );
+
     return Response.json({
       ok: true,
-      status: insertResult === "duplicate" ? "duplicate" : "accepted",
+      status: processingResult,
     });
   } catch {
     return failureResponse("persistence-unavailable", 500);
