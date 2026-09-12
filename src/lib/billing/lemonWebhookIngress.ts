@@ -5,9 +5,7 @@ import { createHash } from "node:crypto";
 import { createSupabaseAdminClientV1 } from "../auth/supabase/admin";
 import { verifyLemonWebhookSignatureV1 } from "./lemonWebhookSignature";
 
-const LEMON_WEBHOOK_RECEIPT_TABLE_V1 = "lemon_webhook_receipts";
-const LEMON_WEBHOOK_RECEIPT_CONFLICT_TARGET_V1 =
-  "store_id,test_mode,idempotency_key";
+const LEMON_WEBHOOK_RECEIPT_RPC_V1 = "ingest_lemon_webhook_receipt_v1";
 const LEMON_UPSTREAM_TIMESTAMP_V1 =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
@@ -30,7 +28,6 @@ export interface LemonWebhookReceiptInputV1 {
   readonly upstreamObjectType: string;
   readonly upstreamObjectId: string;
   readonly upstreamEventAt: string;
-  readonly processingStatus: "pending";
 }
 
 export type LemonWebhookReceiptInsertResultV1 = "inserted" | "duplicate";
@@ -116,7 +113,6 @@ export async function handleLemonWebhookIngressV1(
       upstreamObjectType: envelope.objectType,
       upstreamObjectId: envelope.objectId,
       upstreamEventAt: envelope.upstreamEventAt,
-      processingStatus: "pending",
     }));
 
     return Response.json({
@@ -143,30 +139,22 @@ export async function persistLemonWebhookReceiptV1(
   receipt: LemonWebhookReceiptInputV1,
 ): Promise<LemonWebhookReceiptInsertResultV1> {
   const client = createSupabaseAdminClientV1();
-  const { data, error } = await client
-    .schema("app_private")
-    .from(LEMON_WEBHOOK_RECEIPT_TABLE_V1)
-    .upsert({
-      store_id: receipt.storeId,
-      test_mode: receipt.testMode,
-      event_type: receipt.eventType,
-      idempotency_key: receipt.idempotencyKey,
-      payload_sha256: receipt.payloadSha256,
-      upstream_object_type: receipt.upstreamObjectType,
-      upstream_object_id: receipt.upstreamObjectId,
-      upstream_event_at: receipt.upstreamEventAt,
-      processing_status: receipt.processingStatus,
-    }, {
-      onConflict: LEMON_WEBHOOK_RECEIPT_CONFLICT_TARGET_V1,
-      ignoreDuplicates: true,
-    })
-    .select("id");
+  const { data, error } = await client.rpc(LEMON_WEBHOOK_RECEIPT_RPC_V1, {
+    store_id: receipt.storeId,
+    test_mode: receipt.testMode,
+    event_type: receipt.eventType,
+    idempotency_key: receipt.idempotencyKey,
+    payload_sha256: receipt.payloadSha256,
+    upstream_object_type: receipt.upstreamObjectType,
+    upstream_object_id: receipt.upstreamObjectId,
+    upstream_event_at: receipt.upstreamEventAt,
+  });
 
-  if (error) {
+  if (error || typeof data !== "boolean") {
     throw new LemonWebhookReceiptPersistenceErrorV1();
   }
 
-  return data && data.length > 0 ? "inserted" : "duplicate";
+  return data ? "inserted" : "duplicate";
 }
 
 class LemonWebhookReceiptPersistenceErrorV1 extends Error {

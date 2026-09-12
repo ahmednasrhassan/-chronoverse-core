@@ -219,8 +219,8 @@ async function verifyAcceptedReceiptPreservesMetadata(): Promise<void> {
     "upstream object id is preserved");
   assertEqual(receipt.upstreamEventAt, "2026-09-12T08:15:30.123456Z",
     "upstream object version time is preserved");
-  assertEqual(receipt.processingStatus, "pending",
-    "new receipt remains pending for B5b");
+  assertEqual("processingStatus" in receipt, false,
+    "processing state is fixed inside the receipt RPC");
   assertEqual(
     receipt.payloadSha256,
     createHash("sha256").update(Buffer.from(rawBody, "utf8")).digest("hex"),
@@ -346,15 +346,24 @@ function auditIngressSecurityAndIsolation(): void {
     "ingress and secret access are server-only");
   assertEqual(ingressSource.includes("LEMON_SQUEEZY_WEBHOOK_SECRET"), true,
     "ingress resolves only the requested Lemon webhook secret");
-  assertEqual(ingressSource.includes("ignoreDuplicates: true"), true,
-    "duplicate race uses atomic do-nothing upsert semantics");
   assertEqual(
     ingressSource.includes(
-      'onConflict: LEMON_WEBHOOK_RECEIPT_CONFLICT_TARGET_V1',
+      'client.rpc(LEMON_WEBHOOK_RECEIPT_RPC_V1, {',
     ),
     true,
-    "database uniqueness is targeted by store, mode, and logical key",
+    "trusted persistence invokes the narrow public receipt RPC",
   );
+  assertEqual(
+    ingressSource.includes(
+      'LEMON_WEBHOOK_RECEIPT_RPC_V1 = "ingest_lemon_webhook_receipt_v1"',
+    ),
+    true,
+    "trusted persistence uses the versioned receipt RPC",
+  );
+  assertEqual(ingressSource.includes('.schema("app_private")'), false,
+    "ingress does not request the unexposed private schema");
+  assertEqual(ingressSource.includes('"lemon_webhook_receipts"'), false,
+    "ingress performs no direct table mutation");
   assertEqual(routeSource.includes("export async function POST"), true,
     "authoritative App Router route exports POST");
   assertEqual(routeSource.includes("handleLemonWebhookIngressV1(request)"), true,
