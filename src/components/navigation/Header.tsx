@@ -10,35 +10,43 @@ import {
 } from "@/config/institutionalNavigation";
 
 const NAV_LINK_CLASS =
-  "rounded-sm px-2.5 py-2 text-[13px] font-medium text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page 2xl:px-3";
+  "border-b border-transparent px-2.5 py-2 text-[13px] font-medium text-secondary transition-colors hover:border-[#6F4C91] hover:text-primary active:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page 2xl:px-3";
+
+const MOBILE_NAV_LINK_CLASS =
+  "flex min-h-11 items-center border-b border-[#6F4C91]/20 px-3 text-sm font-medium text-secondary hover:border-[#6F4C91] hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-mauve";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#6F4C91]/25 bg-[#050506]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-[4.5rem] max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[4.75rem] max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 xl:grid xl:grid-cols-[minmax(16rem,1fr)_auto_minmax(16rem,1fr)]">
         <Link
           href="/"
           aria-label="Chronoverse Capital home"
-          className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+          className="flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page xl:justify-self-start"
         >
           <Image
             src="/logo.svg"
             alt=""
-            width={40}
-            height={40}
+            width={44}
+            height={44}
             priority
-            className="h-10 w-10 shrink-0 rounded-full"
+            className="h-11 w-11 shrink-0 rounded-full"
           />
-          <span className="truncate text-sm font-bold tracking-[0.1em] text-primary sm:text-[15px]">
-            CHRONOVERSE <span className="text-mauve">CAPITAL</span>
+          <span className="min-w-0">
+            <span className="block truncate text-[13px] font-bold tracking-[0.11em] text-primary sm:text-base">
+              CHRONOVERSE <span className="text-mauve">CAPITAL</span>
+            </span>
+            <span className="mt-0.5 hidden font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:block">
+              Market intelligence
+            </span>
           </span>
         </Link>
 
         <nav
           aria-label="Primary navigation"
-          className="hidden items-center gap-0.5 xl:flex 2xl:gap-1"
+          className="hidden items-center gap-0.5 xl:flex xl:justify-self-center 2xl:gap-1"
         >
           {PUBLIC_PRIMARY_NAV_V1.map((item) => (
             <Link key={item.label} href={item.href} className={NAV_LINK_CLASS}>
@@ -47,14 +55,14 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="hidden shrink-0 items-center gap-2 xl:flex">
+        <div className="hidden shrink-0 items-center gap-2 border-l border-[#6F4C91]/25 pl-3 xl:flex xl:justify-self-end">
           <Link href="/account" className={NAV_LINK_CLASS}>
             Account
           </Link>
           <Link
             href="/account"
             aria-label="Sign in for early access"
-            className="rounded-sm border border-[#A77BD8] bg-[#A77BD8] px-4 py-2.5 text-[13px] font-semibold text-[#050506] transition-colors hover:border-[#C8A7E8] hover:bg-[#C8A7E8] hover:text-[#050506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]"
+            className="rounded-sm border border-[#6F4C91] bg-[#15131A] px-4 py-2.5 text-[13px] font-semibold text-[#F3EBDD] transition-colors hover:border-[#C8A7E8] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]"
           >
             Early Access
           </Link>
@@ -66,7 +74,7 @@ export default function Header() {
           aria-controls="public-mobile-navigation"
           aria-expanded={isMenuOpen}
           onClick={() => setIsMenuOpen((open) => !open)}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-card text-primary transition-colors hover:border-purple-border hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page xl:hidden"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-[#6F4C91]/50 bg-[#0D0D11] text-primary transition-colors hover:border-[#C8A7E8] hover:text-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page xl:hidden"
         >
           <svg
             aria-hidden="true"
@@ -97,8 +105,8 @@ export default function Header() {
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={item.label === "Early Access"
-                  ? "mt-2 rounded-sm border border-[#A77BD8] bg-[#A77BD8] px-3 py-3 text-center text-sm font-semibold text-[#050506] hover:border-[#C8A7E8] hover:bg-[#C8A7E8] hover:text-[#050506] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-                  : NAV_LINK_CLASS}
+                  ? "mt-2 flex min-h-11 items-center justify-center rounded-sm border border-[#6F4C91] bg-[#15131A] px-3 text-sm font-semibold text-[#F3EBDD] hover:border-[#C8A7E8] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+                  : MOBILE_NAV_LINK_CLASS}
               >
                 {item.label}
               </Link>

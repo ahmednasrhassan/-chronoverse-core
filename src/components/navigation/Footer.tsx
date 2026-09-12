@@ -2,9 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { FOOTER_NAV_GROUPS_V1 } from "@/config/institutionalNavigation";
+import { siteConfig } from "@/config/siteConfig";
 
 const FOOTER_LINK_CLASS =
   "rounded-sm text-[13px] text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+
+const FOOTER_SOCIAL_LINKS = [
+  { label: "X", href: siteConfig.socialLinks.x },
+  { label: "LinkedIn", href: siteConfig.socialLinks.linkedin },
+  { label: "Pinterest", href: siteConfig.socialLinks.pinterest },
+  { label: "Reddit", href: siteConfig.socialLinks.reddit },
+] as const;
 
 export default function Footer() {
   return (
@@ -32,6 +40,26 @@ export default function Footer() {
               Independent market analysis for disciplined decisions across a
               focused five-market launch universe.
             </p>
+            <div className="mt-7">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">
+                Follow
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {FOOTER_SOCIAL_LINKS.map((social) => (
+                  <li key={social.label}>
+                    <a
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Follow Chronoverse Capital on ${social.label}`}
+                      className="inline-flex min-h-11 items-center rounded-sm px-2.5 text-xs font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+                    >
+                      {social.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {FOOTER_NAV_GROUPS_V1.map((group) => (
