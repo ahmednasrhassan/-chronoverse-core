@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-import { loadAccountShellStateV1 } from "@/lib/auth/account";
+import {
+  formatAccountAccessStateV1,
+  loadAccountShellStateV1,
+} from "@/lib/auth/account";
 import { resolveAccessV1 } from "@/lib/auth/access";
 import { createSupabaseServerClientV1 } from "@/lib/auth/supabase/server";
 
@@ -68,7 +71,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           {state.email ? <StatusRow label="Email" value={state.email} /> : null}
           <StatusRow
             label="Access"
-            value={formatAccessState(state.accessState)}
+            value={formatAccountAccessStateV1(state.accessState)}
           />
         </dl>
 
@@ -123,16 +126,4 @@ function formatIdentityStatus(
   if (status === "signed_in") return "Signed in";
   if (status === "signed_out") return "Signed out";
   return "Unavailable";
-}
-
-function formatAccessState(state: string): string {
-  const labels: Record<string, string> = {
-    anonymous_free: "Free — anonymous",
-    authenticated_free: "Free — authenticated",
-    admin: "Administrator",
-    owner: "Owner",
-    unavailable: "Unavailable",
-  };
-
-  return labels[state] ?? "Unavailable";
 }

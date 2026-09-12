@@ -26,6 +26,21 @@ interface AccountShellDependenciesV1 {
   readonly resolveAccess: () => PromiseLike<AccessResultV1>;
 }
 
+export function formatAccountAccessStateV1(
+  state: AccountShellStateV1["accessState"],
+): string {
+  const labels: Record<AccountShellStateV1["accessState"], string> = {
+    anonymous_free: "Free — anonymous",
+    authenticated_free: "Free — authenticated",
+    vip_active: "VIP Active",
+    admin: "Administrator",
+    owner: "Owner",
+    unavailable: "Unavailable",
+  };
+
+  return labels[state];
+}
+
 /** Resolves identity and trusted access independently so DB outages stay honest. */
 export async function loadAccountShellStateV1(
   dependencies: AccountShellDependenciesV1,
