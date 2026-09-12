@@ -83,15 +83,15 @@ function Hero({
         className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(111,76,145,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(111,76,145,0.1)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_right,transparent,black_70%)]"
       />
 
-      <div className="relative mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)] xl:items-center xl:py-24">
-        <div className="max-w-3xl">
+      <div className="relative mx-auto grid max-w-[88rem] gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:px-8 xl:grid-cols-[minmax(0,1.48fr)_minmax(23rem,0.82fr)] xl:items-center xl:gap-0 xl:py-20">
+        <div className="max-w-3xl xl:pr-16">
           <div className="flex items-center gap-3">
             <span aria-hidden="true" className="h-px w-8 bg-[#C8A7E8]" />
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.26em] text-[#C8A7E8]">
               Free Market Intelligence
             </p>
           </div>
-          <h1 className={`mt-7 max-w-[13ch] text-[clamp(2.75rem,5.25vw,4.5rem)] leading-[0.98] tracking-[-0.035em] ${EDITORIAL_HEADING_CLASS}`}>
+          <h1 className={`mt-7 max-w-[12ch] text-[clamp(2.85rem,5.5vw,4.75rem)] leading-[0.95] tracking-[-0.04em] ${EDITORIAL_HEADING_CLASS}`}>
             Five markets. One intelligence system.
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-[#CFC5B8] sm:text-lg">
@@ -108,7 +108,7 @@ function Hero({
               See the VIP Difference
             </Link>
           </div>
-          <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-[#6F4C91]/30 pt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-[#91889A]">
+          <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-[10px] uppercase tracking-[0.13em] text-[#91889A]">
             <span>Five canonical products</span>
             <span>Server-assembled</span>
             <span>Source-dated</span>
@@ -127,16 +127,16 @@ function MarketExperienceFallback() {
       aria-label="Loading Free market intelligence"
       className="border-b border-[#6F4C91]/35 bg-[#050506]"
     >
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)] xl:py-24">
+      <div className="mx-auto grid max-w-[88rem] items-center gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:px-8 xl:grid-cols-[minmax(0,1.48fr)_minmax(23rem,0.82fr)] xl:gap-0 xl:py-20">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#C8A7E8]">
             Free Market Intelligence
           </p>
-          <p className={`mt-7 max-w-[13ch] text-[clamp(2.75rem,5.25vw,4.5rem)] leading-none ${EDITORIAL_HEADING_CLASS}`}>
+          <p className={`mt-7 max-w-[12ch] text-[clamp(2.85rem,5.5vw,4.75rem)] leading-none ${EDITORIAL_HEADING_CLASS}`}>
             Five markets. One intelligence system.
           </p>
         </div>
-        <div className="border border-[#6F4C91]/40 bg-[#0D0D11] p-6 text-sm text-[#91889A]">
+        <div className="border-l border-[#6F4C91]/40 bg-[#0D0D11] p-6 text-sm text-[#91889A]">
           Loading verified Free Lite projections…
         </div>
       </div>
@@ -157,12 +157,12 @@ function VipConversion() {
   ] as const;
 
   return (
-    <section className="relative overflow-hidden border-y border-[#6F4C91]/40 bg-[#15131A]">
+    <section className="relative overflow-hidden bg-[#15131A]">
       <div
         aria-hidden="true"
         className="absolute inset-y-0 left-1/2 w-px bg-linear-to-b from-transparent via-[#6F4C91]/50 to-transparent"
       />
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:gap-20 xl:py-24">
+      <div className="relative mx-auto grid max-w-[88rem] gap-12 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-24 xl:py-24">
         <div className="self-center">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
             The deeper layer
@@ -180,21 +180,29 @@ function VipConversion() {
               <span aria-hidden="true" className="ml-3">→</span>
             </Link>
             <Link href="/pricing" className={SECONDARY_CTA_CLASS}>
-              Compare Access
+              Compare Free and VIP
             </Link>
           </div>
         </div>
 
-        <div className="border-y border-[#6F4C91]/50 py-2">
-          <div className="flex items-center justify-between border-b border-[#6F4C91]/30 py-4 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
+        <div className="py-2">
+          <div className="flex items-center justify-between pb-5 font-mono text-[10px] uppercase tracking-[0.14em] text-[#91889A]">
             <span>VIP depth map</span>
             <span>Conceptual layers</span>
           </div>
-          <ol className="grid sm:grid-cols-2">
+          <ol className="space-y-2">
             {vipCapabilities.map((capability, index) => (
               <li
                 key={capability}
-                className="group flex items-center gap-4 border-b border-[#6F4C91]/25 py-4 sm:odd:border-r sm:odd:pr-5 sm:even:pl-5"
+                className={`flex items-center gap-4 border-l border-[#6F4C91]/60 bg-[#0D0D11]/55 px-5 py-3.5 ${
+                  index % 4 === 1
+                    ? "sm:ml-5"
+                    : index % 4 === 2
+                      ? "sm:ml-10"
+                      : index % 4 === 3
+                        ? "sm:ml-16"
+                        : ""
+                }`}
               >
                 <span className="font-mono text-[10px] text-[#6F4C91]">
                   {String(index + 1).padStart(2, "0")}
@@ -220,8 +228,8 @@ async function LatestResearch() {
       aria-labelledby="latest-research-title"
       className="bg-[#050506]"
     >
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="flex flex-col gap-5 border-b border-[#6F4C91]/35 pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-[86rem] px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="flex flex-col gap-5 pb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
               Research desk
@@ -248,7 +256,7 @@ async function LatestResearch() {
         ) : (
           <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.85fr)]">
             <FeaturedArticle article={featuredArticle} />
-            <div className="divide-y divide-[#6F4C91]/35 border-y border-[#6F4C91]/35">
+            <div className="divide-y divide-[#6F4C91]/30">
               {secondaryArticles.map((article, index) => (
                 <SecondaryArticle
                   key={article.slug}
@@ -266,7 +274,7 @@ async function LatestResearch() {
 
 function FeaturedArticle({ article }: { article: ContentItem }) {
   return (
-    <article className="group grid min-w-0 gap-0 border border-[#6F4C91]/40 bg-[#0D0D11] sm:grid-cols-[minmax(0,1.1fr)_minmax(17rem,0.9fr)]">
+    <article className="group grid min-w-0 gap-0 bg-[#0D0D11] sm:grid-cols-[minmax(0,1.1fr)_minmax(17rem,0.9fr)]">
       <EditorialImage article={article} featured />
       <div className="flex flex-col justify-between p-6 sm:p-8">
         <div>
@@ -334,8 +342,8 @@ function EditorialImage({
   featured?: boolean;
 }) {
   const visualClass = featured
-    ? "relative aspect-[16/10] overflow-hidden border-b border-[#6F4C91]/35 sm:aspect-auto sm:border-b-0 sm:border-r"
-    : "relative aspect-[4/3] overflow-hidden border border-[#6F4C91]/35";
+    ? "relative aspect-[16/10] overflow-hidden sm:aspect-auto"
+    : "relative aspect-[4/3] overflow-hidden bg-[#15131A]";
 
   return (
     <div className={`${visualClass} bg-[#15131A]`}>
@@ -385,7 +393,7 @@ function ResearchFallback() {
   return (
     <section
       aria-label="Loading research"
-      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
+      className="mx-auto max-w-[86rem] px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
     >
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#91889A]">
         Loading published research…
@@ -396,8 +404,8 @@ function ResearchFallback() {
 
 function MembershipAndResearch() {
   return (
-    <section className="border-y border-[#6F4C91]/35 bg-[#0D0D11]">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+    <section className="bg-[#0D0D11]">
+      <div className="mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-end">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
@@ -413,7 +421,7 @@ function MembershipAndResearch() {
           </p>
         </div>
 
-        <div className="mt-10 grid border border-[#6F4C91]/40 xl:grid-cols-2">
+        <div className="mt-10 grid gap-4 xl:grid-cols-2 xl:gap-0">
           <ServiceCard
             index="01"
             eyebrow="Recurring intelligence membership"
@@ -462,7 +470,7 @@ function ServiceCard({
   );
 
   return (
-    <article className="relative min-h-72 border-[#6F4C91]/40 p-6 first:border-b sm:p-9 xl:first:border-b-0 xl:first:border-r">
+    <article className="relative min-h-72 bg-[#050506] p-6 sm:p-9 xl:first:mr-2 xl:last:ml-2 xl:last:bg-[#15131A]">
       <span className="font-mono text-xs text-[#6F4C91]">{index}</span>
       <p className="mt-8 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
         {eyebrow}
@@ -494,14 +502,14 @@ function Newsletter() {
   return (
     <section
       aria-labelledby="newsletter-title"
-      className="relative overflow-hidden bg-[#050506]"
+      className="relative overflow-hidden bg-[#15131A]"
     >
       <div
         aria-hidden="true"
         className="absolute inset-y-0 right-0 w-1/2 bg-[linear-gradient(135deg,transparent,rgba(111,76,145,0.16))]"
       />
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="grid gap-10 border-y border-[#6F4C91]/45 py-10 xl:grid-cols-[minmax(0,0.82fr)_minmax(22rem,1.18fr)] xl:items-center xl:gap-20">
+      <div className="relative mx-auto max-w-[80rem] px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid gap-10 xl:grid-cols-[minmax(0,0.82fr)_minmax(22rem,1.18fr)] xl:items-center xl:gap-20">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
               Chronoverse Dispatch
@@ -535,14 +543,14 @@ function TrustStrip() {
   return (
     <section
       aria-label="Institutional disclosures"
-      className="border-t border-[#6F4C91]/35 bg-[#0D0D11]"
+      className="bg-[#0D0D11]"
     >
-      <div className="mx-auto grid max-w-7xl sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-[88rem] gap-x-8 px-4 py-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         {links.map((link, index) => (
           <Link
             key={link.href}
             href={link.href}
-            className="group flex items-center justify-between gap-4 border-b border-[#6F4C91]/25 px-5 py-5 text-xs font-medium text-[#CFC5B8] hover:bg-[#15131A] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C8A7E8] sm:odd:border-r lg:border-b-0 lg:border-r lg:last:border-r-0"
+            className="group flex items-center justify-between gap-4 py-3 text-xs font-medium text-[#CFC5B8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
           >
             <span>
               <span className="mr-3 font-mono text-[9px] text-[#6F4C91]">

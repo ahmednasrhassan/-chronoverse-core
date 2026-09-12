@@ -19,20 +19,20 @@ export function MarketIntelligenceBoard({
   return (
     <aside
       aria-label="Free market intelligence board"
-      className="relative overflow-hidden border border-[#6F4C91]/55 bg-[#0D0D11] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.38)] sm:p-6"
+      className="relative overflow-hidden border-y border-[#6F4C91]/35 bg-[#0D0D11]/85 px-5 py-5 sm:px-6 xl:border-y-0 xl:border-l xl:px-8"
     >
       <div
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#C8A7E8] to-transparent opacity-80"
       />
-      <div className="flex items-center justify-between gap-4 border-b border-[#6F4C91]/35 pb-4">
+      <div className="flex items-center justify-between gap-4 pb-4">
         <div>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[#C8A7E8]">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C8A7E8]">
             Market intelligence board
           </p>
           <p className="mt-1 text-xs text-[#91889A]">Free Lite · five-market view</p>
         </div>
-        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#CFC5B8]">
+        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[#CFC5B8]">
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#C8A7E8]" />
           Canonical
         </span>
@@ -45,7 +45,7 @@ export function MarketIntelligenceBoard({
           return (
             <li
               key={market.productId}
-              className="grid grid-cols-[1.6rem_minmax(0,0.8fr)_minmax(0,1fr)] items-center gap-3 py-3.5"
+              className="grid grid-cols-[1.6rem_minmax(0,0.8fr)_minmax(0,1fr)] items-center gap-3 py-3.5 first:border-t first:border-[#6F4C91]/25"
             >
               <span className="font-mono text-[10px] tabular-nums text-[#6F4C91]">
                 {String(index + 1).padStart(2, "0")}
@@ -55,7 +55,7 @@ export function MarketIntelligenceBoard({
               </span>
               {isAvailable(projection) ? (
                 <span className="min-w-0 text-right">
-                  <span className="block font-mono text-sm font-semibold tabular-nums text-[#F3EBDD]">
+                  <span className="block font-mono text-base font-semibold tabular-nums text-[#F3EBDD]">
                     {formatCurrentValue(projection)}
                   </span>
                   <span className="mt-0.5 block truncate text-[10px] uppercase tracking-[0.1em] text-[#91889A]">
@@ -72,7 +72,7 @@ export function MarketIntelligenceBoard({
         })}
       </ol>
 
-      <p className="border-t border-[#6F4C91]/35 pt-4 text-[10px] leading-4 text-[#91889A]">
+      <p className="border-t border-[#6F4C91]/25 pt-4 text-[11px] leading-4 text-[#91889A]">
         Reference observations, not a live trading feed. Availability and
         reference dates remain source-authoritative.
       </p>
@@ -89,12 +89,12 @@ export default function FreeMarketSurface({
     <>
       <section
         aria-labelledby="market-pulse-title"
-        className="border-y border-[#6F4C91]/35 bg-[#0D0D11]"
+        className="bg-[#0D0D11]"
       >
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <div className="mx-auto max-w-[88rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
           <div className="grid gap-4 md:grid-cols-[minmax(0,0.75fr)_minmax(18rem,0.45fr)] md:items-end md:justify-between">
             <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C8A7E8]">
                 Market pulse · Free Lite
               </p>
               <h2
@@ -110,7 +110,7 @@ export default function FreeMarketSurface({
             </p>
           </div>
 
-          <ol className="mt-8 grid gap-px overflow-hidden border border-[#6F4C91]/40 bg-[#6F4C91]/30 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-5">
+          <ol className="mt-8 grid gap-x-8 border-y border-[#6F4C91]/30 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-5 xl:gap-x-0">
             {LAUNCH_MARKETS_V1.map((market, index) => {
               const projection = projections[market.productId];
               const isFeatured = market.productId === "eurusd";
@@ -118,9 +118,9 @@ export default function FreeMarketSurface({
               return (
                 <li
                   key={market.productId}
-                  className={`relative min-w-0 p-5 lg:col-span-2 xl:col-span-1 ${
+                  className={`relative min-w-0 py-6 lg:col-span-2 xl:col-span-1 xl:px-5 xl:[&:not(:first-child)]:border-l xl:border-[#6F4C91]/25 ${
                     index === 3 ? "lg:col-start-2 xl:col-start-auto" : ""
-                  } ${isFeatured ? "bg-[#15131A]" : "bg-[#050506]"}`}
+                  } ${isFeatured ? "xl:bg-[#15131A]/70" : ""}`}
                 >
                   {isFeatured ? (
                     <span
@@ -129,23 +129,23 @@ export default function FreeMarketSurface({
                     />
                   ) : null}
                   <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-mono text-xs font-semibold tracking-[0.1em] text-[#F3EBDD]">
+                    <h3 className="font-mono text-[13px] font-semibold tracking-[0.06em] text-[#F3EBDD]">
                       {market.label}
                     </h3>
-                    <span className="text-[9px] uppercase tracking-[0.16em] text-[#91889A]">
+                    <span className="text-[10px] uppercase tracking-[0.12em] text-[#91889A]">
                       {isFeatured ? "Featured" : "Lite"}
                     </span>
                   </div>
 
                   {isAvailable(projection) ? (
                     <>
-                      <p className="mt-7 font-mono text-2xl font-medium tabular-nums text-[#F3EBDD] xl:text-[1.7rem]">
+                      <p className="mt-7 font-mono text-[clamp(1.6rem,2.2vw,2rem)] font-medium tabular-nums text-[#F3EBDD]">
                         {formatCurrentValue(projection)}
                       </p>
-                      <p className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-[#91889A]">
+                      <p className="mt-1 truncate text-[11px] uppercase tracking-[0.1em] text-[#91889A]">
                         {projection.currentValue.unit}
                       </p>
-                      <dl className="mt-6 space-y-2.5 border-t border-[#6F4C91]/25 pt-4 text-[11px]">
+                      <dl className="mt-6 space-y-2.5 text-xs">
                         <CompactMetric
                           label="Direction"
                           value={formatToken(projection.details.direction)}
@@ -163,7 +163,7 @@ export default function FreeMarketSurface({
                             : formatPercentage(projection.details.annualizedVolatility)}
                         />
                       </dl>
-                      <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.12em] text-[#91889A]">
+                      <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.1em] text-[#91889A]">
                         Ref. {projection.referenceDate}
                       </p>
                     </>
@@ -183,11 +183,11 @@ export default function FreeMarketSurface({
       >
         <div
           aria-hidden="true"
-          className="absolute left-1/4 top-0 h-64 w-64 rounded-full bg-[#6F4C91]/10 blur-3xl"
+          className="absolute left-1/4 top-0 h-64 w-64 rounded-full bg-[#6F4C91]/8 blur-3xl"
         />
-        <div className="relative mx-auto grid max-w-7xl gap-0 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(19rem,0.85fr)] xl:py-24">
-          <div className="border border-[#6F4C91]/45 bg-[#0D0D11] p-6 sm:p-9 lg:p-12">
-            <div className="flex flex-col gap-5 border-b border-[#6F4C91]/35 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative mx-auto grid max-w-[88rem] gap-0 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1.72fr)_minmax(20rem,0.78fr)] xl:py-24">
+          <div className="bg-[#0D0D11] p-6 sm:p-10 lg:p-14">
+            <div className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
                   Featured intelligence canvas
@@ -211,7 +211,7 @@ export default function FreeMarketSurface({
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#91889A]">
                       Current reference value
                     </p>
-                    <p className="mt-3 font-mono text-5xl font-medium tracking-[-0.04em] tabular-nums text-[#F3EBDD] sm:text-7xl">
+                    <p className="mt-3 font-mono text-[clamp(3.25rem,7vw,6rem)] font-medium tracking-[-0.05em] tabular-nums text-[#F3EBDD]">
                       {formatCurrentValue(eurUsd)}
                     </p>
                     <p className="mt-3 text-xs text-[#CFC5B8]">
@@ -230,7 +230,7 @@ export default function FreeMarketSurface({
                   aria-label="EUR/USD state and signal band"
                   className="mt-12 border-y border-[#6F4C91]/40"
                 >
-                  <dl className="grid sm:grid-cols-2 xl:grid-cols-4">
+                  <dl className="grid sm:grid-cols-2 xl:grid-cols-3">
                     <SignalCell
                       index="01"
                       label="Market state"
@@ -248,15 +248,25 @@ export default function FreeMarketSurface({
                     />
                     <SignalCell
                       index="04"
+                      label="Reference"
+                      value={eurUsd.referenceDate}
+                    />
+                    <SignalCell
+                      index="05"
+                      label="Freshness"
+                      value="Not assessed"
+                    />
+                    <SignalCell
+                      index="06"
                       label="Projection status"
                       value={formatToken(eurUsd.status)}
                     />
                   </dl>
                 </div>
 
-                <div className="mt-7 flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.13em] text-[#91889A]">
+                <div className="mt-7 flex flex-wrap items-center justify-between gap-3 text-[11px] uppercase tracking-[0.1em] text-[#91889A]">
                   <span>Availability · Verified projection</span>
-                  <span>Freshness · Not assessed</span>
+                  <span>Interval · {formatToken(eurUsd.interval)}</span>
                 </div>
               </div>
             ) : (
@@ -272,7 +282,7 @@ export default function FreeMarketSurface({
             )}
           </div>
 
-          <aside className="border border-t-0 border-[#6F4C91]/45 bg-[#15131A] p-6 sm:p-9 xl:border-l-0 xl:border-t xl:p-10">
+          <aside className="bg-[#15131A] p-6 sm:p-10 xl:p-12">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C8A7E8]">
               Intelligence boundary
             </p>
@@ -284,7 +294,7 @@ export default function FreeMarketSurface({
               layers required to challenge and contextualize it.
             </p>
 
-            <div className="mt-9 space-y-8">
+            <div className="relative mt-10 space-y-10 before:absolute before:bottom-2 before:left-[0.28rem] before:top-2 before:w-px before:bg-[#6F4C91]/55">
               <BoundaryList
                 title="Free intelligence"
                 items={[
@@ -345,7 +355,7 @@ function SignalCell({
   value: string;
 }) {
   return (
-    <div className="border-[#6F4C91]/30 py-5 sm:odd:border-r sm:even:pl-5 xl:border-r xl:px-5 xl:first:pl-0 xl:last:border-r-0 xl:last:pr-0">
+    <div className="border-[#6F4C91]/25 py-5 sm:odd:border-r sm:even:pl-5 xl:border-r xl:px-6 xl:first:pl-0 xl:[&:nth-child(3n)]:border-r-0">
       <dt className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[#91889A]">
         <span className="text-[#6F4C91]">{index}</span>
         {label}
@@ -374,14 +384,15 @@ function BoundaryList({
   items: readonly string[];
 }) {
   return (
-    <div className="border-t border-[#6F4C91]/40 pt-5">
-      <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C8A7E8]">
+    <div className="relative pl-7">
+      <span aria-hidden="true" className="absolute left-0 top-1 h-2.5 w-2.5 rounded-full border border-[#C8A7E8] bg-[#15131A]" />
+      <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A7E8]">
         {title}
       </h3>
-      <ul className="mt-4 space-y-2.5 text-sm leading-5 text-[#CFC5B8]">
+      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm leading-5 text-[#CFC5B8]">
         {items.map((item) => (
-          <li key={item} className="grid grid-cols-[0.75rem_1fr] gap-2">
-            <span aria-hidden="true" className="text-[#6F4C91]">—</span>
+          <li key={item} className="flex items-center gap-2">
+            <span aria-hidden="true" className="text-[#6F4C91]">/</span>
             <span>{item}</span>
           </li>
         ))}

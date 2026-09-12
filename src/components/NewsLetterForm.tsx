@@ -55,7 +55,7 @@ export default function NewsletterForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="min-w-0 border border-[#6F4C91] bg-[#0D0D11] px-4 py-3.5 text-sm text-[#F3EBDD] placeholder:text-[#91889A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]"
+          className="min-w-0 border-0 border-b border-[#6F4C91] bg-transparent px-1 py-3.5 text-sm text-[#F3EBDD] placeholder:text-[#91889A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#15131A]"
         />
         <button
           type="submit"
@@ -66,7 +66,7 @@ export default function NewsletterForm() {
         </button>
       </form>
 
-      <div className="mt-3 min-h-6 border-l border-[#6F4C91]/40 pl-3">
+      <div className="mt-3 min-h-6">
         {feedback ? (
           <p
             role="status"

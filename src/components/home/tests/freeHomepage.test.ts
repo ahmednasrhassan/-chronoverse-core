@@ -14,10 +14,18 @@ const marketSurfaceSource = readSource(
   "src/components/home/FreeMarketSurface.tsx",
 );
 const newsletterSource = readSource("src/components/NewsLetterForm.tsx");
+const headerSource = readSource("src/components/navigation/Header.tsx");
+const footerSource = readSource("src/components/navigation/Footer.tsx");
 const projectionServiceSource = readSource(
   "src/lib/markets/services/canonicalProductResults.ts",
 );
 const combinedHomepageSource = `${homepageSource}\n${marketSurfaceSource}`;
+const combinedPresentationSource = [
+  combinedHomepageSource,
+  newsletterSource,
+  headerSource,
+  footerSource,
+].join("\n");
 
 assert.deepEqual(
   LAUNCH_MARKETS_V1.map((market) => market.label),
@@ -107,25 +115,58 @@ assert.match(newsletterSource, /bg-\[#A77BD8\]/);
 assert.match(newsletterSource, /text-\[#050506\]/);
 assert.match(
   homepageSource,
-  /text-\[clamp\(2\.75rem,5\.25vw,4\.5rem\)\]/,
+  /text-\[clamp\(2\.85rem,5\.5vw,4\.75rem\)\]/,
   "hero heading must scale fluidly across laptop and mobile viewports",
 );
 assert.match(
   homepageSource,
-  /xl:grid-cols-\[minmax\(0,1\.35fr\)_minmax\(22rem,0\.85fr\)\]/,
+  /xl:grid-cols-\[minmax\(0,1\.48fr\)_minmax\(23rem,0\.82fr\)\]/,
   "hero must remain stacked through 1024 and become asymmetric at desktop width",
 );
 assert.match(marketSurfaceSource, /lg:grid-cols-6 xl:grid-cols-5/);
 assert.match(marketSurfaceSource, /lg:col-start-2 xl:col-start-auto/);
 assert.match(
   marketSurfaceSource,
-  /xl:grid-cols-\[minmax\(0,1\.65fr\)_minmax\(19rem,0\.85fr\)\]/,
+  /xl:grid-cols-\[minmax\(0,1\.72fr\)_minmax\(20rem,0\.78fr\)\]/,
   "EUR/USD canvas must stack at tablet widths and split at desktop width",
 );
 assert.doesNotMatch(
   homepageSource,
   /min-h-screen|min-h-\[100vh\]|h-screen/,
   "homepage must not force a viewport-height hero",
+);
+assert.match(homepageSource, /max-w-\[88rem\]/);
+assert.match(marketSurfaceSource, /max-w-\[88rem\]/);
+assert.match(headerSource, /max-w-\[88rem\]/);
+assert.match(footerSource, /max-w-\[88rem\]/);
+
+for (const approvedColor of [
+  "#050506",
+  "#0D0D11",
+  "#15131A",
+  "#F3EBDD",
+  "#CFC5B8",
+  "#91889A",
+  "#C8A7E8",
+  "#A77BD8",
+  "#6F4C91",
+]) {
+  assert.equal(
+    combinedPresentationSource.includes(approvedColor),
+    true,
+    `presentation must retain approved color ${approvedColor}`,
+  );
+}
+
+assert.doesNotMatch(
+  combinedPresentationSource,
+  /swiper|carousel|overflow-x-auto|snap-mandatory|snap-x/i,
+  "homepage must not add a horizontal-carousel dependency",
+);
+assert.doesNotMatch(
+  combinedPresentationSource,
+  /framer-motion|motion\/react|@react-spring|lottie|gsap/i,
+  "homepage must not add an animation framework",
 );
 
 assert.equal(
