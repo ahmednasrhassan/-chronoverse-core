@@ -52,6 +52,10 @@ export interface CanonicalProductResultMapV1 {
   readonly estr: EstrProductionRuntimeResultV1;
 }
 
+export type FiveProductFreeLiteProjectionMapV1 = Readonly<{
+  [TProductId in CanonicalProductIdV1]: MarketProductFreeLiteProjectionV1 | null;
+}>;
+
 class UncacheableCanonicalResultErrorV1 extends Error {
   readonly result: unknown;
 
@@ -145,6 +149,53 @@ export async function getFiveProductFreeLiteProjectionV1(
   return projectFiveProductFreeLiteV1(
     await getCanonicalProjectionInputV1(productId),
   );
+}
+
+/**
+ * Loads the public launch universe through the two existing cache owners:
+ * one atomic FX bundle and one independent €STR result. An unexpected failure
+ * in either source family becomes a null entry for that family so the public
+ * surface can render the remaining verified projections without retry storms.
+ */
+export async function getFiveProductFreeLiteProjectionMapV1(): Promise<
+  FiveProductFreeLiteProjectionMapV1
+> {
+  const [fxResult, estrResult] = await Promise.allSettled([
+    getCachedCanonicalFxResultBundleV1(),
+    getCanonicalEstrResultV1(),
+  ]);
+  const fx = fxResult.status === "fulfilled" ? fxResult.value : null;
+  const estr = estrResult.status === "fulfilled" ? estrResult.value : null;
+
+  return Object.freeze({
+    eurusd: fx === null
+      ? null
+      : projectFiveProductFreeLiteV1({
+        productId: "eurusd",
+        canonical: fx.eurusd,
+      }),
+    eurjpy: fx === null
+      ? null
+      : projectFiveProductFreeLiteV1({
+        productId: "eurjpy",
+        canonical: fx.eurjpy,
+      }),
+    eurgbp: fx === null
+      ? null
+      : projectFiveProductFreeLiteV1({
+        productId: "eurgbp",
+        canonical: fx.eurgbp,
+      }),
+    eurchf: fx === null
+      ? null
+      : projectFiveProductFreeLiteV1({
+        productId: "eurchf",
+        canonical: fx.eurchf,
+      }),
+    estr: estr === null
+      ? null
+      : projectFiveProductFreeLiteV1({ productId: "estr", canonical: estr }),
+  });
 }
 
 export async function getFiveProductVipDeepProjectionV1(

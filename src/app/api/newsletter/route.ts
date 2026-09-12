@@ -27,8 +27,11 @@ const sesClient = new SESClient({
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
+    const normalizedEmail = typeof email === "string"
+      ? email.trim().toLowerCase()
+      : "";
 
-    if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return NextResponse.json(
         { status: "error", message: "A valid email address is required" },
         { status: 400 }
@@ -41,7 +44,6 @@ export async function POST(request: Request) {
     // never block the confirmation email/response) so the daily
     // `/api/cron/send-newsletter` job has a distribution list to read from.
     try {
-      const normalizedEmail = email.trim().toLowerCase();
       const existing = await sanityWriteClient.fetch(
         `*[_type == "subscriber" && email == $email][0]{_id}`,
         { email: normalizedEmail }
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
     const sendEmailCommand = new SendEmailCommand({
       Source: officialEmail,
       Destination: {
-       ToAddresses: [officialEmail, email],
+       ToAddresses: [officialEmail, normalizedEmail],
       },
       Message: {
         Subject: {
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
             Data: `
               <div style="font-family: monospace; background-color: #050506; color: #F3EBDD; padding: 24px; border: 1px solid #C8A7E8; border-radius: 8px;">
                 <h2 style="color: #C8A7E8; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
-                <p><strong>Subscriber Email:</strong> ${email}</p>
+                <p><strong>Subscriber Email:</strong> ${escapeHtml(normalizedEmail)}</p>
                 <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
                 <hr style="border-color: #292432; margin-top: 20px;" />
                 <span style="font-size: 10px; color: #91889A;">Engineered by Chronoverse Capital Infrastructure</span>
@@ -96,7 +98,19 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     console.error("Newsletter SES Execution Error:", error);
-    const message = error instanceof Error ? error.message : "Failed to process subscription";
-    return NextResponse.json({ status: "error", message }, { status: 500 });
+    return NextResponse.json(
+      { status: "error", message: "Subscription could not be completed" },
+      { status: 500 },
+    );
   }
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[character]!);
 }

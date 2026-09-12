@@ -4,6 +4,10 @@ export const siteConfig = {
   url: "https://chronoversecapital.com",
   // Official contact email used across Contact page, Footer, and all Policy pages
   contactEmail: "info@chronoversecapital.com",
+  commerce: {
+    // Existing first-party storefront for standalone research products.
+    gumroadResearchUrl: "https://shop.chronoversecapital.com",
+  },
   // Social links configuration (Amazon SES & footer compliant)
   socialLinks: {
     x: "https://x.com/ChronoVerseCap",
