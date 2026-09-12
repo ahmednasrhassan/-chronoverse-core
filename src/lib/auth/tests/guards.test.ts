@@ -27,6 +27,15 @@ const AUTHENTICATED_FREE_ACCESS: AccessResultV1 = Object.freeze({
   canAccessVip: false,
 });
 
+const VIP_ACTIVE_ACCESS: AccessResultV1 = Object.freeze({
+  state: "vip_active",
+  isAuthenticated: true,
+  authSubject: "verified-vip-subject",
+  userId: "internal-vip-user-id",
+  role: "user",
+  canAccessVip: true,
+});
+
 const ADMIN_ACCESS: AccessResultV1 = Object.freeze({
   state: "admin",
   isAuthenticated: true,
@@ -115,6 +124,23 @@ async function verifyAuthenticatedFreeGuards(): Promise<void> {
   await expectDenial(vipGuard.requireVip, "vip-required",
     "authenticated Free VIP guard");
   assertEqual(vipResolver.calls(), 1, "Free VIP guard resolves once");
+}
+
+async function verifyVipActiveGuards(): Promise<void> {
+  const authenticatedResolver = countingResolver(VIP_ACTIVE_ACCESS);
+  const authenticatedGuard = createAccessGuardsV1(
+    authenticatedResolver.resolve,
+  );
+  assertEqual(await authenticatedGuard.requireAuthenticated(),
+    VIP_ACTIVE_ACCESS, "active VIP is authenticated");
+  assertEqual(authenticatedResolver.calls(), 1,
+    "VIP authenticated guard resolves once");
+
+  const vipResolver = countingResolver(VIP_ACTIVE_ACCESS);
+  const vipGuard = createAccessGuardsV1(vipResolver.resolve);
+  assertEqual(await vipGuard.requireVip(), VIP_ACTIVE_ACCESS,
+    "active VIP passes the VIP guard");
+  assertEqual(vipResolver.calls(), 1, "VIP guard resolves once");
 }
 
 async function verifyElevatedGuards(
@@ -206,6 +232,7 @@ function auditGuardIsolation(): void {
 async function main(): Promise<void> {
   await verifyAnonymousGuards();
   await verifyAuthenticatedFreeGuards();
+  await verifyVipActiveGuards();
   await verifyElevatedGuards(ADMIN_ACCESS, "admin");
   await verifyElevatedGuards(OWNER_ACCESS, "owner");
   await verifyFailClosedBehavior();

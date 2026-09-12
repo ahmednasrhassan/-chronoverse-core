@@ -14,6 +14,17 @@ import {
   CHRONOVERSE_ROLES_V1,
 } from "../types";
 
+const FOUNDATION_COMPOSITION_V1 = Object.freeze({
+  getVipCommercialConfig: () => Object.freeze({
+    storeId: "1",
+    productId: "2",
+    monthlyVariantId: "3",
+    annualVariantId: "4",
+    variantIds: Object.freeze(["3", "4"] as const),
+  }),
+  getCurrentTime: () => "2026-09-12T12:00:00.000Z",
+});
+
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
     throw new Error(
@@ -37,7 +48,10 @@ async function verifyRoleAccessMapping(): Promise<void> {
     "owner",
   ], "future-compatible access state set is exact");
 
-  const anonymous = createAccessResolverV1(async () => null);
+  const anonymous = createAccessResolverV1(
+    async () => null,
+    FOUNDATION_COMPOSITION_V1,
+  );
   assertDeepEqual(await anonymous(), {
     state: "anonymous_free",
     isAuthenticated: false,
@@ -58,14 +72,18 @@ async function verifyRoleAccessMapping(): Promise<void> {
   ] as const;
 
   for (const testCase of cases) {
-    const resolver = createAccessResolverV1(async () => ({
-      authSubject: "verified-auth-subject",
-      trustedAccess: [{
-        user_id: "stable-chronoverse-user-id",
-        auth_user_id: "verified-auth-subject",
-        ...testCase,
-      }],
-    }));
+    const resolver = createAccessResolverV1(
+      async () => ({
+        authSubject: "verified-auth-subject",
+        trustedAccess: [{
+          user_id: "stable-chronoverse-user-id",
+          auth_user_id: "verified-auth-subject",
+          ...testCase,
+        }],
+        loadCommercialAccess: async () => [],
+      }),
+      FOUNDATION_COMPOSITION_V1,
+    );
     const first = await resolver();
     const second = await resolver();
 
@@ -79,16 +97,20 @@ async function verifyRoleAccessMapping(): Promise<void> {
       `${testCase.role} repeated resolution is deterministic`);
   }
 
-  const fabricatedVip = createAccessResolverV1(async () => ({
-    authSubject: "verified-auth-subject",
-    trustedAccess: [{
-      user_id: "stable-chronoverse-user-id",
-      auth_user_id: "verified-auth-subject",
-      role: "user",
-      access_state: "vip_active",
-      can_access_vip: true,
-    }],
-  }));
+  const fabricatedVip = createAccessResolverV1(
+    async () => ({
+      authSubject: "verified-auth-subject",
+      trustedAccess: [{
+        user_id: "stable-chronoverse-user-id",
+        auth_user_id: "verified-auth-subject",
+        role: "user",
+        access_state: "vip_active",
+        can_access_vip: true,
+      }],
+      loadCommercialAccess: async () => [],
+    }),
+    FOUNDATION_COMPOSITION_V1,
+  );
 
   try {
     await fabricatedVip();
@@ -179,6 +201,10 @@ function auditArchitecture(): void {
     "getSession is not authorization truth");
   assertEqual(accessSource.includes("unstable_cache"), false,
     "access resolver is not globally cached");
+  assertEqual(accessSource.includes('"resolve_my_commercial_access_v1"'), true,
+    "normal authenticated access uses the caller-bound commercial RPC");
+  assertEqual(accessSource.includes('.schema("app_private")'), false,
+    "access resolver never requests the unexposed private schema");
   assertEqual(accessSource.toLowerCase().includes("email"), false,
     "access resolver has no email-based role logic");
   assertEqual(proxyClientSource.includes("getClaims()"), true,
