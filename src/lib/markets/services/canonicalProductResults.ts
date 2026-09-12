@@ -56,6 +56,10 @@ export type FiveProductFreeLiteProjectionMapV1 = Readonly<{
   [TProductId in CanonicalProductIdV1]: MarketProductFreeLiteProjectionV1 | null;
 }>;
 
+export type FiveProductVipDeepProjectionMapV1 = Readonly<{
+  [TProductId in CanonicalProductIdV1]: MarketProductVipDeepProjectionV1 | null;
+}>;
+
 class UncacheableCanonicalResultErrorV1 extends Error {
   readonly result: unknown;
 
@@ -204,6 +208,52 @@ export async function getFiveProductVipDeepProjectionV1(
   return projectFiveProductVipDeepV1(
     await getCanonicalProjectionInputV1(productId),
   );
+}
+
+/**
+ * Assembles the complete VIP launch universe from the same two shared
+ * canonical cache owners used by Free: one atomic FX bundle and one €STR
+ * result. Callers must authorize VIP access before invoking this function.
+ */
+export async function getFiveProductVipDeepProjectionMapV1(): Promise<
+  FiveProductVipDeepProjectionMapV1
+> {
+  const [fxResult, estrResult] = await Promise.allSettled([
+    getCachedCanonicalFxResultBundleV1(),
+    getCanonicalEstrResultV1(),
+  ]);
+  const fx = fxResult.status === "fulfilled" ? fxResult.value : null;
+  const estr = estrResult.status === "fulfilled" ? estrResult.value : null;
+
+  return Object.freeze({
+    eurusd: fx === null
+      ? null
+      : projectFiveProductVipDeepV1({
+        productId: "eurusd",
+        canonical: fx.eurusd,
+      }),
+    eurjpy: fx === null
+      ? null
+      : projectFiveProductVipDeepV1({
+        productId: "eurjpy",
+        canonical: fx.eurjpy,
+      }),
+    eurgbp: fx === null
+      ? null
+      : projectFiveProductVipDeepV1({
+        productId: "eurgbp",
+        canonical: fx.eurgbp,
+      }),
+    eurchf: fx === null
+      ? null
+      : projectFiveProductVipDeepV1({
+        productId: "eurchf",
+        canonical: fx.eurchf,
+      }),
+    estr: estr === null
+      ? null
+      : projectFiveProductVipDeepV1({ productId: "estr", canonical: estr }),
+  });
 }
 
 async function getCanonicalProjectionInputV1(
