@@ -145,19 +145,15 @@ export default async function VipMarketsPage() {
               </p>
 
               <div className="mt-5 border-t border-[#211F29] pt-4">
-                {market.kind === "fx" ? (
-                  <Link
-                    href={`/vip/markets/${market.productId}`}
-                    className="inline-flex min-h-11 items-center text-[9px] font-semibold uppercase tracking-[0.18em] text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-                  >
-                    Open FX Market Room
-                    <span aria-hidden="true" className="ml-2">&#8594;</span>
-                  </Link>
-                ) : (
-                  <span className="inline-flex min-h-11 items-center text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
-                    Rate detail remains on VIP Overview
-                  </span>
-                )}
+                <Link
+                  href={`/vip/markets/${market.productId}`}
+                  className="inline-flex min-h-11 items-center text-[9px] font-semibold uppercase tracking-[0.18em] text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+                >
+                  {market.kind === "fx"
+                    ? "Open FX Market Room"
+                    : "Open €STR Market Room"}
+                  <span aria-hidden="true" className="ml-2">&#8594;</span>
+                </Link>
               </div>
             </article>
           ))}

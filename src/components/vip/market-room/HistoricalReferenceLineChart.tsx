@@ -11,6 +11,7 @@ import type { HistoricalPointV1 } from
 interface HistoricalReferenceLineChartProps {
   readonly displayName: string;
   readonly rangeLabel: string;
+  readonly valueKind: "fx-reference-rate" | "interest-rate-percent";
   readonly unit: string;
   readonly points: readonly HistoricalPointV1[];
   readonly observedFrom: number;
@@ -20,6 +21,7 @@ interface HistoricalReferenceLineChartProps {
 export default function HistoricalReferenceLineChart({
   displayName,
   rangeLabel,
+  valueKind,
   unit,
   points,
   observedFrom,
@@ -41,6 +43,8 @@ export default function HistoricalReferenceLineChart({
       borderColor: "#6F4C91",
       borderWidth: 1,
       textStyle: { color: "#F3EBDD", fontSize: 12 },
+      valueFormatter: (value: unknown) =>
+        formatChartValue(value, valueKind, unit),
       axisPointer: {
         type: "line",
         lineStyle: { color: "#91889A", width: 1, type: "dashed" },
@@ -66,6 +70,9 @@ export default function HistoricalReferenceLineChart({
       axisLabel: {
         color: "#91889A",
         fontSize: 10,
+        formatter: valueKind === "interest-rate-percent"
+          ? "{value}%"
+          : undefined,
       },
       splitLine: {
         lineStyle: { color: "rgba(111,76,145,0.20)", type: "dashed" },
@@ -85,7 +92,7 @@ export default function HistoricalReferenceLineChart({
         lineStyle: { width: 2 },
       },
     }],
-  }), [displayName, points]);
+  }), [displayName, points, unit, valueKind]);
   const coverage = `${formatReferenceDate(observedFrom)} to ${formatReferenceDate(observedTo)}`;
 
   return (
@@ -102,6 +109,25 @@ export default function HistoricalReferenceLineChart({
       />
     </div>
   );
+}
+
+function formatChartValue(
+  value: unknown,
+  valueKind: "fx-reference-rate" | "interest-rate-percent",
+  unit: string,
+): string {
+  const candidate = Array.isArray(value) ? value.at(-1) : value;
+  const numeric = typeof candidate === "number"
+    ? candidate
+    : Number(candidate);
+
+  if (!Number.isFinite(numeric)) {
+    return String(candidate);
+  }
+
+  return valueKind === "interest-rate-percent"
+    ? `${numeric.toFixed(3)}%`
+    : `${numeric} ${unit}`;
 }
 
 function formatReferenceDate(timestamp: number): string {

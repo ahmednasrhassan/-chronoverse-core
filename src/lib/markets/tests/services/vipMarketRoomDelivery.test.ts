@@ -248,7 +248,7 @@ function verifyProductionComposition(): void {
   );
 
   for (const required of [
-    "assembleAuthorizedVipFxMarketRoomV1",
+    "assembleAuthorizedVipMarketRoomV1",
     "enforceVipPageAccessV1(requireVipV1, redirect)",
     "getFiveProductVipDeepProjectionV1",
     "getHistoricalChartSeriesV1",

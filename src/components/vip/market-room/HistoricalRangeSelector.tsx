@@ -3,10 +3,9 @@
 import {
   HISTORICAL_RANGES_V1,
   getHistoricalRangeSupportV1,
+  type HistoricalProductIdV1,
   type HistoricalRangeV1,
 } from "@/lib/markets/services/historicalRange";
-import type { VipFxMarketRoomIdV1 } from
-  "@/lib/markets/services/vipMarketRoomDelivery";
 
 const RANGE_LABELS_V1 = Object.freeze({
   "1d": "1D",
@@ -21,7 +20,7 @@ const RANGE_LABELS_V1 = Object.freeze({
 } as const satisfies Record<HistoricalRangeV1, string>);
 
 interface HistoricalRangeSelectorProps {
-  readonly productId: VipFxMarketRoomIdV1;
+  readonly productId: HistoricalProductIdV1;
   readonly selectedRange: HistoricalRangeV1;
   readonly fiveDayAvailable: boolean;
   readonly fiveDayUnavailableReason: string | null;
@@ -48,7 +47,11 @@ export default function HistoricalRangeSelector({
             (support === "conditional" && !fiveDayAvailable);
           const isSelected = range === selectedRange;
           const disabledReason = support === "unsupported"
-            ? `${RANGE_LABELS_V1[range]} is unavailable for FX reference-rate history.`
+            ? `${RANGE_LABELS_V1[range]} is unavailable for ${
+              productId === "estr"
+                ? "€STR official-rate history"
+                : "FX reference-rate history"
+            }.`
             : fiveDayUnavailableReason ??
               "5D requires at least two official observations.";
 

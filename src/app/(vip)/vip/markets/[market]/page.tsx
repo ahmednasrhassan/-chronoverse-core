@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
+import VipEstrMarketRoom from
+  "@/components/vip/market-room/VipEstrMarketRoom";
 import VipFxMarketRoom from
   "@/components/vip/market-room/VipFxMarketRoom";
 import { requireVipV1 } from "@/lib/auth/guards";
@@ -9,13 +11,13 @@ import { getFiveProductVipDeepProjectionV1 } from
   "@/lib/markets/services/canonicalProductResults";
 import { getHistoricalChartSeriesV1 } from
   "@/lib/markets/services/historicalChartSeries";
-import { assembleAuthorizedVipFxMarketRoomV1 } from
+import { assembleAuthorizedVipMarketRoomV1 } from
   "@/lib/markets/services/vipMarketRoomDelivery";
 
 export const metadata: Metadata = {
-  title: "VIP FX Market Room | Chronoverse Capital",
+  title: "VIP Market Room | Chronoverse Capital",
   description:
-    "Protected ECB reference-rate history and Deep decision intelligence for the Chronoverse FX universe.",
+    "Protected ECB reference-rate history and Deep intelligence for the Chronoverse market universe.",
   robots: {
     index: false,
     follow: false,
@@ -26,15 +28,15 @@ export const metadata: Metadata = {
   },
 };
 
-interface VipFxMarketRoomPageProps {
+interface VipMarketRoomPageProps {
   readonly params: Promise<{ readonly market: string }>;
 }
 
-export default async function VipFxMarketRoomPage({
+export default async function VipMarketRoomPage({
   params,
-}: VipFxMarketRoomPageProps) {
+}: VipMarketRoomPageProps) {
   const { market } = await params;
-  const room = await assembleAuthorizedVipFxMarketRoomV1(market, {
+  const room = await assembleAuthorizedVipMarketRoomV1(market, {
     authorize: () => enforceVipPageAccessV1(requireVipV1, redirect),
     loadDeep: getFiveProductVipDeepProjectionV1,
     loadHistorical: getHistoricalChartSeriesV1,
@@ -42,6 +44,10 @@ export default async function VipFxMarketRoomPage({
 
   if (room === null) {
     notFound();
+  }
+
+  if (room.productId === "estr") {
+    return <VipEstrMarketRoom room={room} />;
   }
 
   return <VipFxMarketRoom room={room} />;

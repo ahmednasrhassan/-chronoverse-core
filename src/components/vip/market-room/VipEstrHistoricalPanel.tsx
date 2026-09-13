@@ -10,8 +10,6 @@ import {
   resolveHistoricalRangeRequestV1,
   type HistoricalRangeV1,
 } from "@/lib/markets/services/historicalRange";
-import type { VipFxMarketRoomIdV1 } from
-  "@/lib/markets/services/vipMarketRoomDelivery";
 import HistoricalRangeSelector from "./HistoricalRangeSelector";
 import HistoricalReferenceLineChart from "./HistoricalReferenceLineChart";
 
@@ -29,31 +27,22 @@ const RANGE_LABELS_V1 = Object.freeze({
   "1y": "1 year",
   "2y": "2 years",
   "5y": "5 years",
-  max: "maximum available history",
+  max: "official history since series inception",
 } as const satisfies Record<HistoricalRangeV1, string>);
 
-interface VipFxHistoricalPanelProps {
-  readonly productId: VipFxMarketRoomIdV1;
-  readonly displayName: string;
-  readonly twoYear: HistoricalChartSeriesV1 | null;
+interface VipEstrHistoricalPanelProps {
+  readonly maximum: HistoricalChartSeriesV1 | null;
   readonly fiveDay: HistoricalChartSeriesV1 | null;
 }
 
-export default function VipFxHistoricalPanel({
-  productId,
-  displayName,
-  twoYear,
+export default function VipEstrHistoricalPanel({
+  maximum,
   fiveDay,
-}: VipFxHistoricalPanelProps) {
+}: VipEstrHistoricalPanelProps) {
   const [selectedRange, setSelectedRange] = useState<HistoricalRangeV1>("1y");
   const view = useMemo(
-    () => deriveFxHistoricalRangeViewV1(
-      productId,
-      selectedRange,
-      twoYear,
-      fiveDay,
-    ),
-    [fiveDay, productId, selectedRange, twoYear],
+    () => deriveEstrHistoricalRangeViewV1(selectedRange, maximum, fiveDay),
+    [fiveDay, maximum, selectedRange],
   );
   const fiveDayAvailable = fiveDay?.availability === "available";
   const fiveDayReason = fiveDayAvailable
@@ -61,26 +50,27 @@ export default function VipFxHistoricalPanel({
     : historicalUnavailableMessage(fiveDay);
 
   return (
-    <section aria-labelledby="historical-reference-heading" className="min-w-0">
+    <section aria-labelledby="estr-historical-heading" className="min-w-0">
       <header className="grid gap-4 border-b border-[#6F4C91]/30 pb-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="min-w-0">
           <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C8A7E8]">
-            Historical reference-rate record
+            Official overnight rate record
           </div>
           <h2
-            id="historical-reference-heading"
+            id="estr-historical-heading"
             className="mt-1 text-xl font-bold tracking-tight text-[#F3EBDD] sm:text-2xl"
           >
-            ECB daily reference rate
+            €STR official rate history
           </h2>
           <p className="mt-2 max-w-2xl text-xs leading-5 text-[#91889A]">
-            Official daily observations only. This is not an intraday traded
-            close, and missing publication dates are not synthesized.
+            ECB daily observations in percentage points. Negative, zero, and
+            positive rates remain unaltered, and non-publication dates are not
+            synthesized.
           </p>
         </div>
 
         <HistoricalRangeSelector
-          productId={productId}
+          productId="estr"
           selectedRange={selectedRange}
           fiveDayAvailable={fiveDayAvailable}
           fiveDayUnavailableReason={fiveDayReason}
@@ -99,7 +89,7 @@ export default function VipFxHistoricalPanel({
             </span>
           </div>
           <HistoricalReferenceLineChart
-            displayName={displayName}
+            displayName="€STR"
             rangeLabel={RANGE_LABELS_V1[selectedRange]}
             valueKind={view.valueKind}
             unit={view.unit}
@@ -107,6 +97,12 @@ export default function VipFxHistoricalPanel({
             observedFrom={view.resolved.observedFrom}
             observedTo={view.resolved.observedTo}
           />
+          {selectedRange === "max" ? (
+            <p className="mt-3 text-[11px] leading-5 text-[#91889A]">
+              MAX begins at the first official observation supplied for this
+              ECB series; no earlier history is implied.
+            </p>
+          ) : null}
           <HistoricalProvenance series={view} />
         </div>
       ) : (
@@ -119,7 +115,7 @@ export default function VipFxHistoricalPanel({
               {historicalUnavailableMessage(view)}
             </p>
             <p className="mt-2 text-xs leading-5 text-[#91889A]">
-              No point, date, or alternate range has been substituted.
+              No observation, date, or alternate range has been substituted.
             </p>
           </div>
         </div>
@@ -128,46 +124,46 @@ export default function VipFxHistoricalPanel({
   );
 }
 
-export function deriveFxHistoricalRangeViewV1(
-  productId: VipFxMarketRoomIdV1,
+export function deriveEstrHistoricalRangeViewV1(
   range: HistoricalRangeV1,
-  twoYear: HistoricalChartSeriesV1 | null,
+  maximum: HistoricalChartSeriesV1 | null,
   fiveDay: HistoricalChartSeriesV1 | null,
 ): HistoricalChartSeriesV1 | null {
   if (range === "5d") {
-    return fiveDay?.productId === productId ? fiveDay : null;
+    return fiveDay?.productId === "estr" ? fiveDay : null;
   }
 
-  if (twoYear === null || twoYear.productId !== productId) {
+  if (maximum === null || maximum.productId !== "estr") {
     return null;
   }
 
-  if (range === "2y") {
-    return twoYear;
+  if (range === "max") {
+    return maximum;
   }
 
-  const anchor = twoYear.requested.to;
+  const anchor = maximum.requested.to;
+  const sourceStart = maximum.availability === "available"
+    ? maximum.points[0]?.timestamp ?? 0
+    : 0;
   const requested = resolveHistoricalRangeRequestV1(
     range,
     anchor,
-    twoYear.availability === "available"
-      ? twoYear.points[0]?.timestamp ?? 0
-      : 0,
+    sourceStart,
   );
 
-  if (getHistoricalRangeSupportV1(productId, range) === "unsupported") {
+  if (getHistoricalRangeSupportV1("estr", range) === "unsupported") {
     return Object.freeze({
-      version: twoYear.version,
+      version: maximum.version,
       availability: "unavailable",
-      productId,
+      productId: "estr",
       requested,
       reason: "range-unsupported",
     });
   }
 
-  if (twoYear.availability === "unavailable") {
+  if (maximum.availability === "unavailable") {
     return Object.freeze({
-      ...twoYear,
+      ...maximum,
       requested,
     });
   }
@@ -175,17 +171,17 @@ export function deriveFxHistoricalRangeViewV1(
   const projection = projectHistoricalRangeV1(
     range,
     anchor,
-    twoYear.points,
+    maximum.points,
   );
 
   if (projection.points.length < 2) {
     return Object.freeze({
-      version: twoYear.version,
+      version: maximum.version,
       availability: "unavailable",
-      productId,
+      productId: "estr",
       requested: projection.requested,
       reason: "insufficient-observations",
-      lastKnownProvenance: twoYear.provenance,
+      lastKnownProvenance: maximum.provenance,
     });
   }
 
@@ -193,7 +189,7 @@ export function deriveFxHistoricalRangeViewV1(
   const observedTo = projection.points.at(-1)!.timestamp;
 
   return Object.freeze({
-    ...twoYear,
+    ...maximum,
     requested: projection.requested,
     resolved: Object.freeze({
       interval: "1d",
@@ -203,7 +199,7 @@ export function deriveFxHistoricalRangeViewV1(
     }),
     points: projection.points,
     provenance: Object.freeze({
-      ...twoYear.provenance,
+      ...maximum.provenance,
       sourceTimestamp: observedTo,
     }),
   });
@@ -222,15 +218,15 @@ function HistoricalProvenance({
           value={`${series.provenance.sourceLabel} / ${series.provenance.sourceSeriesId}`}
         />
         <ProvenanceDatum
-          label="Semantics"
-          value={`${formatLabel(series.provenance.status)} / daily reference rate`}
+          label="Semantics / unit"
+          value={`${formatLabel(series.provenance.status)} / official rate / ${series.unit}`}
         />
         <ProvenanceDatum
-          label="Coverage"
+          label="Observed coverage"
           value={`${formatReferenceDate(series.resolved.observedFrom)} — ${formatReferenceDate(series.resolved.observedTo)}`}
         />
         <ProvenanceDatum
-          label="Range / completeness"
+          label="Requested / completeness"
           value={`${series.requested.range} / ${formatLabel(series.resolved.completeness)}`}
         />
         <ProvenanceDatum
@@ -272,7 +268,7 @@ function historicalUnavailableMessage(
 
   switch (result.reason) {
     case "range-unsupported":
-      return "This range is unsupported for FX reference-rate history";
+      return "This range is unsupported for €STR official-rate history";
     case "source-unavailable":
       return "The canonical ECB historical source is temporarily unavailable";
     case "invalid-series":
