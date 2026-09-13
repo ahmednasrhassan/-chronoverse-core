@@ -73,8 +73,21 @@ for (const forbiddenLegacyValue of [
 }
 
 assert.match(homepageSource, /href="\/markets"/);
-assert.match(homepageSource, /href="\/vip"/);
-assert.match(homepageSource, /href="\/pricing"/);
+assert.match(
+  homepageSource,
+  /<Link href="\/pricing" className=\{PRIMARY_CTA_CLASS\}>[\s\S]{0,120}Explore VIP/,
+  "homepage VIP exploration CTA must use the public Pricing surface",
+);
+assert.match(
+  homepageSource,
+  /title="Chronoverse VIP"[\s\S]{0,320}href="\/pricing"[\s\S]{0,120}cta="Explore VIP"/,
+  "homepage VIP membership card must use the public Pricing surface",
+);
+assert.doesNotMatch(
+  homepageSource,
+  /href="\/vip"/,
+  "homepage acquisition links must not send anonymous visitors into VIP auth",
+);
 assert.equal(existsSync(path.join(repositoryRoot, "src/app/(site)/markets/page.tsx")), true);
 assert.equal(existsSync(path.join(repositoryRoot, "src/app/(vip)/vip/page.tsx")), true);
 assert.equal(existsSync(path.join(repositoryRoot, "src/app/(site)/pricing/page.tsx")), true);

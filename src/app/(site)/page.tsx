@@ -175,7 +175,7 @@ function VipConversion() {
             strongly, what could happen next, and what breaks the thesis.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href="/vip" className={PRIMARY_CTA_CLASS}>
+            <Link href="/pricing" className={PRIMARY_CTA_CLASS}>
               Explore VIP
               <span aria-hidden="true" className="ml-3">→</span>
             </Link>
@@ -427,7 +427,7 @@ function MembershipAndResearch() {
             eyebrow="Recurring intelligence membership"
             title="Chronoverse VIP"
             description="The Deep Intelligence layer for the same five-market universe, designed for ongoing analytical context and decision support."
-            href="/vip"
+            href="/pricing"
             cta="Explore VIP"
           />
           <ServiceCard

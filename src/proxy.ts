@@ -39,13 +39,13 @@ export function createChronoverseProxyV1(
         redirectResponse.cookies.set(cookie);
       }
 
-      return applyPreviewRobotsHeaderV1(request, redirectResponse);
+      return applySearchRobotsHeaderV1(request, redirectResponse);
     }
 
     const rewriteUrl = getNewsletterRewriteUrlV1(request);
 
     if (rewriteUrl === null) {
-      return applyPreviewRobotsHeaderV1(request, refreshedResponse);
+      return applySearchRobotsHeaderV1(request, refreshedResponse);
     }
 
     const rewriteResponse = NextResponse.rewrite(rewriteUrl, { request });
@@ -54,7 +54,7 @@ export function createChronoverseProxyV1(
       rewriteResponse.cookies.set(cookie);
     }
 
-    return applyPreviewRobotsHeaderV1(request, rewriteResponse);
+    return applySearchRobotsHeaderV1(request, rewriteResponse);
   };
 }
 
@@ -66,11 +66,24 @@ export function getPreviewRobotsHeaderValueV1(
     : PREVIEW_ROBOTS_HEADER_VALUE_V1;
 }
 
-function applyPreviewRobotsHeaderV1(
+export function getSearchRobotsHeaderValueV1(
+  hostname: string,
+  pathname: string,
+): string | null {
+  return getPreviewRobotsHeaderValueV1(hostname) ??
+    (pathname === '/vip' || pathname.startsWith('/vip/')
+      ? PREVIEW_ROBOTS_HEADER_VALUE_V1
+      : null);
+}
+
+function applySearchRobotsHeaderV1(
   request: NextRequest,
   response: NextResponse,
 ): NextResponse {
-  const headerValue = getPreviewRobotsHeaderValueV1(request.nextUrl.hostname);
+  const headerValue = getSearchRobotsHeaderValueV1(
+    request.nextUrl.hostname,
+    request.nextUrl.pathname,
+  );
 
   if (headerValue !== null) {
     response.headers.set('X-Robots-Tag', headerValue);

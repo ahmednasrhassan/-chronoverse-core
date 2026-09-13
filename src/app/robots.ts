@@ -27,8 +27,6 @@ export default function robots(): MetadataRoute.Robots {
           "/_next/*",
           "/private/",
           "/drafts/",
-          "/vip",
-          "/vip/",
         ],
       },
       {
@@ -43,8 +41,6 @@ export default function robots(): MetadataRoute.Robots {
           "/cart/",
           "/private/",
           "/drafts/",
-          "/vip",
-          "/vip/",
         ],
       },
     ],
