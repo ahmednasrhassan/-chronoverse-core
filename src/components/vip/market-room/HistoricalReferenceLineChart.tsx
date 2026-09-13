@@ -39,6 +39,7 @@ export default function HistoricalReferenceLineChart({
     },
     tooltip: {
       trigger: "axis",
+      confine: true,
       backgroundColor: "#15131A",
       borderColor: "#6F4C91",
       borderWidth: 1,

@@ -466,6 +466,8 @@ function verifyArchitectureBoundary(): void {
     "chart consumes canonical timestamps");
   assertEqual(chart.includes("point.value"), true,
     "chart consumes canonical values");
+  assertEqual(chart.includes("confine: true"), true,
+    "shared tooltip remains inside the chart on narrow viewports");
   assertEqual(delivery.includes('loadHistorical(productId, "2y", options)'), true,
     "room requests selected-market two-year C4-B envelope");
   assertEqual(delivery.includes('loadHistorical(productId, "5d", options)'), true,
