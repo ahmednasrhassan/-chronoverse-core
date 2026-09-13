@@ -17,7 +17,8 @@ export default function ContactPage() {
           Connect with the Chronoverse Research Team.
         </p>
         <p className="text-[#CFC5B8] text-sm max-w-2xl mx-auto pt-2 leading-relaxed">
-          Whether you have a query about a specific <strong className="text-[#F3EBDD]">Dossier</strong>, a partnership proposal, or historical data verification, our team is ready to assist.
+          Use the published contact address for research, account, billing,
+          partnership, or data-source questions.
         </p>
       </header>
 
@@ -52,7 +53,9 @@ export default function ContactPage() {
               <span>🛠️</span> Dossier Support
             </h2>
             <p className="text-[#CFC5B8] text-xs leading-relaxed">
-              Issues with a download? Need help accessing your purchased files? We respond within 24 hours.
+              For questions about a standalone research purchase, identify the
+              relevant dossier without including payment-card or account
+              secrets.
             </p>
             <p className="text-xs pt-1">
               <strong className="text-[#F3EBDD]">Support Desk: </strong>
@@ -65,83 +68,37 @@ export default function ContactPage() {
             </p>
           </div>
 
-          {/* Operating Hours */}
+          {/* Support boundary */}
           <div className="bg-[#050506] border border-border p-6 rounded-xl space-y-2 font-mono">
             <h2 className="text-sm font-bold text-[#C8A7E8] tracking-wider uppercase">
-              🕰️ Operating Hours
+              Support Boundary
             </h2>
-            <p className="text-[#F3EBDD] text-sm font-semibold">
-              Monday — Friday: 09:00 AM — 06:00 PM (GMT+2)
-            </p>
             <p className="text-[#CFC5B8] text-xs">
-              Response SLA: Within 24 business hours.
+              Do not send passwords, authentication links, API keys, card
+              numbers, or other secrets by email.
             </p>
           </div>
 
         </div>
 
 
-        {/* Right Column: Institutional Contact Form */}
+        {/* Right Column: verified contact channel */}
         <div className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-4">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">Send Direct Message</h2>
-          <form className="space-y-4">
-            <div>
-              <label className="block text-xs text-[#CFC5B8] mb-1 font-mono">Full Name</label>
-              <input 
-                type="text" 
-                placeholder="John Doe" 
-                className="w-full bg-[#050506] border border-border text-[#F3EBDD] rounded-md px-4 py-2 text-sm focus:outline-none focus:border-[#C8A7E8] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[#CFC5B8] mb-1 font-mono">Corporate Email</label>
-              <input 
-                type="email" 
-                placeholder="name@company.com" 
-                className="w-full bg-[#050506] border border-border text-[#F3EBDD] rounded-md px-4 py-2 text-sm focus:outline-none focus:border-[#C8A7E8] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[#CFC5B8] mb-1 font-mono">Message / Query</label>
-              <textarea 
-                rows={4} 
-                placeholder="State your inquiry or research request..." 
-                className="w-full bg-[#050506] border border-border text-[#F3EBDD] rounded-md px-4 py-2 text-sm focus:outline-none focus:border-[#C8A7E8] transition-colors resize-none"
-              ></textarea>
-            </div>
-            <button 
-              type="button" 
-              className="w-full bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold py-2.5 rounded-md transition-colors text-sm shadow-md"
-            >
-              Transmit Signal →
-            </button>
-          </form>
+          <h2 className="text-xl font-bold text-[#F3EBDD]">Email the Team</h2>
+          <p className="text-sm leading-6 text-[#CFC5B8]">
+            The public site does not submit an unseen contact form. Use the
+            address below so your email client shows exactly what will be
+            sent.
+          </p>
+          <a
+            href={`mailto:${siteConfig.contactEmail}`}
+            className="inline-flex w-full items-center justify-center bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold py-2.5 rounded-md transition-colors text-sm shadow-md"
+          >
+            Email {siteConfig.contactEmail}
+          </a>
         </div>
 
       </div>
-
-      {/* YouTube Signals */}
-      <section className="bg-[#0D0D11] border border-border p-8 rounded-xl text-center space-y-4">
-        <h2 className="text-xl font-bold text-[#F3EBDD]">Follow Our Signals</h2>
-        <div className="flex flex-col sm:flex-row justify-center gap-4 text-sm font-semibold">
-          <a 
-            href="https://www.youtube.com/@hypohorizons" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-raised hover:bg-raised text-[#F3EBDD] px-6 py-3 rounded-lg border border-purple-border transition-colors flex items-center justify-center gap-2"
-          >
-            <span className="text-[#C8A7E8]">▶</span> YouTube: Hypo Horizons ➔
-          </a>
-          <a 
-            href="https://www.youtube.com/@Ancientdreamworld" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-raised hover:bg-raised text-[#F3EBDD] px-6 py-3 rounded-lg border border-purple-border transition-colors flex items-center justify-center gap-2"
-          >
-            <span className="text-[#C8A7E8]">▶</span> YouTube: Ancient Dream ➔
-          </a>
-        </div>
-      </section>
 
       {/* Administrative Compliance Hub */}
       <section className="border-t border-border pt-8 text-center space-y-4">

@@ -4,37 +4,41 @@ import Link from "next/link";
 export default function FaqPage() {
   const faqCategories = [
     {
-      category: "🛒 Payments & Security",
+      category: "Market Coverage",
       questions: [
         {
-          q: "Is it safe to enter my payment details?",
-          a: "Absolutely. We do not process or store any payment data ourselves. All individual dossier sales are handled by Gumroad, and all Vault subscriptions are managed via Lemon Squeezy. Both platforms utilize banking-grade SSL encryption to ensure your sovereignty over your data.",
+          q: "Which markets are included at launch?",
+          a: "Chronoverse V1 covers exactly five products: EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
+        },
+        {
+          q: "Is €STR treated like a currency pair?",
+          a: "No. €STR is a benchmark rate and uses rate-specific direction, level-regime, and volatility-regime language.",
         },
       ],
     },
     {
-      category: "🔐 The Vault & Intel",
+      category: "Free & VIP",
       questions: [
         {
-          q: "What is the difference between a \"Dossier\" and \"The Vault\"?",
-          a: "A Dossier is a one-time purchase of a specific historical or financial report. The Vault is our premium annual membership that grants you unlimited access to all dossiers, real-time macro-financial alerts, and exclusive research blueprints not available to the public.",
+          q: "What is the difference between Free and VIP?",
+          a: "Both use the same five products and canonical market truth. Free presents the Lite projection; verified VIP access presents the Deep projection.",
         },
         {
-          q: "How do I receive real-time intelligence alerts?",
-          a: "Priority alerts are dispatched via our Sender Network. Once you subscribe through intel.chronoversecapital.com, you will be integrated into our secure communication relay.",
+          q: "Can I purchase VIP through this site now?",
+          a: "No. Public self-service VIP checkout and billing-portal controls are not currently available. The Account page establishes identity and shows the access state trusted by the server.",
         },
       ],
     },
     {
-      category: "📂 Delivery & Refunds",
+      category: "Research & Support",
       questions: [
         {
-          q: "How do I receive my research materials after purchase?",
-          a: "Instantly. Immediately after payment, you will be redirected to your secure download area. A permanent access link will also be dispatched to your registered email address.",
+          q: "Are standalone research products part of VIP membership?",
+          a: "No. Standalone research at shop.chronoversecapital.com and Chronoverse VIP membership are separate offerings with separate access models.",
         },
         {
-          q: "Do you offer refunds?",
-          a: "No. Due to the digital and intellectual nature of our dossiers and Vault access, all sales are final. We encourage you to review our manifestos and free briefings before committing capital.",
+          q: "Where can I ask an account or billing question?",
+          a: "Use the Contact page. Do not include card numbers, passwords, authentication links, or other secrets in your message.",
         },
       ],
     },
@@ -50,7 +54,7 @@ export default function FaqPage() {
         </span>
         <h1 className="text-4xl font-bold text-[#F3EBDD]">Frequently Asked Questions</h1>
         <p className="text-[#CFC5B8] text-sm font-mono">
-          Everything you need to know about our dossiers, subscriptions &amp; research.
+          Launch coverage, access, research, and support boundaries.
         </p>
       </header>
 
@@ -80,12 +84,12 @@ export default function FaqPage() {
       {/* Unresolved Inquiries Contact Box */}
       <div className="bg-[#050506] border border-border p-6 rounded-xl text-center space-y-3 font-mono">
         <h3 className="text-[#F3EBDD] font-bold text-base">Still Have Unresolved Inquiries?</h3>
-        <p className="text-[#CFC5B8] text-xs">Our strategic support team is standing by.</p>
+        <p className="text-[#CFC5B8] text-xs">Additional questions can be sent through Contact.</p>
         <Link 
           href="/contact" 
           className="inline-block bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-6 py-2 rounded-md text-xs transition-colors"
         >
-          ➔ Submit Inquiry
+          Open Contact
         </Link>
       </div>
 

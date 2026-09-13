@@ -518,7 +518,7 @@ function Newsletter() {
               id="newsletter-title"
               className={`mt-4 text-4xl leading-tight sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}
             >
-              Stay ahead of the next move.
+              Published research in your inbox.
             </h2>
             <p className="mt-5 max-w-lg text-sm leading-6 text-[#CFC5B8]">
               New market research and analytical updates, delivered through

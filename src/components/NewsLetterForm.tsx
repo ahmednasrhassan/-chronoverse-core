@@ -9,7 +9,7 @@ export default function NewsletterForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!email || status === "loading") return;
+    if (!email.trim() || status === "loading") return;
 
     setStatus("loading");
     setFeedback("");

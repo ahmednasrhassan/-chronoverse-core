@@ -17,7 +17,7 @@ export default function PricingPage() {
     <InstitutionalPage
       eyebrow="Access structure"
       title="Free clarity. Deeper analysis for VIP."
-      summary="Both access levels cover the same five launch markets. Pricing and checkout controls are not yet active on this public page."
+      summary="Both access levels cover the same five launch markets. VIP rates are listed below; public checkout controls are not yet available."
     >
       <InstitutionalSection title="Free — Lite projection">
         <p>
@@ -29,6 +29,11 @@ export default function PricingPage() {
         <p>
           The authenticated Deep tier uses the same market universe with the
           additional analysis reserved for verified VIP access.
+        </p>
+        <p>
+          VIP pricing is $15.99 monthly or $150.99 annually. Public
+          self-service checkout and billing-portal controls are not currently
+          available.
         </p>
       </InstitutionalSection>
       <InstitutionalSection title="Launch coverage">
@@ -46,7 +51,7 @@ export default function PricingPage() {
           <Link className="font-medium text-mauve hover:text-purple-brand" href="/account">
             Sign in through Account
           </Link>{" "}
-          to establish identity or register interest in early access.
+          to establish identity and review your current access state.
         </p>
       </InstitutionalSection>
     </InstitutionalPage>

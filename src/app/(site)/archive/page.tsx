@@ -85,7 +85,8 @@ export default async function ArchiveIndexPage() {
           Intelligence <span className="text-[#C8A7E8]">Archive Index</span>
         </h1>
         <p className="text-[#CFC5B8] text-sm font-sans">
-          Full directory of all strategic dossiers, proprietary research assets, and historical intelligence — synced live from the CMS.
+          Directory of published Chronoverse research, organized by its
+          recorded editorial category.
         </p>
       </header>
 

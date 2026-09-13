@@ -32,7 +32,7 @@ export const PUBLIC_PRIMARY_NAV_V1 = Object.freeze([
 
 export const PUBLIC_ACCOUNT_NAV_V1 = Object.freeze([
   { label: "Account", href: "/account" },
-  { label: "Early Access", href: "/account" },
+  { label: "Sign In", href: "/account" },
 ] as const satisfies readonly NavigationItemV1[]);
 
 export const FOOTER_NAV_GROUPS_V1 = Object.freeze([

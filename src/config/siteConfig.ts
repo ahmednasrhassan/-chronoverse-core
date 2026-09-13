@@ -1,6 +1,7 @@
 export const siteConfig = {
   name: "Chronoverse Capital",
-  description: "Decoding Future Markets Through Historical Intelligence",
+  description:
+    "Five-market intelligence and independent research from Chronoverse Capital",
   url: "https://chronoversecapital.com",
   // Official contact email used across Contact page, Footer, and all Policy pages
   contactEmail: "info@chronoversecapital.com",

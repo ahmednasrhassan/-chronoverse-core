@@ -22,7 +22,7 @@ export async function enforceVipPageAccessV1(
       }
 
       if (error.code === "vip-required") {
-        redirectTo("/premium");
+        redirectTo("/pricing");
       }
     }
 

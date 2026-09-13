@@ -43,6 +43,7 @@ export default function robots(): MetadataRoute.Robots {
           "/cart/",
           "/private/",
           "/drafts/",
+          "/vip",
           "/vip/",
         ],
       },

@@ -53,7 +53,10 @@ export default function DmcaPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">3. Intellectual Property of Chronoverse Capital</h2>
           <p>
-            All content published on <strong className="text-[#F3EBDD]">ChronoverseCapital.com</strong>, including text, original historical models, analytical graphics, and logos, is the <strong className="text-[#C8A7E8]">exclusive property</strong> of Chronoverse Capital. Unauthorized copying, reproduction, or redistribution of this material is strictly prohibited and will result in immediate legal action.
+            Chronoverse Capital claims rights in its original text, models,
+            graphics, and branding. Third-party material remains subject to the
+            rights and licenses identified by its source. Contact us if a
+            published item appears to use protected material without authority.
           </p>
         </section>
 
@@ -62,7 +65,7 @@ export default function DmcaPage() {
       {/* Designated Agent Contact */}
       <div className="bg-[#050506] border border-border p-6 rounded-xl text-center space-y-2 font-mono">
         <h3 className="text-[#F3EBDD] font-bold text-sm">Designated Agent Contact</h3>
-        <p className="text-[#CFC5B8] text-xs">Please send all DMCA notices to our secure relay:</p>
+        <p className="text-[#CFC5B8] text-xs">Send copyright notices to this contact address:</p>
         <a 
           href={`mailto:${siteConfig.contactEmail}`}
           className="text-[#C8A7E8] text-xs font-bold hover:underline block pt-1"

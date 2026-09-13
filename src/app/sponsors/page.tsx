@@ -5,7 +5,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sponsorship & Partnerships | Chronoverse Capital",
   description:
-    "Partner with Chronoverse Capital to reach an institutional, macroeconomic, and investment-focused global audience through premium research sponsorship.",
+    "Contact Chronoverse Capital about research sponsorship and partnership inquiries.",
 };
 
 export default function SponsorsPage() {
@@ -21,15 +21,15 @@ export default function SponsorsPage() {
           Partner with Chronoverse Capital
         </h1>
         <p className="text-muted text-lg max-w-2xl mx-auto leading-relaxed">
-          Reach an institutional-grade audience of macroeconomic strategists, portfolio managers, 
-          and sophisticated individual investors who rely on Chronoverse Capital for decision-critical financial intelligence.
+          Discuss a research sponsorship or partnership proposal with
+          Chronoverse Capital.
         </p>
         <div className="pt-4">
           <a
             href="mailto:info@chronoversecapital.com"
             className="inline-block bg-white text-black hover:bg-gray-200 font-bold px-8 py-3 rounded-md transition-colors shadow-lg"
           >
-            Become a Sponsor →
+            Start an Inquiry →
           </a>
         </div>
       </section>
@@ -41,40 +41,39 @@ export default function SponsorsPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* Card 1: Targeted Investors */}
+          {/* Card 1: Research context */}
           <div className="bg-card border border-purple-border/40 rounded-xl p-7 space-y-4 hover:border-purple-brand transition-all">
             <div className="w-12 h-12 rounded-lg bg-card border border-purple-border/40 flex items-center justify-center text-mauve text-2xl">
               🎯
             </div>
-            <h3 className="text-lg font-bold text-mauve">Targeted Investors</h3>
+            <h3 className="text-lg font-bold text-mauve">Research Context</h3>
             <p className="text-mauve text-sm leading-relaxed">
-              Connect directly with an engaged readership of institutional allocators, macro
-              traders, and high-net-worth individuals actively seeking asset allocation and
-              market-structure insight.
+              Discuss placements alongside published research for readers
+              interested in macroeconomics and market structure.
             </p>
           </div>
 
-          {/* Card 2: Premium Analysis */}
+          {/* Card 2: Published research */}
           <div className="bg-card border border-purple-border/40 rounded-xl p-7 space-y-4 hover:border-purple-brand transition-all">
             <div className="w-12 h-12 rounded-lg bg-card border border-purple-border/40 flex items-center justify-center text-mauve text-2xl">
               📊
             </div>
-            <h3 className="text-lg font-bold text-mauve">Premium Analysis</h3>
+            <h3 className="text-lg font-bold text-mauve">Published Research</h3>
             <p className="text-mauve text-sm leading-relaxed">
-              Your brand is positioned alongside rigorous, historically-grounded macroeconomic
-              research — reinforcing credibility and trust with a discerning financial audience.
+              Sponsorship discussions remain separate from editorial findings,
+              Free Lite, and VIP Deep product access.
             </p>
           </div>
 
-          {/* Card 3: High-Performance Platform */}
+          {/* Card 3: Placement details */}
           <div className="bg-card border border-purple-border/40 rounded-xl p-7 space-y-4 hover:border-purple-brand transition-all">
             <div className="w-12 h-12 rounded-lg bg-card border border-purple-border/40 flex items-center justify-center text-mauve text-2xl">
               ⚡
             </div>
-            <h3 className="text-lg font-bold text-mauve">High-Performance Platform</h3>
+            <h3 className="text-lg font-bold text-mauve">Placement Details</h3>
             <p className="text-mauve text-sm leading-relaxed">
-              Built on a modern, fast, SEO-optimized publishing stack with strong organic reach —
-              ensuring maximum visibility and durability for every sponsorship placement.
+              Placement availability, format, scope, and commercial terms are
+              discussed before any agreement is made.
             </p>
           </div>
 
@@ -87,8 +86,8 @@ export default function SponsorsPage() {
           Start a Sponsorship Inquiry
         </h2>
         <p className="text-muted text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          Tell us about your organization and sponsorship goals. Our team will follow up with 
-          available placements, audience metrics, and pricing tailored to your objectives.
+          Tell us about your organization and proposed sponsorship scope. Do
+          not include passwords, payment-card details, or other secrets.
         </p>
         
         <div className="bg-raised border border-border rounded-xl p-6 max-w-md mx-auto space-y-2">

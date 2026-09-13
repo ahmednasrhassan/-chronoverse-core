@@ -21,7 +21,7 @@ export default function AboutPage() {
 
         </div>
         <p className="text-[#C8A7E8] text-lg md:text-xl font-semibold font-mono tracking-wide">
-          Decoding Future Markets Through Historical Intelligence.
+          Five-market intelligence. Independent research.
         </p>
       </section>
 
@@ -30,28 +30,41 @@ export default function AboutPage() {
         <h1 className="text-3xl font-bold text-[#F3EBDD]">Institutional Profile</h1>
         <div className="text-[#CFC5B8] leading-relaxed space-y-4 text-base">
           <p>
-            <strong className="text-[#F3EBDD]">Chronoverse Capital</strong> is an independent research firm situated at the intersection of <strong className="text-[#C8A7E8]">Financial History, Macro-Economic Strategy, and Digital Asset Dynamics</strong>.
+            <strong className="text-[#F3EBDD]">Chronoverse Capital</strong> is
+            an independent market-intelligence and research platform. Its V1
+            product surface covers <strong className="text-[#C8A7E8]">EUR/USD,
+            EUR/JPY, EUR/GBP, EUR/CHF, and €STR</strong>.
           </p>
           <p>
-            We do not follow the news cycle. Instead, we analyze the structural DNA of markets. By moving beyond traditional historical narratives, we provide professional-grade analysis on how centuries-old liquidity cycles dictate the movements of today&apos;s digital frontier.
+            Free and VIP use the same canonical market truth at different
+            analytical depths. Separately published editorial research may
+            examine broader historical and financial subjects without adding
+            them to the launch product universe.
           </p>
         </div>
 
         {/* Strategic Vision Card */}
         <div className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-4">
-          <h3 className="text-xl font-bold text-[#C8A7E8]">Strategic Vision</h3>
+          <h3 className="text-xl font-bold text-[#C8A7E8]">Product &amp; Research Boundary</h3>
           <p className="text-[#CFC5B8] text-sm leading-relaxed">
-            Our mission is to arm investors and thinkers with &quot;Temporal Alpha&quot;—the edge gained by understanding market patterns that repeat over centuries.
+            Our public product separates observed source data, Chronoverse
+            analytical transformation, freshness assessment, and availability
+            limits.
           </p>
           <ul className="space-y-3 text-sm text-[#CFC5B8] list-disc list-inside border-t border-border pt-4">
             <li>
-              <strong className="text-[#F3EBDD]">Macro-Cyclical Analysis:</strong> Modeling how 18th-century &quot;Bubbles&quot; mirror modern Crypto volatility.
+              <strong className="text-[#F3EBDD]">Focused Coverage:</strong> Four
+              euro foreign-exchange references and the €STR benchmark rate.
             </li>
             <li>
-              <strong className="text-[#F3EBDD]">Sovereignty &amp; Decentralization:</strong> Tracing the evolution of financial autonomy from the Medici era to DeFi protocols.
+              <strong className="text-[#F3EBDD]">Shared Truth:</strong> Free is
+              the Lite projection; VIP is the Deep projection of the same five
+              products.
             </li>
             <li>
-              <strong className="text-[#F3EBDD]">Asset Class Correlation:</strong> Studying the &quot;Everything Bubble&quot; phenomenon through a historical lens.
+              <strong className="text-[#F3EBDD]">Separate Research:</strong>
+              Editorial articles and standalone dossiers do not expand the
+              application&apos;s launch coverage.
             </li>
           </ul>
         </div>
@@ -101,7 +114,9 @@ export default function AboutPage() {
               <p className="text-[#C8A7E8] text-xs font-mono font-medium mt-1">Trading Infrastructure Engineer &amp; Market Analyst</p>
             </div>
             <p className="text-[#CFC5B8] text-xs leading-relaxed">
-              Mohamed bridges trading technology and macro analysis, analyzing market liquidity, execution data, and order-flow dynamics to uncover actionable trading insights.
+              Mohamed bridges trading technology and macro analysis, examining
+              market liquidity, execution data, and order-flow dynamics for
+              analytical context.
             </p>
           </div>
          {/* Executive: Ahmed Sayed Younis */}
@@ -121,7 +136,8 @@ export default function AboutPage() {
     </p>
   </div>
   <p className="text-[#CFC5B8] text-xs leading-relaxed">
-    Ahmed orchestrates sovereign risk architecture and long-term liquidity models across global reserve assets. Specializing in cross-asset macro dynamics, monetary history, and capital preservation frameworks, he leads the platform’s institutional research and strategic market intelligence initiatives.
+    Ahmed contributes research on sovereign risk, liquidity, cross-asset macro
+    dynamics, monetary history, and capital-preservation frameworks.
   </p>
 </div>
           {/* Executive 3: Heba Sayed Ahmed */}
@@ -165,44 +181,46 @@ export default function AboutPage() {
             >
               AfriKDP
             </a>{" "}
-            | Elite Economic Contributor
+            | External Contributor
           </p>
           <p className="text-[#CFC5B8] text-sm leading-relaxed pt-2">
-            A visionary in the global creator economy, Emmanuel partners with Chronoverse Capital to deliver premium, uncompromised insights on AI infrastructure, automated finance, and digital sovereignty.
+            Emmanuel contributes research perspectives on the creator economy,
+            AI infrastructure, automated finance, and digital sovereignty.
           </p>
         </div>
       </section>
 
-      {/* Strategic Roadmap */}
+      {/* Public product boundary */}
       <section className="space-y-6">
         <h2 className="text-3xl font-bold text-[#F3EBDD] border-b border-border pb-4">
-          Strategic Roadmap
+          Public Product Boundary
         </h2>
 
         <div className="bg-[#050506] border border-border p-6 rounded-xl space-y-6">
           <div>
             <h3 className="text-xl font-bold text-[#C8A7E8] mb-2">The Core Directive</h3>
             <p className="text-[#CFC5B8] text-sm leading-relaxed">
-              We exist to dismantle the illusions of the modern fiat system. Chronoverse Capital is engineered to provide a sanctuary of absolute wealth preservation, utilizing historical decryption to navigate impending financial shifts.
+              Present analytical context without treating model output as a
+              trade order, personalized advice, or a guaranteed outcome.
             </p>
           </div>
 
           <hr className="border-border" />
 
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-[#F3EBDD]">Operational Trajectory</h3>
+            <h3 className="text-lg font-bold text-[#F3EBDD]">Current Structure</h3>
             <div className="grid gap-4 md:grid-cols-3 text-xs">
               <div className="bg-[#0D0D11] p-4 rounded-lg border border-border">
-                <strong className="text-[#C8A7E8] block mb-1">Phase I [Intelligence]</strong>
-                <p className="text-[#CFC5B8]">Decrypting historical wealth traps and macro-cycles to forecast liquidity shifts.</p>
+                <strong className="text-[#C8A7E8] block mb-1">Free [Lite]</strong>
+                <p className="text-[#CFC5B8]">A source-dated, availability-aware view of the five launch products.</p>
               </div>
               <div className="bg-[#0D0D11] p-4 rounded-lg border border-border">
-                <strong className="text-[#C8A7E8] block mb-1">Phase II [Sovereign Network]</strong>
-                <p className="text-[#CFC5B8]">Forging an elite coalition prioritizing portable, cryptographic assets.</p>
+                <strong className="text-[#C8A7E8] block mb-1">VIP [Deep]</strong>
+                <p className="text-[#CFC5B8]">Deeper analysis of the same five products for verified VIP access.</p>
               </div>
               <div className="bg-[#0D0D11] p-4 rounded-lg border border-border">
-                <strong className="text-[#C8A7E8] block mb-1">Phase III [Vault Protocol]</strong>
-                <p className="text-[#CFC5B8]">Establishing advanced macro-economic alerts and defensive asset allocation.</p>
+                <strong className="text-[#C8A7E8] block mb-1">Research [Separate]</strong>
+                <p className="text-[#CFC5B8]">Published research and standalone dossiers remain distinct from VIP membership.</p>
               </div>
             </div>
           </div>

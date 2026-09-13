@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface AIExecutiveSummaryProps {
-  /** Exactly 3 (or fewer, defensively handled) key takeaway strings. */
+  /** Up to three source-derived takeaway strings. */
   points?: any[];
 }
 
@@ -44,34 +44,6 @@ function cleanTakeawayText(item: any): string {
       }
     }
 
-    if (
-      text.includes("_key") ||
-      text.includes("key ") ||
-      text.includes("_type") ||
-      text.includes("type ") ||
-      text.includes("children") ||
-      text.includes("markDefs") ||
-      text.includes("marks") ||
-      text.includes("span") ||
-      text.includes("block")
-    ) {
-      text = text
-        .replace(/\b_?key\s*:?\s*[a-zA-Z0-9_-]+/gi, "")
-        .replace(/\b_?type\s*:?\s*[a-zA-Z0-9_-]+/gi, "")
-        .replace(/\bmarkDefs\s*:?\s*(\[[^\]]*\]|\w+)?/gi, "")
-        .replace(/\bmarks\s*:?\s*(\[[^\]]*\]|\w+)?/gi, "")
-        .replace(/\bstyle\s*:?\s*\w+/gi, "")
-        .replace(/\bchildren\s*:?/gi, "")
-        .replace(/\btext\s*:?/gi, "")
-        .replace(/\bspan\b/gi, "")
-        .replace(/\bblock\b/gi, "")
-        .replace(/\bstrong\b/gi, "")
-        .replace(/[{}[\]"']/g, " ")
-        .replace(/[_:,;]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
     return text;
   }
 
@@ -79,12 +51,7 @@ function cleanTakeawayText(item: any): string {
 }
 
 /**
- * AIExecutiveSummary
- * -------------------
- * Institutional-terminal styled "AI Executive Summary" box rendered at the
- * very top of every article body. Displays 3 concise key takeaways with a
- * smooth collapse/expand toggle that matches the dark copper (#C8A7E8)
- * aesthetic used across Chronoverse Capital.
+ * Collapsible executive-summary box rendered before the article body.
  *
  * Defensive by design: renders nothing if no usable points are provided
  * (e.g. `points` is empty/undefined), never throwing at render time.
@@ -103,7 +70,7 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
     <div
       className="relative mb-10 rounded-2xl border border-[#C8A7E8]/30 bg-gradient-to-br from-[#1a1512] via-[#151110] to-[#0f0c0b] shadow-xl overflow-hidden print:hidden"
       role="region"
-      aria-label="AI Executive Summary"
+      aria-label="Executive Summary"
     >
       {/* Top accent line */}
       <div className="h-0.5 w-full bg-[linear-gradient(to_right,#C8A7E8,#d97706,#C8A7E8)] opacity-80" />
@@ -116,14 +83,14 @@ export default function AIExecutiveSummary({ points = [] }: AIExecutiveSummaryPr
       >
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#C8A7E8]/10 border border-[#C8A7E8]/30 text-[#C8A7E8] text-sm font-bold">
-            AI
+            ES
           </span>
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-[#C8A7E8] leading-none">
               Executive Summary
             </h2>
             <p className="text-[11px] text-secondary mt-1">
-              3 key takeaways · auto-generated briefing
+              {safePoints.length} source-derived {safePoints.length === 1 ? "passage" : "passages"}
             </p>
           </div>
         </div>

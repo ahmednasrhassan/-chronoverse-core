@@ -348,29 +348,18 @@ function assertRouteContract(): void {
     "utf8",
   );
 
-  assertEqual(route.includes("assets/gold/productionRuntime"), true, "active Gold import");
-  assertEqual(route.includes("assets/gold/liveFull"), false, "legacy Gold import inactive");
-  assertEqual(route.match(/unstable_cache/g)?.length, 2, "single Gold final cache");
-  assertEqual(route.includes("revalidate: 3600"), true, "Gold cache cadence");
-  assertEqual(
-    route.indexOf("await getCanonicalLiveGoldIntelligence()") <
-      route.indexOf("new Date().toISOString()"),
-    true,
-    "Gold generatedAt after mapping",
-  );
+  assertEqual(route.includes("status: 410"), true, "Gold HTTP route retired");
+  assertEqual(route.includes("not a Chronoverse V1 launch product"), true,
+    "Gold route explains the launch boundary");
+  assertEqual(route.includes("assets/gold/productionRuntime"), false,
+    "retired Gold route does not invoke the preserved engine");
+  assertEqual(route.includes("unstable_cache"), false,
+    "retired Gold route has no market cache");
   assertEqual(production.includes("getHistoricalMarketData"), false, "no direct Gold history");
   assertEqual(production.includes("cacheMode"), false, "no caller-owned history");
   assertEqual(production.includes("runEngineRuntimeV3"), false, "no legacy Engine call");
   assertEqual(production.includes("calculateGoldIntelligence"), false, "no analytical recalculation");
 
-  const success = route.slice(route.indexOf("ok: true"), route.indexOf("status: 200"));
-  const failure = route.slice(route.indexOf("ok: false"), route.indexOf("status: 500"));
-  for (const key of ["ok", "asset", "generatedAt", "cached", "stale", "intelligence"]) {
-    assertEqual(success.includes(`${key}:`), true, `Gold success key ${key}`);
-  }
-  for (const key of ["ok", "asset", "generatedAt", "error"]) {
-    assertEqual(failure.includes(`${key}:`), true, `Gold error key ${key}`);
-  }
 }
 
 async function main(): Promise<void> {

@@ -24,7 +24,7 @@ const SITE_URL = "https://chronoversecapital.com";
 const SITE_NAME = "Chronoverse Capital";
 
 const DEFAULT_DESCRIPTION =
-  "Chronoverse Capital offers institutional-grade macroeconomic intelligence, expert asset allocation strategies, and deep-dive financial market research.";
+  "Free Lite and VIP Deep market intelligence for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR, alongside independent market research.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -49,17 +49,20 @@ export const metadata: Metadata = {
 
   title: {
     default:
-      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+      "Chronoverse Capital | Five-Market Intelligence",
     template: "%s | Chronoverse",
   },
 
   description: DEFAULT_DESCRIPTION,
 
   keywords: [
-    "Macro",
-    "Finance",
-    "Asset Allocation",
-    "Research",
+    "EUR/USD",
+    "EUR/JPY",
+    "EUR/GBP",
+    "EUR/CHF",
+    "€STR",
+    "Market Intelligence",
+    "Financial Research",
     "Chronoverse Capital",
   ],
 
@@ -78,7 +81,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     title:
-      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+      "Chronoverse Capital | Five-Market Intelligence",
     description: DEFAULT_DESCRIPTION,
     locale: "en_US",
 
@@ -95,7 +98,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title:
-      "Chronoverse Capital | Institutional Macroeconomic Intelligence",
+      "Chronoverse Capital | Five-Market Intelligence",
     description: DEFAULT_DESCRIPTION,
     site: "@ChronoVerseCap",
     creator: "@ChronoVerseCap",
@@ -118,6 +121,7 @@ export const metadata: Metadata = {
 
 const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W";
+const GA_MEASUREMENT_ID_JSON = JSON.stringify(GA_MEASUREMENT_ID);
 
 export default function RootLayout({
   children,
@@ -136,34 +140,57 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
+              window.gtag = window.gtag || function gtag(){
+                window.dataLayer.push(arguments);
+              };
 
-              function gtag(){
-                dataLayer.push(arguments);
-              }
-
-              gtag('js', new Date());
-
-              gtag('config', '${GA_MEASUREMENT_ID}', {
-                page_path: window.location.pathname,
-                send_page_view: true
+              window.gtag('consent', 'default', {
+                analytics_storage: 'denied',
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                wait_for_update: 500
               });
 
-              function loadGtagScript() {
+              window.loadChronoverseAnalytics = function loadChronoverseAnalytics() {
+                if (window.__chronoverseAnalyticsLoaded) return;
+                window.__chronoverseAnalyticsLoaded = true;
+
+                var measurementId = ${GA_MEASUREMENT_ID_JSON};
+                window.gtag('consent', 'update', {
+                  analytics_storage: 'granted',
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied'
+                });
+                window.gtag('js', new Date());
+                window.gtag('config', measurementId, {
+                  page_path: window.location.pathname,
+                  send_page_view: true
+                });
+
                 var s = document.createElement('script');
-
                 s.src =
-                  'https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}';
-
+                  'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
                 s.async = true;
-
+                s.dataset.chronoverseAnalytics = 'true';
                 document.head.appendChild(s);
+              };
+
+              var analyticsAllowed = false;
+              try {
+                var detailedConsent = localStorage.getItem('chrono_cookie_consent');
+                if (detailedConsent) {
+                  var parsedConsent = JSON.parse(detailedConsent);
+                  analyticsAllowed = parsedConsent && parsedConsent.analytics === true;
+                } else {
+                  analyticsAllowed = localStorage.getItem('cookie_consent') === 'granted';
+                }
+              } catch (_) {
+                analyticsAllowed = false;
               }
 
-              if ('requestIdleCallback' in window) {
-                window.requestIdleCallback(loadGtagScript);
-              } else {
-                setTimeout(loadGtagScript, 2000);
-              }
+              if (analyticsAllowed) window.loadChronoverseAnalytics();
             `,
           }}
         />

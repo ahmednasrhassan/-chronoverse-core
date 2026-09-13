@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Editorial Policy",
   description:
-    "Chronoverse Capital's editorial standards for accuracy, independence, and the use of AI-assisted research and visual content.",
+    "Chronoverse Capital's standards for sourcing, editorial independence, assisted tools, and corrections.",
 };
 
 export default function EditorialPolicyPage() {
@@ -19,13 +19,15 @@ export default function EditorialPolicyPage() {
         </span>
         <h1 className="text-4xl font-bold text-[#F3EBDD]">Editorial Policy</h1>
         <p className="text-[#CFC5B8] text-lg italic">
-          Standardizing Excellence in Financial &amp; Historical Research
+          Standards for Published Research and Analysis
         </p>
       </header>
 
       {/* Intro */}
       <p className="text-[#CFC5B8] text-base leading-relaxed">
-        At <strong className="text-[#F3EBDD]">Chronoverse Capital</strong>, our commitment to our readers is built on accuracy, integrity, and analytical depth. This Editorial Policy outlines the standards we follow to ensure that every piece of content—from historical deep dives to modern economic modeling—meets the highest quality benchmarks.
+        This policy describes the sourcing, disclosure, and correction
+        standards applied to Chronoverse Capital&apos;s published research and
+        analytical content.
       </p>
 
       {/* Sections */}
@@ -35,20 +37,27 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">1. Accuracy and Fact-Checking</h2>
           <p>
-            Every article published on our platform undergoes a rigorous multi-stage verification process. We rely on primary historical sources, academic papers, and official financial archives to ensure that our data is accurate. Our team, led by <strong className="text-[#C8A7E8]">Ahmed Abdel Fattah</strong> and <strong className="text-[#C8A7E8]">Heba Sayed</strong>, meticulously reviews all historical dates, financial figures, and economic theories before publication.
+            Published work should distinguish sourced facts, analytical
+            interpretation, and hypothetical scenarios. Dates, figures, and
+            attributed claims should be checked against the cited or identified
+            source available to the editor at publication time.
           </p>
         </section>
 
         {/* Section 2 */}
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-3">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">2. Use of Advanced Technology &amp; AI</h2>
+          <h2 className="text-xl font-bold text-[#F3EBDD]">2. Assisted Tools</h2>
           <p>
-            In line with the digital evolution, Chronoverse Capital utilizes advanced technological tools, including AI-assisted language models and data analysis software.
+            Editorial and analytical tools may assist with drafting,
+            summarization, formatting, or visual production.
           </p>
           <div className="bg-[#050506] border-l-4 border-l-[#C8A7E8] p-4 rounded-r-lg text-xs space-y-1">
             <strong className="text-[#F3EBDD] uppercase font-mono block">Our Stance:</strong>
             <p className="text-[#CFC5B8]">
-              We use these technologies to enhance linguistic precision, summarize vast historical datasets, and generate high-fidelity visual representations. However, <strong className="text-[#C8A7E8]">all final content is human-curated, edited, and verified</strong>. The core insights, financial analysis, and strategic conclusions are exclusively the product of our human researchers&apos; expertise.
+              Assisted output is not evidence by itself. The identified author
+              or editor remains responsible for the material selected for
+              publication, and unsupported generated claims should not be
+              presented as verified facts.
             </p>
           </div>
         </section>
@@ -57,7 +66,10 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">3. Independence and Objectivity</h2>
           <p>
-            Our analysis is independent and unbiased. Chronoverse Capital does not accept payments to promote specific financial assets or distort historical facts. Our goal is to provide a neutral &quot;what-if&quot; lens that helps our readers understand the mechanics of wealth and power through time.
+            Sponsorship, affiliate, or commercial relationships should be
+            disclosed where relevant and kept separate from editorial
+            conclusions. A commercial relationship does not add a market to the
+            five-product launch universe or determine an analytical result.
           </p>
         </section>
 
@@ -65,7 +77,11 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">4. Visual Content Integrity</h2>
           <p>
-            The imagery on our site is designed to provide a cinematic and educational experience. We utilize AI-generation tools to create unique, high-resolution visuals that represent historical scenarios where no actual photography exists. Each image is audited to ensure it aligns with the historical and financial context of the article.
+            Article images are illustrative unless the accompanying context
+            identifies them as documentary source material. Captions,
+            alternative text, and metadata should not invent provenance or
+            describe an image more specifically than the available source
+            supports.
           </p>
         </section>
 
@@ -73,11 +89,12 @@ export default function EditorialPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">5. Corrections Policy</h2>
           <p>
-            We strive for perfection but acknowledge that history and finance are complex fields. If an error is identified, we are committed to correcting it promptly and transparently. Readers can report any inaccuracies directly to our editorial team via our{" "}
+            Readers can report a possible error through the{" "}
             <Link href="/contact" className="text-[#C8A7E8] hover:underline">
               Contact Us
             </Link>{" "}
-            page.
+            page. Confirmed corrections should preserve the distinction between
+            the original source, editorial interpretation, and revised text.
           </p>
         </section>
 
@@ -86,7 +103,7 @@ export default function EditorialPolicyPage() {
       {/* Editorial Board Sign-off */}
       <div className="text-center pt-4 border-t border-border space-y-1">
         <p className="text-[#F3EBDD] font-bold text-base">Chronoverse Capital Editorial Board</p>
-        <p className="text-[#CFC5B8] text-xs font-mono">Last Updated: January 2026</p>
+        <p className="text-[#CFC5B8] text-xs font-mono">Last Updated: September 2026</p>
       </div>
 
       {/* Compliance Hub Nav */}

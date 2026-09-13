@@ -317,25 +317,13 @@ function assertRouteAndImportSafety(): void {
     "utf8",
   );
 
-  assertEqual(route.includes("assets/oil/productionRuntime"), true, "active route import");
-  assertEqual(route.includes("assets/oil/runtime"), false, "legacy route import absent");
-  assertEqual(route.match(/unstable_cache/g)?.length, 2, "single final cache import/call");
-  assertEqual(route.includes("60 * 60"), true, "one-hour final cache");
-  assertEqual(
-    route.indexOf("await getCanonicalLiveOilIntelligence()") <
-      route.indexOf("new Date().toISOString()"),
-    true,
-    "generatedAt follows mapped intelligence",
-  );
-
-  const success = route.slice(route.indexOf("ok: true"), route.indexOf("status: 200"));
-  const failure = route.slice(route.indexOf("ok: false"), route.indexOf("status: 500"));
-  for (const key of ["ok", "asset", "generatedAt", "cached", "stale", "intelligence"]) {
-    assertEqual(success.includes(`${key}:`), true, `success key ${key}`);
-  }
-  for (const key of ["ok", "asset", "error"]) {
-    assertEqual(failure.includes(`${key}:`), true, `error key ${key}`);
-  }
+  assertEqual(route.includes("status: 410"), true, "Oil HTTP route retired");
+  assertEqual(route.includes("not a Chronoverse V1 launch product"), true,
+    "Oil route explains the launch boundary");
+  assertEqual(route.includes("assets/oil/productionRuntime"), false,
+    "retired Oil route does not invoke the preserved engine");
+  assertEqual(route.includes("unstable_cache"), false,
+    "retired Oil route has no market cache");
   assertEqual(production.includes("getHistoricalMarketData"), false, "no direct history acquisition");
   assertEqual(production.includes("getEiaOilFundamentals"), false, "no direct EIA acquisition");
   assertEqual(production.includes("unstable_cache"), false, "no nested final cache");

@@ -28,8 +28,8 @@ export default function MethodologyPage() {
       </InstitutionalSection>
       <InstitutionalSection title="Interpretation limits">
         <p>
-          System-generated recommendations are analytical classifications,
-          not trade orders or personalized instructions. Users remain
+          System-generated outputs are analytical classifications, not trade
+          orders or personalized instructions. Users remain
           responsible for independently evaluating assumptions, suitability,
           liquidity, and risk.
         </p>

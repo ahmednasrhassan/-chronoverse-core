@@ -6,6 +6,7 @@ import Link from 'next/link';
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
+    loadChronoverseAnalytics?: () => void;
   }
 }
 
@@ -15,8 +16,7 @@ export default function CookieConsent() {
 
   const [preferences, setPreferences] = useState({
     necessary: true,
-    analytics: true,
-    marketing: false,
+    analytics: false,
   });
 
   useEffect(() => {
@@ -30,18 +30,27 @@ export default function CookieConsent() {
         }
       }
     } catch {
+      setShowBanner(true);
       // تفادي التوقف في حال حظر التخزين في وضع التصفح الخفي
     }
   }, []);
 
-  const updateGtagConsent = (analytics: boolean, marketing: boolean) => {
+  const updateGtagConsent = (analytics: boolean) => {
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('consent', 'update', {
         analytics_storage: analytics ? 'granted' : 'denied',
-        ad_storage: marketing ? 'granted' : 'denied',
-        ad_user_data: marketing ? 'granted' : 'denied',
-        ad_personalization: marketing ? 'granted' : 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
       });
+    }
+
+    if (
+      analytics &&
+      typeof window !== 'undefined' &&
+      typeof window.loadChronoverseAnalytics === 'function'
+    ) {
+      window.loadChronoverseAnalytics();
     }
   };
 
@@ -56,10 +65,10 @@ export default function CookieConsent() {
   };
 
   const handleAcceptAll = () => {
-    const fullConsent = { necessary: true, analytics: true, marketing: true };
+    const fullConsent = { necessary: true, analytics: true, marketing: false };
     safeSetStorage('chrono_cookie_consent', JSON.stringify(fullConsent));
     safeSetStorage('cookie_consent', 'granted');
-    updateGtagConsent(true, true);
+    updateGtagConsent(true);
     setShowBanner(false);
   };
 
@@ -67,14 +76,15 @@ export default function CookieConsent() {
     const minConsent = { necessary: true, analytics: false, marketing: false };
     safeSetStorage('chrono_cookie_consent', JSON.stringify(minConsent));
     safeSetStorage('cookie_consent', 'denied');
-    updateGtagConsent(false, false);
+    updateGtagConsent(false);
     setShowBanner(false);
   };
 
   const handleSavePreferences = () => {
-    safeSetStorage('chrono_cookie_consent', JSON.stringify(preferences));
-    safeSetStorage('cookie_consent', 'granted');
-    updateGtagConsent(preferences.analytics, preferences.marketing);
+    const savedPreferences = { ...preferences, marketing: false };
+    safeSetStorage('chrono_cookie_consent', JSON.stringify(savedPreferences));
+    safeSetStorage('cookie_consent', preferences.analytics ? 'granted' : 'denied');
+    updateGtagConsent(preferences.analytics);
     setShowBanner(false);
     setShowPreferences(false);
   };
@@ -91,7 +101,7 @@ export default function CookieConsent() {
                 Privacy &amp; Cookie Preferences
               </h3>
               <p className="text-xs text-secondary leading-relaxed max-w-3xl">
-                We use cookies to enhance your browsing experience, serve personalized market insights, and analyze our traffic in compliance with GDPR. By clicking &quot;Accept All&quot;, you consent to our use of cookies. Read our{' '}
+                Essential storage supports core site functions. Optional analytics remains off unless you choose to enable it. Read our{' '}
                 <Link href="/privacy-policy" className="text-mauve underline hover:text-purple-brand transition">
                   Privacy Policy
                 </Link>.
@@ -111,14 +121,14 @@ export default function CookieConsent() {
                 onClick={handleRejectAll}
                 className="px-4 py-2 text-xs font-semibold text-secondary bg-raised/80 hover:bg-raised border border-purple-border rounded transition cursor-pointer"
               >
-                Reject All
+                Essential Only
               </button>
               <button
                 type="button"
                 onClick={handleAcceptAll}
                 className="px-5 py-2 text-xs font-bold text-[#050506] bg-mauve hover:bg-purple-brand rounded shadow transition cursor-pointer"
               >
-                Accept All
+                Accept Analytics
               </button>
             </div>
           </>
@@ -135,7 +145,7 @@ export default function CookieConsent() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div className="p-3 bg-raised/60 rounded border border-border">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold text-primary">Essential</span>
@@ -158,19 +168,6 @@ export default function CookieConsent() {
                 <p className="text-secondary text-[11px]">Helps us understand how visitors interact with the platform.</p>
               </div>
 
-              <div className="p-3 bg-raised/60 rounded border border-border">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-primary">Marketing</span>
-                  <input
-                    type="checkbox"
-                    aria-label="Toggle marketing cookies"
-                    checked={preferences.marketing}
-                    onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
-                    className="accent-[#A77BD8] cursor-pointer"
-                  />
-                </div>
-                <p className="text-secondary text-[11px]">Used to deliver relevant insights and sponsor offers.</p>
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">

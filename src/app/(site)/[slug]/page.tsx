@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     // Ensure minimum description length for SEO
     const fullDescription = rawDescription.length < 110
-      ? `${rawDescription} Read the full institutional macroeconomic analysis on Chronoverse Capital.`
+      ? `${rawDescription} Read the full analysis on Chronoverse Capital.`
       : rawDescription;
 
     const optimizedDescription = truncateForSEO(fullDescription, 155);
@@ -257,11 +257,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Calculate estimated read time dynamically (approx. 200 words per minute)
   const readTimeMinutes = calculateReadTime(rawText);
 
-  // Auto-generate Smart Image SEO Data
-  const autoAltText = `Illustration for ${currentPost.category || "Research"} covering ${currentPost.title || ""}`;
-  const autoCaption = `Figure 1: Visual representation of ${(currentPost.title || "").toLowerCase()} concepts.`;
-
-  const autoSummary = currentPost.seoDescription || rawText.substring(0, 140);
+  const imageAltText = `${currentPost.title} featured image`;
 
   // Extract top 3 natural analytical paragraphs directly for the Executive Summary
   const naturalParagraphs = rawText
@@ -311,38 +307,31 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   const sanitizedLegacyBody = transformedLegacyBody ? sanitizeHtml(transformedLegacyBody) : "";
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
 
-  const breadcrumbItems = [
-    { name: "Home", url: baseUrl },
-    {
-      name: currentPost.category || "Research",
-      url: `${baseUrl}/category/${currentPost.category || "general"}`
-    },
-    {
-      name: currentPost.title,
-      url: `${baseUrl}/${currentPost.slug}`
-    },
-  ];
   const articleSchema = {
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
+    "@type": "Article",
     headline: currentPost.title,
     description: currentPost.seoDescription || currentPost.title,
-    datePublished: (currentPost as Record<string, any>).publishedAt || (currentPost as Record<string, any>).publishDate || new Date().toISOString(),
-    dateModified: (currentPost as Record<string, any>)._updatedAt || (currentPost as Record<string, any>).publishedAt || new Date().toISOString(),
+    ...(currentPost.date ? { datePublished: currentPost.date } : {}),
+    ...(currentPost.imageUrl ? { image: currentPost.imageUrl } : {}),
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `${baseUrl}/${currentPost.slug}`,
     },
-    author: {
-      "@type": "Person",
-      name: typeof currentPost.author === "string" ? currentPost.author : "ChronoVerse Research",
-    },
+    ...(currentPost.author
+      ? {
+          author: {
+            "@type": "Person",
+            name: currentPost.author,
+          },
+        }
+      : {}),
     publisher: {
       "@type": "Organization",
-      name: "ChronoVerse",
+      name: "Chronoverse Capital",
       logo: {
         "@type": "ImageObject",
-        url: `${baseUrl}/logo.png`,
+        url: `${baseUrl}/logo.svg`,
       },
     },
   };
@@ -470,7 +459,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border shadow-2xl">
             <Image
               src={currentPost.imageUrl}
-              alt={autoAltText}
+              alt={imageAltText}
               title={currentPost.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
@@ -481,11 +470,6 @@ export default async function UniversalArticlePage({ params }: PageProps) {
               blurDataURL={SHIMMER_BLUR_DATA_URL}
             />
           </div>
-          {autoCaption && (
-            <figcaption className="text-center text-xs text-muted mt-3 italic print:text-gray-500">
-              {autoCaption}
-            </figcaption>
-          )}
         </figure>
       )}
 
@@ -499,10 +483,9 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         <RelatedDropdown articles={formattedRelated} />
       </div>
 
-      {/* AI Executive Summary — rendered at the very top of the article
-          body, before the main content. See src/components/AIExecutiveSummary.tsx */}
+      {/* Source-derived executive summary, rendered before the article body. */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
-      {/* AI Audio Reader */}
+      {/* Browser text-to-speech reader */}
       <AudioReader textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`} />
 
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.

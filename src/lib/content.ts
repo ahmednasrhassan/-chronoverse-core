@@ -4,8 +4,6 @@ import { getReadingTime } from "./readingTime";
 import {
   generateExcerpt,
   generateFallbackTags,
-  resolveFallbackCategory,
-  slugifyCategory,
 } from "./metadataFallback";
 import type { PortableTextBlock } from "@portabletext/types";
 
@@ -72,6 +70,7 @@ interface SanityRawPost {
   bodyPlainText?: string | null;
   body?: PortableTextBlock[] | null;
   manualRelatedLinks?: SanityRawPost[] | null;
+  _isPublic?: boolean;
 }
 
 /**
@@ -176,7 +175,7 @@ const POST_PROJECTION = `{
     "date": publishedAt,
     "category": category->title,
     "categorySlug": category->slug.current,
-    keywords,
+    "keywords": coalesce(tags, keywords, []),
     "content": body,
     body,
     "legacyBody": bodyRaw,
@@ -186,12 +185,13 @@ const POST_PROJECTION = `{
     seoDescription,
     "bodyPlainText": pt::text(body),
     "manualRelatedLinks": manualRelatedLinks[]->{
+      "_isPublic": defined(slug.current) && defined(publishedAt) && publishedAt <= now() && !(_id in path('drafts.**')),
       "slug": slug.current,
       title,
       "date": publishedAt,
       "category": category->title,
       "categorySlug": category->slug.current,
-      keywords,
+      "keywords": coalesce(tags, keywords, []),
       "content": body,
       body,
       "legacyBody": bodyRaw,
@@ -230,9 +230,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   }
 
   resolvedImageUrl =
-    resolvedImageUrl ||
-    extractFirstImageSrc(post.legacyBody || "") ||
-    "/images/articles/deglobalization-impact/1767774882.webp";
+    resolvedImageUrl || extractFirstImageSrc(post.legacyBody || "");
 
   // --- Automated SEO Description / Excerpt Fallback ---
   const resolvedSeoDescription =
@@ -247,15 +245,13 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
       : generateFallbackTags(title, bodyContent);
 
   // --- Automated Category Fallback ---
-  const resolvedCategory =
-    post.category || resolveFallbackCategory(`${title} ${bodyContent}`);
-  const resolvedCategorySlug =
-    post.categorySlug || slugifyCategory(resolvedCategory);
+  const resolvedCategory = post.category || DEFAULT_CATEGORY;
+  const resolvedCategorySlug = post.categorySlug || DEFAULT_CATEGORY_SLUG;
 
   return {
     slug: post.slug || "",
     title,
-    date: post.date ? new Date(post.date).toISOString().split("T")[0] : "2026-08-01",
+    date: post.date ? post.date.split("T")[0] : "",
     category: resolvedCategory,
     categorySlug: resolvedCategorySlug,
     keywords: resolvedKeywords,
@@ -265,19 +261,21 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     // with the page-level <h1> (the post title) rendered by the template.
     legacyBody: sanitizeHtml(downgradeHeadings(post.legacyBody || "")),
     imageUrl: resolvedImageUrl,
-    author: post.author || "Ahmed Abdel-Fattah",
+    author: post.author || undefined,
 
     seoDescription: resolvedSeoDescription || undefined,
     bodyContent,
     body: post.body && post.body.length > 0 ? post.body : undefined,
     manualRelatedLinks:
       post.manualRelatedLinks && post.manualRelatedLinks.length > 0
-        ? post.manualRelatedLinks.filter(Boolean).map(mapSanityPost)
+        ? post.manualRelatedLinks
+            .filter((relatedPost) => relatedPost?._isPublic === true)
+            .map(mapSanityPost)
         : undefined,
   };
 }
 
-// 1. Fetch a single article by its slug with fallback to local content
+// 1. Fetch a single article by slug; unavailable content resolves to null.
 export async function getSanityArticleBySlug(slug: string): Promise<ContentItem | null> {
   const query = `*[${PUBLISHED_POST_FILTER} && slug.current == $slug][0] ${POST_PROJECTION}`;
 
@@ -287,7 +285,7 @@ export async function getSanityArticleBySlug(slug: string): Promise<ContentItem 
       return mapSanityPost(post);
     }
   } catch (error) {
-    console.warn(`Sanity fetch for slug "${slug}" failed, falling back to local content:`, error);
+    console.warn(`Sanity fetch for slug "${slug}" failed:`, error);
   }
 return null;
 }
@@ -301,7 +299,7 @@ export async function getSanityArticles(): Promise<ContentItem[]> {
       return posts.map(mapSanityPost);
     }
   } catch (error) {
-    console.warn("Sanity fetch failed, falling back to local content:", error);
+    console.warn("Sanity article fetch failed:", error);
   }
 
   return [];
@@ -319,7 +317,7 @@ export async function getLatestSanityArticles(limit: number = 4): Promise<Conten
       return posts.map(mapSanityPost);
     }
   } catch (error) {
-    console.warn("Sanity fetch for latest articles failed, falling back to local content:", error);
+    console.warn("Sanity fetch for latest articles failed:", error);
   }
 
   return [];
@@ -362,7 +360,7 @@ export async function getRelatedArticles(
       slug.current != $currentSlug &&
       (
         ($categorySlug != null && category->slug.current == $categorySlug) ||
-        count((keywords[])[@ in $keywords]) > 0
+        count((coalesce(tags, keywords, []))[@ in $keywords]) > 0
       )
     ] | order(publishedAt desc) [0...$limit] ${POST_PROJECTION}`;
 

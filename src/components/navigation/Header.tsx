@@ -101,10 +101,10 @@ export default function Header() {
               />
               <Link
                 href="/account"
-                aria-label="Sign in for early access"
+                aria-label="Sign in to your account"
                 className="chronoverse-primary-cta flex min-h-11 min-w-[8.5rem] items-center justify-center border border-[#6F4C91] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F3EBDD]"
               >
-                Early Access
+                Sign In
               </Link>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function Header() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className={item.label === "Early Access"
+                    className={item.label === "Sign In"
                       ? "chronoverse-primary-cta flex min-h-11 items-center justify-center rounded-[2px] border border-[#6F4C91] px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F3EBDD]"
                       : MOBILE_NAV_LINK_CLASS}
                   >

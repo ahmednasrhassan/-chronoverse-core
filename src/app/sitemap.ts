@@ -9,6 +9,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital
 
 // Slugs that are permanently redirected (301/308) and MUST NOT appear in the sitemap
 const EXCLUDED_SLUGS = new Set([
+  "intelligence",
+  "premium",
+  "products",
+  "markets/bitcoin",
+  "markets/gold",
+  "markets/oil",
+  "markets/sp500",
   "the-new-scarcity-economy-macro-crisis",
 ]);
 

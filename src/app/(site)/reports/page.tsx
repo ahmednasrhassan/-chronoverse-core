@@ -21,7 +21,7 @@ export default async function ReportsPage() {
           Research & <span className="text-[#C8A7E8]">Intelligence Reports</span>
         </h1>
         <p className="text-[#CFC5B8] text-lg">
-          Institutional-grade research, macro liquidity analysis, and cyclical dynamics.
+          Published research, macro liquidity analysis, and cyclical dynamics.
         </p>
       </header>
 

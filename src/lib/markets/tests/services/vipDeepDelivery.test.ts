@@ -76,7 +76,7 @@ async function verifyVipPageBoundary(): Promise<void> {
 
   for (const [access, expectedDestination, label] of [
     [ANONYMOUS_ACCESS, "/account", "anonymous"],
-    [AUTHENTICATED_FREE_ACCESS, "/premium", "authenticated Free"],
+    [AUTHENTICATED_FREE_ACCESS, "/pricing", "authenticated Free"],
   ] as const) {
     let destination: string | null = null;
     const redirectMarker = new Error("redirect");
@@ -217,12 +217,14 @@ function auditProtectedRoutes(): void {
       `${relativePath} guards before rendering protected content`);
   }
 
-  const publicMarketDataRoute = readFileSync(
+  const legacyMarketDataRoute = readFileSync(
     `${repositoryRoot}src/app/api/market-data/route.ts`,
     "utf8",
   );
-  assertEqual(publicMarketDataRoute.includes("requireVipV1"), false,
-    "public Market Pulse remains unprotected");
+  assertEqual(legacyMarketDataRoute.includes("status: 410"), true,
+    "legacy generic market-data route is retired");
+  assertEqual(legacyMarketDataRoute.includes("getHistoricalMarketData"), false,
+    "retired generic route cannot invoke market providers");
 
   const deliverySource = readFileSync(
     `${repositoryRoot}src/lib/markets/services/vipDeepDelivery.ts`,

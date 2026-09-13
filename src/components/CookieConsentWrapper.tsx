@@ -14,7 +14,9 @@ export default function CookieConsentWrapper() {
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
-        const consent = localStorage.getItem("cookie_consent");
+        const consent =
+          localStorage.getItem("chrono_cookie_consent") ||
+          localStorage.getItem("cookie_consent");
         if (consent) {
           setHasAnswered(true);
           return;

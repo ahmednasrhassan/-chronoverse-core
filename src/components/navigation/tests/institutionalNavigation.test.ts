@@ -52,9 +52,9 @@ assert.deepEqual(
   PUBLIC_ACCOUNT_NAV_V1.map(({ label, href }) => ({ label, href })),
   [
     { label: "Account", href: "/account" },
-    { label: "Early Access", href: "/account" },
+    { label: "Sign In", href: "/account" },
   ],
-  "early access must truthfully reuse the working Account route",
+  "account actions must truthfully reuse the working Account route",
 );
 assert.match(headerSource, /PUBLIC_PRIMARY_NAV_V1\.map/);
 assert.match(headerSource, /PUBLIC_ACCOUNT_NAV_V1/);

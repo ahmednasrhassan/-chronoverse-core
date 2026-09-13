@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
         </span>
         <h1 className="text-4xl font-bold text-[#F3EBDD]">Privacy Policy</h1>
         <p className="text-[#CFC5B8] text-xs font-mono">
-          Last Updated: January 2026
+          Last Updated: September 2026
         </p>
       </header>
 
@@ -30,7 +30,9 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">1. Consent</h2>
           <p>
-            By using our website, you hereby consent to our Privacy Policy and agree to its terms and conditions.
+            Using the site acknowledges this notice. Optional analytics consent
+            is requested separately through the cookie controls, and account or
+            newsletter data is processed when you submit the relevant form.
           </p>
         </section>
 
@@ -42,27 +44,39 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul className="list-disc list-inside space-y-2 text-xs text-[#CFC5B8] pt-1">
             <li>
-              <strong className="text-[#F3EBDD]">Log Files:</strong> We follow standard procedures of using log files. These files log visitors when they visit websites. The data includes IP addresses, browser types, Internet Service Providers (ISP), date/time stamps, and referring/exit pages.
+              <strong className="text-[#F3EBDD]">Request Logs:</strong> Hosting
+              and security infrastructure may process standard request
+              metadata such as IP address, user agent, timestamp, and requested
+              path for delivery, reliability, and security.
             </li>
             <li>
-              <strong className="text-[#F3EBDD]">Cookies and Web Beacons:</strong> We use cookies to store information about visitors&apos; preferences and the pages accessed. This data is used to optimize the user experience by customizing web content based on browser type.
+              <strong className="text-[#F3EBDD]">Local Storage and Optional Analytics:</strong>
+              {" "}The site stores your consent choice locally. Analytics is
+              loaded only after analytics consent is granted.
+            </li>
+            <li>
+              <strong className="text-[#F3EBDD]">Account and Newsletter Email:</strong> We process the email address you provide when requesting a sign-in link or submitting the newsletter form for those stated purposes.
             </li>
           </ul>
         </section>
 
         {/* Section 3 */}
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">3. Advertising Partners (Google AdSense)</h2>
+          <h2 className="text-xl font-bold text-[#F3EBDD]">3. Optional Analytics</h2>
           <p>
-            Google is one of the third-party vendors on our site. It uses cookies, known as DART cookies, to serve ads based on your visit to our site and others on the internet. You may choose to decline the use of DART cookies by visiting the Google ad and content network Privacy Policy at:
+            When analytics consent is granted, Google Analytics may process
+            usage information to help us understand how visitors interact with
+            the site. Analytics storage remains denied unless the visitor
+            permits it through the cookie controls. Google&apos;s privacy policy is
+            available at:
           </p>
-          <a 
-            href="https://policies.google.com/technologies/ads" 
-            target="_blank" 
+          <a
+            href="https://policies.google.com/privacy"
+            target="_blank"
             rel="noopener noreferrer"
             className="text-[#C8A7E8] text-xs font-mono hover:underline block pt-1"
           >
-            https://policies.google.com/technologies/ads
+            https://policies.google.com/privacy
           </a>
         </section>
 
@@ -70,21 +84,29 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">4. Third-Party Privacy Policies</h2>
           <p>
-            Chronoverse Capital&apos;s Privacy Policy does not apply to other advertisers or websites. We advise you to consult the respective Privacy Policies of these third-party ad servers for more detailed information.
+            This Privacy Policy does not govern third-party authentication,
+            analytics, email, research-storefront, or linked website services.
+            Review the applicable provider&apos;s privacy terms before using those
+            services.
           </p>
         </section>
 
         {/* Section 5 */}
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-3">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">5. Your Data Protection Rights (GDPR/CCPA)</h2>
+          <h2 className="text-xl font-bold text-[#F3EBDD]">5. Data Protection Rights</h2>
           <p>
-            We want to ensure you are fully aware of your data protection rights. Every user is entitled to:
+            Depending on applicable law and your location, you may have rights
+            to request:
           </p>
           <ul className="list-disc list-inside space-y-1 text-xs text-[#CFC5B8] pt-1">
             <li>The right to access, rectify, or erase your personal data.</li>
             <li>The right to restrict or object to the processing of your data.</li>
             <li>The right to data portability.</li>
           </ul>
+          <p>
+            These rights may be subject to legal exceptions. Use the contact
+            address below for a request.
+          </p>
         </section>
 
         {/* Section 6 */}
@@ -99,39 +121,30 @@ export default function PrivacyPolicyPage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#F3EBDD]">7. Financial Transactions &amp; Digital Products</h2>
           <p>
-            Please note that Chronoverse Capital does not process payments directly. All digital asset sales and subscriptions are securely processed through our authorized merchants of record:
+            Chronoverse Capital does not request card details through the
+            public application. Standalone research is offered separately
+            through the external research storefront at
+            shop.chronoversecapital.com. Public self-service VIP checkout and
+            billing-portal controls are not currently available.
           </p>
-          <ul className="list-disc list-inside space-y-2 text-xs text-[#CFC5B8] pt-1">
-            <li>
-              <strong className="text-[#F3EBDD]">Lemon Squeezy (The Vault):</strong> Handles our premium annual subscriptions.
-            </li>
-            <li>
-              <strong className="text-[#F3EBDD]">Gumroad, Inc. (The Shop):</strong> Handles individual dossier sales.
-            </li>
-          </ul>
         </section>
 
         {/* Section 8 */}
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-3">
           <h2 className="text-xl font-bold text-[#F3EBDD]">8. Strategic Partners &amp; Affiliates</h2>
           <p>
-            To maintain our operational infrastructure, Chronoverse Capital partners with select global entities. Some links provided may be affiliate links, meaning we may earn a commission at no additional cost to you.
+            Editorial or legacy material may identify a partner or include an
+            affiliate disclosure. Such a disclosure does not make a broker,
+            execution service, or other third-party product part of the
+            Chronoverse five-product launch or VIP membership.
           </p>
-          <ul className="list-disc list-inside space-y-2 text-xs text-[#CFC5B8] pt-1">
-            <li>
-              <strong className="text-[#F3EBDD]">XM Trading:</strong> Global broker for executing macro-financial strategies.
-            </li>
-            <li>
-              <strong className="text-[#F3EBDD]">Agility Writer:</strong> AI infrastructure utilized within our research ecosystem.
-            </li>
-          </ul>
         </section>
 
         {/* Section 9 */}
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">9. Intelligence Communications &amp; Newsletters</h2>
           <p>
-            When you subscribe to our intelligence briefs via <strong className="text-[#C8A7E8]">intel.chronoversecapital.com</strong>, we collect your email address solely for delivering our macro-financial reports and updates. We do not sell or share your contact information with unauthorized external parties, and you may opt-out at any time.
+            When you submit the newsletter form on the main site or at <strong className="text-[#C8A7E8]">newsletter.chronoversecapital.com</strong>, we process your email address for subscription and dispatch operations. We do not sell the submitted address, and newsletter delivery may depend on the availability of our server-owned content and email services.
           </p>
         </section>
 

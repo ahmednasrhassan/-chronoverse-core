@@ -1,21 +1,11 @@
-import { NextResponse } from "next/server";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { sanityWriteClient } from "@/lib/sanity/writeClient";
+import { NextResponse } from "next/server";
 
+import {
+  assertWriteTokenConfigured,
+  sanityWriteClient,
+} from "@/lib/sanity/writeClient";
 
-/**
- * Newsletter Subdomain Alignment (API layer)
- * -------------------------------------------
- * This route is intentionally kept separate from `/api/amazon` (the generic
- * SES relay/ping endpoint) so that the `newsletter.chronoversecapital.com`
- * subdomain has its own dedicated subscription endpoint, letting future
- * changes to newsletter logic (double opt-in, list segmentation, etc.)
- * evolve independently of the generic contact/ping relay — while both
- * continue to share the same AWS SES client/credentials and are exempt from
- * the `/newsletter` host rewrite in `src/proxy.ts` (matcher excludes
- * `/api/*` entirely), so this endpoint responds identically whether called
- * from the main domain or the newsletter subdomain.
- */
 const sesClient = new SESClient({
   region: process.env.AWS_REGION || "us-east-1",
   credentials: {
@@ -24,93 +14,132 @@ const sesClient = new SESClient({
   },
 });
 
+interface NewsletterRequestBody {
+  email?: unknown;
+}
+
+interface ExistingSubscriber {
+  _id: string;
+  active?: boolean;
+}
+
 export async function POST(request: Request) {
+  let requestBody: NewsletterRequestBody;
+
   try {
-    const { email } = await request.json();
-    const normalizedEmail = typeof email === "string"
-      ? email.trim().toLowerCase()
+    const parsedBody: unknown = await request.json();
+    requestBody =
+      parsedBody && typeof parsedBody === "object"
+        ? (parsedBody as NewsletterRequestBody)
+        : {};
+  } catch {
+    return invalidEmailResponse();
+  }
+
+  const normalizedEmail =
+    typeof requestBody.email === "string"
+      ? requestBody.email.trim().toLowerCase()
       : "";
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      return NextResponse.json(
-        { status: "error", message: "A valid email address is required" },
-        { status: 400 }
-      );
-    }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    return invalidEmailResponse();
+  }
 
-    const officialEmail = process.env.OFFICIAL_EMAIL || "info@chronoversecapital.com";
+  const officialEmail =
+    process.env.OFFICIAL_EMAIL || "info@chronoversecapital.com";
+  const subscribedAt = new Date().toISOString();
 
-    // Persist the subscriber to Sanity (best-effort — a failure here should
-    // never block the confirmation email/response) so the daily
-    // `/api/cron/send-newsletter` job has a distribution list to read from.
-    try {
-      const existing = await sanityWriteClient.fetch(
-        `*[_type == "subscriber" && email == $email][0]{_id}`,
-        { email: normalizedEmail }
-      );
+  // A successful response means the address is durably present on the
+  // distribution list. Email notification is secondary to that state.
+  try {
+    assertWriteTokenConfigured();
+    const existing = await sanityWriteClient.fetch<ExistingSubscriber | null>(
+      `*[_type == "subscriber" && email == $email][0]{_id, active}`,
+      { email: normalizedEmail },
+    );
 
-      if (!existing) {
-        await sanityWriteClient.create({
-          _type: "subscriber",
-          email: normalizedEmail,
-          subscribedAt: new Date().toISOString(),
+    if (!existing) {
+      await sanityWriteClient.create({
+        _type: "subscriber",
+        email: normalizedEmail,
+        subscribedAt,
+        active: true,
+        source: "newsletter.chronoversecapital.com",
+      });
+    } else if (existing.active !== true) {
+      await sanityWriteClient
+        .patch(existing._id)
+        .set({
+          subscribedAt,
           active: true,
           source: "newsletter.chronoversecapital.com",
-        });
-      }
-    } catch (subscriberError) {
-      console.warn("Failed to persist subscriber to Sanity:", subscriberError);
+        })
+        .commit();
     }
-
-
-    const sendEmailCommand = new SendEmailCommand({
-      Source: officialEmail,
-      Destination: {
-       ToAddresses: [officialEmail, normalizedEmail],
-      },
-      Message: {
-        Subject: {
-          Data: "[Newsletter] New Subscription — Chronoverse Dispatch",
-          Charset: "UTF-8",
-        },
-        Body: {
-          Html: {
-            Data: `
-              <div style="font-family: monospace; background-color: #050506; color: #F3EBDD; padding: 24px; border: 1px solid #C8A7E8; border-radius: 8px;">
-                <h2 style="color: #C8A7E8; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
-                <p><strong>Subscriber Email:</strong> ${escapeHtml(normalizedEmail)}</p>
-                <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
-                <hr style="border-color: #292432; margin-top: 20px;" />
-                <span style="font-size: 10px; color: #91889A;">Engineered by Chronoverse Capital Infrastructure</span>
-              </div>
-            `,
-            Charset: "UTF-8",
-          },
-        },
-      },
-    });
-
-    await sesClient.send(sendEmailCommand);
-
-    return NextResponse.json({
-      status: "success",
-      message: "Subscription confirmed via Amazon SES",
-    });
-  } catch (error: unknown) {
-    console.error("Newsletter SES Execution Error:", error);
+  } catch (subscriberError) {
+    console.error("Newsletter subscription persistence failed:", subscriberError);
     return NextResponse.json(
       { status: "error", message: "Subscription could not be completed" },
-      { status: 500 },
+      { status: 503 },
     );
   }
+
+  try {
+    await sesClient.send(
+      new SendEmailCommand({
+        Source: officialEmail,
+        Destination: {
+          ToAddresses: [officialEmail, normalizedEmail],
+        },
+        Message: {
+          Subject: {
+            Data: "[Newsletter] New Subscription - Chronoverse Dispatch",
+            Charset: "UTF-8",
+          },
+          Body: {
+            Html: {
+              Data: `
+                <div style="font-family: monospace; background-color: #050506; color: #F3EBDD; padding: 24px; border: 1px solid #C8A7E8; border-radius: 8px;">
+                  <h2 style="color: #C8A7E8; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
+                  <p><strong>Subscriber Email:</strong> ${escapeHtml(normalizedEmail)}</p>
+                  <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
+                  <hr style="border-color: #292432; margin-top: 20px;" />
+                  <span style="font-size: 10px; color: #91889A;">Chronoverse Capital</span>
+                </div>
+              `,
+              Charset: "UTF-8",
+            },
+          },
+        },
+      }),
+    );
+  } catch (notificationError) {
+    console.warn("Newsletter confirmation notification failed:", notificationError);
+  }
+
+  return NextResponse.json({
+    status: "success",
+    message: "Subscription recorded",
+  });
+}
+
+function invalidEmailResponse() {
+  return NextResponse.json(
+    { status: "error", message: "A valid email address is required" },
+    { status: 400 },
+  );
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
-  })[character]!);
+  return value.replace(/[&<>"']/g, (character) =>
+    (
+      {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      } as const
+    )[character as "&" | "<" | ">" | '"' | "'"],
+  );
 }

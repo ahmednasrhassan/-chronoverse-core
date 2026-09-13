@@ -10,10 +10,8 @@ import { useState } from "react";
  * both via `newsletter.chronoversecapital.com/` (subdomain) and, for
  * previewing/testing, `chronoversecapital.com/newsletter` directly.
  *
- * Subscriptions POST to `/api/newsletter`, which relays via AWS SES —
- * completely decoupled from Vercel's routing/DNS, so SES DKIM/Mail-From
- * records live on their own subdomain (e.g. `mail.chronoversecapital.com`)
- * without ever needing to touch the Vercel-managed `newsletter.*` CNAME.
+ * Subscriptions POST only to the local `/api/newsletter` server endpoint;
+ * persistence and optional notification credentials remain server-side.
  */
 export default function NewsletterPage() {
   const [email, setEmail] = useState("");
@@ -22,6 +20,8 @@ export default function NewsletterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!email.trim() || status === "loading") return;
+
     setStatus("loading");
     setFeedback("");
 
@@ -29,9 +29,15 @@ export default function NewsletterPage() {
       const res = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
       });
-      const data = await res.json();
+
+      let data: { status?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // A non-JSON server error must not be mistaken for a subscription.
+      }
 
       if (res.ok && data.status === "success") {
         setStatus("success");
@@ -39,7 +45,7 @@ export default function NewsletterPage() {
         setEmail("");
       } else {
         setStatus("error");
-        setFeedback(data.message || "Something went wrong. Please try again.");
+        setFeedback("Subscription could not be completed. Please try again.");
       }
     } catch {
       setStatus("error");
@@ -54,11 +60,11 @@ export default function NewsletterPage() {
           Chronoverse Dispatch
         </span>
         <h1 className="text-2xl md:text-3xl font-extrabold text-primary mt-4 mb-3 tracking-tight">
-          Institutional Macro Intelligence — Direct to Your Inbox
+          Published Research — Direct to Your Inbox
         </h1>
         <p className="text-sm text-muted leading-relaxed mb-8">
-          Subscribe to our Amazon SES-powered newsletter for exclusive macroeconomic
-          data, asset allocation strategies, and direct institutional insights.
+          Receive published market research and analytical updates. Newsletter
+          content is separate from Free Lite and VIP Deep product access.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -89,6 +95,8 @@ export default function NewsletterPage() {
         <div className="mt-4 min-h-5">
           {feedback && (
             <p
+              role="status"
+              aria-live="polite"
               className={`text-sm ${
                 status === "success" ? "text-emerald-400" : "text-red-400"
               }`}

@@ -26,44 +26,52 @@ export default function ManifestoPage() {
           
           <div className="space-y-2 border-b border-border/60 pb-6">
             <h2 className="text-[#C8A7E8] font-bold text-lg uppercase tracking-wider">
-              01. THE FIAT ILLUSION
+              01. FOCUSED COVERAGE
             </h2>
             <p className="text-[#F3EBDD]">
-              We do not measure wealth in fiat currency. Fiat is not money; it is a control mechanism designed to extract purchasing power from the productive class to fund systemic debt. Relying on traditional ROI metrics while your base currency is mathematically programmed to debase is a guaranteed path to serfdom.
+              The V1 product surface covers EUR/USD, EUR/JPY, EUR/GBP,
+              EUR/CHF, and €STR. Broader editorial subjects do not become
+              additional launch products.
             </p>
           </div>
 
           <div className="space-y-2 border-b border-border/60 pb-6">
             <h2 className="text-[#C8A7E8] font-bold text-lg uppercase tracking-wider">
-              02. SOVEREIGNTY OVER YIELD
+              02. ONE CANONICAL TRUTH
             </h2>
             <p className="text-[#F3EBDD]">
-              If you need permission to hold an asset, you do not own it. We prioritize &quot;Sovereignty&quot; (censorship resistance, self-custody, and verifiable scarcity) over paper yields. Assets with a low Sovereignty Score are merely systemic liabilities acting as exit liquidity for central planners.
+              Free and VIP begin with the same source observations and
+              canonical analysis. Free presents the Lite projection; VIP
+              presents the Deep projection for verified access.
             </p>
           </div>
 
           <div className="space-y-2 border-b border-border/60 pb-6">
             <h2 className="text-[#C8A7E8] font-bold text-lg uppercase tracking-wider">
-              03. HISTORICAL REVERSE-ENGINEERING
+              03. EVIDENCE BEFORE CLAIMS
             </h2>
             <p className="text-[#F3EBDD]">
-              History is a ledger of human behavior. We do not try to predict the future. Instead, we reverse-engineer past economic collapses, liquidity traps, and sovereign rug-pulls to identify the active algorithms executing in today&apos;s markets.
+              Source identity, reference time, freshness assessment, and
+              availability limits belong with the analytical output. Unknown
+              freshness is never presented as live or real-time delivery.
             </p>
           </div>
 
           <div className="space-y-2 pb-2">
             <h2 className="text-[#C8A7E8] font-bold text-lg uppercase tracking-wider">
-              04. THE MISSION
+              04. ANALYSIS, NOT INSTRUCTION
             </h2>
             <p className="text-[#F3EBDD]">
-              Chronoverse Capital is not a news outlet. It is an Intelligence Hub. Our objective is to arm individuals with the historical context and quantitative tools necessary to survive the coming monetary reset. We build the fortresses; you hold the keys.
+              Chronoverse provides informational market analysis and research.
+              Its classifications are not personalized advice, trade orders,
+              or guarantees of performance.
             </p>
           </div>
 
         </div>
 
         <div className="border-t border-border pt-8 text-center space-y-2">
-          <h3 className="text-[#C8A7E8] font-extrabold text-2xl tracking-widest">&gt;_ STAY SOVEREIGN.</h3>
+          <h3 className="text-[#C8A7E8] font-extrabold text-2xl tracking-widest">&gt;_ KEEP THE EVIDENCE VISIBLE.</h3>
           <p className="text-[#CFC5B8] text-xs italic">
             {"// Chronoverse Intelligence Network | Established 2026 //"}
           </p>

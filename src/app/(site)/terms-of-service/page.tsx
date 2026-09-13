@@ -14,7 +14,7 @@ export default function TermsOfServicePage() {
         </span>
         <h1 className="text-4xl font-bold text-[#F3EBDD]">Terms of Service</h1>
         <p className="text-[#CFC5B8] text-xs font-mono">
-          Last Updated: January 2026
+          Last Updated: September 2026
         </p>
       </header>
 
@@ -44,7 +44,7 @@ export default function TermsOfServicePage() {
           <h2 className="text-xl font-bold text-[#F3EBDD]">2. Important Disclaimer (No Financial Advice)</h2>
           <div className="bg-[#050506] border-l-4 border-l-[#C8A7E8] p-4 rounded-r-lg text-xs space-y-2">
             <p>
-              <strong className="text-[#F3EBDD]">Educational Purpose Only:</strong> The content on Chronoverse Capital, including analyses of DeFi, Cryptocurrency, and Economic history, is for informational and educational purposes only.
+              <strong className="text-[#F3EBDD]">Educational Purpose Only:</strong> The Chronoverse V1 product surface covers EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR. Published research may discuss broader historical or financial subjects; those subjects are not additional launch products. All such content is informational and educational.
             </p>
             <p>
               <strong className="text-[#F3EBDD]">Not Financial Advice:</strong> We are research analysts and historians, not licensed financial advisors. Nothing on this website constitutes investment, legal, or tax advice.
@@ -56,7 +56,9 @@ export default function TermsOfServicePage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">3. Accuracy of Information</h2>
           <p>
-            While we strive for institutional-grade accuracy in our research, Chronoverse Capital makes no warranties regarding the completeness or reliability of the information provided.
+            We work to keep published information accurate, but Chronoverse
+            Capital makes no warranties regarding its completeness or
+            reliability.
           </p>
         </section>
 
@@ -64,7 +66,10 @@ export default function TermsOfServicePage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">4. Third-Party Links &amp; Affiliates</h2>
           <p>
-            Our website features links to third-party strategic partners and advertisements. We have no control over the content or privacy practices of these external services. Utilizing any third-party links is at your own discretion and risk.
+            Some editorial, partner, social, or research-storefront links lead
+            to third-party services. We do not control their content, terms,
+            availability, or privacy practices. A disclosed partner or
+            affiliate link is not part of the Chronoverse launch product set.
           </p>
         </section>
 
@@ -80,7 +85,12 @@ export default function TermsOfServicePage() {
         <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
           <h2 className="text-xl font-bold text-[#F3EBDD]">6. Digital Product Sales &amp; Subscriptions</h2>
           <p>
-            All digital dossiers and Vault subscriptions are processed via our authorized merchants of record, <strong className="text-[#F3EBDD]">Lemon Squeezy</strong> and <strong className="text-[#F3EBDD]">Gumroad, Inc.</strong> By purchasing, you acknowledge that due to the intangible nature of digital downloads and exclusive intelligence access, <strong className="text-[#C8A7E8]">all sales are final and non-refundable</strong>.
+            Standalone research products are offered through the separate
+            Chronoverse research storefront and are governed by the terms
+            shown in that purchase flow. Public self-service VIP checkout and
+            billing-portal controls are not currently available through this
+            site. VIP membership and standalone research are separate
+            offerings.
           </p>
         </section>
 

@@ -110,7 +110,7 @@ assert.match(
 assert.equal(
   headerSource.match(/chronoverse-primary-cta/g)?.length,
   2,
-  "desktop and mobile Early Access must use the scoped CTA color contract",
+  "desktop and mobile sign-in actions must use the scoped CTA color contract",
 );
 const primaryCtaRule = globalStylesSource.match(
   /a\.chronoverse-primary-cta\s*\{([\s\S]*?)\}/,

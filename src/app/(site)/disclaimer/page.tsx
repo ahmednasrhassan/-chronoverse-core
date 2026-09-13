@@ -25,8 +25,8 @@ export default function DisclaimerPage() {
           any security, currency, instrument, service, or strategy.
         </p>
         <p>
-          System-generated recommendations and classifications are analytical
-          outputs. They are not trade orders and do not account for an
+          System-generated outputs and classifications are analytical. They
+          are not trade orders and do not account for an
           individual user&apos;s objectives, circumstances, or risk tolerance.
         </p>
       </InstitutionalSection>
