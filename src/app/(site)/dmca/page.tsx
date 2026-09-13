@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import {
@@ -5,6 +6,14 @@ import {
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Copyright and DMCA Notices",
+  description:
+    "Review guidance for submitting copyright notices and counter-notices about material published on the Chronoverse Capital website.",
+  pathname: "/dmca",
+});
 
 export default function DmcaPage() {
   return (

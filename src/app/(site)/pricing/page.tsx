@@ -6,11 +6,14 @@ import {
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Pricing",
-  description: "Free Lite and VIP Deep access structure for Chronoverse markets.",
-};
+  description:
+    "Compare Free Lite with VIP Deep at $15.99 monthly or $150.99 annually; public self-service checkout is not currently available.",
+  pathname: "/pricing",
+});
 
 export default function PricingPage() {
   return (

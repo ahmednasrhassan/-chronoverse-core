@@ -5,11 +5,14 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Methodology",
-  description: "How Chronoverse transforms market observations into analytical output.",
-};
+  description:
+    "How Chronoverse transforms official ECB market observations into bounded analytical evidence.",
+  pathname: "/methodology",
+});
 
 export default function MethodologyPage() {
   return (

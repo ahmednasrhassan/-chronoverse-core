@@ -6,11 +6,14 @@ import {
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Data Sources",
-  description: "Source provenance for the Chronoverse launch market universe.",
-};
+  description:
+    "Learn how official ECB observations support Chronoverse's five launch products and where its normalization and analysis begin.",
+  pathname: "/data-sources",
+});
 
 export default function DataSourcesPage() {
   return (

@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
+
 import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Privacy Policy",
+  description:
+    "Review how the current Chronoverse Capital website processes account, newsletter, contact, consent, and request information.",
+  pathname: "/privacy-policy",
+});
 
 export default function PrivacyPolicyPage() {
   return (

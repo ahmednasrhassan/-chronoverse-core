@@ -5,12 +5,14 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Editorial Policy",
   description:
-    "Chronoverse Capital's standards for sourcing, editorial independence, assisted tools, and corrections.",
-};
+    "Review Chronoverse standards for sourcing, corrections, assisted-tool responsibility, and commercial-editorial independence.",
+  pathname: "/editorial-policy",
+});
 
 export default function EditorialPolicyPage() {
   return (

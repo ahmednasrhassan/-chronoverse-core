@@ -1,5 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSanityArticles, stripHtml, calculateReadTime } from '@/lib/content';
+import { buildPublicPageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: 'Research Reports',
+  description:
+    'Browse editorial research on markets, macro liquidity, and cyclical dynamics, separate from Chronoverse VIP membership.',
+  pathname: '/reports',
+});
 
 /**
  * Research & Intelligence Reports

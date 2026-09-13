@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Markets",
-  description: "The five-market Chronoverse launch coverage universe.",
-};
+  description:
+    "Explore the public Free Lite overview for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
+  pathname: "/markets",
+});
 
 export default function MarketsPage() {
   return (

@@ -5,11 +5,14 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Financial Information Disclaimer",
-  description: "Important limitations for Chronoverse market information and analysis.",
-};
+  description:
+    "Review the limitations of Chronoverse financial information, market data, analytical classifications, and model outputs.",
+  pathname: "/disclaimer",
+});
 
 export default function DisclaimerPage() {
   return (

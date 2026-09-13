@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import {
@@ -6,6 +7,14 @@ import {
 } from "@/components/content/InstitutionalPage";
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
 import { siteConfig } from "@/config/siteConfig";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "About",
+  description:
+    "Learn about Chronoverse Capital's independent, evidence-led market intelligence for four euro FX pairs and €STR.",
+  pathname: "/about",
+});
 
 export default function AboutPage() {
   const launchMarkets = LAUNCH_MARKETS_V1.map((market) => market.label).join(", ");

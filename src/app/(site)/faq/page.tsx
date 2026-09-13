@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import {
@@ -5,6 +6,14 @@ import {
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Frequently Asked Questions",
+  description:
+    "Find answers about Chronoverse market coverage, Free and VIP access, ECB data, standalone research, and support.",
+  pathname: "/faq",
+});
 
 export default function FaqPage() {
   return (

@@ -4,11 +4,14 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Freshness & Availability",
-  description: "How Chronoverse communicates data freshness and service availability.",
-};
+  description:
+    "Understand official reference timing, publication gaps, supported ranges, and availability limits for Chronoverse market data.",
+  pathname: "/freshness",
+});
 
 const RANGE_ROWS = [
   { range: "1D", fx: "Unsupported", estr: "Unsupported" },
