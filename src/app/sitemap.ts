@@ -45,7 +45,6 @@ const STATIC_ROUTES: Array<{
 }> = [
   { path: "", changeFrequency: "daily", priority: 1.0 },
   { path: "about", changeFrequency: "monthly", priority: 0.6 },
-  { path: "archive", changeFrequency: "daily", priority: 0.8 },
   { path: "contact", changeFrequency: "monthly", priority: 0.5 },
   { path: "disclaimer", changeFrequency: "yearly", priority: 0.3 },
   { path: "dmca", changeFrequency: "yearly", priority: 0.3 },
@@ -97,7 +96,11 @@ async function getSanityPosts(): Promise<SanitySlugDoc[]> {
  */
 async function getCategorySlugs(): Promise<string[]> {
   try {
-    const [usedSlugs, hasUncategorizedPosts] = await Promise.all([
+    const [
+      usedSlugs,
+      hasUncategorizedPosts,
+      hasGeneralCategory,
+    ] = await Promise.all([
       client.fetch<string[]>(
         `array::unique(*[
           _type == "post" &&
@@ -118,11 +121,23 @@ async function getCategorySlugs(): Promise<string[]> {
           !(_id in path('drafts.**'))
         ]) > 0`
       ),
+      client.fetch<boolean>(
+        `count(*[
+          _type == "category" &&
+          slug.current == $generalSlug &&
+          !(_id in path('drafts.**'))
+        ]) > 0`,
+        { generalSlug: DEFAULT_CATEGORY_SLUG },
+      ),
     ]);
 
     const slugs = (usedSlugs || []).filter((s): s is string => Boolean(s));
 
-    if (hasUncategorizedPosts && !slugs.includes(DEFAULT_CATEGORY_SLUG)) {
+    if (
+      hasUncategorizedPosts &&
+      hasGeneralCategory &&
+      !slugs.includes(DEFAULT_CATEGORY_SLUG)
+    ) {
       slugs.push(DEFAULT_CATEGORY_SLUG);
     }
 

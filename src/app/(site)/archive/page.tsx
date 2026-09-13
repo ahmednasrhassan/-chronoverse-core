@@ -1,7 +1,22 @@
 import React from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { client } from "@/sanity/client";
 import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Archive",
+  description:
+    "Directory of published Chronoverse research organized by editorial category.",
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
+};
 
 /**
  * Intelligence Archive Index

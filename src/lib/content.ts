@@ -346,6 +346,65 @@ export async function getSanityArticlesByCategorySlug(slug: string): Promise<Con
 
 }
 
+export interface CategoryPageContentV1 {
+  readonly title: string;
+  readonly slug: string;
+  readonly description?: string;
+  readonly articles: readonly ContentItem[];
+}
+
+interface SanityCategoryPageResultV1 {
+  readonly category: {
+    readonly title: string | null;
+    readonly slug: string | null;
+    readonly description: string | null;
+  } | null;
+  readonly articles: readonly SanityRawPost[] | null;
+}
+
+/**
+ * Loads the authored category identity and its published articles together.
+ * Unlike the legacy list helpers, this narrow route query intentionally lets
+ * provider failures propagate so an outage cannot be mislabeled as a 404.
+ */
+export async function getSanityCategoryPageBySlugV1(
+  slug: string,
+): Promise<CategoryPageContentV1 | null> {
+  const query = `{
+    "category": *[
+      _type == "category" &&
+      slug.current == $slug &&
+      !(_id in path('drafts.**'))
+    ][0] {
+      title,
+      "slug": slug.current,
+      description
+    },
+    "articles": *[${PUBLISHED_POST_FILTER} && (
+      category->slug.current == $slug ||
+      lower(category->title) == lower($slug) ||
+      ($slug == "general" && (!defined(category) || category->slug.current == null || category->title == null))
+    )] | order(publishedAt desc) ${POST_PROJECTION}
+  }`;
+  const result = await client.fetch<SanityCategoryPageResultV1>(query, {
+    slug,
+  });
+  const category = result.category;
+
+  if (!category?.title || !category.slug) {
+    return null;
+  }
+
+  const description = category.description?.trim();
+
+  return {
+    title: category.title,
+    slug: category.slug,
+    description: description || undefined,
+    articles: (result.articles || []).map(mapSanityPost),
+  };
+}
+
 /**
  * Automated Internal Linking Engine.
  */
