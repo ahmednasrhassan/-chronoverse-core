@@ -17,6 +17,9 @@ const NEWSLETTER_HOSTS = new Set([
   'newsletter.www.chronoversecapital.com',
 ]);
 
+export const PRODUCTION_SEARCH_HOSTNAME_V1 = 'chronoversecapital.com';
+export const PREVIEW_ROBOTS_HEADER_VALUE_V1 = 'noindex, nofollow';
+
 export type SessionRefresherV1 = (
   request: NextRequest,
 ) => Promise<NextResponse>;
@@ -29,7 +32,7 @@ export function createChronoverseProxyV1(
     const rewriteUrl = getNewsletterRewriteUrlV1(request);
 
     if (rewriteUrl === null) {
-      return refreshedResponse;
+      return applyPreviewRobotsHeaderV1(request, refreshedResponse);
     }
 
     const rewriteResponse = NextResponse.rewrite(rewriteUrl, { request });
@@ -38,8 +41,29 @@ export function createChronoverseProxyV1(
       rewriteResponse.cookies.set(cookie);
     }
 
-    return rewriteResponse;
+    return applyPreviewRobotsHeaderV1(request, rewriteResponse);
   };
+}
+
+export function getPreviewRobotsHeaderValueV1(
+  hostname: string,
+): string | null {
+  return hostname.toLowerCase() === PRODUCTION_SEARCH_HOSTNAME_V1
+    ? null
+    : PREVIEW_ROBOTS_HEADER_VALUE_V1;
+}
+
+function applyPreviewRobotsHeaderV1(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  const headerValue = getPreviewRobotsHeaderValueV1(request.nextUrl.hostname);
+
+  if (headerValue !== null) {
+    response.headers.set('X-Robots-Tag', headerValue);
+  }
+
+  return response;
 }
 
 export function getNewsletterRewriteUrlV1(request: NextRequest): URL | null {

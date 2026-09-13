@@ -14,6 +14,14 @@ import { signOutActionV1 } from "./actions";
 export const metadata: Metadata = {
   title: "Account",
   description: "Chronoverse Capital account identity and access status.",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 interface AccountPageProps {

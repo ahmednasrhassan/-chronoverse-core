@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
+
 import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
+};
 
 export default function ManifestoPage() {
   return (

@@ -9,6 +9,14 @@ import {
 export const metadata: Metadata = {
   title: "Billing",
   description: "Billing support and account access information for Chronoverse.",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 export default function BillingPage() {

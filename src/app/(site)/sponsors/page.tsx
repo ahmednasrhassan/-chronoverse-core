@@ -11,6 +11,14 @@ export const metadata: Metadata = {
   title: "Sponsorships",
   description:
     "Contact Chronoverse Capital about research sponsorship and collaboration inquiries.",
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
 };
 
 export default function SponsorsPage() {
