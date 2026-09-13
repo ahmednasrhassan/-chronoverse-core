@@ -1,8 +1,10 @@
+export const canonicalSiteOrigin = "https://chronoversecapital.com";
+
 export const siteConfig = {
   name: "Chronoverse Capital",
   description:
     "Five-market intelligence and independent research from Chronoverse Capital",
-  url: "https://chronoversecapital.com",
+  url: canonicalSiteOrigin,
   // Official contact email used across contact and policy surfaces.
   contactEmail: "info@chronoversecapital.com",
   commerce: {

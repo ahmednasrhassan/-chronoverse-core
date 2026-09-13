@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 
 import CookieConsentWrapper from "@/components/CookieConsentWrapper";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+import { canonicalSiteOrigin } from "@/lib/seo/site-url";
 
 import "./globals.css";
 
@@ -20,9 +22,7 @@ const geistMono = Geist_Mono({
   adjustFontFallback: true,
 });
 
-const SITE_URL = "https://chronoversecapital.com";
-const SITE_NAME = "Chronoverse Capital";
-
+const DEFAULT_TITLE = "Chronoverse Capital | Five-Market Intelligence";
 const DEFAULT_DESCRIPTION =
   "Free Lite and VIP Deep market intelligence for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR, alongside independent market research.";
 
@@ -34,22 +34,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-
-  alternates: {
-    types: {
-      "application/rss+xml": [
-        {
-          url: "/rss.xml",
-          title: `${SITE_NAME} - RSS Feed`,
-        },
-      ],
-    },
-  },
+  ...buildPublicPageMetadata({
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    pathname: "/",
+  }),
+  metadataBase: new URL(canonicalSiteOrigin),
 
   title: {
-    default:
-      "Chronoverse Capital | Five-Market Intelligence",
+    default: DEFAULT_TITLE,
     template: "%s | Chronoverse",
   },
 
@@ -65,48 +58,6 @@ export const metadata: Metadata = {
     "Financial Research",
     "Chronoverse Capital",
   ],
-
-  authors: [
-    {
-      name: "Chronoverse Capital Team",
-    },
-  ],
-
-  icons: {
-    icon: "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
-  },
-
-  openGraph: {
-    type: "website",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title:
-      "Chronoverse Capital | Five-Market Intelligence",
-    description: DEFAULT_DESCRIPTION,
-    locale: "en_US",
-
-    images: [
-      {
-        url: "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
-        width: 1080,
-        height: 1358,
-        alt: SITE_NAME,
-      },
-    ],
-  },
-
-  twitter: {
-    card: "summary_large_image",
-    title:
-      "Chronoverse Capital | Five-Market Intelligence",
-    description: DEFAULT_DESCRIPTION,
-    site: "@ChronoVerseCap",
-    creator: "@ChronoVerseCap",
-
-    images: [
-      "https://cdn.sanity.io/images/xfs4j01p/production/a03a88e45b450a8f347633edf76d251bd9881fea-1080x1358.jpg",
-    ],
-  },
 
   robots: {
     index: true,
