@@ -29,7 +29,7 @@ export function InstitutionalPage({
         </h1>
         <p className="mt-5 text-base leading-7 text-secondary">{summary}</p>
       </header>
-      <div className="mt-10 grid gap-5">{children}</div>
+      <div className="mt-10 grid min-w-0 gap-5 break-words">{children}</div>
     </div>
   );
 }
@@ -39,9 +39,9 @@ export function InstitutionalSection({
   children,
 }: InstitutionalSectionProps) {
   return (
-    <section className="rounded-xl border border-border bg-card p-6 sm:p-8">
+    <section className="min-w-0 rounded-xl border border-border bg-card p-6 sm:p-8">
       <h2 className="text-lg font-semibold text-primary">{title}</h2>
-      <div className="mt-3 space-y-3 text-sm leading-6 text-secondary">
+      <div className="mt-3 min-w-0 space-y-3 break-words text-sm leading-6 text-secondary [&_a]:rounded-sm [&_a]:font-medium [&_a]:text-mauve [&_a]:underline [&_a]:underline-offset-4 [&_a]:transition-colors [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-2 [&_a:focus-visible]:ring-mauve [&_a:hover]:text-primary">
         {children}
       </div>
     </section>

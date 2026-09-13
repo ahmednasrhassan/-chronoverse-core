@@ -1,120 +1,78 @@
-import React from "react";
 import Link from "next/link";
 
+import {
+  InstitutionalPage,
+  InstitutionalSection,
+} from "@/components/content/InstitutionalPage";
+import { siteConfig } from "@/config/siteConfig";
+
 export default function FaqPage() {
-  const faqCategories = [
-    {
-      category: "Market Coverage",
-      questions: [
-        {
-          q: "Which markets are included at launch?",
-          a: "Chronoverse V1 covers exactly five products: EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
-        },
-        {
-          q: "Is €STR treated like a currency pair?",
-          a: "No. €STR is a benchmark rate and uses rate-specific direction, level-regime, and volatility-regime language.",
-        },
-      ],
-    },
-    {
-      category: "Free & VIP",
-      questions: [
-        {
-          q: "What is the difference between Free and VIP?",
-          a: "Both use the same five products and canonical market truth. Free presents the Lite projection; verified VIP access presents the Deep projection.",
-        },
-        {
-          q: "Can I purchase VIP through this site now?",
-          a: "No. Public self-service VIP checkout and billing-portal controls are not currently available. The Account page establishes identity and shows the access state trusted by the server.",
-        },
-      ],
-    },
-    {
-      category: "Research & Support",
-      questions: [
-        {
-          q: "Are standalone research products part of VIP membership?",
-          a: "No. Standalone research at shop.chronoversecapital.com and Chronoverse VIP membership are separate offerings with separate access models.",
-        },
-        {
-          q: "Where can I ask an account or billing question?",
-          a: "Use the Contact page. Do not include card numbers, passwords, authentication links, or other secrets in your message.",
-        },
-      ],
-    },
-  ];
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 font-sans">
-      
-      {/* Header */}
-      <header className="border-b border-border pb-8 space-y-3">
-        <span className="bg-[#C8A7E8]/15 text-[#C8A7E8] px-3 py-1 rounded-md text-xs font-mono font-semibold border border-[#C8A7E8]/30 inline-block">
-          KNOWLEDGE BASE
-        </span>
-        <h1 className="text-4xl font-bold text-[#F3EBDD]">Frequently Asked Questions</h1>
-        <p className="text-[#CFC5B8] text-sm font-mono">
-          Launch coverage, access, research, and support boundaries.
+    <InstitutionalPage
+      eyebrow="Knowledge base"
+      title="Frequently Asked Questions"
+      summary="Concise answers to durable questions about launch coverage, access, data, research, and support."
+    >
+      <InstitutionalSection title="Which markets are included?">
+        <p>
+          Chronoverse covers exactly EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and
+          €STR. €STR is a benchmark rate, not a currency pair. Editorial
+          research may discuss other subjects without adding them to the
+          product.
         </p>
-      </header>
+      </InstitutionalSection>
 
-      {/* FAQ Categories */}
-      <div className="space-y-8">
-        {faqCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-4">
-            <h2 className="text-lg font-bold text-[#C8A7E8] font-mono border-b border-border pb-2">
-              {cat.category}
-            </h2>
-            <div className="space-y-4">
-              {cat.questions.map((item, qIdx) => (
-                <div key={qIdx} className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2 hover:border-[#C8A7E8]/40 transition-colors">
-                  <h3 className="text-base font-bold text-[#F3EBDD]">
-                    Q: {item.q}
-                  </h3>
-                  <p className="text-sm text-[#CFC5B8] leading-relaxed">
-                    <strong className="text-[#C8A7E8]">A:</strong> {item.a}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <InstitutionalSection title="What is the difference between Free and VIP?">
+        <p>
+          Both use the same canonical five-product truth. Free presents the
+          Lite projection; verified VIP access presents the Deep projection in
+          protected Market Rooms. See <Link href="/pricing">Pricing</Link> for
+          the current commercial boundary.
+        </p>
+      </InstitutionalSection>
 
-      {/* Unresolved Inquiries Contact Box */}
-      <div className="bg-[#050506] border border-border p-6 rounded-xl text-center space-y-3 font-mono">
-        <h3 className="text-[#F3EBDD] font-bold text-base">Still Have Unresolved Inquiries?</h3>
-        <p className="text-[#CFC5B8] text-xs">Additional questions can be sent through Contact.</p>
-        <Link 
-          href="/contact" 
-          className="inline-block bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-6 py-2 rounded-md text-xs transition-colors"
-        >
-          Open Contact
-        </Link>
-      </div>
+      <InstitutionalSection title="Is the data live or intraday?">
+        <p>
+          No. The launch surface uses official ECB daily reference-rate
+          observations for the four FX products and the official ECB €STR
+          series. It does not present streaming, tick, intraday, or OHLC data.
+          See <Link href="/freshness">Freshness &amp; Availability</Link>.
+        </p>
+      </InstitutionalSection>
 
-      {/* Compliance Hub Nav */}
-      <section className="border-t border-border pt-8 text-center space-y-4">
-        <h3 className="text-xs font-mono font-bold text-[#C8A7E8] tracking-wider uppercase">
-          ⚖️ Administrative Compliance Hub
-        </h3>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-[#CFC5B8] font-medium">
-          <Link href="/about" className="hover:text-[#F3EBDD] transition-colors">About Us</Link>
-          <span>|</span>
-          <Link href="/contact" className="hover:text-[#F3EBDD] transition-colors">Contact Us</Link>
-          <span>|</span>
-          <Link href="/privacy-policy" className="hover:text-[#F3EBDD] transition-colors">Privacy Policy</Link>
-          <span>|</span>
-          <Link href="/terms-of-service" className="hover:text-[#F3EBDD] transition-colors">Terms of Service</Link>
-          <span>|</span>
-          <Link href="/editorial-policy" className="hover:text-[#F3EBDD] transition-colors">Editorial Policy</Link>
-          <span>|</span>
-          <Link href="/disclaimer" className="hover:text-[#F3EBDD] transition-colors">Disclaimer</Link>
-          <span>|</span>
-          <Link href="/dmca" className="hover:text-[#F3EBDD] transition-colors">DMCA</Link>
-        </div>
-      </section>
+      <InstitutionalSection title="Can I purchase or manage VIP on this site now?">
+        <p>
+          Not through public self-service controls. VIP pricing is $15.99
+          monthly or $150.99 annually, but public checkout and billing-portal
+          controls are not currently available. The{" "}
+          <Link href="/account">Account page</Link> verifies identity and
+          displays the access state trusted by the server.
+        </p>
+      </InstitutionalSection>
 
-    </div>
+      <InstitutionalSection title="Is standalone research included with VIP?">
+        <p>
+          No. VIP membership and standalone research are separate offerings.
+          Standalone research is available from the{" "}
+          <a
+            href={siteConfig.commerce.gumroadResearchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Chronoverse research storefront
+          </a>
+          .
+        </p>
+      </InstitutionalSection>
+
+      <InstitutionalSection title="Where can I ask for help or report an error?">
+        <p>
+          Use <Link href="/contact">Contact</Link> for account, access, billing,
+          research-source, correction, sponsorship, or collaboration
+          inquiries. Do not send passwords, one-time sign-in links, card
+          numbers, or other secrets.
+        </p>
+      </InstitutionalSection>
+    </InstitutionalPage>
   );
 }

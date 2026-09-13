@@ -11,14 +11,12 @@ import {
 import { siteConfig } from "../../../config/siteConfig";
 
 const repositoryRoot = process.cwd();
-const headerSource = readFileSync(
-  path.join(repositoryRoot, "src/components/navigation/Header.tsx"),
-  "utf8",
-);
-const footerSource = readFileSync(
-  path.join(repositoryRoot, "src/components/navigation/Footer.tsx"),
-  "utf8",
-);
+const readSource = (relativePath: string) =>
+  readFileSync(path.join(repositoryRoot, relativePath), "utf8");
+const headerSource = readSource("src/components/navigation/Header.tsx");
+const footerSource = readSource("src/components/navigation/Footer.tsx");
+const socialIconSource = readSource("src/components/socialicons.tsx");
+const aboutSource = readSource("src/app/(site)/about/page.tsx");
 
 assert.deepEqual(
   LAUNCH_MARKETS_V1.map(({ productId, label, kind }) => ({
@@ -62,32 +60,54 @@ assert.match(headerSource, /PUBLIC_ACCOUNT_NAV_V1/);
 assert.deepEqual(
   FOOTER_NAV_GROUPS_V1.map(({ label, links }) => ({
     label,
-    links: links.map((link) => link.label),
+    links: links.map(({ label: linkLabel, href }) => ({
+      label: linkLabel,
+      href,
+    })),
   })),
   [
     {
       label: "Product",
-      links: ["Markets", "Free", "VIP", "Pricing"],
+      links: [
+        { label: "Markets", href: "/markets" },
+        { label: "Free", href: "/" },
+        { label: "VIP", href: "/vip" },
+        { label: "Pricing", href: "/pricing" },
+      ],
     },
     {
       label: "Research",
       links: [
-        "Research",
-        "Methodology",
-        "Data Sources",
-        "Freshness & Availability",
+        { label: "Research", href: "/reports" },
+        { label: "Methodology", href: "/methodology" },
+        { label: "Data Sources", href: "/data-sources" },
+        { label: "Freshness & Availability", href: "/freshness" },
       ],
     },
     {
       label: "Company",
-      links: ["About", "Account", "Billing", "Contact"],
+      links: [
+        { label: "About", href: "/about" },
+        { label: "Account", href: "/account" },
+        { label: "Billing", href: "/billing" },
+        { label: "Contact", href: "/contact" },
+      ],
     },
     {
       label: "Legal",
-      links: ["Terms", "Privacy", "Financial Information Disclaimer"],
+      links: [
+        { label: "Terms", href: "/terms-of-service" },
+        { label: "Privacy", href: "/privacy-policy" },
+        {
+          label: "Financial Information Disclaimer",
+          href: "/disclaimer",
+        },
+        { label: "Editorial Policy", href: "/editorial-policy" },
+        { label: "DMCA", href: "/dmca" },
+      ],
     },
   ],
-  "footer groups must match the institutional shell structure",
+  "footer groups must match the approved four-group structure",
 );
 
 const discoverableHrefs: readonly string[] = [
@@ -98,47 +118,79 @@ const discoverableHrefs: readonly string[] = [
   ),
 ];
 
-assert.equal(discoverableHrefs.includes("/intelligence"), false);
-assert.equal(discoverableHrefs.includes("/products"), false);
-assert.equal(discoverableHrefs.includes("/sponsors"), false);
-assert.equal(discoverableHrefs.includes("/premium"), false);
+for (const contextualOnlyRoute of [
+  "/faq",
+  "/manifesto",
+  "/sponsors",
+  "/intelligence",
+  "/products",
+  "/premium",
+]) {
+  assert.equal(
+    discoverableHrefs.includes(contextualOnlyRoute),
+    false,
+    contextualOnlyRoute + " must not appear in global navigation",
+  );
+}
 
 const socialBlock = footerSource.match(
   /const FOOTER_SOCIAL_LINKS = \[([\s\S]*?)\] as const;/,
 )?.[1];
 assert.ok(socialBlock, "footer must define a bounded social-link set");
 assert.deepEqual(
-  [...socialBlock.matchAll(/label: "([^"]+)"/g)].map((match) => match[1]),
-  ["X", "LinkedIn", "Pinterest", "Reddit"],
-  "footer must restore exactly the four requested social labels",
+  [...socialBlock.matchAll(/id: "([^"]+)"/g)].map((match) => match[1]),
+  ["reddit", "x", "pinterest"],
+  "footer must expose exactly the approved brand profiles",
 );
 assert.deepEqual(
   [...socialBlock.matchAll(/siteConfig\.socialLinks\.([a-z]+)/g)].map(
     (match) => match[1],
   ),
-  ["x", "linkedin", "pinterest", "reddit"],
-  "footer social links must resolve through the verified site configuration",
+  ["reddit", "x", "pinterest"],
+  "footer social destinations must resolve through site configuration",
+);
+assert.deepEqual(
+  [...socialBlock.matchAll(/accessibleLabel: "([^"]+)"/g)].map(
+    (match) => match[1],
+  ),
+  [
+    "Join Chronoverse Capital on Reddit",
+    "Follow Chronoverse Capital on X",
+    "Chronoverse Capital on Pinterest",
+  ],
+  "every icon-only social link must have its approved accessible name",
 );
 
 assert.deepEqual(
-  {
-    x: siteConfig.socialLinks.x,
-    linkedin: siteConfig.socialLinks.linkedin,
-    pinterest: siteConfig.socialLinks.pinterest,
-    reddit: siteConfig.socialLinks.reddit,
-  },
+  siteConfig.socialLinks,
   {
     x: "https://x.com/ChronoVerseCap",
-    linkedin: "https://www.linkedin.com/in/ahmed-n-hassan-09b739238",
+    reddit: "https://www.reddit.com/r/ChronoVerseCapital/",
     pinterest: "https://pin.it/G3QCKVDL3",
-    reddit: "https://www.reddit.com/u/Prestigious_Mine_321/s/D6hnVH4BE4",
   },
-  "footer must use the exact historically tracked Chronoverse destinations",
+  "footer must use the exact approved brand destinations",
 );
+assert.deepEqual(siteConfig.founder, {
+  name: "Ahmed N. Hassan",
+  linkedInUrl: "https://www.linkedin.com/in/ahmed-n-hassan-09b739238",
+});
+assert.equal(
+  footerSource.includes(siteConfig.founder.linkedInUrl),
+  false,
+  "the founder's personal LinkedIn must not appear in the global Footer",
+);
+assert.doesNotMatch(footerSource, /LinkedIn|Prestigious_Mine_321/);
+assert.match(footerSource, /title=\{social\.title\}/);
+assert.match(footerSource, /min-h-11 min-w-11/);
+assert.match(footerSource, /focus-visible:ring-2/);
+assert.match(footerSource, /<SocialIcon platform=\{social\.id\}/);
+assert.doesNotMatch(socialIconSource, /<a\b|https?:\/\//);
+assert.match(aboutSource, /siteConfig\.founder\.linkedInUrl/);
+assert.match(aboutSource, /Ahmed N\. Hassan — LinkedIn/);
+assert.match(aboutSource, /rel="noopener noreferrer"/);
 
 for (const genericHomepage of [
   "https://x.com",
-  "https://www.linkedin.com",
   "https://www.pinterest.com",
   "https://www.reddit.com",
 ]) {
@@ -147,10 +199,10 @@ for (const genericHomepage of [
       (configuredUrl: string) => configuredUrl === genericHomepage,
     ),
     false,
-    `generic social homepage must not be used: ${genericHomepage}`,
+    "generic social homepage must not be used: " + genericHomepage,
   );
 }
 
 assert.doesNotMatch(footerSource, /affs\.click|sponsor|affiliate/i);
 
-console.log("PASS: institutional navigation and five-market scope");
+console.log("PASS: institutional navigation, footer identity, and launch scope");

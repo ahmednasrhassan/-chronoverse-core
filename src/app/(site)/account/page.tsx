@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import {
   formatAccountAccessStateV1,
@@ -86,7 +87,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <form action={signOutActionV1} className="mt-8">
             <button
               type="submit"
-              className="rounded-md border border-purple-border px-5 py-3 text-sm font-semibold text-mauve transition hover:bg-raised"
+              className="rounded-md border border-purple-border px-5 py-3 text-sm font-semibold text-mauve transition hover:bg-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-card"
             >
               Sign out
             </button>
@@ -106,6 +107,29 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             Account identity is temporarily unavailable. Please retry shortly.
           </p>
         )}
+
+        <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-secondary">
+          <h2 className="font-semibold text-primary">Access and billing help</h2>
+          <p className="mt-2">
+            Signing in verifies identity; it does not purchase or change
+            access. Public checkout and subscription-management controls are
+            not available on this page. Review{" "}
+            <Link
+              href="/billing"
+              className="rounded-sm text-mauve underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+            >
+              Billing
+            </Link>{" "}
+            or use{" "}
+            <Link
+              href="/contact"
+              className="rounded-sm text-mauve underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
+            >
+              Contact
+            </Link>{" "}
+            for support.
+          </p>
+        </div>
       </div>
     </section>
   );

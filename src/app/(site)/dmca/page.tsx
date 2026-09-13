@@ -1,102 +1,84 @@
-import React from "react";
 import Link from "next/link";
+
+import {
+  InstitutionalPage,
+  InstitutionalSection,
+} from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
 
 export default function DmcaPage() {
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 font-sans">
-      
-      {/* Header */}
-      <header className="border-b border-border pb-8 space-y-3">
-        <span className="bg-[#C8A7E8]/15 text-[#C8A7E8] px-3 py-1 rounded-md text-xs font-mono font-semibold border border-[#C8A7E8]/30 inline-block">
-          INTELLECTUAL PROPERTY &amp; COPYRIGHT
-        </span>
-        <h1 className="text-4xl font-bold text-[#F3EBDD]">DMCA Policy</h1>
-        <p className="text-[#CFC5B8] text-sm font-mono">
-          Digital Millennium Copyright Act Compliance
+    <InstitutionalPage
+      eyebrow="Copyright"
+      title="Copyright and DMCA Notices"
+      summary="Chronoverse Capital provides this contact path for good-faith notices about material published on the website."
+    >
+      <InstitutionalSection title="Copyright notice">
+        <p>
+          If you believe material on this site infringes a copyright you own or
+          are authorized to represent, send a notice that includes:
         </p>
-      </header>
+        <ul className="list-disc space-y-2 pl-5">
+          <li>your name and reliable contact information;</li>
+          <li>identification of the copyrighted work;</li>
+          <li>
+            the exact URL and enough detail to locate the material at issue;
+          </li>
+          <li>
+            a statement that you have a good-faith belief the disputed use is
+            not authorized by the owner, its agent, or the law;
+          </li>
+          <li>
+            a statement that the notice is accurate and, under penalty of
+            perjury, that you are authorized to act for the rights owner; and
+          </li>
+          <li>your physical or electronic signature.</li>
+        </ul>
+      </InstitutionalSection>
 
-      {/* Intro */}
-      <p className="text-[#CFC5B8] text-base leading-relaxed">
-        <strong className="text-[#F3EBDD]">Chronoverse Capital</strong> respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 (&quot;DMCA&quot;), we will respond expeditiously to claims of copyright infringement reported to our designated agent.
-      </p>
+      <InstitutionalSection title="Counter-notice">
+        <p>
+          If material you provided is removed or restricted and you believe
+          that resulted from mistake or misidentification, reply through the
+          same contact path. Identify the material, its former location, your
+          contact information, and the basis for your request. Additional
+          information may be required before the request can be evaluated.
+        </p>
+      </InstitutionalSection>
 
-      {/* Sections */}
-      <div className="space-y-8 text-[#CFC5B8] leading-relaxed text-sm">
-        
-        {/* Section 1 */}
-        <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-3">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">1. Reporting Infringement</h2>
-          <p>
-            If you are a copyright owner and believe that any material available on our website infringes your copyright, please notify us immediately. Your notice must include:
-          </p>
-          <ul className="list-disc list-inside space-y-1 text-xs text-[#CFC5B8] pt-1">
-            <li>Identification of the copyrighted work claimed to have been infringed.</li>
-            <li>Identification of the material on our site that is claimed to be infringing (URL required).</li>
-            <li>Full contact information (Name, Address, Phone, Email).</li>
-            <li>A statement of &quot;good faith belief&quot; that the use is unauthorized.</li>
-            <li>A statement under penalty of perjury that the information is accurate.</li>
-          </ul>
-        </section>
+      <InstitutionalSection title="Review process">
+        <p>
+          Chronoverse may request clarification, forward relevant notice
+          information to the affected party, or remove, restrict, preserve, or
+          restore material as appropriate. Submitting a notice does not
+          guarantee a particular outcome.
+        </p>
+        <p>
+          Knowingly material misstatements can have legal consequences.
+          Consider obtaining qualified advice if you are uncertain about your
+          rights or obligations.
+        </p>
+      </InstitutionalSection>
 
-        {/* Section 2 */}
-        <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">2. Counter-Notification</h2>
-          <p>
-            If you believe that your content was removed by mistake or misidentification, you may submit a counter-notification to our designated agent containing the proofs required by the DMCA guidelines.
-          </p>
-        </section>
+      <InstitutionalSection title="Copyright contact">
+        <p>
+          Send notices to{" "}
+          <a href={"mailto:" + siteConfig.contactEmail}>
+            {siteConfig.contactEmail}
+          </a>
+          . This page does not represent that the address is registered as a
+          statutory designated agent.
+        </p>
+      </InstitutionalSection>
 
-        {/* Section 3 */}
-        <section className="bg-[#0D0D11] border border-border p-6 rounded-xl space-y-2">
-          <h2 className="text-xl font-bold text-[#F3EBDD]">3. Intellectual Property of Chronoverse Capital</h2>
-          <p>
-            Chronoverse Capital claims rights in its original text, models,
-            graphics, and branding. Third-party material remains subject to the
-            rights and licenses identified by its source. Contact us if a
-            published item appears to use protected material without authority.
-          </p>
-        </section>
-
-      </div>
-
-      {/* Designated Agent Contact */}
-      <div className="bg-[#050506] border border-border p-6 rounded-xl text-center space-y-2 font-mono">
-        <h3 className="text-[#F3EBDD] font-bold text-sm">Designated Agent Contact</h3>
-        <p className="text-[#CFC5B8] text-xs">Send copyright notices to this contact address:</p>
-        <a 
-          href={`mailto:${siteConfig.contactEmail}`}
-          className="text-[#C8A7E8] text-xs font-bold hover:underline block pt-1"
-        >
-          {siteConfig.contactEmail}
-        </a>
-      </div>
-
-
-      {/* Compliance Hub Nav */}
-      <section className="border-t border-border pt-8 text-center space-y-4">
-        <h3 className="text-xs font-mono font-bold text-[#C8A7E8] tracking-wider uppercase">
-          ⚖️ Administrative Compliance Hub
-        </h3>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-[#CFC5B8] font-medium">
-          <Link href="/about" className="hover:text-[#F3EBDD] transition-colors">About Us</Link>
-          <span>|</span>
-          <Link href="/contact" className="hover:text-[#F3EBDD] transition-colors">Contact Us</Link>
-          <span>|</span>
-          <Link href="/privacy-policy" className="hover:text-[#F3EBDD] transition-colors">Privacy Policy</Link>
-          <span>|</span>
-          <Link href="/terms-of-service" className="hover:text-[#F3EBDD] transition-colors">Terms of Service</Link>
-          <span>|</span>
-          <Link href="/editorial-policy" className="hover:text-[#F3EBDD] transition-colors">Editorial Policy</Link>
-          <span>|</span>
-          <Link href="/disclaimer" className="hover:text-[#F3EBDD] transition-colors">Disclaimer</Link>
-          <span>|</span>
-          <Link href="/faq" className="hover:text-[#F3EBDD] transition-colors">F.A.Q</Link>
-        </div>
-      </section>
-
-    </div>
+      <InstitutionalSection title="Related terms">
+        <p>
+          See the <Link href="/terms-of-service">Terms of Service</Link> for
+          site-use and intellectual-property boundaries and the{" "}
+          <Link href="/privacy-policy">Privacy Policy</Link> for information
+          about contact messages.
+        </p>
+      </InstitutionalSection>
+    </InstitutionalPage>
   );
 }

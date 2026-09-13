@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import {
+  PinterestIcon,
+  RedditIcon,
+  XIcon,
+} from "@/components/socialicons";
 import { FOOTER_NAV_GROUPS_V1 } from "@/config/institutionalNavigation";
 import { siteConfig } from "@/config/siteConfig";
 
@@ -8,10 +13,24 @@ const FOOTER_LINK_CLASS =
   "rounded-sm text-[13px] text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-card";
 
 const FOOTER_SOCIAL_LINKS = [
-  { label: "X", href: siteConfig.socialLinks.x },
-  { label: "LinkedIn", href: siteConfig.socialLinks.linkedin },
-  { label: "Pinterest", href: siteConfig.socialLinks.pinterest },
-  { label: "Reddit", href: siteConfig.socialLinks.reddit },
+  {
+    id: "reddit",
+    href: siteConfig.socialLinks.reddit,
+    accessibleLabel: "Join Chronoverse Capital on Reddit",
+    title: "Reddit",
+  },
+  {
+    id: "x",
+    href: siteConfig.socialLinks.x,
+    accessibleLabel: "Follow Chronoverse Capital on X",
+    title: "X",
+  },
+  {
+    id: "pinterest",
+    href: siteConfig.socialLinks.pinterest,
+    accessibleLabel: "Chronoverse Capital on Pinterest",
+    title: "Pinterest",
+  },
 ] as const;
 
 export default function Footer() {
@@ -42,19 +61,20 @@ export default function Footer() {
             </p>
             <div className="mt-7">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">
-                Follow
+                Community
               </p>
-              <ul className="mt-2 flex flex-wrap gap-1.5">
+              <ul className="mt-2 flex flex-wrap gap-2">
                 {FOOTER_SOCIAL_LINKS.map((social) => (
-                  <li key={social.label}>
+                  <li key={social.id}>
                     <a
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`Follow Chronoverse Capital on ${social.label}`}
-                      className="inline-flex min-h-11 items-center rounded-sm px-2.5 text-xs font-medium text-secondary hover:bg-[#15131A] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+                      aria-label={social.accessibleLabel}
+                      title={social.title}
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-transparent text-secondary transition-colors hover:border-[#6F4C91]/40 hover:bg-[#15131A] hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D0D11]"
                     >
-                      {social.label}
+                      <SocialIcon platform={social.id} />
                     </a>
                   </li>
                 ))}
@@ -94,4 +114,20 @@ export default function Footer() {
       </div>
     </footer>
   );
+}
+
+function SocialIcon({
+  platform,
+}: {
+  platform: (typeof FOOTER_SOCIAL_LINKS)[number]["id"];
+}) {
+  const iconClassName = "h-5 w-5";
+
+  if (platform === "reddit") {
+    return <RedditIcon className={iconClassName} />;
+  }
+  if (platform === "pinterest") {
+    return <PinterestIcon className={iconClassName} />;
+  }
+  return <XIcon className={iconClassName} />;
 }

@@ -72,6 +72,8 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
         label: "Financial Information Disclaimer",
         href: "/disclaimer",
       },
+      { label: "Editorial Policy", href: "/editorial-policy" },
+      { label: "DMCA", href: "/dmca" },
     ],
   },
 ] as const satisfies readonly {
