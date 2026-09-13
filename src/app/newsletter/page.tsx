@@ -3,12 +3,9 @@
 import { useState } from "react";
 
 /**
- * Dedicated landing page served on the `newsletter.chronoversecapital.com`
- * subdomain (see `src/proxy.ts`, which rewrites requests on that host to
- * `/newsletter`). Kept as its own route so it never collides with the main
- * Vercel routes/domain — the middleware rewrite means this file is reached
- * both via `newsletter.chronoversecapital.com/` (subdomain) and, for
- * previewing/testing, `chronoversecapital.com/newsletter` directly.
+ * Canonical landing page served at `chronoversecapital.com/newsletter`.
+ * `src/proxy.ts` permanently redirects the known Newsletter host roots here
+ * while retaining existing non-root rewrite behavior.
  *
  * Subscriptions POST only to the local `/api/newsletter` server endpoint;
  * persistence and optional notification credentials remain server-side.

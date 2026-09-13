@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  CANONICAL_NEWSLETTER_URL_V1,
   createChronoverseProxyV1,
+  getNewsletterCanonicalRedirectUrlV1,
   getNewsletterRewriteUrlV1,
 } from "../../../proxy";
 
@@ -21,7 +23,6 @@ function request(host: string, pathname: string): NextRequest {
 
 async function main(): Promise<void> {
   const rewriteCases = [
-    ["newsletter.chronoversecapital.com", "/", "/newsletter"],
     ["newsletter.chronoversecapital.com", "/about", "/newsletter/about"],
     ["newsletter.www.chronoversecapital.com", "/dispatch", "/newsletter/dispatch"],
     ["newsletter.preview.example", "/archive", "/newsletter/archive"],
@@ -31,6 +32,18 @@ async function main(): Promise<void> {
     assertEqual(getNewsletterRewriteUrlV1(request(host, pathname))?.pathname,
       expectedPathname, `${host}${pathname} keeps newsletter rewrite behavior`);
   }
+
+  const newsletterRoot = request("newsletter.chronoversecapital.com", "/");
+  assertEqual(
+    getNewsletterCanonicalRedirectUrlV1(newsletterRoot)?.toString(),
+    CANONICAL_NEWSLETTER_URL_V1,
+    "Newsletter host root resolves to the canonical main-domain page",
+  );
+  assertEqual(
+    getNewsletterRewriteUrlV1(newsletterRoot),
+    null,
+    "Newsletter host root is not rewritten before its canonical redirect",
+  );
 
   const bypassCases = [
     ["chronoversecapital.com", "/"],
