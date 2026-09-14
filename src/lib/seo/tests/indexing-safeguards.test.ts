@@ -146,14 +146,22 @@ function verifyRoutePolicies(): void {
   for (const preservedBillingTruth of [
     "$15.99 monthly",
     "$150.99 annually",
-    "VIP checkout starts on Pricing",
-    "Billing-portal and subscription-management controls are not currently available",
+    "Subscription facts are private",
+    "No active paid subscription is recorded",
+    "ManageSubscriptionButton",
   ]) {
     assert.ok(
       billingSource.includes(preservedBillingTruth),
       `/billing preserves ${preservedBillingTruth}`,
     );
   }
+  assert.equal(
+    billingSource.includes(
+      "Billing-portal and subscription-management controls are not currently available",
+    ),
+    false,
+    "/billing no longer claims customer management is unavailable",
+  );
 }
 
 function request(hostname: string, pathname: string): NextRequest {

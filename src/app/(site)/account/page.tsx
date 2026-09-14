@@ -120,8 +120,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <h2 className="font-semibold text-primary">Access and billing help</h2>
           <p className="mt-2">
             Signing in verifies identity; it does not purchase or change
-            access. Public checkout and subscription-management controls are
-            not available on this page. Review{" "}
+            access. Review your trusted commercial state and open secure
+            provider-hosted subscription management from{" "}
             <Link
               href="/billing"
               className="rounded-sm text-mauve underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"

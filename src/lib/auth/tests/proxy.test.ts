@@ -102,7 +102,10 @@ async function main(): Promise<void> {
   for (const pathname of [
     "/account",
     "/account/profile",
+    "/auth",
     "/auth/confirm",
+    "/billing",
+    "/billing/history",
     "/vip",
     "/vip/markets/eurusd",
   ]) {
@@ -121,7 +124,8 @@ async function main(): Promise<void> {
     "/newsletter",
     "/category/macro",
     "/research-article",
-    "/billing",
+    "/billings",
+    "/billing-example",
     "/api/newsletter",
     "/accounting",
     "/authentication",
@@ -131,7 +135,7 @@ async function main(): Promise<void> {
       `${pathname} skips session refresh`);
   }
 
-  assertEqual(refreshCalls, 5,
+  assertEqual(refreshCalls, 8,
     "only auth-sensitive route families invoke session refresh");
 
   console.log("PASS: proxy bounds Supabase refresh to auth-sensitive routes");

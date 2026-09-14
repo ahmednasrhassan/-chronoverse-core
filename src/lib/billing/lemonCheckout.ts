@@ -9,10 +9,14 @@ import {
   getVipCommercialConfigV1,
   type VipCommercialConfigV1,
 } from "./vipCommercialConfig";
+import {
+  LEMON_API_TIMEOUT_MS_V1,
+  LemonApiRequestErrorV1,
+  requestLemonApiJsonV1,
+} from "./lemonApi";
 
-const LEMON_CHECKOUT_API_URL_V1 =
-  "https://api.lemonsqueezy.com/v1/checkouts";
-export const LEMON_CHECKOUT_TIMEOUT_MS_V1 = 8_000;
+const LEMON_CHECKOUT_API_PATH_V1 = "/v1/checkouts";
+export const LEMON_CHECKOUT_TIMEOUT_MS_V1 = LEMON_API_TIMEOUT_MS_V1;
 
 export const LEMON_CHECKOUT_PLANS_V1 = ["monthly", "annual"] as const;
 export type LemonCheckoutPlanV1 =
@@ -63,18 +67,11 @@ export async function createLemonCheckoutV1(
     ? config.monthlyVariantId
     : config.annualVariantId;
   const returnUrl = dependencies.getReturnUrl();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), dependencies.timeoutMs);
-  let response: Response;
+  let payload: unknown;
 
   try {
-    response = await dependencies.fetchProvider(LEMON_CHECKOUT_API_URL_V1, {
+    payload = await requestLemonApiJsonV1(LEMON_CHECKOUT_API_PATH_V1, {
       method: "POST",
-      headers: {
-        Accept: "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json",
-        Authorization: `Bearer ${apiKey}`,
-      },
       body: JSON.stringify({
         data: {
           type: "checkouts",
@@ -98,25 +95,17 @@ export async function createLemonCheckoutV1(
           },
         },
       }),
-      cache: "no-store",
-      signal: controller.signal,
+    }, {
+      getApiKey: () => apiKey,
+      fetchProvider: dependencies.fetchProvider,
+      timeoutMs: dependencies.timeoutMs,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof LemonApiRequestErrorV1) {
+      throw new LemonCheckoutErrorV1(error.code);
+    }
+
     throw new LemonCheckoutErrorV1("provider-unavailable");
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  if (!response.ok) {
-    throw new LemonCheckoutErrorV1("provider-unavailable");
-  }
-
-  let payload: unknown;
-
-  try {
-    payload = await response.json();
-  } catch {
-    throw new LemonCheckoutErrorV1("invalid-provider-response");
   }
 
   const checkoutUrl = parseCheckoutResponseV1(

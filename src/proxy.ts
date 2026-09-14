@@ -25,7 +25,12 @@ export type SessionRefresherV1 = (
   request: NextRequest,
 ) => Promise<NextResponse>;
 
-const AUTH_SESSION_ROUTE_FAMILIES_V1 = ['/account', '/auth', '/vip'] as const;
+const AUTH_SESSION_ROUTE_FAMILIES_V1 = [
+  '/account',
+  '/auth',
+  '/billing',
+  '/vip',
+] as const;
 
 export function requiresAuthSessionRefreshV1(pathname: string): boolean {
   return AUTH_SESSION_ROUTE_FAMILIES_V1.some(
