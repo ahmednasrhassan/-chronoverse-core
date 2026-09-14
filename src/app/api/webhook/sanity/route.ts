@@ -1,58 +1,37 @@
-import { NextResponse } from "next/server";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { sanityWriteClient } from "@/lib/sanity/writeClient";
-import { generateExecutiveSummary } from "@/lib/executiveSummary";
+import { NextResponse } from "next/server";
 
-/**
- * Sanity "Publish" Webhook -> Amazon SES Broadcast
- * -------------------------------------------------
- * Configure this endpoint in Sanity (Manage Project > API > Webhooks) to
- * fire on `create`/`update` of `post` documents (filter: `_type == "post"`),
- * with a projection that includes at least `_id` and `_type` — e.g.:
- *
- *   { "_id": _id, "_type": _type, "slug": slug.current }
- *
- * On receipt, this route:
- *   1. Re-fetches the full post from Sanity (never trusts webhook payload
- *      body directly — Sanity webhooks can be configured with partial
- *      projections and may be stale/replayed).
- *   2. Skips silently (200 OK) if the document isn't a published `post`.
- *   3. Builds a branded "Chronoverse Capital" HTML email containing the
- *      article title, an auto-generated executive summary, and a direct
- *      link to the live article.
- *   4. Parses `SUBSCRIBER_EMAILS` (comma-separated) from the environment
- *      and dispatches one email per subscriber via Amazon SES.
- *
- * Error handling philosophy: a failure to send to any single subscriber
- * (or even a total configuration failure) must never crash the route or
- * cause Sanity to treat the webhook as failed/retry indefinitely — so all
- * errors are caught, logged, and the route still resolves with HTTP 200.
- */
+import { generateExecutiveSummary } from "@/lib/executiveSummary";
+import {
+  isValidSanityDocumentId,
+  SanityWebhookRequestError,
+  verifySanityWebhookRequest,
+} from "@/lib/sanity/webhookSecurity";
+import {
+  beginSanityWebhookOperation,
+  SanityWebhookReplayError,
+  type SanityWebhookLease,
+} from "@/lib/sanity/webhookReplay";
+import { client, dataset, projectId } from "@/sanity/client";
+
 export const dynamic = "force-dynamic";
 
 const BASE_URL = "https://chronoversecapital.com";
-const SENDER_EMAIL =
-  process.env.NEWSLETTER_SENDER_EMAIL || "contact@newsletter.chronoversecapital.com";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-const sesClient = new SESClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
-});
-
-interface SanityWebhookPayload {
-  _id?: string;
-  _type?: string;
-  slug?: string | { current?: string };
+interface SanityPublishWebhookPayload extends Record<string, unknown> {
+  documentId?: unknown;
+  documentType?: unknown;
+  revision?: unknown;
+  becamePublished?: unknown;
 }
 
 interface PublishedPost {
   _id: string;
   title: string;
   slug: string;
-  publishedAt: string | null;
+  publishedAt: string;
   excerpt: string | null;
   seoDescription: string | null;
   categoryTitle: string | null;
@@ -60,23 +39,38 @@ interface PublishedPost {
   bodyPlainText: string | null;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Parses the comma-separated `SUBSCRIBER_EMAILS` env var into a clean, de-duplicated list of valid addresses. */
-function getSubscriberEmailsFromEnv(): string[] {
-  const raw = process.env.SUBSCRIBER_EMAILS || "";
-
-  const emails = raw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter((e) => e.length > 0 && EMAIL_REGEX.test(e));
-
-  return Array.from(new Set(emails));
+interface Subscriber {
+  email: string;
 }
 
-/** Re-fetches the canonical post document from Sanity by `_id`, never trusting the raw webhook payload. */
-async function fetchPublishedPost(documentId: string): Promise<PublishedPost | null> {
-  const query = `*[_id == $id && _type == "post" && defined(slug.current) && defined(publishedAt) && publishedAt <= now()][0]{
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
+    return entities[character];
+  });
+}
+
+async function fetchPublishedPost(
+  documentId: string,
+  revision: string,
+): Promise<PublishedPost | null> {
+  return client.fetch<PublishedPost | null>(
+    `*[
+      _id == $id &&
+      _rev == $revision &&
+      _type == "post" &&
+      defined(title) &&
+      defined(slug.current) &&
+      defined(publishedAt) &&
+      publishedAt <= now() &&
+      !(_id in path("drafts.**"))
+    ][0]{
       _id,
       title,
       "slug": slug.current,
@@ -86,182 +80,193 @@ async function fetchPublishedPost(documentId: string): Promise<PublishedPost | n
       "categoryTitle": category->title,
       tags,
       "bodyPlainText": pt::text(body)
-    }`;
-
-  try {
-    const post = await sanityWriteClient.fetch<PublishedPost | null>(query, { id: documentId });
-    return post || null;
-  } catch (error) {
-    console.error("[webhook/sanity] Failed to fetch post from Sanity:", error);
-    return null;
-  }
+    }`,
+    { id: documentId, revision },
+  );
 }
 
-/** Resolves a one-paragraph description for the email preview text (excerpt/seoDescription first, AI summary fallback). */
-function resolveSummaryPoints(post: PublishedPost): string[] {
-  if (post.excerpt && post.excerpt.trim()) {
-    return [post.excerpt.trim()];
-  }
-  if (post.seoDescription && post.seoDescription.trim()) {
-    return [post.seoDescription.trim()];
-  }
+async function fetchActiveSubscribers(): Promise<string[]> {
+  const subscribers = await client.fetch<Subscriber[]>(
+    `*[_type == "subscriber" && active != false && defined(email)] | order(_id asc)[0...1000]{email}`,
+  );
+  const emails = subscribers
+    .map(({ email }) => (typeof email === "string" ? email.trim().toLowerCase() : ""))
+    .filter((email) => EMAIL_REGEX.test(email));
+  return Array.from(new Set(emails));
+}
 
+function resolveSummaryPoints(post: PublishedPost): string[] {
+  if (post.excerpt?.trim()) return [post.excerpt.trim()];
+  if (post.seoDescription?.trim()) return [post.seoDescription.trim()];
   return generateExecutiveSummary(
     post.title,
     post.categoryTitle || undefined,
     post.bodyPlainText || undefined,
-    post.tags || []
+    post.tags || [],
   );
 }
 
-/** Builds the branded "Chronoverse Capital" HTML email template for a single article. */
 function buildArticleEmailHtml(post: PublishedPost, articleUrl: string): string {
-  const summaryPoints = resolveSummaryPoints(post);
-
+  const summaryPoints = resolveSummaryPoints(post).map(escapeHtml);
   const summaryHtml =
     summaryPoints.length === 1
       ? `<p style="color:#CFC5B8;font-size:15px;line-height:1.6;margin:0 0 24px 0;">${summaryPoints[0]}</p>`
-      : `<ul style="color:#CFC5B8;font-size:15px;line-height:1.6;margin:0 0 24px 0;padding-left:20px;">
-          ${summaryPoints.map((point) => `<li style="margin-bottom:8px;">${point}</li>`).join("")}
-        </ul>`;
-
+      : `<ul style="color:#CFC5B8;font-size:15px;line-height:1.6;margin:0 0 24px 0;padding-left:20px;">${summaryPoints.map((point) => `<li style="margin-bottom:8px;">${point}</li>`).join("")}</ul>`;
   const category = post.categoryTitle
-    ? `<span style="display:inline-block;font-size:11px;color:#C8A7E8;background-color:#0D0D11;border:1px solid #C8A7E840;border-radius:4px;padding:3px 10px;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase;">${post.categoryTitle}</span>`
+    ? `<span style="display:inline-block;font-size:11px;color:#C8A7E8;margin-bottom:12px;text-transform:uppercase;">${escapeHtml(post.categoryTitle)}</span>`
     : "";
 
-  return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#050506;color:#F3EBDD;padding:32px 16px;">
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#050506;color:#F3EBDD;padding:32px 16px;">
     <table style="max-width:600px;margin:0 auto;width:100%;border-collapse:collapse;">
-      <tr>
-        <td style="padding-bottom:24px;border-bottom:1px solid #292432;">
-          <span style="color:#C8A7E8;font-size:12px;letter-spacing:2px;text-transform:uppercase;">// New Dispatch</span>
-          <h1 style="font-size:22px;font-weight:bold;margin:8px 0 0 0;color:#ffffff;">Chronoverse Capital</h1>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:28px 0 0 0;">
-          ${category}
-          <h2 style="font-size:24px;font-weight:700;line-height:1.35;margin:0 0 16px 0;color:#ffffff;">
-            <a href="${articleUrl}" style="color:#ffffff;text-decoration:none;">${post.title}</a>
-          </h2>
-          ${summaryHtml}
-          <a href="${articleUrl}" style="display:inline-block;background-color:#C8A7E8;color:#050506;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:6px;">Read Full Article →</a>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-top:40px;text-align:center;color:#91889A;font-size:12px;">
-          You are receiving this email because you subscribed to Chronoverse Capital's newsletter.<br/>
-          Chronoverse Capital LLC, 1207 Delaware Ave #1234, Wilmington, DE 19806, United States
-        </td>
-      </tr>
+      <tr><td style="padding-bottom:24px;border-bottom:1px solid #292432;"><strong>Chronoverse Capital</strong></td></tr>
+      <tr><td style="padding:28px 0 0 0;">${category}<h2><a href="${articleUrl}" style="color:#ffffff;text-decoration:none;">${escapeHtml(post.title)}</a></h2>${summaryHtml}<a href="${articleUrl}" style="color:#C8A7E8;">Read Full Article →</a></td></tr>
+      <tr><td style="padding-top:40px;text-align:center;color:#91889A;font-size:12px;">You are receiving this email because you subscribed to Chronoverse Capital's newsletter.</td></tr>
     </table>
   </div>`;
 }
 
-async function sendArticleEmail(email: string, subject: string, html: string): Promise<void> {
-  const command = new SendEmailCommand({
-    Source: SENDER_EMAIL,
-    Destination: { ToAddresses: [email] },
-    Message: {
-      Subject: { Data: subject, Charset: "UTF-8" },
-      Body: { Html: { Data: html, Charset: "UTF-8" } },
-    },
-  });
-
-  await sesClient.send(command);
-}
-
-/** Dispatches the article email to every subscriber, isolating failures so one bad address never blocks the rest. */
 async function broadcastToSubscribers(
   post: PublishedPost,
-  articleUrl: string
+  emails: string[],
 ): Promise<{ sent: number; failed: number; total: number }> {
-  const subscribers = getSubscriberEmailsFromEnv();
-
-  if (subscribers.length === 0) {
-    console.warn("[webhook/sanity] SUBSCRIBER_EMAILS is empty or unset — no emails dispatched.");
-    return { sent: 0, failed: 0, total: 0 };
-  }
-
-  const subject = `New Dispatch: ${post.title} — Chronoverse Capital`;
+  const sender =
+    process.env.NEWSLETTER_FROM_EMAIL ||
+    process.env.NEWSLETTER_SENDER_EMAIL ||
+    "contact@newsletter.chronoversecapital.com";
+  const articleUrl = `${BASE_URL}/${post.slug}`;
   const html = buildArticleEmailHtml(post, articleUrl);
-
+  const sesClient = new SESClient({ region: process.env.AWS_REGION || "us-east-1" });
   let sent = 0;
   let failed = 0;
 
-  for (const email of subscribers) {
+  for (const email of emails) {
     try {
-      await sendArticleEmail(email, subject, html);
+      await sesClient.send(
+        new SendEmailCommand({
+          Source: sender,
+          Destination: { ToAddresses: [email] },
+          Message: {
+            Subject: {
+              Data: `New Dispatch: ${post.title} — Chronoverse Capital`,
+              Charset: "UTF-8",
+            },
+            Body: { Html: { Data: html, Charset: "UTF-8" } },
+          },
+        }),
+      );
       sent += 1;
     } catch (error) {
       failed += 1;
-      console.error(`[webhook/sanity] Failed to send article email to ${email}:`, error);
+      console.error(
+        "[webhook/sanity] Failed to send one article email:",
+        error instanceof Error ? error.message : "unknown SES error",
+      );
     }
   }
 
-  return { sent, failed, total: subscribers.length };
+  return { sent, failed, total: emails.length };
 }
 
+/**
+ * Configure this signed Sanity webhook for `post` creates only, with drafts
+ * and versions disabled, and projection:
+ * {"documentId": _id, "documentType": _type, "revision": _rev,
+ *  "becamePublished": before() == null && defined(after().publishedAt)}
+ */
 export async function POST(request: Request) {
+  let lease: SanityWebhookLease | null = null;
+  let deliveryStarted = false;
+
   try {
-    const payload = (await request.json().catch(() => ({}))) as SanityWebhookPayload;
-
-    if (!payload?._id) {
-      return NextResponse.json(
-        { status: "skipped", message: "Missing document _id in webhook payload" },
-        { status: 200 }
-      );
-    }
-
-    if (payload._type && payload._type !== "post") {
-      return NextResponse.json(
-        { status: "skipped", message: `Ignoring non-post document type: ${payload._type}` },
-        { status: 200 }
-      );
-    }
-
-    const post = await fetchPublishedPost(payload._id);
-
-    if (!post) {
-      return NextResponse.json(
-        {
-          status: "skipped",
-          message: "Document is not a published post, or could not be fetched from Sanity",
-        },
-        { status: 200 }
-      );
-    }
-
-    const articleUrl = `${BASE_URL}/${post.slug}`;
-    const result = await broadcastToSubscribers(post, articleUrl);
-
-    return NextResponse.json(
+    const verified = await verifySanityWebhookRequest<SanityPublishWebhookPayload>(
+      request,
       {
-        status: "success",
-        message: "Sanity publish webhook processed",
-        article: { id: post._id, title: post.title, url: articleUrl },
-        ...result,
+        secret: process.env.SANITY_WEBHOOK_SECRET,
+        expectedProjectId: projectId,
+        expectedDataset: dataset,
       },
-      { status: 200 }
     );
-  } catch (error: unknown) {
-    // Never let a failure here surface as a non-200 — Sanity webhooks may
-    // retry aggressively on non-2xx responses, and a single malformed
-    // payload or transient AWS/Sanity error should not trigger retry storms.
-    console.error("[webhook/sanity] Unhandled error while processing webhook:", error);
-    const message = error instanceof Error ? error.message : "Failed to process Sanity webhook";
-    return NextResponse.json({ status: "error", message }, { status: 200 });
-  }
-}
+    const { documentId, documentType, revision, becamePublished } =
+      verified.payload;
 
-export async function GET() {
-  return NextResponse.json(
-    {
-      status: "active",
-      system: "Chronoverse Capital Sanity Publish -> SES Broadcast Webhook",
-      endpoint: "https://chronoversecapital.com/api/webhook/sanity",
-      usage: "POST { _id: string, _type?: string } — configure as a Sanity webhook on post publish/update.",
-    },
-    { status: 200 }
-  );
+    if (
+      verified.operation !== "create" ||
+      documentType !== "post" ||
+      becamePublished !== true
+    ) {
+      return NextResponse.json(
+        { status: "skipped", message: "Not a new published post" },
+        { status: 200 },
+      );
+    }
+
+    if (
+      !isValidSanityDocumentId(documentId) ||
+      documentId.startsWith("drafts.") ||
+      typeof revision !== "string" ||
+      !revision ||
+      request.headers.get("sanity-document-id") !== documentId
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "Invalid published post target" },
+        { status: 400 },
+      );
+    }
+
+    const [post, subscribers] = await Promise.all([
+      fetchPublishedPost(documentId, revision),
+      fetchActiveSubscribers(),
+    ]);
+    if (!post || !SLUG_REGEX.test(post.slug)) {
+      return NextResponse.json(
+        { status: "skipped", message: "Published post is unavailable or stale" },
+        { status: 200 },
+      );
+    }
+    if (subscribers.length === 0) {
+      return NextResponse.json(
+        { status: "skipped", message: "No active subscribers" },
+        { status: 200 },
+      );
+    }
+
+    lease = await beginSanityWebhookOperation("publish", verified.idempotencyKey);
+    if (!lease) {
+      return NextResponse.json(
+        { status: "skipped", message: "Webhook delivery already processed" },
+        { status: 200 },
+      );
+    }
+
+    deliveryStarted = true;
+    const result = await broadcastToSubscribers(post, subscribers);
+    await lease.complete();
+    return NextResponse.json({ status: "success", ...result }, { status: 200 });
+  } catch (error: unknown) {
+    if (lease && !deliveryStarted) {
+      await lease.release().catch(() => undefined);
+    }
+
+    if (error instanceof SanityWebhookRequestError) {
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: error.status },
+      );
+    }
+    if (error instanceof SanityWebhookReplayError) {
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: 503 },
+      );
+    }
+
+    console.error(
+      "[webhook/sanity] Verified delivery failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return NextResponse.json(
+      { status: "error", message: "Publish webhook processing failed" },
+      { status: 500 },
+    );
+  }
 }

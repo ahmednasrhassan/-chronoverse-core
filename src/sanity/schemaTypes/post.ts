@@ -25,10 +25,12 @@ export default defineType({
       title: 'Title',
       type: 'string',
       group: 'content',
-      validation: (Rule) =>
-        Rule.required().warning(
-          'Aim for under ~60 characters — longer titles get truncated in Google search results and in the auto-generated <title> tag (see optimizedTitle logic in the article page template).'
-        ),
+      description:
+        'Use the complete factual article title. Search presentation is handled by the public site.',
+      validation: (Rule) => [
+        Rule.required(),
+        Rule.max(120).warning('Long titles may be harder to scan in listings and search results.'),
+      ],
     }),
     defineField({
       name: 'slug',
@@ -81,11 +83,13 @@ export default defineType({
       to: { type: 'category' },
       group: 'content',
       description:
-        'Required. If a post somehow ends up without a category, the site automatically falls back to "General" — but every post should be assigned a real category for accurate SEO and navigation.',
+        'Recommended for accurate navigation. Existing posts without a category use the site\'s "General" fallback.',
       validation: (Rule) =>
-        Rule.warning(
-          'No category assigned. This post will display under the default "General" category on the live site until one is set.'
-        ),
+        Rule.custom((category) =>
+          category
+            ? true
+            : 'No category assigned. This post will display under the default "General" category on the live site until one is set.'
+        ).warning(),
     }),
     defineField({
       name: 'tags',
@@ -103,6 +107,21 @@ export default defineType({
       type: 'image',
       group: 'content',
       options: { hotspot: true },
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alternative Text',
+          type: 'string',
+          description:
+            'Optional. Describe the factual visual content for readers who cannot see the image. Leave empty only when the image is decorative.',
+        }),
+        defineField({
+          name: 'caption',
+          title: 'Caption',
+          type: 'string',
+          description: 'Optional factual caption displayed with the image when supported.',
+        }),
+      ],
     }),
     defineField({
       name: 'excerpt',
@@ -111,7 +130,7 @@ export default defineType({
       rows: 3,
       group: 'seo',
       description:
-        'Short summary for previews. Can be auto-generated via "Generate SEO & Excerpt (AI)".',
+        'Short factual summary for previews. Can be generated from the article body with the Studio document action.',
     }),
     defineField({
       name: 'seoDescription',
@@ -120,10 +139,10 @@ export default defineType({
       rows: 2,
       group: 'seo',
       description:
-        'Search-engine meta description (max ~160 chars). Can be auto-generated via "Generate SEO & Excerpt (AI)". If left empty, the site automatically falls back to the first 160 characters of the article body.',
+        'Search-engine meta description (max ~160 chars). The Studio action can derive it from the article body.',
       validation: (Rule) =>
         Rule.max(160).warning(
-          'Descriptions over ~160 characters get truncated by Google — the automated truncateForSEO() logic in the article page will cut it anyway, so it is worth trimming manually for a cleaner result.'
+          'Descriptions over ~160 characters may be truncated in search results.'
         ),
     }),
     defineField({
@@ -160,7 +179,25 @@ export default defineType({
             { title: 'Quote', value: 'blockquote' },
           ],
         },
-        { type: 'image', options: { hotspot: true } },
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Alternative Text',
+              type: 'string',
+              description:
+                'Optional. Describe the factual visual content for readers who cannot see the image. Leave empty only when the image is decorative.',
+            }),
+            defineField({
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+              description: 'Optional factual caption shown below the image.',
+            }),
+          ],
+        },
       ],
     }),
     // Legacy field retained to preserve data migrated from Blogger.

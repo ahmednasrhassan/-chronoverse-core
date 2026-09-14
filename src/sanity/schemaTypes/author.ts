@@ -33,4 +33,7 @@ export default defineType({
       of: [{ type: 'block' }],
     }),
   ],
+  preview: {
+    select: { title: 'name', subtitle: 'slug.current', media: 'image' },
+  },
 })

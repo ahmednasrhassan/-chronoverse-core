@@ -1,4 +1,3 @@
-import ExecutiveDiscussion from "@/components/ExecutiveDiscussion";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -162,8 +161,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Administrative Page fallback: if no `post` matches this slug, check
   // for an administrative `page` document (About, Privacy Policy, etc.).
   // These documents support an optional `legacyHtml` field for pasting raw
-  // legacy HTML/CSS/JS (e.g. imported Blogger templates or standalone
-  // microsites) — when present it is sanitized and rendered directly via
+  // legacy HTML (e.g. imported Blogger pages) — when present it is sanitized
+  // and rendered directly via
   // `dangerouslySetInnerHTML`, taking priority over the structured
   // Portable Text `bodyContent`.
   // ---------------------------------------------------------------------
@@ -515,8 +514,6 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Author Card Component */}
       <AuthorCard authorName={currentPost.author} />
 
-      {/* Article Discussion & Comments Section */}
-     <ExecutiveDiscussion postId={(currentPost as any)?._id || currentPost.slug || ""} comments={(currentPost as any)?.comments || []} />
     </main>
   );
 }

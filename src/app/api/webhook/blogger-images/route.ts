@@ -1,81 +1,130 @@
 import { NextResponse } from "next/server";
+
 import {
-  migrateAllBloggerImages,
   migrateDocumentImages,
   type BloggerDocument,
 } from "@/lib/sanity/bloggerImages";
-import { sanityWriteClient, assertWriteTokenConfigured } from "@/lib/sanity/writeClient";
+import { getSanityWriteClient } from "@/lib/sanity/writeClient";
+import {
+  isValidSanityDocumentId,
+  SanityWebhookRequestError,
+  verifySanityWebhookRequest,
+} from "@/lib/sanity/webhookSecurity";
+import {
+  beginSanityWebhookOperation,
+  SanityWebhookReplayError,
+  type SanityWebhookLease,
+} from "@/lib/sanity/webhookReplay";
+import { dataset, projectId } from "@/sanity/client";
 
 export const dynamic = "force-dynamic";
 
-interface BloggerImageMigrationRequestBody {
-  /** If provided, only migrate images for this single document. */
-  documentId?: string;
+interface BloggerImageWebhookPayload extends Record<string, unknown> {
+  documentId?: unknown;
+  documentType?: unknown;
+  revision?: unknown;
 }
+
+const ALLOWED_DOCUMENT_TYPES = new Set(["post", "page"]);
 
 /**
- * Blogger Image Migration & Sync endpoint.
+ * Signed, single-document Blogger image migration webhook.
  *
- * POST body (optional): { "documentId": "<sanity-doc-id>" }
- *
- * - Without a body / with an empty body: scans every `post`/`page`
- *   document, parses Blogger/Google-hosted image URLs out of `bodyRaw`,
- *   downloads and re-uploads them to Sanity Assets, and rewrites the
- *   document's HTML to reference the new Sanity CDN URLs.
- * - With `documentId`: performs the same migration for just that document.
+ * Configure the Sanity webhook with a secret and this projection:
+ * {"documentId": _id, "documentType": _type, "revision": _rev}
  */
 export async function POST(request: Request) {
+  let lease: SanityWebhookLease | null = null;
+  let operationStarted = false;
+
   try {
-    assertWriteTokenConfigured();
-
-    let body: BloggerImageMigrationRequestBody = {};
-    try {
-      body = (await request.json()) as BloggerImageMigrationRequestBody;
-    } catch {
-      // Empty body is fine — treat as "migrate all".
-    }
-
-    if (body.documentId) {
-      const doc = await sanityWriteClient.fetch<BloggerDocument | null>(
-        `*[_id == $id][0]{ _id, title, bodyRaw }`,
-        { id: body.documentId }
-      );
-
-      if (!doc) {
-        return NextResponse.json(
-          { status: "error", message: `Document not found: ${body.documentId}` },
-          { status: 404 }
-        );
-      }
-
-      const result = await migrateDocumentImages(sanityWriteClient, doc);
-      return NextResponse.json({ status: "success", results: [result] }, { status: 200 });
-    }
-
-    const results = await migrateAllBloggerImages(sanityWriteClient);
-
-    return NextResponse.json(
+    const verified = await verifySanityWebhookRequest<BloggerImageWebhookPayload>(
+      request,
       {
-        status: "success",
-        documentsUpdated: results.length,
-        results,
+        secret: process.env.SANITY_WEBHOOK_SECRET,
+        expectedProjectId: projectId,
+        expectedDataset: dataset,
       },
-      { status: 200 }
+    );
+
+    if (verified.operation !== "create" && verified.operation !== "update") {
+      return NextResponse.json(
+        { status: "skipped", message: "Unsupported document operation" },
+        { status: 200 },
+      );
+    }
+
+    const { documentId, documentType, revision } = verified.payload;
+    if (
+      !isValidSanityDocumentId(documentId) ||
+      !ALLOWED_DOCUMENT_TYPES.has(String(documentType)) ||
+      typeof revision !== "string" ||
+      !revision ||
+      request.headers.get("sanity-document-id") !== documentId
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "Invalid migration target" },
+        { status: 400 },
+      );
+    }
+
+    const sanityWriteClient = getSanityWriteClient();
+    lease = await beginSanityWebhookOperation(
+      "blogger-images",
+      verified.idempotencyKey,
+    );
+    if (!lease) {
+      return NextResponse.json(
+        { status: "skipped", message: "Webhook delivery already processed" },
+        { status: 200 },
+      );
+    }
+
+    const doc = await sanityWriteClient.fetch<BloggerDocument | null>(
+      `*[_id == $id && _type == $documentType && _rev == $revision][0]{ _id, title, bodyRaw }`,
+      { id: documentId, documentType, revision },
+    );
+
+    if (!doc) {
+      await lease.complete();
+      return NextResponse.json(
+        { status: "skipped", message: "Migration target is no longer current" },
+        { status: 200 },
+      );
+    }
+
+    operationStarted = true;
+    const result = await migrateDocumentImages(sanityWriteClient, doc);
+    await lease.complete();
+    return NextResponse.json(
+      { status: "success", results: [result] },
+      { status: 200 },
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to migrate Blogger images";
-    console.error("Blogger Image Migration Webhook Error:", error);
-    return NextResponse.json({ status: "error", message }, { status: 500 });
-  }
-}
+    if (lease && !operationStarted) {
+      await lease.release().catch(() => undefined);
+    }
 
-export async function GET() {
-  return NextResponse.json(
-    {
-      status: "active",
-      system: "Chronoverse Capital Blogger Image Migration & Sync",
-      usage: "POST {} to migrate all documents, or { documentId: string } for a single document",
-    },
-    { status: 200 }
-  );
+    if (error instanceof SanityWebhookRequestError) {
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: error.status },
+      );
+    }
+    if (error instanceof SanityWebhookReplayError) {
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: 503 },
+      );
+    }
+
+    console.error(
+      "[webhook/blogger-images] Migration failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return NextResponse.json(
+      { status: "error", message: "Blogger image migration failed" },
+      { status: 500 },
+    );
+  }
 }

@@ -1,55 +1,76 @@
-import { revalidatePath } from 'next/cache';
-import { NextResponse } from 'next/server';
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
 
-type SanityWebhookBody = {
-  _type?: string;
-  slug?: string | null;
-};
+import {
+  SanityWebhookRequestError,
+  verifySanityWebhookRequest,
+} from "@/lib/sanity/webhookSecurity";
+import { dataset, projectId } from "@/sanity/client";
 
+interface SanityRevalidationPayload extends Record<string, unknown> {
+  _type?: unknown;
+  slug?: unknown;
+}
+
+const REVALIDATED_TYPES = new Set(["post", "page", "category"]);
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Configure with the shared Sanity webhook secret and a projection that
+ * supplies `_type` and `slug.current` (using before() for deletes).
+ */
 export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get('secret');
+    const { payload } =
+      await verifySanityWebhookRequest<SanityRevalidationPayload>(request, {
+        secret: process.env.SANITY_WEBHOOK_SECRET,
+        expectedProjectId: projectId,
+        expectedDataset: dataset,
+      });
 
-    if (secret !== process.env.SANITY_REVALIDATE_SECRET) {
-      return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
-    }
-
-    let body: SanityWebhookBody = {};
-
-    try {
-      body = (await request.json()) as SanityWebhookBody;
-    } catch {
-      // Keep the webhook resilient even if Sanity sends no JSON body.
+    if (typeof payload._type !== "string" || !REVALIDATED_TYPES.has(payload._type)) {
+      return NextResponse.json(
+        { revalidated: false, message: "Unsupported document type" },
+        { status: 200 },
+      );
     }
 
     const slug =
-      typeof body.slug === 'string' && body.slug.trim().length > 0
-        ? body.slug.trim()
+      typeof payload.slug === "string" && SLUG_PATTERN.test(payload.slug)
+        ? payload.slug
         : null;
 
-    revalidatePath('/');
-    revalidatePath('/reports');
-    revalidatePath('/archive');
-    revalidatePath('/sitemap.xml');
-    revalidatePath('/feed.xml');
-    revalidatePath('/rss.xml');
+    revalidatePath("/");
+    revalidatePath("/reports");
+    revalidatePath("/archive");
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/feed.xml");
+    revalidatePath("/rss.xml");
 
-    if (slug) {
+    if (slug && (payload._type === "post" || payload._type === "page")) {
       revalidatePath(`/${slug}`);
     } else {
-      revalidatePath('/[slug]', 'page');
+      revalidatePath("/[slug]", "page");
     }
 
-    revalidatePath('/category/[slug]', 'page');
+    revalidatePath("/category/[slug]", "page");
 
-    return NextResponse.json({
-      revalidated: true,
-      slug,
-      now: Date.now(),
-    });
-  } catch (err) {
-    console.error('[Sanity revalidate] Failed:', err);
-    return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
+    return NextResponse.json({ revalidated: true, slug });
+  } catch (error) {
+    if (error instanceof SanityWebhookRequestError) {
+      return NextResponse.json(
+        { revalidated: false, message: error.message },
+        { status: error.status },
+      );
+    }
+
+    console.error(
+      "[Sanity revalidate] Verified request failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return NextResponse.json(
+      { revalidated: false, message: "Error revalidating" },
+      { status: 500 },
+    );
   }
 }

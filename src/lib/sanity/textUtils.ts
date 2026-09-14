@@ -53,17 +53,15 @@ export interface FallbackSeoResult {
 
 /**
  * Deterministic, dependency-free summarizer used as a fallback when no
- * AI provider (e.g. OPENAI_API_KEY) is configured. Produces a short
+ * AI provider is configured. Produces a short
  * "rich excerpt" (2-3 sentences) and a search-engine-friendly meta
  * description capped at ~160 characters.
  */
-export function generateFallbackSeo(plainText: string, title: string): FallbackSeoResult {
+export function generateFallbackSeo(plainText: string): FallbackSeoResult {
   const cleaned = (plainText || "").trim();
 
   if (!cleaned) {
-    const genericExcerpt = `${title} — an in-depth analysis from Chronoverse Capital covering key macroeconomic and financial market developments.`;
-    const genericDescription = `${title} | Analysis from Chronoverse Capital`.slice(0, 160);
-    return { excerpt: genericExcerpt, seoDescription: genericDescription };
+    return { excerpt: "", seoDescription: "" };
   }
 
   const sentences = splitSentences(cleaned);

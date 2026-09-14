@@ -1,18 +1,10 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 
-import {
-  assertWriteTokenConfigured,
-  sanityWriteClient,
-} from "@/lib/sanity/writeClient";
+import { getSanityWriteClient } from "@/lib/sanity/writeClient";
 
-const sesClient = new SESClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
-});
+const MAX_REQUEST_BYTES = 4 * 1024;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface NewsletterRequestBody {
   email?: unknown;
@@ -24,12 +16,18 @@ interface ExistingSubscriber {
 }
 
 export async function POST(request: Request) {
-  let requestBody: NewsletterRequestBody;
+  const contentLength = Number(request.headers.get("content-length") || "0");
+  if (contentLength > MAX_REQUEST_BYTES) return invalidEmailResponse();
 
+  let requestBody: NewsletterRequestBody;
   try {
-    const parsedBody: unknown = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      return invalidEmailResponse();
+    }
+    const parsedBody: unknown = JSON.parse(rawBody);
     requestBody =
-      parsedBody && typeof parsedBody === "object"
+      parsedBody && typeof parsedBody === "object" && !Array.isArray(parsedBody)
         ? (parsedBody as NewsletterRequestBody)
         : {};
   } catch {
@@ -41,30 +39,36 @@ export async function POST(request: Request) {
       ? requestBody.email.trim().toLowerCase()
       : "";
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+  if (
+    normalizedEmail.length > 254 ||
+    !EMAIL_PATTERN.test(normalizedEmail)
+  ) {
     return invalidEmailResponse();
   }
 
-  const officialEmail =
-    process.env.OFFICIAL_EMAIL || "info@chronoversecapital.com";
   const subscribedAt = new Date().toISOString();
+  const deterministicId = `subscriber.${createHash("sha256")
+    .update(normalizedEmail)
+    .digest("hex")}`;
 
-  // A successful response means the address is durably present on the
-  // distribution list. Email notification is secondary to that state.
+  // A successful response means the normalized address is durably present
+  // and active in Sanity. Public signup does not trigger email; delivery is
+  // reserved for authenticated newsletter workflows.
   try {
-    assertWriteTokenConfigured();
+    const sanityWriteClient = getSanityWriteClient();
     const existing = await sanityWriteClient.fetch<ExistingSubscriber | null>(
-      `*[_type == "subscriber" && email == $email][0]{_id, active}`,
+      `*[_type == "subscriber" && lower(email) == $email][0]{_id, active}`,
       { email: normalizedEmail },
     );
 
     if (!existing) {
-      await sanityWriteClient.create({
+      await sanityWriteClient.createIfNotExists({
+        _id: deterministicId,
         _type: "subscriber",
         email: normalizedEmail,
         subscribedAt,
         active: true,
-        source: "newsletter.chronoversecapital.com",
+        source: "chronoversecapital.com/newsletter",
       });
     } else if (existing.active !== true) {
       await sanityWriteClient
@@ -72,49 +76,19 @@ export async function POST(request: Request) {
         .set({
           subscribedAt,
           active: true,
-          source: "newsletter.chronoversecapital.com",
+          source: "chronoversecapital.com/newsletter",
         })
         .commit();
     }
-  } catch (subscriberError) {
-    console.error("Newsletter subscription persistence failed:", subscriberError);
+  } catch (error) {
+    console.error(
+      "Newsletter subscription persistence failed:",
+      error instanceof Error ? error.message : "unknown persistence error",
+    );
     return NextResponse.json(
       { status: "error", message: "Subscription could not be completed" },
       { status: 503 },
     );
-  }
-
-  try {
-    await sesClient.send(
-      new SendEmailCommand({
-        Source: officialEmail,
-        Destination: {
-          ToAddresses: [officialEmail, normalizedEmail],
-        },
-        Message: {
-          Subject: {
-            Data: "[Newsletter] New Subscription - Chronoverse Dispatch",
-            Charset: "UTF-8",
-          },
-          Body: {
-            Html: {
-              Data: `
-                <div style="font-family: monospace; background-color: #050506; color: #F3EBDD; padding: 24px; border: 1px solid #C8A7E8; border-radius: 8px;">
-                  <h2 style="color: #C8A7E8; margin-top: 0;">[Chronoverse Newsletter Subscription]</h2>
-                  <p><strong>Subscriber Email:</strong> ${escapeHtml(normalizedEmail)}</p>
-                  <p><strong>Source:</strong> newsletter.chronoversecapital.com</p>
-                  <hr style="border-color: #292432; margin-top: 20px;" />
-                  <span style="font-size: 10px; color: #91889A;">Chronoverse Capital</span>
-                </div>
-              `,
-              Charset: "UTF-8",
-            },
-          },
-        },
-      }),
-    );
-  } catch (notificationError) {
-    console.warn("Newsletter confirmation notification failed:", notificationError);
   }
 
   return NextResponse.json({
@@ -127,19 +101,5 @@ function invalidEmailResponse() {
   return NextResponse.json(
     { status: "error", message: "A valid email address is required" },
     { status: 400 },
-  );
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) =>
-    (
-      {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      } as const
-    )[character as "&" | "<" | ">" | '"' | "'"],
   );
 }

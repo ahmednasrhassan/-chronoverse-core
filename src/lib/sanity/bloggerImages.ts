@@ -14,8 +14,9 @@
 
 import type { SanityClient } from "@sanity/client";
 
-const BLOGGER_IMAGE_URL_REGEX =
-  /https?:\/\/(?:[a-z0-9-]+\.)*(?:blogspot\.com|googleusercontent\.com|bp\.blogspot\.com)[^\s"'>]+/gi;
+const HTTPS_URL_REGEX = /https:\/\/[^\s"'<>)]+/gi;
+const MAX_IMAGES_PER_DOCUMENT = 20;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export interface BloggerDocument {
   _id: string;
@@ -36,8 +37,27 @@ export interface MigrationResult {
  */
 export function extractBloggerImageUrls(html?: string): string[] {
   if (!html) return [];
-  const matches = html.match(BLOGGER_IMAGE_URL_REGEX) || [];
-  return Array.from(new Set(matches)).filter((url) => !url.includes("cdn.sanity.io"));
+  const matches = html.match(HTTPS_URL_REGEX) || [];
+  return Array.from(new Set(matches)).filter(isAllowedBloggerImageUrl);
+}
+
+export function isAllowedBloggerImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      !url.port &&
+      (hostname === "blogspot.com" ||
+        hostname.endsWith(".blogspot.com") ||
+        hostname === "googleusercontent.com" ||
+        hostname.endsWith(".googleusercontent.com"))
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -51,15 +71,35 @@ export async function downloadImageBuffer(url: string, timeoutMs = 8000): Promis
   try {
     const response = await fetch(url, {
       signal: controller.signal,
+      redirect: "error",
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ChronoverseImageBot/1.0",
       },
     });
 
     if (!response.ok) return null;
+    const contentType = response.headers.get("content-type") || "";
+    const contentLength = Number(response.headers.get("content-length") || "0");
+    if (!contentType.toLowerCase().startsWith("image/")) return null;
+    if (contentLength > MAX_IMAGE_BYTES) return null;
 
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    if (!response.body) return null;
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let receivedBytes = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      receivedBytes += value.byteLength;
+      if (receivedBytes > MAX_IMAGE_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+
+    return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), receivedBytes);
   } catch {
     return null;
   } finally {
@@ -75,13 +115,17 @@ export async function uploadImageToSanity(client: SanityClient, url: string): Pr
   const buffer = await downloadImageBuffer(url);
   if (!buffer) return null;
 
-  const filename = url.split("/").pop()?.split("?")[0] || `blogger-image-${Date.now()}.jpg`;
+  const rawFilename = url.split("/").pop()?.split("?")[0] || "blogger-image.jpg";
+  const filename = rawFilename.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 120);
 
   try {
     const asset = await client.assets.upload("image", buffer, { filename });
     return `${asset.url}?auto=format`;
   } catch (err) {
-    console.warn(`[bloggerImages] Failed to upload asset for ${url}:`, err);
+    console.warn(
+      "[bloggerImages] Failed to upload a validated Blogger image asset:",
+      err instanceof Error ? err.message : "unknown upload error",
+    );
     return null;
   }
 }
@@ -106,7 +150,7 @@ export async function migrateDocumentImages(
 
   if (!doc.bodyRaw) return result;
 
-  const imageUrls = extractBloggerImageUrls(doc.bodyRaw);
+  const imageUrls = extractBloggerImageUrls(doc.bodyRaw).slice(0, MAX_IMAGES_PER_DOCUMENT);
   result.imagesFound = imageUrls.length;
   if (imageUrls.length === 0) return result;
 

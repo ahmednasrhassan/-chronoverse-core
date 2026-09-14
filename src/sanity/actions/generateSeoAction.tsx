@@ -1,62 +1,82 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { DocumentActionComponent, DocumentActionDescription } from "sanity";
+import {
+  useClient,
+  type DocumentActionComponent,
+  type DocumentActionDescription,
+} from "sanity";
 import { Icon } from "@sanity/icons";
+import {
+  generateFallbackSeo,
+  htmlToText,
+  portableTextToPlainText,
+} from "@/lib/sanity/textUtils";
 
 /**
- * Custom Sanity Studio document action: "Generate SEO & Excerpt (AI)".
- *
- * Available on `post` documents. Calls the `/api/webhook/seo-generate`
- * Next.js Route Handler, which uses AI (with a deterministic fallback) to
- * produce a professional meta description and rich excerpt, then patches
- * the document directly in Sanity.
+ * Generates source-based SEO fields inside the authenticated Studio. The
+ * editor's Sanity session performs the only two permitted field updates, so
+ * no public endpoint or server write token participates in this workflow.
  */
-// This is a Sanity Studio "document action" factory, not a React
-// component — Sanity's own API contract calls it per-document render and
-// expects it to use React hooks internally (see Sanity's official docs
-// for custom document actions). ESLint's `rules-of-hooks` can't recognize
-// this convention because the function name doesn't start with an
-// uppercase letter or "use", so we disable the rule for this function only.
 /* eslint-disable react-hooks/rules-of-hooks */
-export const generateSeoAction: DocumentActionComponent = (props): DocumentActionDescription | null => {
+export const generateSeoAction: DocumentActionComponent = (
+  props,
+): DocumentActionDescription | null => {
   const { id, type, draft, published, onComplete } = props;
   const [isRunning, setIsRunning] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const client = useClient({ apiVersion: "2024-03-01" });
 
   const targetId = draft?._id || published?._id || id;
+  const sourceDocument = draft || published;
 
   const handleGenerate = useCallback(async () => {
-
     setIsRunning(true);
     setError(null);
+
     try {
-      const response = await fetch("/api/webhook/seo-generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: targetId }),
-      });
+      const title =
+        typeof sourceDocument?.title === "string"
+          ? sourceDocument.title.trim()
+          : "";
+      const structuredText = portableTextToPlainText(sourceDocument?.body);
+      const legacyText = htmlToText(
+        typeof sourceDocument?.bodyRaw === "string"
+          ? sourceDocument.bodyRaw
+          : "",
+      );
+      const sourceText = structuredText || legacyText;
 
-      const data = await response.json();
-
-      if (!response.ok || data.status !== "success") {
-        throw new Error(data?.message || "Failed to generate SEO content");
+      if (!title || !sourceText) {
+        throw new Error(
+          "Add a factual title and article body before generating SEO fields.",
+        );
       }
+
+      const seo = generateFallbackSeo(sourceText);
+      await client
+        .patch(targetId)
+        .set({ excerpt: seo.excerpt, seoDescription: seo.seoDescription })
+        .commit();
 
       setDialogOpen(false);
       onComplete();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error generating SEO content");
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unknown error generating SEO content",
+      );
     } finally {
       setIsRunning(false);
     }
-  }, [targetId, onComplete]);
+  }, [client, onComplete, sourceDocument, targetId]);
 
   if (type !== "post") return null;
 
   return {
-    label: isRunning ? "Generating…" : "Generate SEO & Excerpt (AI)",
+    label: isRunning ? "Generating…" : "Generate SEO & Excerpt",
     icon: () => <Icon symbol="sparkles" />,
     disabled: isRunning,
     onHandle: () => setDialogOpen(true),
@@ -65,7 +85,7 @@ export const generateSeoAction: DocumentActionComponent = (props): DocumentActio
           type: "confirm",
           message: error
             ? `Error: ${error}`
-            : "Generate a professional SEO meta description and rich excerpt for this article using AI? This will overwrite the existing excerpt and SEO description fields.",
+            : "Generate a source-based SEO description and excerpt? This overwrites the existing excerpt and SEO description fields.",
           onConfirm: handleGenerate,
           onCancel: () => {
             setDialogOpen(false);

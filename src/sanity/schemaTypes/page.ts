@@ -38,8 +38,20 @@ export default defineType({
       options: {
         source: 'title',
         maxLength: 96,
+        slugify: (input) =>
+          input
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)+/g, '')
+            .slice(0, 96),
       },
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) =>
+        Rule.required().custom((slug) => {
+          if (!slug?.current) return true
+          return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug.current)
+            ? true
+            : 'Slug must contain lowercase letters, numbers, and single hyphens only.'
+        }),
     }),
     defineField({
       name: 'mainImage',
@@ -68,7 +80,7 @@ export default defineType({
       rows: 20,
       group: 'content',
       description:
-        'Paste raw legacy HTML/CSS/JS pages here (e.g. imported Blogger templates or standalone microsites). Accepts long strings/code snippets. When populated, this takes priority over the structured "Page Content" field above and is rendered directly on the front-end via dangerouslySetInnerHTML — use with caution and only trusted/sanitized source markup.',
+        'Optional trusted legacy HTML. When populated, it takes priority over structured Page Content. The public site removes scripts, event handlers, unsafe URLs, and other active markup before rendering; review the sanitized result after edits.',
     }),
     defineField({
       name: 'seoDescription',

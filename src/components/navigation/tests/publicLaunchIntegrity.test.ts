@@ -144,19 +144,16 @@ for (const clientSource of [homepageNewsletterSource, newsletterPageSource]) {
   assert.match(clientSource, /email\.trim\(\)/);
   assert.doesNotMatch(clientSource, /\/api\/amazon|NEXT_PUBLIC_.*(?:SECRET|KEY)/);
 }
-assert.match(newsletterApiSource, /assertWriteTokenConfigured\(\)/);
+assert.match(newsletterApiSource, /getSanityWriteClient\(\)/);
 assert.match(newsletterApiSource, /\{_id, active\}/);
 assert.match(newsletterApiSource, /\.patch\(existing\._id\)/);
 assert.match(newsletterApiSource, /existing\.active !== true/);
+assert.match(newsletterApiSource, /createIfNotExists/);
+assert.match(newsletterApiSource, /createHash\("sha256"\)/);
 assert.match(newsletterApiSource, /\{ status: 503 \}/);
 assert.match(newsletterApiSource, /message: "Subscription recorded"/);
-assert.doesNotMatch(newsletterApiSource, /confirmed via Amazon SES|best-effort/i);
-assert.equal(
-  newsletterApiSource.indexOf('message: "Subscription recorded"') >
-    newsletterApiSource.indexOf("Newsletter confirmation notification failed"),
-  true,
-  "notification failure must not reverse a durable subscription",
-);
+assert.match(newsletterApiSource, /source: "chronoversecapital\.com\/newsletter"/);
+assert.doesNotMatch(newsletterApiSource, /SESClient|SendEmailCommand|\.send\(/);
 
 const layoutSource = readSource("src/app/layout.tsx");
 const cookieSource = readSource("src/components/cookiesconsent.tsx");

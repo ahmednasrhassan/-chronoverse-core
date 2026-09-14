@@ -226,15 +226,22 @@ async function handleSendNewsletter(): Promise<{
  * triggering/testing.
  */
 export async function GET(request: Request) {
-  // Optional shared-secret guard: if `CRON_SECRET` is configured, require
-  // the request to present it (Vercel Cron sends this automatically as a
-  // Bearer token when the env var is set in the project).
+  // Vercel Cron sends CRON_SECRET as a Bearer token. Missing deployment
+  // configuration must fail closed because this route triggers paid email.
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ status: "error", message: "Unauthorized" }, { status: 401 });
-    }
+  if (!cronSecret) {
+    return NextResponse.json(
+      { status: "error", message: "Newsletter dispatch is not configured" },
+      { status: 503 },
+    );
+  }
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json(
+      { status: "error", message: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   try {
@@ -250,5 +257,4 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return GET(request);
 }
-
 

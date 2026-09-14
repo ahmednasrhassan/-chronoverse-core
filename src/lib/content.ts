@@ -6,6 +6,7 @@ import {
   generateFallbackTags,
 } from "./metadataFallback";
 import type { PortableTextBlock } from "@portabletext/types";
+import DOMPurify from "isomorphic-dompurify";
 
 
 // Default/fallback category applied whenever a post has no category
@@ -98,19 +99,32 @@ export function extractFirstImageSrc(html: string): string | undefined {
 }
 
 /**
- * Sanitizes HTML to prevent XSS (Cross-Site Scripting) attacks by removing dangerous tags and attributes.
- * This version safely removes script/iframe tags without destroying body text or attributes.
+ * Sanitizes trusted legacy HTML before raw rendering. DOMPurify removes
+ * executable elements, event handlers, unsafe URL protocols, SVG/MathML,
+ * form controls, and embedding surfaces while retaining ordinary article
+ * markup and legacy inline presentation.
  */
 export function sanitizeHtml(html: string): string {
   if (!html) return "";
-
-  // Remove script tags and their content safely
-  let clean = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
-
-  // Remove iframe tags and their content safely
-  clean = clean.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "");
-
-  return clean;
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    FORBID_TAGS: [
+      "base",
+      "button",
+      "embed",
+      "form",
+      "iframe",
+      "input",
+      "link",
+      "meta",
+      "object",
+      "option",
+      "script",
+      "select",
+      "textarea",
+    ],
+    FORBID_ATTR: ["srcdoc"],
+  });
 }
 
 /**

@@ -25,7 +25,13 @@ export default defineType({
       description:
         'Used to build the /category/[slug] URL. Should match the imported Blogger label (kebab-case).',
       options: { source: 'title', maxLength: 96 },
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) =>
+        Rule.required().custom((slug) => {
+          if (!slug?.current) return true
+          return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug.current)
+            ? true
+            : 'Slug must contain lowercase letters, numbers, and single hyphens only.'
+        }),
     }),
     defineField({
       name: 'description',
@@ -33,4 +39,10 @@ export default defineType({
       type: 'text',
     }),
   ],
+  preview: {
+    select: { title: 'title', slug: 'slug.current' },
+    prepare({ title, slug }) {
+      return { title, subtitle: slug ? `/category/${slug}` : 'Slug required' }
+    },
+  },
 })

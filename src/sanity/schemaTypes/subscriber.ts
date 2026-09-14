@@ -2,11 +2,9 @@ import { defineType, defineField } from 'sanity'
 
 /**
  * Subscriber schema — stores newsletter subscriber email addresses
- * captured via the `/api/newsletter` subscription endpoint
- * (newsletter.chronoversecapital.com). Read by the
+ * captured via the canonical `/newsletter` subscription page. Read by the
  * `/api/cron/send-newsletter` Vercel Cron job to build the daily
- * distribution list for the automated RSS -> Amazon SES newsletter
- * dispatch.
+ * distribution list for the automated Amazon SES newsletter dispatch.
  */
 export default defineType({
   name: 'subscriber',
@@ -29,14 +27,15 @@ export default defineType({
       name: 'active',
       title: 'Active',
       type: 'boolean',
-      description: 'Unchecked automatically when a subscriber unsubscribes.',
+      description:
+        'Controls delivery eligibility. A repeat subscription reactivates an inactive record.',
       initialValue: true,
     }),
     defineField({
       name: 'source',
       title: 'Source',
       type: 'string',
-      description: 'Where this subscriber signed up (e.g. newsletter.chronoversecapital.com).',
+      description: 'Signup source path, normally chronoversecapital.com/newsletter.',
     }),
   ],
   preview: {

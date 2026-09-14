@@ -13,10 +13,8 @@ import { RecentContentWidget } from '@/sanity/dashboard/RecentContentWidget'
 import { ImageAssetsWidget } from '@/sanity/dashboard/ImageAssetsWidget'
 import { ContentStatsWidget } from '@/sanity/dashboard/ContentStatsWidget'
 
-import postSchema from '@/sanity/schemaTypes/post'
-import pageSchema from '@/sanity/schemaTypes/page'
-import authorSchema from '@/sanity/schemaTypes/author'
-import categorySchema from '@/sanity/schemaTypes/category'
+import { dataset, projectId } from '@/sanity/client'
+import { schemaTypes } from '@/sanity/schemaTypes'
 
 const deskStructure = (S: StructureBuilder) =>
   S.list()
@@ -47,11 +45,18 @@ const deskStructure = (S: StructureBuilder) =>
         .title('Categories')
         .icon(() => <Icon symbol="tag" />)
         .child(S.documentTypeList('category').title('Categories')),
+      S.divider(),
+      S.listItem()
+        .title('Newsletter Subscribers')
+        .child(S.documentTypeList('subscriber').title('Newsletter Subscribers')),
+      S.listItem()
+        .title('Legacy Comments')
+        .child(S.documentTypeList('comment').title('Legacy Comments')),
     ])
 
 const config = defineConfig({
-  projectId: 'xfs4j01p',
-  dataset: 'production',
+  projectId,
+  dataset,
   title: 'Chronoverse Capital Admin',
   basePath: '/studio',
   plugins: [
@@ -71,7 +76,7 @@ const config = defineConfig({
     }),
   ],
   schema: {
-    types: [postSchema, pageSchema, authorSchema, categorySchema],
+    types: schemaTypes,
   },
   document: {
     actions: (prev, context) => {
