@@ -28,6 +28,7 @@ export interface ContentItem {
   content: string;
   legacyBody?: string;
   imageUrl?: string;
+  cardImageUrl?: string;
   featuredImageUrl?: string;
   imageAlt?: string;
   imageCaption?: string;
@@ -257,11 +258,17 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
 
   // --- Automated Featured Image Fallback ---
   let resolvedImageUrl: string | undefined;
+  let resolvedCardImageUrl: string | undefined;
   if (post.mainImage?.asset) {
     try {
       resolvedImageUrl = urlForOptimized(post.mainImage as never)
         .width(1600)
         .height(900)
+        .fit("crop")
+        .url();
+      resolvedCardImageUrl = urlForOptimized(post.mainImage as never)
+        .width(720)
+        .height(405)
         .fit("crop")
         .url();
     } catch {
@@ -310,6 +317,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     // with the page-level <h1> (the post title) rendered by the template.
     legacyBody: sanitizeHtml(downgradeHeadings(post.legacyBody || "")),
     imageUrl: resolvedImageUrl,
+    cardImageUrl: resolvedCardImageUrl,
     featuredImageUrl: post.mainImage?.asset ? resolvedImageUrl : undefined,
     imageAlt: post.mainImage?.alt?.trim() || undefined,
     imageCaption: post.mainImage?.caption?.trim() || undefined,

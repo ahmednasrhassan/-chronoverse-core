@@ -5,6 +5,7 @@ import {
   createChronoverseProxyV1,
   getNewsletterCanonicalRedirectUrlV1,
   getNewsletterRewriteUrlV1,
+  requiresAuthSessionRefreshV1,
 } from "../../../proxy";
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
@@ -18,6 +19,15 @@ function assertEqual<T>(actual: T, expected: T, label: string): void {
 function request(host: string, pathname: string): NextRequest {
   return new NextRequest(`https://${host}${pathname}`, {
     headers: { host },
+  });
+}
+
+function requestWithSessionCookie(host: string, pathname: string): NextRequest {
+  return new NextRequest(`https://${host}${pathname}`, {
+    headers: {
+      host,
+      cookie: "sb-session-test=existing-session",
+    },
   });
 }
 
@@ -69,23 +79,62 @@ async function main(): Promise<void> {
     "/research",
   ));
 
-  assertEqual(refreshCalls, 1, "session refresh runs before rewrite");
+  assertEqual(refreshCalls, 0, "public newsletter rewrite skips session refresh");
   assertEqual(
     new URL(rewritten.headers.get("x-middleware-rewrite")!).pathname,
     "/newsletter/research",
     "composed proxy returns newsletter rewrite",
   );
-  assertEqual(rewritten.cookies.get("auth-refresh-test")?.value, "preserved",
-    "rewrite preserves refreshed auth cookie");
+  assertEqual(rewritten.cookies.get("auth-refresh-test"), undefined,
+    "public rewrite does not synthesize refreshed auth cookies");
 
   const direct = await handler(request("chronoversecapital.com", "/about"));
-  assertEqual(refreshCalls, 2, "session refresh also runs without a rewrite");
+  assertEqual(refreshCalls, 0, "public page skips session refresh");
   assertEqual(direct.headers.get("x-middleware-rewrite"), null,
     "main-domain response remains direct");
-  assertEqual(direct.cookies.get("auth-refresh-test")?.value, "preserved",
-    "direct response preserves refreshed auth cookie");
+  assertEqual(direct.cookies.get("auth-refresh-test"), undefined,
+    "public response does not synthesize refreshed auth cookies");
 
-  console.log("PASS: Supabase session refresh preserves newsletter proxy");
+  await handler(requestWithSessionCookie("chronoversecapital.com", "/reports"));
+  assertEqual(refreshCalls, 0,
+    "public requests tolerate an existing session without requiring rotation");
+
+  for (const pathname of [
+    "/account",
+    "/account/profile",
+    "/auth/confirm",
+    "/vip",
+    "/vip/markets/eurusd",
+  ]) {
+    assertEqual(requiresAuthSessionRefreshV1(pathname), true,
+      `${pathname} requires session refresh`);
+    const response = await handler(request("chronoversecapital.com", pathname));
+    assertEqual(response.cookies.get("auth-refresh-test")?.value, "preserved",
+      `${pathname} preserves refreshed auth cookies`);
+  }
+
+  for (const pathname of [
+    "/",
+    "/markets",
+    "/pricing",
+    "/reports",
+    "/newsletter",
+    "/category/macro",
+    "/research-article",
+    "/billing",
+    "/api/newsletter",
+    "/accounting",
+    "/authentication",
+    "/vipers",
+  ]) {
+    assertEqual(requiresAuthSessionRefreshV1(pathname), false,
+      `${pathname} skips session refresh`);
+  }
+
+  assertEqual(refreshCalls, 5,
+    "only auth-sensitive route families invoke session refresh");
+
+  console.log("PASS: proxy bounds Supabase refresh to auth-sensitive routes");
 }
 
 void main();

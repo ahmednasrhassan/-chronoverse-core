@@ -29,7 +29,7 @@ export default function Header() {
               alt=""
               width={54}
               height={54}
-              priority
+              loading="eager"
               className="h-11 w-11 shrink-0 rounded-full xl:h-[3.375rem] xl:w-[3.375rem]"
             />
             <span className="min-w-0">

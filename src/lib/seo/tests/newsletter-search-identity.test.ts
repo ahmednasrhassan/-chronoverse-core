@@ -110,8 +110,9 @@ async function verifyNewsletterHostPolicy(): Promise<void> {
     PREVIEW_ROBOTS_HEADER_VALUE_V1,
   );
   assert.equal(
-    subdomainResponse.cookies.get("newsletter-search-test")?.value,
-    "preserved",
+    subdomainResponse.cookies.get("newsletter-search-test"),
+    undefined,
+    "Newsletter host redirect avoids unnecessary auth refresh",
   );
 
   const redirectDestinationRequest = request(
@@ -153,7 +154,7 @@ async function verifyNewsletterHostPolicy(): Promise<void> {
     PREVIEW_ROBOTS_HEADER_VALUE_V1,
   );
 
-  assert.equal(refreshCalls, 6, "session refresh runs exactly once per request");
+  assert.equal(refreshCalls, 0, "public Newsletter requests skip session refresh");
 }
 
 async function main(): Promise<void> {

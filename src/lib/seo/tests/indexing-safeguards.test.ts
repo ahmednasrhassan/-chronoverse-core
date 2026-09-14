@@ -195,8 +195,8 @@ async function verifyPreviewProtection(): Promise<void> {
 
   assert.equal(
     refreshCalls,
-    2 + nonProductionHosts.slice(0, 4).length,
-    "session refresh runs exactly once per request",
+    0,
+    "public production and preview requests skip session refresh",
   );
 }
 

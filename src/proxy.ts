@@ -25,17 +25,29 @@ export type SessionRefresherV1 = (
   request: NextRequest,
 ) => Promise<NextResponse>;
 
+const AUTH_SESSION_ROUTE_FAMILIES_V1 = ['/account', '/auth', '/vip'] as const;
+
+export function requiresAuthSessionRefreshV1(pathname: string): boolean {
+  return AUTH_SESSION_ROUTE_FAMILIES_V1.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
 export function createChronoverseProxyV1(
   refreshSession: SessionRefresherV1 = refreshSupabaseSessionV1,
 ) {
   return async function handleProxy(request: NextRequest) {
-    const refreshedResponse = await refreshSession(request);
+    const sessionResponse = requiresAuthSessionRefreshV1(
+      request.nextUrl.pathname,
+    )
+      ? await refreshSession(request)
+      : NextResponse.next({ request });
     const newsletterRedirectUrl = getNewsletterCanonicalRedirectUrlV1(request);
 
     if (newsletterRedirectUrl !== null) {
       const redirectResponse = NextResponse.redirect(newsletterRedirectUrl, 308);
 
-      for (const cookie of refreshedResponse.cookies.getAll()) {
+      for (const cookie of sessionResponse.cookies.getAll()) {
         redirectResponse.cookies.set(cookie);
       }
 
@@ -45,12 +57,12 @@ export function createChronoverseProxyV1(
     const rewriteUrl = getNewsletterRewriteUrlV1(request);
 
     if (rewriteUrl === null) {
-      return applySearchRobotsHeaderV1(request, refreshedResponse);
+      return applySearchRobotsHeaderV1(request, sessionResponse);
     }
 
     const rewriteResponse = NextResponse.rewrite(rewriteUrl, { request });
 
-    for (const cookie of refreshedResponse.cookies.getAll()) {
+    for (const cookie of sessionResponse.cookies.getAll()) {
       rewriteResponse.cookies.set(cookie);
     }
 

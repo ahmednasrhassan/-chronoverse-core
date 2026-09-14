@@ -167,11 +167,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             <div className="relative w-full h-96 md:h-96 rounded-2xl overflow-hidden border border-border shadow-2xl print:border-none print:h-auto print:max-h-80">
               <Image
                 src={currentPage.imageUrl}
-                alt={currentPage.title}
-                title={currentPage.title}
+                alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, 768px"
-                priority
+                loading="eager"
+                decoding="async"
                 className="w-full h-full object-cover print:object-contain print:scale-100"
                 placeholder="blur"
                 blurDataURL={SHIMMER_BLUR_DATA_URL}
@@ -397,20 +397,31 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
       {currentPost.imageUrl && (
         <figure className="mb-12 w-full print:mb-6">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border shadow-2xl">
-            <Image
+          {currentPost.featuredImageUrl ? (
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border shadow-2xl">
+              <Image
+                src={currentPost.featuredImageUrl}
+                alt={imageAltText}
+                title={currentPost.title}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                preload
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
+              />
+            </div>
+          ) : (
+            <img
               src={currentPost.imageUrl}
               alt={imageAltText}
               title={currentPost.title}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
-              priority
-              quality={90}
-              className="w-full h-full object-cover transition-transform duration-700 hover:scale-105 print:object-contain"
-              placeholder="blur"
-              blurDataURL={SHIMMER_BLUR_DATA_URL}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="block h-auto w-full rounded-2xl border border-border shadow-2xl"
             />
-          </div>
+          )}
           {currentPost.imageCaption ? (
             <figcaption className="mt-3 text-sm text-muted text-center">
               {currentPost.imageCaption}

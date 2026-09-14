@@ -341,21 +341,24 @@ function EditorialImage({
   article: ContentItem;
   featured?: boolean;
 }) {
+  const imageUrl = article.cardImageUrl || article.imageUrl;
   const visualClass = featured
     ? "relative aspect-[16/10] overflow-hidden sm:aspect-auto"
     : "relative aspect-[4/3] overflow-hidden bg-[#15131A]";
 
   return (
     <div className={`${visualClass} bg-[#15131A]`}>
-      {article.imageUrl ? (
+      {imageUrl ? (
         <Image
-          src={article.imageUrl}
-          alt={article.title}
+          src={imageUrl}
+          alt={article.imageAlt || ""}
           fill
           sizes={featured
             ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 36vw"
             : "(max-width: 640px) 30vw, 136px"}
           className="object-cover opacity-75 grayscale-[20%]"
+          loading="lazy"
+          decoding="async"
         />
       ) : (
         <div

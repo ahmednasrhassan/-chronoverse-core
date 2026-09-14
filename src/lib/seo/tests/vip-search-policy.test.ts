@@ -174,7 +174,11 @@ async function verifyVipResponseHeaders(): Promise<void> {
     null,
     "Account continues to rely on its existing page-level B3 policy",
   );
-  assert.equal(refreshCalls, 9, "session refresh runs exactly once per request");
+  assert.equal(
+    refreshCalls,
+    7,
+    "VIP and Account refresh while Pricing and Markets skip refresh",
+  );
 }
 
 function verifyRobotsPolicy(): void {
