@@ -74,6 +74,7 @@ for (const retiredSlug of [
 
 const contentSource = readSource("src/lib/content.ts");
 const articleSource = readSource("src/app/(site)/[slug]/page.tsx");
+const articleSeoSource = readSource("src/lib/seo/article.ts");
 const summaryComponentSource = readSource(
   "src/components/AIExecutiveSummary.tsx",
 );
@@ -89,11 +90,14 @@ assert.match(contentSource, /coalesce\(tags, keywords, \[\]\)/);
 assert.match(contentSource, /relatedPost\?\._isPublic === true/);
 assert.doesNotMatch(articleSource, /logo\.png|Visual representation of|autoCaption/);
 assert.doesNotMatch(
-  articleSource,
-  /datePublished:[^\n]*new Date|dateModified:/,
+  articleSeoSource,
+  /datePublished:[^\n]*new Date|dateModified:[^\n]*new Date/,
 );
-assert.match(articleSource, /datePublished: currentPost\.date/);
-assert.match(articleSource, /logo\.svg/);
+assert.match(articleSource, /publishedAt: article\.publishedAt/);
+assert.match(articleSource, /modifiedAt: article\.updatedAt/);
+assert.match(articleSeoSource, /datePublished: article\.publishedAt/);
+assert.match(articleSeoSource, /dateModified: article\.modifiedAt/);
+assert.match(articleSeoSource, /buildCanonicalUrl\("\/logo\.svg"\)/);
 assert.match(summaryComponentSource, /aria-label="Executive Summary"/);
 assert.doesNotMatch(
   summaryComponentSource,

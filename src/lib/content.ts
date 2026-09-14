@@ -19,14 +19,22 @@ export interface ContentItem {
   slug: string;
   title: string;
   date: string;
+  publishedAt?: string;
+  updatedAt?: string;
   category: string;
+  authoredCategory?: string;
   categorySlug?: string;
   keywords: string[];
   content: string;
   legacyBody?: string;
   imageUrl?: string;
+  featuredImageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
   author?: string;
+  authoredSeoDescription?: string;
   seoDescription?: string;
+  excerpt?: string;
   bodyContent?: string;
   /**
    * Structured Sanity Portable Text `body` blocks (headings, paragraphs,
@@ -53,12 +61,15 @@ interface SanityImageAssetRef {
   };
   hotspot?: unknown;
   crop?: unknown;
+  alt?: string | null;
+  caption?: string | null;
 }
 
 interface SanityRawPost {
   slug: string | null;
   title: string | null;
-  date: string | null;
+  publishedAt: string | null;
+  updatedAt: string | null;
   category: string | null;
   categorySlug: string | null;
   keywords: string[] | null;
@@ -68,6 +79,7 @@ interface SanityRawPost {
   mainImage?: SanityImageAssetRef | null;
   author: string | null;
   seoDescription?: string | null;
+  excerpt?: string | null;
   bodyPlainText?: string | null;
   body?: PortableTextBlock[] | null;
   manualRelatedLinks?: SanityRawPost[] | null;
@@ -186,7 +198,8 @@ const PUBLISHED_POST_FILTER = `_type == "post" && defined(slug.current) && defin
 const POST_PROJECTION = `{
     "slug": slug.current,
     title,
-    "date": publishedAt,
+    publishedAt,
+    "updatedAt": _updatedAt,
     "category": category->title,
     "categorySlug": category->slug.current,
     "keywords": coalesce(tags, keywords, []),
@@ -194,15 +207,17 @@ const POST_PROJECTION = `{
     body,
     "legacyBody": bodyRaw,
     "imageUrl": mainImage.asset->url,
-    "mainImage": mainImage { ..., asset-> },
+    "mainImage": mainImage { ..., alt, caption, asset-> },
     "author": author->name,
     seoDescription,
+    excerpt,
     "bodyPlainText": pt::text(body),
     "manualRelatedLinks": manualRelatedLinks[]->{
       "_isPublic": defined(slug.current) && defined(publishedAt) && publishedAt <= now() && !(_id in path('drafts.**')),
       "slug": slug.current,
       title,
-      "date": publishedAt,
+      publishedAt,
+      "updatedAt": _updatedAt,
       "category": category->title,
       "categorySlug": category->slug.current,
       "keywords": coalesce(tags, keywords, []),
@@ -210,9 +225,10 @@ const POST_PROJECTION = `{
       body,
       "legacyBody": bodyRaw,
       "imageUrl": mainImage.asset->url,
-      "mainImage": mainImage { ..., asset-> },
+      "mainImage": mainImage { ..., alt, caption, asset-> },
       "author": author->name,
       seoDescription,
+      excerpt,
       "bodyPlainText": pt::text(body)
     }
   }`;
@@ -223,7 +239,9 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   // every downstream fallback (description, tags, category) operates on
   // clean text only.
   const bodyContent =
-    post.bodyPlainText || stripHtml(post.legacyBody || "") || "";
+    post.bodyPlainText ||
+    stripHtml(sanitizeHtml(post.legacyBody || "")) ||
+    "";
 
   const title = post.title || "Untitled";
 
@@ -247,10 +265,14 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     resolvedImageUrl || extractFirstImageSrc(post.legacyBody || "");
 
   // --- Automated SEO Description / Excerpt Fallback ---
+  const authoredSeoDescription = post.seoDescription?.trim() || undefined;
+  const authoredExcerpt = post.excerpt?.trim() || undefined;
   const resolvedSeoDescription =
-    post.seoDescription && post.seoDescription.trim().length > 0
-      ? post.seoDescription.trim()
-      : generateExcerpt(bodyContent);
+    authoredSeoDescription
+      ? authoredSeoDescription
+      : authoredExcerpt
+        ? authoredExcerpt
+        : generateExcerpt(bodyContent);
 
   // --- Automated Tags Fallback ---
   const resolvedKeywords =
@@ -265,8 +287,11 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   return {
     slug: post.slug || "",
     title,
-    date: post.date ? post.date.split("T")[0] : "",
+    date: post.publishedAt ? post.publishedAt.split("T")[0] : "",
+    publishedAt: post.publishedAt || undefined,
+    updatedAt: post.updatedAt || undefined,
     category: resolvedCategory,
+    authoredCategory: post.category?.trim() || undefined,
     categorySlug: resolvedCategorySlug,
     keywords: resolvedKeywords,
     content: typeof post.content === "string" ? post.content : "",
@@ -275,9 +300,13 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     // with the page-level <h1> (the post title) rendered by the template.
     legacyBody: sanitizeHtml(downgradeHeadings(post.legacyBody || "")),
     imageUrl: resolvedImageUrl,
+    featuredImageUrl: post.mainImage?.asset ? resolvedImageUrl : undefined,
+    imageAlt: post.mainImage?.alt?.trim() || undefined,
+    imageCaption: post.mainImage?.caption?.trim() || undefined,
     author: post.author || undefined,
-
+    authoredSeoDescription,
     seoDescription: resolvedSeoDescription || undefined,
+    excerpt: authoredExcerpt,
     bodyContent,
     body: post.body && post.body.length > 0 ? post.body : undefined,
     manualRelatedLinks:

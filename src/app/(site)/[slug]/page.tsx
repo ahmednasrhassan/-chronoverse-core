@@ -12,11 +12,9 @@ import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
 import AudioReader from "@/components/AudioReader";
 import MathContent from "@/components/MathContent";
-import { siteConfig } from "@/config/siteConfig";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
 
 import {
-  getSanityArticleBySlug,
   getSanityArticles,
   getSanityPageBySlug,
   stripHtml,
@@ -28,11 +26,38 @@ import {
 
 import { computeTopRelatedArticles } from "@/lib/relatedArticles";
 import { generateExecutiveSummary } from "@/lib/executiveSummary";
+import {
+  buildArticleJsonLd,
+  buildArticleMetadata,
+  normalizeArticleSeo,
+  serializeJsonForHtml,
+} from "@/lib/seo/article";
+import { getArticleForRoute } from "@/lib/seo/article-data";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
 import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+function getArticleSeo(article: ContentItem) {
+  return normalizeArticleSeo({
+    slug: article.slug,
+    title: article.title,
+    seoDescription: article.authoredSeoDescription,
+    excerpt: article.excerpt,
+    bodyText: article.bodyContent,
+    publishedAt: article.publishedAt,
+    modifiedAt: article.updatedAt,
+    author: article.author,
+    category: article.authoredCategory,
+    keywords: article.keywords,
+    featuredImageUrl: article.featuredImageUrl,
+    imageAlt: article.imageAlt,
+    imageCaption: article.imageCaption,
+    socialImageUrl: article.imageUrl,
+  });
 }
 
 // Article and administrative-page content is refreshed on-demand when
@@ -47,7 +72,11 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const currentPost = await getSanityArticleBySlug(slug);
+  const currentPost = await getArticleForRoute(slug);
+
+  if (currentPost) {
+    return buildArticleMetadata(getArticleSeo(currentPost));
+  }
 
   // Helper function to safely truncate strings to a specific max length for SEO
   const truncateForSEO = (text: string, maxLength: number) => {
@@ -57,57 +86,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return cleanText.substring(0, maxLength - 3).trim() + "...";
   };
 
-  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
   const BRAND_SUFFIX = "";
-  const canonicalUrl = `${SITE_URL}/${slug}`;
-
-  if (currentPost) {
-    // 1. Optimize Title (Max ~60 characters total including suffix)
-    const maxTitleLength = 40;
-    const optimizedTitle = truncateForSEO(currentPost.title || "", maxTitleLength);
-
-    // 2. Optimize Meta Description (Ideal length 120 - 155 characters)
-    let rawDescription = currentPost.seoDescription || "";
-    if (!rawDescription) {
-      rawDescription = stripHtml(currentPost.legacyBody || currentPost.content || "");
-    }
-
-    // Ensure minimum description length for SEO
-    const fullDescription = rawDescription.length < 110
-      ? `${rawDescription} Read the full analysis on Chronoverse Capital.`
-      : rawDescription;
-
-    const optimizedDescription = truncateForSEO(fullDescription, 155);
-
-    // 3. Resolve Image for Open Graph and Twitter
-    const dynamicOgImage = `${SITE_URL}/api/og?title=${encodeURIComponent(
-      truncateForSEO(currentPost.title || "Chronoverse Capital", 50)
-    )}&category=${encodeURIComponent(currentPost.category || "Intelligence")}`;
-    const resolvedOgImage = currentPost.imageUrl || dynamicOgImage;
-
-    return {
-      title: optimizedTitle,
-      description: optimizedDescription,
-      keywords: currentPost.keywords,
-      alternates: {
-        canonical: canonicalUrl, // Fixes: Open Graph URL not matching canonical
-      },
-      openGraph: {
-        title: optimizedTitle,
-        description: optimizedDescription,
-        url: canonicalUrl,
-        type: "article",
-        images: resolvedOgImage ? [{ url: resolvedOgImage }] : [],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: optimizedTitle,
-        description: optimizedDescription,
-        images: resolvedOgImage ? [resolvedOgImage] : [],
-      },
-      category: currentPost.category,
-    };
-  }
+  const canonicalUrl = buildCanonicalUrl(`/${slug}`);
 
   // Fallback: administrative `page` document (About, Privacy Policy, etc.)
   const currentPage = await getSanityPageBySlug(slug);
@@ -155,7 +135,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
 
   // Retrieve the current article directly matching the URL slug
-  const currentPost = await getSanityArticleBySlug(slug);
+  const currentPost = await getArticleForRoute(slug);
 
   // ---------------------------------------------------------------------
   // Administrative Page fallback: if no `post` matches this slug, check
@@ -256,7 +236,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Calculate estimated read time dynamically (approx. 200 words per minute)
   const readTimeMinutes = calculateReadTime(rawText);
 
-  const imageAltText = `${currentPost.title} featured image`;
+  const imageAltText = currentPost.imageAlt || "Article featured image";
 
   // Extract top 3 natural analytical paragraphs directly for the Executive Summary
   const naturalParagraphs = rawText
@@ -304,36 +284,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
   const transformedLegacyBody = strippedLegacyBody;
   const sanitizedLegacyBody = transformedLegacyBody ? sanitizeHtml(transformedLegacyBody) : "";
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
-
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: currentPost.title,
-    description: currentPost.seoDescription || currentPost.title,
-    ...(currentPost.date ? { datePublished: currentPost.date } : {}),
-    ...(currentPost.imageUrl ? { image: currentPost.imageUrl } : {}),
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${baseUrl}/${currentPost.slug}`,
-    },
-    ...(currentPost.author
-      ? {
-          author: {
-            "@type": "Person",
-            name: currentPost.author,
-          },
-        }
-      : {}),
-    publisher: {
-      "@type": "Organization",
-      name: "Chronoverse Capital",
-      logo: {
-        "@type": "ImageObject",
-        url: `${baseUrl}/logo.svg`,
-      },
-    },
-  };
+  const articleSeo = getArticleSeo(currentPost);
+  const articleSchema = buildArticleJsonLd(articleSeo);
   // --- Automatic Internal Links & Related Articles Engine ---
   // Filter related posts based on shared keywords or identical categories
   let relatedPosts = allArticles
@@ -378,7 +330,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       <ReadingProgressBar />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonForHtml(articleSchema) }}
       />
       {/* Article Header & Admin Controls */}
       <div className="mb-10 border-b border-border/80 pb-8 print:border-none print:pb-2">
@@ -417,7 +369,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           <div className="flex items-center gap-2 print:hidden">
             <ArticleShareButtons
               title={currentPost.title}
-              url={`${siteConfig.url}/${currentPost.slug}`}
+              url={articleSeo.canonicalUrl}
             />
 
             <PrintButton />
@@ -469,6 +421,11 @@ export default async function UniversalArticlePage({ params }: PageProps) {
               blurDataURL={SHIMMER_BLUR_DATA_URL}
             />
           </div>
+          {currentPost.imageCaption ? (
+            <figcaption className="mt-3 text-sm text-muted text-center">
+              {currentPost.imageCaption}
+            </figcaption>
+          ) : null}
         </figure>
       )}
 
