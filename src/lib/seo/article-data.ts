@@ -40,3 +40,15 @@ export function requireRootContent(
   if (!content) notFound();
   return content;
 }
+
+/** Used by legacy URL normalization without weakening provider failures. */
+export async function rootContentExistsForLegacyRedirect(
+  slug: string,
+): Promise<boolean> {
+  return (
+    (await resolveRootContent(
+      getArticleForRoute(slug),
+      () => getPageForRoute(slug),
+    )) !== null
+  );
+}

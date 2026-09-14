@@ -37,10 +37,15 @@ import {
   getPageForRoute,
   requireRootContent,
   resolveRootContent,
+  rootContentExistsForLegacyRedirect,
 } from "@/lib/seo/article-data";
 import { buildCmsPageMetadata } from "@/lib/seo/cms-page";
+import {
+  getRootHtmlCandidate,
+  resolveLegacyContentRedirect,
+} from "@/lib/seo/legacy-routes";
 
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -79,6 +84,16 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+
+  if (slug.endsWith(".html")) {
+    const legacyTarget = await resolveLegacyContentRedirect(
+      getRootHtmlCandidate(slug),
+      rootContentExistsForLegacyRedirect,
+    );
+    if (!legacyTarget) notFound();
+    permanentRedirect(legacyTarget);
+  }
+
   if (isReservedRootSlug(slug)) notFound();
   const content = requireRootContent(
     await resolveRootContent(
@@ -96,6 +111,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
+
+  if (slug.endsWith(".html")) {
+    const legacyTarget = await resolveLegacyContentRedirect(
+      getRootHtmlCandidate(slug),
+      rootContentExistsForLegacyRedirect,
+    );
+    if (!legacyTarget) notFound();
+    permanentRedirect(legacyTarget);
+  }
+
   if (isReservedRootSlug(slug)) notFound();
 
   const content = requireRootContent(

@@ -9,9 +9,8 @@ const readSource = (relativePath: string) =>
   readFileSync(path.join(repositoryRoot, relativePath), "utf8");
 
 const retiredRoutes = new Map([
-  ["src/app/(site)/intelligence/page.tsx", "/vip"],
+  ["src/app/(site)/intelligence/page.tsx", "/markets"],
   ["src/app/(site)/premium/page.tsx", "/pricing"],
-  ["src/app/(site)/products/page.tsx", "/"],
   ["src/app/(site)/markets/bitcoin/page.tsx", "/markets"],
   ["src/app/(site)/markets/gold/page.tsx", "/markets"],
   ["src/app/(site)/markets/oil/page.tsx", "/markets"],
@@ -32,6 +31,10 @@ for (const [relativePath, destination] of retiredRoutes) {
     `${relativePath} must not retain its obsolete public experience`,
   );
 }
+
+const retiredProductsPage = readSource("src/app/(site)/products/page.tsx");
+assert.match(retiredProductsPage, /notFound\(\)/);
+assert.doesNotMatch(retiredProductsPage, /redirect/i);
 
 for (const retiredApi of [
   "src/app/api/market-data/route.ts",

@@ -36,7 +36,6 @@ export const RESERVED_ROOT_SLUGS = Object.freeze([
   "sponsors",
   "studio",
   "terms-of-service",
-  "the-new-scarcity-economy-macro-crisis",
   "vip",
 ] as const);
 

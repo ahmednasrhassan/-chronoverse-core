@@ -29,7 +29,6 @@ function verifyPurePolicy(): void {
     "premium",
     "robots.txt",
     "sitemap.xml",
-    "the-new-scarcity-economy-macro-crisis",
   ]) {
     assert.equal(isReservedRootSlug(slug), true, `${slug} must be reserved`);
   }

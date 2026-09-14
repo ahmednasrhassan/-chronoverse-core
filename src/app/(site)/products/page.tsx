@@ -1,5 +1,6 @@
-import { permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-export default function LegacyProductsPage() {
-  permanentRedirect("/");
+/** The obsolete external product/resource directory has no current equivalent. */
+export default function RetiredProductsPage() {
+  notFound();
 }
