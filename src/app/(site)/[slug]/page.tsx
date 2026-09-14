@@ -17,7 +17,6 @@ import { isReservedRootSlug } from "@/lib/content/reservedSlugs";
 
 import {
   getSanityArticles,
-  getSanityPageBySlug,
   stripHtml,
   sanitizeHtml,
   calculateReadTime,
@@ -33,8 +32,13 @@ import {
   normalizeArticleSeo,
   serializeJsonForHtml,
 } from "@/lib/seo/article";
-import { getArticleForRoute } from "@/lib/seo/article-data";
-import { buildCanonicalUrl } from "@/lib/seo/site-url";
+import {
+  getArticleForRoute,
+  getPageForRoute,
+  requireRootContent,
+  resolveRootContent,
+} from "@/lib/seo/article-data";
+import { buildCmsPageMetadata } from "@/lib/seo/cms-page";
 
 import { notFound } from "next/navigation";
 
@@ -76,71 +80,30 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   if (isReservedRootSlug(slug)) notFound();
-  const currentPost = await getArticleForRoute(slug);
-
-  if (currentPost) {
-    return buildArticleMetadata(getArticleSeo(currentPost));
-  }
-
-  // Helper function to safely truncate strings to a specific max length for SEO
-  const truncateForSEO = (text: string, maxLength: number) => {
-    if (!text) return "";
-    const cleanText = text.trim();
-    if (cleanText.length <= maxLength) return cleanText;
-    return cleanText.substring(0, maxLength - 3).trim() + "...";
-  };
-
-  const BRAND_SUFFIX = "";
-  const canonicalUrl = buildCanonicalUrl(`/${slug}`);
-
-  // Fallback: administrative `page` document (About, Privacy Policy, etc.)
-  const currentPage = await getSanityPageBySlug(slug);
-  if (!currentPage) {
-    return {
-      alternates: {
-        canonical: canonicalUrl,
-      },
-    };
-  }
-
-  const rawPageText = stripHtml(currentPage.legacyHtml || currentPage.bodyContent || "");
-
-  // Optimize Administrative Page Title & Description
-  const maxTitleLength = 45;
-  const optimizedPageTitle = `${truncateForSEO(currentPage.title || slug, maxTitleLength)}${BRAND_SUFFIX}`;
-  const optimizedPageDesc = truncateForSEO(
-    currentPage.seoDescription || rawPageText || "Institutional Macroeconomic Research and Financial Intelligence.",
-    155
+  const content = requireRootContent(
+    await resolveRootContent(
+      getArticleForRoute(slug),
+      () => getPageForRoute(slug),
+    ),
   );
 
-  return {
-    title: optimizedPageTitle,
-    description: optimizedPageDesc,
-    alternates: {
-      canonical: canonicalUrl, // SEO FIX: Explicitly enforce canonical URL for all administrative pages
-    },
-    openGraph: {
-      title: optimizedPageTitle,
-      description: optimizedPageDesc,
-      url: canonicalUrl,
-      type: "website",
-      images: currentPage.imageUrl ? [{ url: currentPage.imageUrl }] : [],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: optimizedPageTitle,
-      description: optimizedPageDesc,
-      images: currentPage.imageUrl ? [currentPage.imageUrl] : [],
-    },
-  };
+  if (content.kind === "post") {
+    return buildArticleMetadata(getArticleSeo(content.post));
+  }
+
+  return buildCmsPageMetadata(content.page);
 }
 
 export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
   if (isReservedRootSlug(slug)) notFound();
 
-  // Retrieve the current article directly matching the URL slug
-  const currentPost = await getArticleForRoute(slug);
+  const content = requireRootContent(
+    await resolveRootContent(
+      getArticleForRoute(slug),
+      () => getPageForRoute(slug),
+    ),
+  );
 
   // ---------------------------------------------------------------------
   // Administrative Page fallback: if no `post` matches this slug, check
@@ -151,12 +114,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // `dangerouslySetInnerHTML`, taking priority over the structured
   // Portable Text `bodyContent`.
   // ---------------------------------------------------------------------
-  if (!currentPost) {
-    const currentPage = await getSanityPageBySlug(slug);
-
-    if (!currentPage) {
-      notFound();
-    }
+  if (content.kind === "page") {
+    const currentPage = content.page;
 
     const sanitizedLegacyHtml = currentPage.legacyHtml
       ? sanitizeHtml(currentPage.legacyHtml)
@@ -207,6 +166,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       </main>
     );
   }
+
+  const currentPost = content.post;
 
   // Retrieve articles for generating related posts recommendations
   const allArticles = await getSanityArticles();

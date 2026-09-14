@@ -318,34 +318,26 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   };
 }
 
-// 1. Fetch a single article by slug; unavailable content resolves to null.
+// 1. Fetch a single article by slug; a successful miss resolves to null.
 export async function getSanityArticleBySlug(slug: string): Promise<ContentItem | null> {
   const query = `*[${PUBLISHED_POST_FILTER} && slug.current == $slug][0] ${POST_PROJECTION}`;
-
-  try {
-    const post = await client.fetch<SanityRawPost | null>(query, { slug });
-    if (post) {
-      return mapSanityPost(post);
-    }
-  } catch (error) {
-    console.warn(`Sanity fetch for slug "${slug}" failed:`, error);
-  }
-return null;
+  const post = await client.fetch<SanityRawPost | null>(query, { slug });
+  return post ? mapSanityPost(post) : null;
 }
+
+type SanityArticleCollectionLoader = () => Promise<
+  SanityRawPost[] | null | undefined
+>;
+
 // 2. Fetch articles directly from Sanity CMS
-export async function getSanityArticles(): Promise<ContentItem[]> {
-  const query = `*[${PUBLISHED_POST_FILTER}] | order(publishedAt desc) ${POST_PROJECTION}`;
-
-  try {
-    const posts = await client.fetch<SanityRawPost[]>(query);
-    if (posts && posts.length > 0) {
-      return posts.map(mapSanityPost);
-    }
-  } catch (error) {
-    console.warn("Sanity article fetch failed:", error);
-  }
-
-  return [];
+export async function getSanityArticles(
+  loadPosts: SanityArticleCollectionLoader = () =>
+    client.fetch<SanityRawPost[]>(
+      `*[${PUBLISHED_POST_FILTER}] | order(publishedAt desc) ${POST_PROJECTION}`,
+    ),
+): Promise<ContentItem[]> {
+  const posts = await loadPosts();
+  return (posts || []).map(mapSanityPost);
 }
 
 /**
@@ -353,17 +345,8 @@ export async function getSanityArticles(): Promise<ContentItem[]> {
  */
 export async function getLatestSanityArticles(limit: number = 4): Promise<ContentItem[]> {
   const query = `*[${PUBLISHED_POST_FILTER}] | order(publishedAt desc)[0...${limit}] ${POST_PROJECTION}`;
-
-  try {
-    const posts = await freshClient.fetch<SanityRawPost[]>(query);
-    if (posts && posts.length > 0) {
-      return posts.map(mapSanityPost);
-    }
-  } catch (error) {
-    console.warn("Sanity fetch for latest articles failed:", error);
-  }
-
-  return [];
+  const posts = await freshClient.fetch<SanityRawPost[]>(query);
+  return (posts || []).map(mapSanityPost);
 }
 
 /**
@@ -525,27 +508,22 @@ export async function getSanityPageBySlug(slug: string): Promise<PageContentItem
     legacyHtml
   }`;
 
-  try {
-    const page = await client.fetch<SanityRawPage | null>(query, { slug });
-    if (!page) return null;
-    return {
-      slug: page.slug || "",
-      title: page.title || "Untitled Page",
-      seoDescription: page.seoDescription || undefined,
-      bodyContent: page.bodyPlainText || undefined,
-      imageUrl: page.imageUrl || undefined,
-      // Same H1-collision protection as posts: downgrade any raw <h1> in
-      // the administrative page's legacy HTML to <h2> before it's ever
-      // rendered, since the page template already renders its own <h1>
-      // from `currentPage.title`.
-      legacyHtml: page.legacyHtml
-        ? sanitizeHtml(downgradeHeadings(page.legacyHtml))
-        : undefined,
-    };
-  } catch (error) {
-    console.warn(`Sanity fetch for page "${slug}" failed:`, error);
-    return null;
-  }
+  const page = await client.fetch<SanityRawPage | null>(query, { slug });
+  if (!page) return null;
+  return {
+    slug: page.slug || "",
+    title: page.title || "Untitled Page",
+    seoDescription: page.seoDescription || undefined,
+    bodyContent: page.bodyPlainText || undefined,
+    imageUrl: page.imageUrl || undefined,
+    // Same H1-collision protection as posts: downgrade any raw <h1> in
+    // the administrative page's legacy HTML to <h2> before it's ever
+    // rendered, since the page template already renders its own <h1>
+    // from `currentPage.title`.
+    legacyHtml: page.legacyHtml
+      ? sanitizeHtml(downgradeHeadings(page.legacyHtml))
+      : undefined,
+  };
 }
 
 export async function getAllCategories(): Promise<{ title: string; slug: string }[]> {
@@ -554,11 +532,6 @@ export async function getAllCategories(): Promise<{ title: string; slug: string 
     "slug": slug.current
   }`;
 
-  try {
-    const categories = await client.fetch<{ title: string; slug: string }[]>(query);
-    return categories || [];
-  } catch (error) {
-    console.warn("Sanity fetch for categories failed:", error);
-    return [];
-  }
+  const categories = await client.fetch<{ title: string; slug: string }[]>(query);
+  return categories || [];
 }

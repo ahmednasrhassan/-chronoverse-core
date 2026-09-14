@@ -1,106 +1,71 @@
-import { MetadataRoute } from "next";
-import { client } from "@/sanity/client";
-import { DEFAULT_CATEGORY_SLUG } from "@/lib/content";
+import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
+import { DEFAULT_CATEGORY_SLUG } from "@/lib/content";
+import { isReservedRootSlug } from "@/lib/content/reservedSlugs";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
+import { client } from "@/sanity/client";
 
 // The sitemap is refreshed on-demand when Sanity publishes, updates,
 // or deletes editorial content through `/api/revalidate`.
 
-// Slugs that are permanently redirected (301/308) and MUST NOT appear in the sitemap
-const EXCLUDED_SLUGS = new Set([
-  "intelligence",
-  "premium",
-  "products",
-  "markets/bitcoin",
-  "markets/gold",
-  "markets/oil",
-  "markets/sp500",
-  "the-new-scarcity-economy-macro-crisis",
-]);
-
-/**
- * Utility function to generate perfectly clean, canonical-matching URLs.
- * Strips leading/trailing slashes to prevent duplicate indexing issues.
- */
-const cleanUrl = (path: string): string => {
-  const cleanPath = path.replace(/^\/+|\/+$/g, "");
-  return cleanPath ? `${BASE_URL}/${cleanPath}` : BASE_URL;
-};
-
 interface SanitySlugDoc {
-  slug: string | null;
-  updatedAt?: string | null;
-  publishedAt?: string | null;
+  readonly slug: string | null;
+  readonly updatedAt?: string | null;
+  readonly publishedAt?: string | null;
 }
 
-/**
- * Static, first-class routes for the site. Kept in sync with the
- * `src/app/(site)` route group.
- */
-const STATIC_ROUTES: Array<{
-  path: string;
-  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
-  priority: number;
+interface SitemapContent {
+  readonly posts: readonly SanitySlugDoc[];
+  readonly categorySlugs: readonly string[];
+}
+
+const ROOT_POST_SLUG_FORMAT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CATEGORY_SLUG_FORMAT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Static routes whose existing route metadata permits indexing. */
+const STATIC_ROUTES: ReadonlyArray<{
+  readonly path: string;
+  readonly changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+  readonly priority: number;
 }> = [
   { path: "", changeFrequency: "daily", priority: 1.0 },
   { path: "about", changeFrequency: "monthly", priority: 0.6 },
   { path: "contact", changeFrequency: "monthly", priority: 0.5 },
+  { path: "data-sources", changeFrequency: "monthly", priority: 0.5 },
   { path: "disclaimer", changeFrequency: "yearly", priority: 0.3 },
   { path: "dmca", changeFrequency: "yearly", priority: 0.3 },
   { path: "editorial-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "faq", changeFrequency: "monthly", priority: 0.4 },
-  { path: "data-sources", changeFrequency: "monthly", priority: 0.5 },
   { path: "freshness", changeFrequency: "monthly", priority: 0.5 },
-  { path: "manifesto", changeFrequency: "monthly", priority: 0.5 },
   { path: "markets", changeFrequency: "weekly", priority: 0.7 },
   { path: "methodology", changeFrequency: "monthly", priority: 0.6 },
+  { path: "newsletter", changeFrequency: "monthly", priority: 0.5 },
   { path: "pricing", changeFrequency: "weekly", priority: 0.6 },
   { path: "privacy-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "reports", changeFrequency: "weekly", priority: 0.9 },
   { path: "terms-of-service", changeFrequency: "yearly", priority: 0.3 },
 ];
 
-/**
- * Optional: manually tracked last-modified dates for static assets.
- */
-const STATIC_LAST_MODIFIED: Record<string, Date> = {};
-
-/**
- * Fetches ONLY published `post` documents from Sanity.
- */
 async function getSanityPosts(): Promise<SanitySlugDoc[]> {
-  try {
-    const posts = await client.fetch<SanitySlugDoc[]>(
-      `*[
-        _type == "post" &&
-        defined(slug.current) &&
-        defined(publishedAt) &&
-        publishedAt <= now() &&
-        !(_id in path('drafts.**'))
-      ] {
-        "slug": slug.current,
-        "updatedAt": _updatedAt,
-        publishedAt
-      }`
-    );
-    return posts || [];
-  } catch (error) {
-    console.warn("[Sitemap] Failed to fetch Sanity posts:", error);
-    return [];
-  }
+  const posts = await client.fetch<SanitySlugDoc[]>(
+    `*[
+      _type == "post" &&
+      defined(slug.current) &&
+      defined(publishedAt) &&
+      publishedAt <= now() &&
+      !(_id in path('drafts.**'))
+    ] {
+      "slug": slug.current,
+      "updatedAt": _updatedAt,
+      publishedAt
+    }`,
+  );
+  return posts || [];
 }
 
-/**
- * Resolves active category slugs referenced by at least one published post.
- */
 async function getCategorySlugs(): Promise<string[]> {
-  try {
-    const [
-      usedSlugs,
-      hasUncategorizedPosts,
-      hasGeneralCategory,
-    ] = await Promise.all([
+  const [usedSlugs, hasUncategorizedPosts, hasGeneralCategory] =
+    await Promise.all([
       client.fetch<string[]>(
         `array::unique(*[
           _type == "post" &&
@@ -109,7 +74,7 @@ async function getCategorySlugs(): Promise<string[]> {
           publishedAt <= now() &&
           defined(category->slug.current) &&
           !(_id in path('drafts.**'))
-        ].category->slug.current)`
+        ].category->slug.current)`,
       ),
       client.fetch<boolean>(
         `count(*[
@@ -119,7 +84,7 @@ async function getCategorySlugs(): Promise<string[]> {
           publishedAt <= now() &&
           !defined(category) &&
           !(_id in path('drafts.**'))
-        ]) > 0`
+        ]) > 0`,
       ),
       client.fetch<boolean>(
         `count(*[
@@ -131,87 +96,83 @@ async function getCategorySlugs(): Promise<string[]> {
       ),
     ]);
 
-    const slugs = (usedSlugs || []).filter((s): s is string => Boolean(s));
+  const slugs = (usedSlugs || []).filter(
+    (slug): slug is string =>
+      typeof slug === "string" && CATEGORY_SLUG_FORMAT.test(slug),
+  );
 
-    if (
-      hasUncategorizedPosts &&
-      hasGeneralCategory &&
-      !slugs.includes(DEFAULT_CATEGORY_SLUG)
-    ) {
-      slugs.push(DEFAULT_CATEGORY_SLUG);
-    }
-
-    return Array.from(new Set(slugs));
-  } catch (error) {
-    console.warn("[Sitemap] Failed to fetch category slugs:", error);
-    return [];
+  if (
+    hasUncategorizedPosts &&
+    hasGeneralCategory &&
+    !slugs.includes(DEFAULT_CATEGORY_SLUG)
+  ) {
+    slugs.push(DEFAULT_CATEGORY_SLUG);
   }
+
+  return Array.from(new Set(slugs));
 }
 
-/**
- * Resolves the accurate modification timestamp for each post.
- */
-function resolvePostDate(post: SanitySlugDoc): Date {
-  if (post.updatedAt) return new Date(post.updatedAt);
-  if (post.publishedAt) return new Date(post.publishedAt);
-  return new Date();
+/** Loads every required dynamic source without partial-success fallbacks. */
+export async function loadSitemapContent(
+  loadPosts: () => Promise<readonly SanitySlugDoc[]> = getSanityPosts,
+  loadCategorySlugs: () => Promise<readonly string[]> = getCategorySlugs,
+): Promise<SitemapContent> {
+  const [posts, categorySlugs] = await Promise.all([
+    loadPosts(),
+    loadCategorySlugs(),
+  ]);
+  return { posts, categorySlugs };
+}
+
+function resolvePostDate(post: SanitySlugDoc): string | undefined {
+  return post.updatedAt || post.publishedAt || undefined;
+}
+
+/** Builds only canonical, indexable entries from successfully loaded data. */
+export function buildSitemap(content: SitemapContent): MetadataRoute.Sitemap {
+  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
+    url: buildCanonicalUrl(route.path ? `/${route.path}` : "/"),
+    changeFrequency: route.changeFrequency,
+    priority: route.priority,
+  }));
+
+  const postEntries: MetadataRoute.Sitemap = content.posts
+    .filter(
+      (post): post is SanitySlugDoc & { readonly slug: string } =>
+        typeof post.slug === "string" &&
+        ROOT_POST_SLUG_FORMAT.test(post.slug) &&
+        !isReservedRootSlug(post.slug),
+    )
+    .map((post) => {
+      const lastModified = resolvePostDate(post);
+      return {
+        url: buildCanonicalUrl(`/${post.slug}`),
+        ...(lastModified ? { lastModified } : {}),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      };
+    });
+
+  const categoryEntries: MetadataRoute.Sitemap = Array.from(
+    new Set(content.categorySlugs),
+  )
+    .filter((slug) => CATEGORY_SLUG_FORMAT.test(slug))
+    .map((slug) => ({
+      url: buildCanonicalUrl(`/category/${slug}`),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }));
+
+  const seen = new Set<string>();
+  return [...staticEntries, ...postEntries, ...categoryEntries].filter(
+    (entry) => {
+      if (seen.has(entry.url)) return false;
+      seen.add(entry.url);
+      return true;
+    },
+  );
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, categorySlugs] = await Promise.all([
-    getSanityPosts(),
-    getCategorySlugs(),
-  ]);
-
-  // 1. Process Static Entries
-  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => {
-    const entry: MetadataRoute.Sitemap[number] = {
-      url: cleanUrl(route.path),
-      changeFrequency: route.changeFrequency,
-      priority: route.priority,
-    };
-
-    const overrideDate = STATIC_LAST_MODIFIED[route.path];
-    if (overrideDate) {
-      entry.lastModified = overrideDate;
-    }
-
-    return entry;
-  });
-
-  // 2. Process Post Entries
-  const postEntries: MetadataRoute.Sitemap = posts
-    .filter(
-      (post): post is SanitySlugDoc & { slug: string } =>
-        typeof post.slug === "string" &&
-        !post.slug.endsWith(".html") &&
-        !post.slug.startsWith("p/") &&
-        !EXCLUDED_SLUGS.has(post.slug)
-    )
-    .map((post) => ({
-      url: cleanUrl(post.slug),
-      lastModified: resolvePostDate(post),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
-
-  // 3. Process Category Entries
-  const categoryEntries: MetadataRoute.Sitemap = categorySlugs.map((slug) => ({
-    url: cleanUrl(`category/${slug}`),
-    changeFrequency: "weekly",
-    priority: 0.6,
-  }));
-
-  // 4. De-duplicate URLs strictly to ensure clean XML generation
-  const seen = new Set<string>();
-  const merged: MetadataRoute.Sitemap = [];
-
-  for (const entry of [...staticEntries, ...postEntries, ...categoryEntries]) {
-    if (!seen.has(entry.url)) {
-      seen.add(entry.url);
-      merged.push(entry);
-    }
-  }
-
-  return merged;
+  return buildSitemap(await loadSitemapContent());
 }

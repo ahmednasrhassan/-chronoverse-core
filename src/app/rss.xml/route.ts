@@ -37,23 +37,35 @@ async function getPublishedPosts(): Promise<RssArticle[]> {
       "authorName": author->name
     }`;
 
+  const posts = await client.fetch<RssArticle[]>(query);
+  return posts || [];
+}
+
+type PublishedPostsLoader = () => Promise<RssArticle[]>;
+
+export async function createRssResponse(
+  loadPosts: PublishedPostsLoader = getPublishedPosts,
+): Promise<Response> {
   try {
-    const posts = await client.fetch<RssArticle[]>(query);
-    return posts || [];
-  } catch (error) {
-    console.warn("[rss.xml] Failed to fetch Sanity posts:", error);
-    return [];
+    const posts = await loadPosts();
+    const xml = buildRssXml(posts);
+
+    return new Response(xml, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/rss+xml; charset=utf-8",
+      },
+    });
+  } catch {
+    return new Response("RSS temporarily unavailable.\n", {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
   }
 }
 
 export async function GET() {
-  const posts = await getPublishedPosts();
-  const xml = buildRssXml(posts);
-
-  return new Response(xml, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
-    },
-  });
+  return createRssResponse();
 }

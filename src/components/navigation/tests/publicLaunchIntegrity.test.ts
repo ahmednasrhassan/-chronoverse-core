@@ -48,6 +48,7 @@ for (const retiredApi of [
 }
 
 const sitemapSource = readSource("src/app/sitemap.ts");
+const reservedSlugsSource = readSource("src/lib/content/reservedSlugs.ts");
 const vipPageAccessSource = readSource("src/lib/auth/vipPageAccess.ts");
 assert.doesNotMatch(vipPageAccessSource, /"\/premium"/);
 assert.match(vipPageAccessSource, /redirectTo\("\/pricing"\)/);
@@ -61,9 +62,11 @@ for (const retiredSlug of [
   "markets/sp500",
 ]) {
   assert.equal(
-    sitemapSource.includes(`"${retiredSlug}"`),
+    retiredSlug.includes("/")
+      ? sitemapSource.includes("ROOT_POST_SLUG_FORMAT.test(post.slug)")
+      : reservedSlugsSource.includes(`"${retiredSlug}"`),
     true,
-    `sitemap CMS entries must exclude retired route ${retiredSlug}`,
+    `shared sitemap policy must exclude retired route ${retiredSlug}`,
   );
   assert.equal(
     sitemapSource.includes(`path: "${retiredSlug}"`),
@@ -71,6 +74,7 @@ for (const retiredSlug of [
     `sitemap must exclude retired route ${retiredSlug}`,
   );
 }
+assert.match(sitemapSource, /isReservedRootSlug\(post\.slug\)/);
 
 const contentSource = readSource("src/lib/content.ts");
 const articleSource = readSource("src/app/(site)/[slug]/page.tsx");
