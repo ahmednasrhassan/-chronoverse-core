@@ -1,7 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { client } from "@/sanity/client";
+import {
+  getArchivePage,
+  parseArchivePage,
+  type ArchivePost,
+} from "@/lib/archive";
 import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -21,49 +25,25 @@ export const metadata: Metadata = {
 /**
  * Intelligence Archive Index
  * ----------------------------
- * Pulls every published `post` document directly from Sanity via a single
- * GROQ query. Posts are then grouped server-side (in this server
+ * Pulls one bounded page of published `post` documents from Sanity. Posts
+ * are then grouped server-side (in this server
  * component) by their category for display — no hardcoded section/post
- * data is used anywhere on this page.
+ * data is used anywhere on this page. One lookahead row determines whether
+ * a next page exists without a separate collection-count query.
  *
  * This page is refreshed on-demand when Sanity publishes, updates,
  * or deletes a post through `/api/revalidate`.
  */
 
-interface ArchivePost {
-  slug: string;
-  title: string;
-  date: string | null;
-  category: string | null;
-  categorySlug: string | null;
+interface ArchiveIndexPageProps {
+  searchParams: Promise<{ page?: string | string[] }>;
 }
 
-async function getAllPublishedPosts(): Promise<ArchivePost[]> {
-  const query = `*[
-    _type == "post" &&
-    defined(slug.current) &&
-    defined(publishedAt) &&
-    publishedAt <= now() &&
-    !(_id in path('drafts.**'))
-  ] | order(publishedAt desc) {
-    "slug": slug.current,
-    title,
-    "date": publishedAt,
-    "category": category->title,
-    "categorySlug": category->slug.current
-  }`;
-
-  try {
-    const posts = await client.fetch<ArchivePost[]>(query);
-    return posts || [];
-  } catch (error) {
-    console.warn("Sanity fetch for archive posts failed:", error);
-    return [];
-  }
-}
-
-export default async function ArchiveIndexPage() {
-  const posts = await getAllPublishedPosts();
+export default async function ArchiveIndexPage({
+  searchParams,
+}: ArchiveIndexPageProps) {
+  const page = parseArchivePage((await searchParams).page);
+  const { posts, hasNext } = await getArchivePage(page);
 
   // Group the flat list of posts into per-category sections, preserving
   // first-seen order (which mirrors the `publishedAt desc` sort already
@@ -127,7 +107,7 @@ export default async function ArchiveIndexPage() {
               </h2>
 
               <ul className="divide-y divide-border/60">
-                {section.posts.slice(0, 50000).map((post) => (
+                {section.posts.map((post) => (
                   <li
                     key={post.slug}
                     className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-[#0D0D11] px-3 rounded-lg transition-colors group cursor-pointer"
@@ -147,6 +127,37 @@ export default async function ArchiveIndexPage() {
             </section>
           ))}
         </div>
+      )}
+
+      {(page > 1 || hasNext) && (
+        <nav
+          aria-label="Archive pagination"
+          className="flex items-center justify-between gap-4 border-t border-border pt-6 text-sm"
+        >
+          {page > 1 ? (
+            <Link
+              href={page === 2 ? "/archive" : `/archive?page=${page - 1}`}
+              aria-label={`View archive page ${page - 1}`}
+              className="text-[#C8A7E8] hover:text-[#F3EBDD] transition-colors"
+            >
+              ← Previous
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="text-muted">Page {page}</span>
+          {hasNext ? (
+            <Link
+              href={`/archive?page=${page + 1}`}
+              aria-label={`View archive page ${page + 1}`}
+              className="text-[#C8A7E8] hover:text-[#F3EBDD] transition-colors"
+            >
+              Next →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
       )}
 
       {/* Footer Info */}

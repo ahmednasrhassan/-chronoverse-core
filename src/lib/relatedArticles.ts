@@ -7,8 +7,8 @@
  *
  * How it works:
  *  1. The current post's category, tags/keywords, title words, and the
- *     plain-text content extracted from `legacyBody`/`legacyHtml` (via
- *     `stripHtml`) are tokenized into a weighted "relevance profile".
+ *     available plain-text content are tokenized into a weighted relevance
+ *     profile. Lean runtime candidates supply their authored excerpt here.
  *  2. Every other fetched Sanity article is scored against that profile
  *     using simple keyword/category/title overlap matching.
  *  3. Articles are ranked by score (ties broken by most recent) and the
@@ -151,4 +151,22 @@ export function computeTopRelatedArticles(
   const ranked = (relevant.length > 0 ? relevant : scored).slice(0, limit);
 
   return ranked.map((entry) => entry.article);
+}
+
+export const RELATED_ARTICLE_VISIBLE_LIMIT = 8;
+
+/** Manual editorial choices always replace automated ranking for this block. */
+export function selectRelatedArticles(
+  currentPost: ContentItem,
+  candidates: ContentItem[],
+): ContentItem[] {
+  if (currentPost.manualRelatedLinks?.length) {
+    return currentPost.manualRelatedLinks.slice(0, RELATED_ARTICLE_VISIBLE_LIMIT);
+  }
+
+  return computeTopRelatedArticles(
+    currentPost,
+    candidates,
+    RELATED_ARTICLE_VISIBLE_LIMIT,
+  );
 }

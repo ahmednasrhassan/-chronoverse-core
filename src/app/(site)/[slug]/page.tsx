@@ -17,6 +17,7 @@ import { isReservedRootSlug } from "@/lib/content/reservedSlugs";
 
 import {
   getSanityArticles,
+  getRelatedArticleCandidates,
   stripHtml,
   sanitizeHtml,
   calculateReadTime,
@@ -24,7 +25,7 @@ import {
   DEFAULT_CATEGORY_SLUG,
 } from "@/lib/content";
 
-import { computeTopRelatedArticles } from "@/lib/relatedArticles";
+import { selectRelatedArticles } from "@/lib/relatedArticles";
 import { generateExecutiveSummary } from "@/lib/executiveSummary";
 import {
   buildArticleJsonLd,
@@ -194,8 +195,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
   const currentPost = content.post;
 
-  // Retrieve articles for generating related posts recommendations
-  const allArticles = await getSanityArticles();
+  // One bounded, lean candidate query serves both related-article widgets.
+  const relatedCandidates = await getRelatedArticleCandidates(currentPost.slug);
 
   // --- Automated "Related Intelligence / Internal Links" Engine ---
   // Priority order:
@@ -203,14 +204,12 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   //      (`manualRelatedLinks` field on the `post` schema).
   //   2. Otherwise, automatically compute the TOP 8 most relevant articles
   //      using a keyword/category/title relevance-scoring algorithm that
-  //      compares the plain text extracted from `legacyBody` (HTML tags
-  //      stripped) against every other fetched Sanity article.
+  //      compares the current article against a bounded recent candidate
+  //      pool using category, keywords, title, and authored excerpt signals.
   const hasManualLinks =
     currentPost.manualRelatedLinks && currentPost.manualRelatedLinks.length > 0;
 
-  const relatedArticles = hasManualLinks
-    ? currentPost.manualRelatedLinks!.slice(0, 8)
-    : computeTopRelatedArticles(currentPost, allArticles, 8);
+  const relatedArticles = selectRelatedArticles(currentPost, relatedCandidates);
 
   const relatedArticlesTitle = hasManualLinks
     ? "Related Intelligence"
@@ -279,7 +278,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   const articleSchema = buildArticleJsonLd(articleSeo);
   // --- Automatic Internal Links & Related Articles Engine ---
   // Filter related posts based on shared keywords or identical categories
-  let relatedPosts = allArticles
+  let relatedPosts = relatedCandidates
     .filter((item: ContentItem) => item.slug !== currentPost.slug)
     .filter((item: ContentItem) => {
       const sameCategory = item.category === currentPost.category;
@@ -295,7 +294,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // return (not necessarily newest-first) despite the comment saying
   // "latest" — now explicitly sorted by date, newest first, before slicing.
   if (relatedPosts.length === 0) {
-    relatedPosts = allArticles
+    relatedPosts = relatedCandidates
       .filter((item: ContentItem) => item.slug !== currentPost.slug)
       .sort((a: ContentItem, b: ContentItem) => {
         const dateA = a.date ? new Date(a.date).getTime() : 0;

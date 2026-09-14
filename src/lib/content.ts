@@ -86,6 +86,16 @@ interface SanityRawPost {
   _isPublic?: boolean;
 }
 
+interface SanityRelatedArticleCandidate {
+  slug: string | null;
+  title: string | null;
+  publishedAt: string | null;
+  category: string | null;
+  categorySlug: string | null;
+  keywords: string[] | null;
+  excerpt: string | null;
+}
+
 /**
  * Strips HTML tags safely from a string.
  */
@@ -431,50 +441,62 @@ export async function getSanityCategoryPageBySlugV1(
   };
 }
 
+export const RELATED_ARTICLE_CANDIDATE_LIMIT = 24;
+
+type RelatedArticleCandidateLoader = (
+  query: string,
+  params: { currentSlug: string; limit: number },
+) => Promise<SanityRelatedArticleCandidate[] | null | undefined>;
+
 /**
  * Automated Internal Linking Engine.
+ *
+ * Fetches one modest, recent candidate pool for both related-article widgets.
+ * Twenty-four candidates give the relevance scorer three choices per visible
+ * slot while keeping body, image, author, SEO, and manual-link payloads out of
+ * this request. Provider failures intentionally propagate to the route.
  */
-export async function getRelatedArticles(
+export async function getRelatedArticleCandidates(
   currentSlug: string,
-  categorySlug?: string,
-  keywords: string[] = [],
-  limit: number = 8
+  loadCandidates: RelatedArticleCandidateLoader = (query, params) =>
+    client.fetch<SanityRelatedArticleCandidate[]>(query, params),
 ): Promise<ContentItem[]> {
   const query = `*[
-      ${PUBLISHED_POST_FILTER} &&
-      slug.current != $currentSlug &&
-      (
-        ($categorySlug != null && category->slug.current == $categorySlug) ||
-        count((coalesce(tags, keywords, []))[@ in $keywords]) > 0
-      )
-    ] | order(publishedAt desc) [0...$limit] ${POST_PROJECTION}`;
+    ${PUBLISHED_POST_FILTER} &&
+    slug.current != $currentSlug
+  ] | order(publishedAt desc) [0...$limit] {
+    "slug": slug.current,
+    title,
+    publishedAt,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    "keywords": coalesce(tags, keywords, []),
+    excerpt
+  }`;
+  const posts = await loadCandidates(query, {
+    currentSlug,
+    limit: RELATED_ARTICLE_CANDIDATE_LIMIT,
+  });
 
-  try {
-    const posts = await client.fetch<SanityRawPost[]>(query, {
-      currentSlug,
-      categorySlug: categorySlug || null,
-      keywords,
-      limit,
+  return (posts || [])
+    .slice(0, RELATED_ARTICLE_CANDIDATE_LIMIT)
+    .map((post) => {
+      const excerpt = post.excerpt?.trim() || undefined;
+
+      return {
+        slug: post.slug || "",
+        title: post.title || "Untitled",
+        date: post.publishedAt ? post.publishedAt.split("T")[0] : "",
+        publishedAt: post.publishedAt || undefined,
+        category: post.category || DEFAULT_CATEGORY,
+        authoredCategory: post.category?.trim() || undefined,
+        categorySlug: post.categorySlug || DEFAULT_CATEGORY_SLUG,
+        keywords: post.keywords || [],
+        content: "",
+        excerpt,
+        bodyContent: excerpt || "",
+      };
     });
-
-    if (posts && posts.length > 0) {
-      return posts.map(mapSanityPost);
-    }
-  } catch (error) {
-    console.warn(`Sanity fetch for related articles to "${currentSlug}" failed:`, error);
-  }
-
-  try {
-    const fallbackQuery = `*[${PUBLISHED_POST_FILTER} && slug.current != $currentSlug] | order(publishedAt desc) [0...$limit] ${POST_PROJECTION}`;
-    const fallbackPosts = await client.fetch<SanityRawPost[]>(fallbackQuery, {
-      currentSlug,
-      limit,
-    });
-    return (fallbackPosts || []).map(mapSanityPost);
-  } catch (error) {
-    console.warn("Sanity fallback fetch for related articles failed:", error);
-    return [];
-  }
 }
 
 // ---------------------------------------------------------------------------
