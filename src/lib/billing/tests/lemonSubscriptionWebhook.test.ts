@@ -359,6 +359,10 @@ async function verifyIngressOrderingAndResults(): Promise<void> {
       sequence.push("receipt");
       return "inserted" as const;
     },
+    classifyProductionScope: async () => {
+      sequence.push("scope");
+      return "in-scope" as const;
+    },
     processVerifiedEvent: async (input: VerifiedLemonWebhookProcessingInputV1) => {
       sequence.push("process");
       processingCalls += 1;
@@ -391,8 +395,8 @@ async function verifyIngressOrderingAndResults(): Promise<void> {
   assertEqual(valid.status, 200, "verified subscription is acknowledged");
   assertEqual((await valid.json() as { status: string }).status, "processed",
     "applied subscription returns processed");
-  assertDeepEqual(sequence, ["secret", "receipt", "process"],
-    "receipt intake precedes verified commercial processing");
+  assertDeepEqual(sequence, ["secret", "scope", "receipt", "process"],
+    "verified scope precedes receipt intake and commercial processing");
 
   for (const [processingResult, expectedStatus] of [
     ["ignored", "ignored"],

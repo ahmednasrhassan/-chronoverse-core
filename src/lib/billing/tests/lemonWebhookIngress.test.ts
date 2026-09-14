@@ -16,6 +16,7 @@ interface ReceiptHarnessV1 {
   readonly dependencies: LemonWebhookIngressDependenciesV1;
   readonly receipts: LemonWebhookReceiptInputV1[];
   readonly persistenceCalls: () => number;
+  readonly scopeCalls: () => number;
   readonly processingCalls: () => number;
 }
 
@@ -26,11 +27,13 @@ function createReceiptHarness(
   const identities = new Set<string>();
   const finalizedIdentities = new Set<string>();
   let calls = 0;
+  let scopeCalls = 0;
   let processingCalls = 0;
 
   return {
     receipts,
     persistenceCalls: () => calls,
+    scopeCalls: () => scopeCalls,
     processingCalls: () => processingCalls,
     dependencies: {
       getWebhookSecret,
@@ -49,6 +52,10 @@ function createReceiptHarness(
 
         identities.add(scopedIdentity);
         return "inserted";
+      },
+      classifyProductionScope: async () => {
+        scopeCalls += 1;
+        return "in-scope";
       },
       processVerifiedEvent: async (input) => {
         processingCalls += 1;
@@ -156,6 +163,8 @@ async function verifySignatureFailuresDoNotPersist(): Promise<void> {
     assertEqual(response.status, 401, `${label} signature is unauthorized`);
     assertEqual(harness.persistenceCalls(), 0,
       `${label} signature cannot reach persistence`);
+    assertEqual(harness.scopeCalls(), 0,
+      `${label} signature cannot reach production-scope processing`);
     assertEqual(harness.processingCalls(), 0,
       `${label} signature cannot reach commercial processing`);
     assertEqual((await responseBody(response)).error, "invalid-signature",

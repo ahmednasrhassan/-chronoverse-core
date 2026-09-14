@@ -8,6 +8,11 @@ import {
   type LemonWebhookProcessingResultV1,
   type VerifiedLemonWebhookProcessingInputV1,
 } from "./lemonSubscriptionWebhook";
+import {
+  classifyVerifiedLemonProductionScopeV1,
+  LemonWebhookProductionScopeErrorV1,
+  type LemonWebhookProductionScopeResultV1,
+} from "./lemonWebhookProductionScope";
 import { verifyLemonWebhookSignatureV1 } from "./lemonWebhookSignature";
 
 const LEMON_WEBHOOK_RECEIPT_RPC_V1 = "ingest_lemon_webhook_receipt_v1";
@@ -42,6 +47,9 @@ export interface LemonWebhookIngressDependenciesV1 {
   readonly persistReceipt: (
     receipt: LemonWebhookReceiptInputV1,
   ) => Promise<LemonWebhookReceiptInsertResultV1>;
+  readonly classifyProductionScope: (
+    input: VerifiedLemonWebhookProcessingInputV1,
+  ) => Promise<LemonWebhookProductionScopeResultV1>;
   readonly processVerifiedEvent: (
     input: VerifiedLemonWebhookProcessingInputV1,
   ) => Promise<LemonWebhookProcessingResultV1>;
@@ -51,12 +59,13 @@ const PRODUCTION_DEPENDENCIES_V1: LemonWebhookIngressDependenciesV1 =
   Object.freeze({
     getWebhookSecret: () => process.env.LEMON_SQUEEZY_WEBHOOK_SECRET,
     persistReceipt: persistLemonWebhookReceiptV1,
+    classifyProductionScope: classifyVerifiedLemonProductionScopeV1,
     processVerifiedEvent: processVerifiedLemonWebhookV1,
   });
 
 /**
- * Authenticates raw bytes, records the receipt, then processes only the
- * already-verified in-memory event.
+ * Authenticates raw bytes, validates production mutation scope, records the
+ * receipt, then processes only the already-verified in-memory event.
  */
 export async function handleLemonWebhookIngressV1(
   request: Request,
@@ -110,6 +119,40 @@ export async function handleLemonWebhookIngressV1(
 
   const envelope = parsedEnvelope.value;
   const idempotencyKey = deriveLemonWebhookIdempotencyKeyV1(envelope);
+  const processingInput = Object.freeze({
+    payload: parsedBody.value,
+    eventName: envelope.eventName,
+    objectType: envelope.objectType,
+    objectId: envelope.objectId,
+    storeId: envelope.storeId,
+    testMode: envelope.testMode,
+    upstreamEventAt: envelope.upstreamEventAt,
+    idempotencyKey,
+  });
+  let productionScope: LemonWebhookProductionScopeResultV1;
+
+  try {
+    productionScope = await dependencies.classifyProductionScope(
+      processingInput,
+    );
+  } catch (error) {
+    if (error instanceof LemonWebhookProductionScopeErrorV1 &&
+      error.code === "configuration-unavailable") {
+      return failureResponse("configuration-unavailable", 500);
+    }
+
+    return failureResponse("persistence-unavailable", 500);
+  }
+
+  if (productionScope === "out-of-scope") {
+    return Response.json({ ok: true, status: "ignored" });
+  }
+
+  if (productionScope !== "in-scope" &&
+    productionScope !== "not-applicable") {
+    return failureResponse("persistence-unavailable", 500);
+  }
+
   const payloadSha256 = createHash("sha256").update(rawBody).digest("hex");
 
   try {
@@ -125,16 +168,7 @@ export async function handleLemonWebhookIngressV1(
     }));
 
     const processingResult = await dependencies.processVerifiedEvent(
-      Object.freeze({
-        payload: parsedBody.value,
-        eventName: envelope.eventName,
-        objectType: envelope.objectType,
-        objectId: envelope.objectId,
-        storeId: envelope.storeId,
-        testMode: envelope.testMode,
-        upstreamEventAt: envelope.upstreamEventAt,
-        idempotencyKey,
-      }),
+      processingInput,
     );
 
     return Response.json({
