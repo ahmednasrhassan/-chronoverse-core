@@ -112,9 +112,10 @@ export default function PrivacyPolicyPage() {
           >
             Chronoverse research storefront
           </a>
-          , whose privacy practices apply to that purchase flow. Public
-          self-service VIP checkout and billing-portal controls are not
-          currently available.
+          , whose privacy practices apply to that purchase flow. VIP checkout
+          is hosted by Lemon Squeezy, whose privacy practices apply to payment
+          processing. Subscription-management and billing-portal controls are
+          not currently available on Chronoverse.
         </p>
       </InstitutionalSection>
 

@@ -189,7 +189,7 @@ const pricingDescription = requireString(
 );
 assert.match(pricingDescription, /\$15\.99 monthly/);
 assert.match(pricingDescription, /\$150\.99 annually/);
-assert.match(pricingDescription, /not currently available/i);
+assert.doesNotMatch(pricingDescription, /checkout[^.]*not currently available/i);
 assert.doesNotMatch(
   pricingDescription,
   /buy now|subscribe now|instant access after payment/i,

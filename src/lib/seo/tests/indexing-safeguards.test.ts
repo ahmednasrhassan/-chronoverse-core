@@ -146,8 +146,8 @@ function verifyRoutePolicies(): void {
   for (const preservedBillingTruth of [
     "$15.99 monthly",
     "$150.99 annually",
-    "Public self-service VIP checkout",
-    "billing-portal controls are not currently available",
+    "VIP checkout starts on Pricing",
+    "Billing-portal and subscription-management controls are not currently available",
   ]) {
     assert.ok(
       billingSource.includes(preservedBillingTruth),

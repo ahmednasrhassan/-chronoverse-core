@@ -80,8 +80,9 @@ export default function TermsOfServicePage() {
 
       <InstitutionalSection title="5. VIP pricing, billing, and research products">
         <p>
-          Approved VIP pricing is $15.99 monthly or $150.99 annually. Public
-          self-service VIP checkout and billing-portal controls are not
+          Approved VIP pricing is $15.99 monthly or $150.99 annually. Secure
+          hosted checkout starts from <Link href="/pricing">Pricing</Link>.
+          Subscription-management and billing-portal controls are not
           currently available. Access and billing questions must use the
           published <Link href="/contact">support path</Link>.
         </p>

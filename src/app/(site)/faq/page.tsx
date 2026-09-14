@@ -51,11 +51,11 @@ export default function FaqPage() {
 
       <InstitutionalSection title="Can I purchase or manage VIP on this site now?">
         <p>
-          Not through public self-service controls. VIP pricing is $15.99
-          monthly or $150.99 annually, but public checkout and billing-portal
-          controls are not currently available. The{" "}
-          <Link href="/account">Account page</Link> verifies identity and
-          displays the access state trusted by the server.
+          VIP checkout is available from <Link href="/pricing">Pricing</Link>
+          {" "}at $15.99 monthly or $150.99 annually after you authenticate.
+          Subscription-management and billing-portal controls are not yet
+          available. The <Link href="/account">Account page</Link> verifies
+          identity and displays the access state trusted by the server.
         </p>
       </InstitutionalSection>
 

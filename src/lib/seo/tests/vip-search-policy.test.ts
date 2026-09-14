@@ -264,10 +264,9 @@ function verifySitemapAndPricing(): void {
   const pricingSource = readSource("src/app/(site)/pricing/page.tsx");
   assert.match(pricingSource, /\$15\.99 monthly/);
   assert.match(pricingSource, /\$150\.99 annually/);
-  assert.match(
-    pricingSource,
-    /self-service checkout[^.]*not currently[\s\S]{0,40}available/i,
-  );
+  assert.match(pricingSource, /<CheckoutButtons \/>/);
+  assert.match(pricingSource, /billing-portal controls are not currently/i);
+  assert.doesNotMatch(pricingSource, /checkout[^.]*not currently available/i);
 }
 
 function verifyPublicVipLinks(): void {

@@ -208,8 +208,8 @@ const currentTruthSources = [
 const pricingSource = readSource("src/app/(site)/pricing/page.tsx");
 assert.match(pricingSource, /\$15\.99 monthly/);
 assert.match(pricingSource, /\$150\.99 annually/);
-assert.match(pricingSource, /self-service checkout/);
-assert.match(pricingSource, /billing-portal controls/);
+assert.match(pricingSource, /<CheckoutButtons \/>/);
+assert.match(pricingSource, /billing-portal controls/i);
 assert.doesNotMatch(
   currentTruthSources,
   /LEMON-70|vault\.chronoversecapital\.com|real-time intelligence alerts/i,

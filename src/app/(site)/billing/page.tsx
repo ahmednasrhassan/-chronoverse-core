@@ -24,12 +24,13 @@ export default function BillingPage() {
     <InstitutionalPage
       eyebrow="Account support"
       title="Billing"
-      summary="Public self-service VIP checkout and billing-portal controls are not currently available."
+      summary="VIP checkout starts on Pricing. Billing-portal and subscription-management controls are not currently available."
     >
       <InstitutionalSection title="Current VIP pricing">
         <p>
           The approved VIP price is $15.99 monthly or $150.99 annually. Listing
-          these prices does not indicate that a public checkout is active.
+          these prices does not grant or change VIP access. Start a secure
+          hosted checkout from the <Link href="/pricing">Pricing page</Link>.
         </p>
       </InstitutionalSection>
 

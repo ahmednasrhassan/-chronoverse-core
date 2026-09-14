@@ -8,10 +8,12 @@ import {
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
+import CheckoutButtons from "./CheckoutButtons";
+
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Pricing",
   description:
-    "Compare Free Lite with VIP Deep at $15.99 monthly or $150.99 annually; public self-service checkout is not currently available.",
+    "Compare Free Lite with VIP Deep at $15.99 monthly or $150.99 annually.",
   pathname: "/pricing",
 });
 
@@ -20,7 +22,7 @@ export default function PricingPage() {
     <InstitutionalPage
       eyebrow="Access structure"
       title="Free clarity. Deeper analysis for VIP."
-      summary="Both access levels cover the same five launch markets. VIP rates are listed below; public checkout controls are not yet available."
+      summary="Both access levels cover the same five launch markets. Choose monthly or annual VIP access through secure hosted checkout."
     >
       <InstitutionalSection title="Free — Lite projection">
         <p>
@@ -34,9 +36,15 @@ export default function PricingPage() {
           additional analysis reserved for verified VIP access.
         </p>
         <p>
-          VIP pricing is $15.99 monthly or $150.99 annually. Public
-          self-service checkout and billing-portal controls are not currently
-          available.
+          VIP pricing is $15.99 monthly or $150.99 annually. Checkout requires
+          a verified Chronoverse account and opens on Lemon Squeezy.
+          Billing-portal controls are not currently available.
+        </p>
+        <CheckoutButtons />
+        <p className="text-sm text-secondary">
+          If you are not signed in, you will be sent to Account first and can
+          select your plan again after authentication. VIP access begins only
+          after trusted payment confirmation.
         </p>
       </InstitutionalSection>
       <InstitutionalSection title="Launch coverage">
