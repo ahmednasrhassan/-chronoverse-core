@@ -13,6 +13,7 @@ import ArticleShareButtons from "@/components/ArticleShareButtons";
 import AudioReader from "@/components/AudioReader";
 import MathContent from "@/components/MathContent";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
+import { isReservedRootSlug } from "@/lib/content/reservedSlugs";
 
 import {
   getSanityArticles,
@@ -65,13 +66,16 @@ function getArticleSeo(article: ContentItem) {
 
 export async function generateStaticParams() {
   const articles = await getSanityArticles();
-  return articles.map((article) => ({
-    slug: article.slug,
-  }));
+  return articles
+    .filter((article) => !isReservedRootSlug(article.slug))
+    .map((article) => ({
+      slug: article.slug,
+    }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (isReservedRootSlug(slug)) notFound();
   const currentPost = await getArticleForRoute(slug);
 
   if (currentPost) {
@@ -133,6 +137,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UniversalArticlePage({ params }: PageProps) {
   const { slug } = await params;
+  if (isReservedRootSlug(slug)) notFound();
 
   // Retrieve the current article directly matching the URL slug
   const currentPost = await getArticleForRoute(slug);

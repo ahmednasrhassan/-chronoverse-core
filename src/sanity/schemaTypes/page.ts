@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity'
+import { validatePublicRootSlug } from '../../lib/content/reservedSlugs'
 
 /**
  * Page schema — Administrative / static pages only (About, Privacy Policy,
@@ -46,12 +47,9 @@ export default defineType({
             .slice(0, 96),
       },
       validation: (Rule) =>
-        Rule.required().custom((slug) => {
-          if (!slug?.current) return true
-          return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug.current)
-            ? true
-            : 'Slug must contain lowercase letters, numbers, and single hyphens only.'
-        }),
+        Rule.required().custom((slug) =>
+          validatePublicRootSlug(slug?.current),
+        ),
     }),
     defineField({
       name: 'mainImage',

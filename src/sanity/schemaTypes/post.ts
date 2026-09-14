@@ -1,5 +1,6 @@
 import { defineType, defineField } from 'sanity'
 import { MarkdownPasteInput } from '../components/MarkdownPasteInput'
+import { validatePublicRootSlug } from '../../lib/content/reservedSlugs'
 
 /**
  * Post schema — editorial/blog content only.
@@ -48,16 +49,9 @@ export default defineType({
             .slice(0, 96),
       },
       validation: (Rule) =>
-        Rule.required().custom((slug) => {
-          if (!slug?.current) return true;
-          // Keep slugs limited to lowercase letters, numbers, and hyphens —
-          // matches the URL format every route/query in the app (sitemap,
-          // category matching, canonical URLs) assumes.
-          const isValidFormat = /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug.current);
-          return isValidFormat
-            ? true
-            : 'Slug must be lowercase letters, numbers, and hyphens only (e.g. "my-article-title").';
-        }),
+        Rule.required().custom((slug) =>
+          validatePublicRootSlug(slug?.current),
+        ),
     }),
     defineField({
       name: 'publishedAt',
