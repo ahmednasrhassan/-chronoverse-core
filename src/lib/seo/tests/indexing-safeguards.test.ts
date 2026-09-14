@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { NextRequest, NextResponse } from "next/server";
 
+import robots from "../../../app/robots";
 import {
   createChronoverseProxyV1,
   getPreviewRobotsHeaderValueV1,
@@ -38,6 +39,49 @@ const ROUTE_POLICIES = [
     follow: false,
   },
 ] as const;
+
+function verifyRobotsPolicy(): void {
+  const policy = robots();
+  const rules = Array.isArray(policy.rules) ? policy.rules : [policy.rules];
+  const generalRule = rules.find((rule) => rule.userAgent === "*");
+
+  assert.ok(generalRule, "robots exports a general crawler rule");
+
+  const disallow = Array.isArray(generalRule.disallow)
+    ? generalRule.disallow
+    : generalRule.disallow
+      ? [generalRule.disallow]
+      : [];
+
+  assert.equal(disallow.includes("/_next/"), false);
+  assert.equal(disallow.includes("/_next/*"), false);
+  assert.ok(disallow.includes("/api/"));
+  assert.ok(disallow.includes("/studio/"));
+  for (const metadataProtectedRoute of ["/vip", "/account", "/billing"]) {
+    assert.equal(
+      disallow.some(
+        (entry) =>
+          entry === metadataProtectedRoute ||
+          entry.startsWith(`${metadataProtectedRoute}/`),
+      ),
+      false,
+      `${metadataProtectedRoute} remains governed by its noindex policy`,
+    );
+  }
+  assert.equal(
+    policy.sitemap,
+    "https://chronoversecapital.com/sitemap.xml",
+  );
+
+  const source = readFileSync(
+    fileURLToPath(new URL("../../../app/robots.ts", import.meta.url)),
+    "utf8",
+  );
+  assert.doesNotMatch(
+    source,
+    /NEXT_PUBLIC_SITE_URL|VERCEL_URL|request\s*host/i,
+  );
+}
 
 function verifyRoutePolicies(): void {
   for (const route of ROUTE_POLICIES) {
@@ -201,6 +245,7 @@ async function verifyPreviewProtection(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  verifyRobotsPolicy();
   verifyRoutePolicies();
   await verifyPreviewProtection();
 

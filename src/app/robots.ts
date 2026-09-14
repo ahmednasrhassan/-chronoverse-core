@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chronoversecapital.com";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
 /**
  * Generates crawler directives for search engines and AI scrapers.
@@ -23,8 +23,6 @@ export default function robots(): MetadataRoute.Robots {
           "/checkout/*",
           "/cart/",
           "/cart/*",
-          "/_next/",
-          "/_next/*",
           "/private/",
           "/drafts/",
         ],
@@ -44,6 +42,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: buildCanonicalUrl("/sitemap.xml"),
   };
 }
