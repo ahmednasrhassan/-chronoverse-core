@@ -28,6 +28,8 @@ assert.match(page, /Commercial subscription/);
 assert.match(page, /subscription === null \? "None" : "Recorded"/);
 assert.match(page, /ManageSubscriptionButton/);
 assert.match(page, /Unknown \/ unsupported|subscription\.plan/);
+assert.match(page, /subscription\.paymentIssue/);
+assert.match(page, /label="Payment" value="Issue"/);
 assert.doesNotMatch(page, /lemon_customer_id|lemon_subscription_id|userId/);
 
 assert.match(button, /method: "POST"/);

@@ -190,6 +190,25 @@ async function verifyRefundScope(): Promise<void> {
   assert.equal(testLookupCalls, 0);
 }
 
+async function verifyPaymentScope(): Promise<void> {
+  for (const eventName of ["subscription_payment_failed",
+    "subscription_payment_success", "subscription_payment_recovered"]) {
+    const invoice = input(payload({ eventName,
+      objectType: "subscription-invoices", objectId: "91",
+      productId: null, variantId: null }));
+    assert.equal(await classifyVerifiedLemonProductionScopeV1(invoice,
+      dependencies([scopeRow()])), "in-scope");
+    for (const rows of [[], [scopeRow({ product_id: "24" })],
+      [scopeRow({ variant_id: "25" })]]) {
+      assert.equal(await classifyVerifiedLemonProductionScopeV1(invoice,
+        dependencies(rows)), "out-of-scope");
+    }
+    assert.equal(await classifyVerifiedLemonProductionScopeV1(
+      input(payload({ eventName, objectType: "subscription-invoices",
+        objectId: "91", testMode: true })), dependencies()), "out-of-scope");
+  }
+}
+
 async function verifyIngressOrderingAndMutationBoundary(): Promise<void> {
   for (const [label, body, rows, expectedProcessCalls] of [
     ["monthly lifecycle", payload(), [scopeRow()], 1],
@@ -216,6 +235,22 @@ async function verifyIngressOrderingAndMutationBoundary(): Promise<void> {
       objectType: "subscription-invoices",
       objectId: "91",
       testMode: true,
+    }), [scopeRow()], 0],
+    ["valid payment failure", payload({
+      eventName: "subscription_payment_failed",
+      objectType: "subscription-invoices", objectId: "91",
+    }), [scopeRow()], 1],
+    ["wrong-product payment failure", payload({
+      eventName: "subscription_payment_failed",
+      objectType: "subscription-invoices", objectId: "91",
+    }), [scopeRow({ product_id: "24" })], 0],
+    ["wrong-variant payment failure", payload({
+      eventName: "subscription_payment_failed",
+      objectType: "subscription-invoices", objectId: "91",
+    }), [scopeRow({ variant_id: "25" })], 0],
+    ["test payment failure", payload({
+      eventName: "subscription_payment_failed",
+      objectType: "subscription-invoices", objectId: "91", testMode: true,
     }), [scopeRow()], 0],
   ] as const) {
     const rawBody = JSON.stringify(body);
@@ -355,6 +390,7 @@ function hasOwn(value: object, key: string): boolean {
 async function main(): Promise<void> {
   await verifySubscriptionScope();
   await verifyRefundScope();
+  await verifyPaymentScope();
   await verifyIngressOrderingAndMutationBoundary();
   await verifySignatureAndConfigurationFailures();
 

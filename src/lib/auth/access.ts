@@ -212,6 +212,7 @@ function parseCommercialFactsV1(
   const upstreamUpdatedAt = value.upstream_updated_at;
   const testMode = value.test_mode;
   const refundAffected = value.refund_affected;
+  const paymentIssue = value.payment_issue;
 
   if (
     !isCanonicalVendorIdV1(subscriptionId)
@@ -228,6 +229,7 @@ function parseCommercialFactsV1(
     || typeof upstreamUpdatedAt !== "string"
     || typeof testMode !== "boolean"
     || typeof refundAffected !== "boolean"
+    || typeof paymentIssue !== "boolean"
   ) {
     return null;
   }
@@ -247,6 +249,7 @@ function parseCommercialFactsV1(
     productId,
     variantId,
     refundAffected,
+    paymentIssue,
   });
 }
 

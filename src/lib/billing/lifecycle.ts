@@ -27,7 +27,7 @@ export type SubscriptionTimestampFieldV1 =
 
 /**
  * Upstream facts assembled from private subscription persistence and, for
- * refundAffected, verified persisted commercial-event evidence.
+ * refundAffected and paymentIssue, verified persisted commercial-event evidence.
  */
 export interface LemonSubscriptionLifecycleFactsV1 {
   readonly subscriptionId: string;
@@ -44,6 +44,7 @@ export interface LemonSubscriptionLifecycleFactsV1 {
   readonly productId: string;
   readonly variantId: string;
   readonly refundAffected: boolean;
+  readonly paymentIssue: boolean;
 }
 
 export interface NormalizedSubscriptionLifecycleV1 {
@@ -63,6 +64,7 @@ export interface NormalizedSubscriptionLifecycleV1 {
   readonly productId: string;
   readonly variantId: string;
   readonly refundAffected: boolean;
+  readonly paymentIssue: boolean;
   readonly invalidTimestampFields: readonly SubscriptionTimestampFieldV1[];
 }
 
@@ -110,6 +112,7 @@ export function normalizeSubscriptionLifecycleV1(
     productId: facts.productId,
     variantId: facts.variantId,
     refundAffected: facts.refundAffected,
+    paymentIssue: facts.paymentIssue,
     invalidTimestampFields: Object.freeze(invalidTimestampFields),
   });
 }
@@ -126,11 +129,15 @@ function lifecycleStateV1(
     return "refund_affected";
   }
 
+  if (facts.paymentIssue) {
+    return "payment_issue";
+  }
+
   if (facts.cancelled || rawStatusKey === "cancelled") {
     return "ending";
   }
 
-  if (rawStatusKey === "paused") {
+  if (rawStatusKey === "paused" || facts.pauseMode !== null) {
     return "paused";
   }
 

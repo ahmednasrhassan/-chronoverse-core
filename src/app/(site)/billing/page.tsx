@@ -155,6 +155,9 @@ function SubscriptionFacts({
       {subscription.pauseMode ? (
         <FactRow label="Pause state" value={subscription.pauseMode} />
       ) : null}
+      {subscription.paymentIssue ? (
+        <FactRow label="Payment" value="Issue" />
+      ) : null}
       {subscription.pauseResumesAt ? (
         <DateFact label="Pause resumes" value={subscription.pauseResumesAt} />
       ) : null}

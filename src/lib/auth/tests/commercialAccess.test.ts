@@ -38,6 +38,7 @@ const BASE_SUBSCRIPTION = Object.freeze({
   upstream_updated_at: "2026-09-12T10:00:00.000Z",
   test_mode: false,
   refund_affected: false,
+  payment_issue: false,
 });
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {

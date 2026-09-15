@@ -76,8 +76,20 @@ export function evaluateCommercialEntitlementV1(
     return result("unresolved", "invalid-timestamp");
   }
 
+  if (lifecycle.refundAffected) {
+    return result("unresolved", "refund-policy-unresolved");
+  }
+
+  if (lifecycle.paymentIssue) {
+    return result("unresolved", "payment-policy-unresolved");
+  }
+
+  if (lifecycle.state === "paused" || lifecycle.pauseMode !== null) {
+    return result("unresolved", "paused-policy-unresolved");
+  }
+
   if (lifecycle.state === "active") {
-    if (lifecycle.endsAt !== null || lifecycle.pauseMode !== null) {
+    if (lifecycle.endsAt !== null) {
       return result("unresolved", "active-facts-conflict");
     }
 
@@ -92,10 +104,6 @@ export function evaluateCommercialEntitlementV1(
     return Date.parse(lifecycle.endsAt) > Date.parse(evaluatedAt)
       ? result("active", "cancelled-paid-through")
       : result("inactive", "cancelled-ended");
-  }
-
-  if (lifecycle.state === "paused") {
-    return result("unresolved", "paused-policy-unresolved");
   }
 
   if (lifecycle.state === "payment_issue") {

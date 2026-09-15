@@ -5,6 +5,7 @@ import { parseUntrustedLemonCommercialIdentityV1 } from "./commercialIdentity";
 import {
   processVerifiedLemonSubscriptionRefundV1,
 } from "./lemonSubscriptionRefund";
+import { processVerifiedLemonPaymentV1 } from "./lemonPaymentLifecycle";
 
 export const LEMON_SUBSCRIPTION_WEBHOOK_EVENTS_V1 = [
   "subscription_created",
@@ -130,6 +131,11 @@ export async function processVerifiedLemonWebhookV1(
 ): Promise<LemonWebhookProcessingResultV1> {
   if (input.eventName === "subscription_payment_refunded") {
     return processVerifiedLemonSubscriptionRefundV1(input);
+  }
+
+  if ((LEMON_SUBSCRIPTION_INVOICE_WEBHOOK_EVENTS_V1 as readonly string[])
+    .includes(input.eventName)) {
+    return processVerifiedLemonPaymentV1(input);
   }
 
   const parsed = parseVerifiedLemonSubscriptionWebhookV1(input);

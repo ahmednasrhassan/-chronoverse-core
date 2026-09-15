@@ -29,6 +29,7 @@ export interface BillingSubscriptionSummaryV1 {
   readonly pauseMode: string | null;
   readonly pauseResumesAt: string | null;
   readonly commercialEntitlement: "active" | "inactive" | "unresolved";
+  readonly paymentIssue: boolean;
 }
 
 export type BillingPageStateV1 =
@@ -229,6 +230,7 @@ export function summarizeCommercialRowsV1(
     pauseMode: selected.lifecycle.pauseMode,
     pauseResumesAt: selected.lifecycle.pauseResumesAt,
     commercialEntitlement: selected.commercialEntitlement,
+    paymentIssue: selected.facts.paymentIssue,
   });
 }
 
@@ -276,7 +278,8 @@ function parseCommercialFactsV1(
     !isNullableStringV1(value.ends_at) ||
     typeof value.upstream_updated_at !== "string" ||
     typeof value.test_mode !== "boolean" ||
-    typeof value.refund_affected !== "boolean") {
+    typeof value.refund_affected !== "boolean" ||
+    typeof value.payment_issue !== "boolean") {
     throw new BillingManagementErrorV1("commercial-summary-unavailable");
   }
 
@@ -295,6 +298,7 @@ function parseCommercialFactsV1(
     upstreamUpdatedAt: value.upstream_updated_at,
     testMode: value.test_mode,
     refundAffected: value.refund_affected,
+    paymentIssue: value.payment_issue,
   });
 }
 

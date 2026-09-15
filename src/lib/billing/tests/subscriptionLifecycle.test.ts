@@ -28,6 +28,7 @@ const BASE_FACTS: LemonSubscriptionLifecycleFactsV1 = Object.freeze({
   productId: "product-1",
   variantId: "variant-1",
   refundAffected: false,
+  paymentIssue: false,
 });
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {

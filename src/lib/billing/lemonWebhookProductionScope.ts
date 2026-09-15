@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseAdminClientV1 } from "../auth/supabase/admin";
 import {
   LEMON_SUBSCRIPTION_WEBHOOK_EVENTS_V1,
+  LEMON_SUBSCRIPTION_INVOICE_WEBHOOK_EVENTS_V1,
   type VerifiedLemonWebhookProcessingInputV1,
 } from "./lemonSubscriptionWebhook";
 import {
@@ -12,7 +13,6 @@ import {
 
 const RESOLVE_LEMON_SUBSCRIPTION_SCOPE_RPC_V1 =
   "resolve_lemon_subscription_scope_v1";
-const REFUND_EVENT_V1 = "subscription_payment_refunded";
 
 export type LemonWebhookProductionScopeResultV1 =
   | "in-scope"
@@ -57,9 +57,11 @@ export async function classifyVerifiedLemonProductionScopeV1(
   const isSubscription = (
     LEMON_SUBSCRIPTION_WEBHOOK_EVENTS_V1 as readonly string[]
   ).includes(input.eventName);
-  const isRefund = input.eventName === REFUND_EVENT_V1;
+  const isInvoice = (
+    LEMON_SUBSCRIPTION_INVOICE_WEBHOOK_EVENTS_V1 as readonly string[]
+  ).includes(input.eventName);
 
-  if (!isSubscription && !isRefund) return "not-applicable";
+  if (!isSubscription && !isInvoice) return "not-applicable";
 
   const config = commercialConfigV1(dependencies);
 
@@ -71,7 +73,7 @@ export async function classifyVerifiedLemonProductionScopeV1(
     return subscriptionScopeV1(input, config);
   }
 
-  return refundScopeV1(input, config, dependencies);
+  return invoiceScopeV1(input, config, dependencies);
 }
 
 export async function loadLemonSubscriptionScopeV1(
@@ -120,7 +122,7 @@ function subscriptionScopeV1(
     : "out-of-scope";
 }
 
-async function refundScopeV1(
+async function invoiceScopeV1(
   input: VerifiedLemonWebhookProcessingInputV1,
   config: VipCommercialConfigV1,
   dependencies: LemonWebhookProductionScopeDependenciesV1,

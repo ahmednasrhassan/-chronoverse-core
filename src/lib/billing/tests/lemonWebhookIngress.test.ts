@@ -338,6 +338,7 @@ async function verifyPersistenceFailureIsGeneric(): Promise<void> {
       persistReceipt: async () => {
         throw new Error("private database details");
       },
+      classifyProductionScope: async () => "in-scope",
       processVerifiedEvent: async () => "processed",
     },
   );
@@ -357,6 +358,7 @@ async function verifyProcessingFailureIsGeneric(): Promise<void> {
     {
       getWebhookSecret: () => SECRET,
       persistReceipt: async () => "inserted",
+      classifyProductionScope: async () => "in-scope",
       processVerifiedEvent: async () => {
         throw new Error("private processing details");
       },
@@ -369,6 +371,88 @@ async function verifyProcessingFailureIsGeneric(): Promise<void> {
     "processing infrastructure failure is generic");
   assertEqual(JSON.stringify(body).includes("private processing details"), false,
     "processing details are not exposed");
+}
+
+async function verifyFailedDeliveryCanRecover(): Promise<void> {
+  const rawBody = payload({ eventName: "subscription_payment_failed",
+    objectType: "subscription-invoices", objectId: "91" });
+  const receiptKeys = new Set<string>();
+  const finalized = new Set<string>();
+  let attempts = 0;
+  let mutations = 0;
+  const dependencies: LemonWebhookIngressDependenciesV1 = {
+    getWebhookSecret: () => SECRET,
+    classifyProductionScope: async () => "in-scope",
+    persistReceipt: async (receipt) => {
+      const duplicate = receiptKeys.has(receipt.idempotencyKey);
+      receiptKeys.add(receipt.idempotencyKey);
+      return duplicate ? "duplicate" : "inserted";
+    },
+    processVerifiedEvent: async (input) => {
+      attempts += 1;
+      if (finalized.has(input.idempotencyKey)) return "duplicate";
+      if (attempts === 1) throw new Error("transient database failure");
+      finalized.add(input.idempotencyKey);
+      mutations += 1;
+      return "processed";
+    },
+  };
+  const responses = [];
+  for (let i = 0; i < 3; i++) responses.push(
+    await handleLemonWebhookIngressV1(
+      request(rawBody, signature(rawBody)), dependencies));
+  assertEqual(responses[0].status, 500,
+    "transient processing failure asks the provider to retry");
+  assertEqual((await responseBody(responses[1])).status, "processed",
+    "redelivery can finish a previously unfinalized receipt");
+  assertEqual((await responseBody(responses[2])).status, "duplicate",
+    "finalized replay remains idempotent");
+  assertEqual(mutations, 1, "commercial mutation occurs once");
+}
+
+async function verifyRecordedOrderingFailureCanRecover(): Promise<void> {
+  const rawBody = payload({ eventName: "subscription_updated" });
+  let receiptState: "absent" | "failed" | "pending" | "processed" =
+    "absent";
+  let mutationCount = 0;
+  let firstAttempt = true;
+  const dependencies: LemonWebhookIngressDependenciesV1 = {
+    getWebhookSecret: () => SECRET,
+    classifyProductionScope: async () => "in-scope",
+    persistReceipt: async () => {
+      if (receiptState === "absent") {
+        receiptState = "pending";
+        return "inserted";
+      }
+      if (receiptState === "failed") {
+        receiptState = "pending";
+        return "inserted";
+      }
+      return "duplicate";
+    },
+    processVerifiedEvent: async () => {
+      if (receiptState === "processed") return "duplicate";
+      if (firstAttempt) {
+        firstAttempt = false;
+        receiptState = "failed";
+        return "ignored";
+      }
+      receiptState = "processed";
+      mutationCount += 1;
+      return "processed";
+    },
+  };
+  const responses = [];
+  for (let i = 0; i < 3; i++) responses.push(
+    await handleLemonWebhookIngressV1(
+      request(rawBody, signature(rawBody)), dependencies));
+  assertEqual((await responseBody(responses[0])).status, "ignored",
+    "ordering-dependent failure records no commercial mutation");
+  assertEqual((await responseBody(responses[1])).status, "processed",
+    "exact redelivery reclaims a recoverable failed receipt");
+  assertEqual((await responseBody(responses[2])).status, "duplicate",
+    "processed receipt cannot be reclaimed");
+  assertEqual(mutationCount, 1, "recovery mutates once");
 }
 
 function auditIngressSecurityAndIsolation(): void {
@@ -461,6 +545,8 @@ async function main(): Promise<void> {
   await verifyScopedIdentityAndConfigurationFailure();
   await verifyPersistenceFailureIsGeneric();
   await verifyProcessingFailureIsGeneric();
+  await verifyFailedDeliveryCanRecover();
+  await verifyRecordedOrderingFailureCanRecover();
   auditIngressSecurityAndIsolation();
 
   console.log("PASS: Lemon webhook ingress and receipt intake");

@@ -34,6 +34,7 @@ const BASE_ROW = Object.freeze({
   upstream_updated_at: "2026-09-15T10:00:00.000Z",
   test_mode: false,
   refund_affected: false,
+  payment_issue: false,
 });
 
 function row(overrides: Readonly<Record<string, unknown>> = {}) {
@@ -107,6 +108,7 @@ function verifySummaryNormalization(): void {
     pauseMode: null,
     pauseResumesAt: null,
     commercialEntitlement: "active",
+    paymentIssue: false,
   });
   assert.equal(summarizeCommercialRowsV1([
     row({ variant_id: CONFIG.annualVariantId }),
@@ -136,6 +138,11 @@ function verifySummaryNormalization(): void {
   assert.equal(summarizeCommercialRowsV1([row({
     refund_affected: true,
   })], CONFIG, NOW)?.commercialEntitlement, "unresolved");
+  const paymentTrouble = summarizeCommercialRowsV1([row({
+    payment_issue: true,
+  })], CONFIG, NOW);
+  assert.equal(paymentTrouble?.paymentIssue, true);
+  assert.equal(paymentTrouble?.commercialEntitlement, "unresolved");
 
   const currentActive = summarizeCommercialRowsV1([
     row(),
