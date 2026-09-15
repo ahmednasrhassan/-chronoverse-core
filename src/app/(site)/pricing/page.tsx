@@ -38,7 +38,9 @@ export default function PricingPage() {
         <p>
           VIP pricing is $15.99 monthly or $150.99 annually. Checkout requires
           a verified Chronoverse account and opens on Lemon Squeezy.
-          Billing-portal controls are not currently available.
+          Authenticated customers can manage eligible subscriptions through
+          Billing. Lemon Squeezy-hosted billing-portal controls are available
+          when a trusted customer mapping exists.
         </p>
         <CheckoutButtons />
         <p className="text-sm text-secondary">

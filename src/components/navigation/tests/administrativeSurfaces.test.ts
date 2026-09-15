@@ -49,8 +49,11 @@ assert.doesNotMatch(sources.account, /LEMON-70|access code|Early Access/i);
 
 assert.match(sources.billing, /\$15\.99 monthly/);
 assert.match(sources.billing, /\$150\.99 annually/);
-assert.match(sources.billing, /<Link href="\/pricing">Pricing page<\/Link>/);
-assert.match(sources.billing, /billing-portal[\s\S]{0,50}controls/i);
+assert.match(sources.billing, /<Link href="\/pricing">Pricing<\/Link>/);
+assert.match(
+  sources.billing,
+  /state\.portalAvailable \? <ManageSubscriptionButton \/> : null/,
+);
 assert.match(sources.billing, /Contact page/);
 assert.doesNotMatch(sources.billing, /LEMON-70|access code/i);
 
