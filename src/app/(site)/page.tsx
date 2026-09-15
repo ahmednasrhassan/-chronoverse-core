@@ -342,15 +342,18 @@ function EditorialImage({
   featured?: boolean;
 }) {
   const imageUrl = article.cardImageUrl || article.imageUrl;
+  const imageSrc = article.cardImageUrl
+    ? `/api/research-image?url=${encodeURIComponent(article.cardImageUrl)}`
+    : imageUrl;
   const visualClass = featured
     ? "relative aspect-[16/10] overflow-hidden sm:aspect-auto"
     : "relative aspect-[4/3] overflow-hidden bg-[#15131A]";
 
   return (
     <div className={`${visualClass} bg-[#15131A]`}>
-      {imageUrl ? (
+      {imageSrc ? (
         <Image
-          src={imageUrl}
+          src={imageSrc}
           alt={article.imageAlt || ""}
           fill
           sizes={featured

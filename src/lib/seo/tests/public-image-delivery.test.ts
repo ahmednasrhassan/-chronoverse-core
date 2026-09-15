@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { GET as getResearchImage } from "../../../app/api/research-image/route";
 import { getSanityArticles } from "../../content";
 
 const repositoryRoot = process.cwd();
@@ -27,7 +28,7 @@ const basePost = {
   manualRelatedLinks: null,
 };
 
-async function verifySanityImageVariants(): Promise<void> {
+async function verifySanityImageVariants(): Promise<string> {
   const [article] = await getSanityArticles(async () => [
     {
       ...basePost,
@@ -55,6 +56,83 @@ async function verifySanityImageVariants(): Promise<void> {
   assert.notEqual(article.cardImageUrl, article.featuredImageUrl);
   assert.equal(article.imageAlt, "Authored description of the research chart");
   assert.equal(article.imageCaption, "Authored factual caption.");
+  return article.cardImageUrl;
+}
+
+async function verifyHomepageCardRelay(cardUrl: string): Promise<void> {
+  const originalFetch = globalThis.fetch;
+  const imageBytes = new Uint8Array([82, 73, 70, 70]);
+  const croppedCardUrl = cardUrl.replace("?", "?rect=0,0,1600,900&");
+  const allowedUrls = new Set([cardUrl, croppedCardUrl]);
+  let upstreamRequests = 0;
+
+  globalThis.fetch = async (input, init) => {
+    upstreamRequests += 1;
+    assert.ok(allowedUrls.has(input.toString()));
+    assert.ok(init?.signal instanceof AbortSignal);
+    assert.equal(init.cache, "no-store");
+    assert.equal(init.redirect, "manual");
+    return new Response(new Blob([imageBytes]), {
+      headers: { "Content-Type": "image/webp" },
+    });
+  };
+
+  try {
+    const relayUrl =
+      `http://localhost/api/research-image?url=${encodeURIComponent(cardUrl)}`;
+    const response = await getResearchImage(new Request(relayUrl));
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("Content-Type"), "image/webp");
+    assert.match(response.headers.get("Cache-Control") || "", /s-maxage=31536000/);
+    assert.match(response.headers.get("Cache-Control") || "", /immutable/);
+    assert.equal(
+      response.headers.get("Vercel-CDN-Cache-Control"),
+      "public, max-age=31536000, immutable",
+    );
+    assert.deepEqual(
+      new Uint8Array(await response.arrayBuffer()),
+      imageBytes,
+    );
+    assert.equal(upstreamRequests, 1);
+
+    const croppedResponse = await getResearchImage(
+      new Request(
+        `http://localhost/api/research-image?url=${encodeURIComponent(croppedCardUrl)}`,
+      ),
+    );
+    assert.equal(croppedResponse.status, 200);
+    assert.equal(upstreamRequests, 2);
+
+    const rejected = await getResearchImage(
+      new Request(
+        "http://localhost/api/research-image?url=" +
+          encodeURIComponent(cardUrl.replace("cdn.sanity.io", "example.com")),
+      ),
+    );
+    assert.equal(rejected.status, 400);
+    assert.equal(upstreamRequests, 2);
+
+    const duplicateWidth = await getResearchImage(
+      new Request(
+        "http://localhost/api/research-image?url=" +
+          encodeURIComponent(cardUrl + "&w=5000"),
+      ),
+    );
+    assert.equal(duplicateWidth.status, 400);
+    assert.equal(upstreamRequests, 2);
+
+    globalThis.fetch = async (_input, init) => {
+      assert.ok(init?.signal instanceof AbortSignal);
+      throw new DOMException("Upstream timed out", "TimeoutError");
+    };
+    const timedOut = await getResearchImage(new Request(relayUrl));
+    assert.equal(timedOut.status, 502);
+    assert.equal(timedOut.headers.get("Cache-Control"), "no-store");
+    assert.equal(timedOut.headers.get("Vercel-CDN-Cache-Control"), null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
 
 async function verifyLegacyImageConservatism(): Promise<void> {
@@ -78,8 +156,15 @@ function verifyRenderContracts(): void {
   const articleSource = readSource("src/app/(site)/[slug]/page.tsx");
   const headerSource = readSource("src/components/navigation/Header.tsx");
   const nextConfigSource = readSource("next.config.ts");
+  const researchImageRouteSource = readSource("src/app/api/research-image/route.ts");
+
+  assert.match(researchImageRouteSource, /signal:\s*AbortSignal\.timeout\(5000\)/);
 
   assert.match(homepageSource, /article\.cardImageUrl \|\| article\.imageUrl/);
+  assert.match(
+    homepageSource,
+    /\/api\/research-image\?url=\$\{encodeURIComponent\(article\.cardImageUrl\)\}/,
+  );
   assert.match(homepageSource, /alt=\{article\.imageAlt \|\| ""\}/);
   assert.match(homepageSource, /loading="lazy"/);
   assert.match(homepageSource, /decoding="async"/);
@@ -105,7 +190,8 @@ function verifyRenderContracts(): void {
 }
 
 async function main(): Promise<void> {
-  await verifySanityImageVariants();
+  const cardUrl = await verifySanityImageVariants();
+  await verifyHomepageCardRelay(cardUrl);
   await verifyLegacyImageConservatism();
   verifyRenderContracts();
   console.log("PASS: SEO-B11B public image delivery boundaries");
