@@ -37,7 +37,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
           <Link
             href="/"
-            className="w-full sm:w-auto bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-md"
+            className="chronoverse-primary-cta w-full sm:w-auto bg-[#C8A7E8] hover:bg-[#d88d65] text-black font-bold px-8 py-3 rounded-lg text-xs uppercase tracking-wider transition-colors shadow-md"
           >
             ← Return to Home Terminal
           </Link>
