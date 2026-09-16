@@ -1,10 +1,16 @@
 import { createClient } from "@sanity/client";
 
+const token = process.env.SANITY_TOKEN;
+
+if (!token) {
+  throw new Error("SANITY_TOKEN is required");
+}
+
 const client = createClient({
   projectId: "xfs4j01p",
   dataset: "production",
   apiVersion: "2024-01-01",
-  token: "sk5q3mk6sJ4MNawnGIEDdzLPKLgagdTOww7M6TmbMmIaLDKxbkASdt3lE1hGs4GEKMYmzq6XmCXd3aN62UlpYAshRecMbiQBtiLYwYEBta42ICNzaOE8Y48HGljUupQB79wWcQXJboCEkBYyJqEJm7vvUMQ1etRYDn1mWYS4VQhRs7XAFHLm",
+  token,
   useCdn: false,
 });
 

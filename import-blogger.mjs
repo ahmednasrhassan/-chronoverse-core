@@ -2,7 +2,11 @@ import fs from 'fs';
 import { XMLParser } from 'fast-xml-parser';
 import { createClient } from '@sanity/client';
 
-const API_TOKEN = 'skrKrt1sL7YKzs7nzAjLQKpv7EAspKVWjjCf68Cr8LUlCpxOS2o7rrCPKPpuVOVRsBiEdvlt1k01UwANPa3of2u5Cfh1eFksdzVt99U5S5pETHXtb0h4KwwTVuqEE8UA1GfzdDO9Ls8TFuGMtzyVYGpp3YaaPx1fCRt0LCvtrCKM5X8gnw51';
+const API_TOKEN = process.env.SANITY_TOKEN;
+
+if (!API_TOKEN) {
+  throw new Error('SANITY_TOKEN is required');
+}
 
 const client = createClient({
   projectId: 'xfs4j01p',
