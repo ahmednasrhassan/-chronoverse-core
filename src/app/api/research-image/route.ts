@@ -3,6 +3,11 @@ import { dataset, projectId } from "../../../sanity/client";
 const IMMUTABLE_IMAGE_CACHE =
   "public, max-age=31536000, s-maxage=31536000, immutable";
 
+const HOMEPAGE_IMAGE_PROFILES = [
+  { width: "720", height: "405", quality: "80" },
+  { width: "320", height: "240", quality: "75" },
+] as const;
+
 function isHomepageCardUrl(url: URL): boolean {
   const assetPath = url.pathname.slice(
     `/images/${projectId}/${dataset}/`.length,
@@ -18,9 +23,12 @@ function isHomepageCardUrl(url: URL): boolean {
     !url.hash &&
     url.pathname.startsWith(`/images/${projectId}/${dataset}/`) &&
     /^[a-zA-Z0-9-]+-\d+x\d+\.(?:jpg|jpeg|png|webp|gif|avif)$/.test(assetPath) &&
-    parameters.get("w") === "720" &&
-    parameters.get("h") === "405" &&
-    parameters.get("q") === "80" &&
+    HOMEPAGE_IMAGE_PROFILES.some(
+      (profile) =>
+        parameters.get("w") === profile.width &&
+        parameters.get("h") === profile.height &&
+        parameters.get("q") === profile.quality,
+    ) &&
     parameters.get("fit") === "crop" &&
     parameters.get("auto") === "format" &&
     ["w", "h", "q", "fit", "auto"].every(
@@ -54,7 +62,9 @@ export async function GET(request: Request): Promise<Response> {
       cache: "no-store",
       redirect: "manual",
       signal: AbortSignal.timeout(5000),
-      headers: { Accept: "*/*" },
+      // A fixed upstream representation keeps the immutable relay cache
+      // deterministic while allowing Sanity's `auto=format` to return WebP.
+      headers: { Accept: "image/webp" },
     });
     const contentType = upstream.headers.get("content-type") || "";
 

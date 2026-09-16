@@ -340,7 +340,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
                 This guarantees the link always matches an actual, resolvable
                 /category/[slug] route — no separate slug logic to keep in
                 sync and risk drifting out of alignment. */}
-            {currentPost.category ? (
+            {currentPost.authoredCategory && currentPost.categorySlug ? (
               <Link
                 href={`/category/${currentPost.categorySlug || DEFAULT_CATEGORY_SLUG}`}
                 className="text-xs font-bold uppercase tracking-widest text-[#C8A7E8] bg-[#C8A7E8]/10 px-3 py-1.5 rounded-full border border-[#C8A7E8]/20 hover:bg-[#C8A7E8]/20 transition-colors print:bg-transparent print:border-none print:px-0"

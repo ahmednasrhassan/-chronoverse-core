@@ -28,7 +28,10 @@ const basePost = {
   manualRelatedLinks: null,
 };
 
-async function verifySanityImageVariants(): Promise<string> {
+async function verifySanityImageVariants(): Promise<{
+  featuredCardUrl: string;
+  secondaryCardUrl: string;
+}> {
   const [article] = await getSanityArticles(async () => [
     {
       ...basePost,
@@ -42,8 +45,10 @@ async function verifySanityImageVariants(): Promise<string> {
 
   assert.ok(article.featuredImageUrl);
   assert.ok(article.cardImageUrl);
+  assert.ok(article.secondaryCardImageUrl);
   const heroUrl = new URL(article.featuredImageUrl);
   const cardUrl = new URL(article.cardImageUrl);
+  const secondaryCardUrl = new URL(article.secondaryCardImageUrl);
 
   assert.equal(heroUrl.hostname, "cdn.sanity.io");
   assert.equal(heroUrl.searchParams.get("w"), "1600");
@@ -52,18 +57,40 @@ async function verifySanityImageVariants(): Promise<string> {
   assert.equal(cardUrl.hostname, "cdn.sanity.io");
   assert.equal(cardUrl.searchParams.get("w"), "720");
   assert.equal(cardUrl.searchParams.get("h"), "405");
+  assert.equal(cardUrl.searchParams.get("q"), "80");
   assert.equal(cardUrl.searchParams.get("fit"), "crop");
+  assert.equal(cardUrl.searchParams.get("auto"), "format");
+  assert.equal(secondaryCardUrl.hostname, "cdn.sanity.io");
+  assert.equal(secondaryCardUrl.searchParams.get("w"), "320");
+  assert.equal(secondaryCardUrl.searchParams.get("h"), "240");
+  assert.equal(secondaryCardUrl.searchParams.get("q"), "75");
+  assert.equal(secondaryCardUrl.searchParams.get("fit"), "crop");
+  assert.equal(secondaryCardUrl.searchParams.get("auto"), "format");
   assert.notEqual(article.cardImageUrl, article.featuredImageUrl);
+  assert.notEqual(article.secondaryCardImageUrl, article.cardImageUrl);
   assert.equal(article.imageAlt, "Authored description of the research chart");
   assert.equal(article.imageCaption, "Authored factual caption.");
-  return article.cardImageUrl;
+  return {
+    featuredCardUrl: article.cardImageUrl,
+    secondaryCardUrl: article.secondaryCardImageUrl,
+  };
 }
 
-async function verifyHomepageCardRelay(cardUrl: string): Promise<void> {
+async function verifyHomepageCardRelay(
+  featuredCardUrl: string,
+  secondaryCardUrl: string,
+): Promise<void> {
   const originalFetch = globalThis.fetch;
   const imageBytes = new Uint8Array([82, 73, 70, 70]);
-  const croppedCardUrl = cardUrl.replace("?", "?rect=0,0,1600,900&");
-  const allowedUrls = new Set([cardUrl, croppedCardUrl]);
+  const croppedCardUrl = featuredCardUrl.replace(
+    "?",
+    "?rect=0,0,1600,900&",
+  );
+  const allowedUrls = new Set([
+    featuredCardUrl,
+    secondaryCardUrl,
+    croppedCardUrl,
+  ]);
   let upstreamRequests = 0;
 
   globalThis.fetch = async (input, init) => {
@@ -72,14 +99,14 @@ async function verifyHomepageCardRelay(cardUrl: string): Promise<void> {
     assert.ok(init?.signal instanceof AbortSignal);
     assert.equal(init.cache, "no-store");
     assert.equal(init.redirect, "manual");
+    assert.equal(new Headers(init.headers).get("Accept"), "image/webp");
     return new Response(new Blob([imageBytes]), {
       headers: { "Content-Type": "image/webp" },
     });
   };
 
   try {
-    const relayUrl =
-      `http://localhost/api/research-image?url=${encodeURIComponent(cardUrl)}`;
+    const relayUrl = `http://localhost/api/research-image?url=${encodeURIComponent(featuredCardUrl)}`;
     const response = await getResearchImage(new Request(relayUrl));
 
     assert.equal(response.status, 200);
@@ -96,31 +123,77 @@ async function verifyHomepageCardRelay(cardUrl: string): Promise<void> {
     );
     assert.equal(upstreamRequests, 1);
 
+    const secondaryResponse = await getResearchImage(
+      new Request(
+        `http://localhost/api/research-image?url=${encodeURIComponent(secondaryCardUrl)}`,
+      ),
+    );
+    assert.equal(secondaryResponse.status, 200);
+    assert.equal(upstreamRequests, 2);
+
     const croppedResponse = await getResearchImage(
       new Request(
         `http://localhost/api/research-image?url=${encodeURIComponent(croppedCardUrl)}`,
       ),
     );
     assert.equal(croppedResponse.status, 200);
-    assert.equal(upstreamRequests, 2);
+    assert.equal(upstreamRequests, 3);
 
-    const rejected = await getResearchImage(
-      new Request(
-        "http://localhost/api/research-image?url=" +
-          encodeURIComponent(cardUrl.replace("cdn.sanity.io", "example.com")),
-      ),
+    const requestFor = (url: string) =>
+      getResearchImage(
+        new Request(
+          `http://localhost/api/research-image?url=${encodeURIComponent(url)}`,
+        ),
+      );
+
+    const rejectedHost = await requestFor(
+      featuredCardUrl.replace("cdn.sanity.io", "example.com"),
     );
-    assert.equal(rejected.status, 400);
-    assert.equal(upstreamRequests, 2);
+    assert.equal(rejectedHost.status, 400);
+
+    const arbitraryDimensions = new URL(featuredCardUrl);
+    arbitraryDimensions.searchParams.set("w", "5000");
+    assert.equal((await requestFor(arbitraryDimensions.toString())).status, 400);
+
+    const wrongProject = new URL(featuredCardUrl);
+    wrongProject.pathname = wrongProject.pathname.replace(
+      `/images/${wrongProject.pathname.split("/")[2]}/`,
+      "/images/not-the-project/",
+    );
+    assert.equal((await requestFor(wrongProject.toString())).status, 400);
+
+    const wrongDataset = new URL(featuredCardUrl);
+    const pathParts = wrongDataset.pathname.split("/");
+    pathParts[3] = "not-the-dataset";
+    wrongDataset.pathname = pathParts.join("/");
+    assert.equal((await requestFor(wrongDataset.toString())).status, 400);
+
+    const malformedRect = new URL(featuredCardUrl);
+    malformedRect.searchParams.set("rect", "0,0,invalid,900");
+    assert.equal((await requestFor(malformedRect.toString())).status, 400);
+
+    const unexpectedParameter = new URL(featuredCardUrl);
+    unexpectedParameter.searchParams.set("download", "1");
+    assert.equal((await requestFor(unexpectedParameter.toString())).status, 400);
 
     const duplicateWidth = await getResearchImage(
       new Request(
         "http://localhost/api/research-image?url=" +
-          encodeURIComponent(cardUrl + "&w=5000"),
+          encodeURIComponent(featuredCardUrl + "&w=5000"),
       ),
     );
     assert.equal(duplicateWidth.status, 400);
-    assert.equal(upstreamRequests, 2);
+    assert.equal(upstreamRequests, 3);
+
+    globalThis.fetch = async () =>
+      new Response(null, {
+        status: 503,
+        headers: { "Content-Type": "text/plain" },
+      });
+    const failedUpstream = await getResearchImage(new Request(relayUrl));
+    assert.equal(failedUpstream.status, 502);
+    assert.equal(failedUpstream.headers.get("Cache-Control"), "no-store");
+    assert.equal(failedUpstream.headers.get("Vercel-CDN-Cache-Control"), null);
 
     globalThis.fetch = async (_input, init) => {
       assert.ok(init?.signal instanceof AbortSignal);
@@ -163,8 +236,11 @@ function verifyRenderContracts(): void {
   assert.match(homepageSource, /article\.cardImageUrl \|\| article\.imageUrl/);
   assert.match(
     homepageSource,
-    /\/api\/research-image\?url=\$\{encodeURIComponent\(article\.cardImageUrl\)\}/,
+    /function getResearchImageRelayUrl[\s\S]*?\/api\/research-image\?url=\$\{encodeURIComponent\(url\)\}/,
   );
+  assert.match(homepageSource, /media="\(min-width: 640px\)"/);
+  assert.match(homepageSource, /srcSet=\{secondaryImageSrc\}/);
+  assert.match(homepageSource, /\(max-width: 639px\) 100vw, 136px/);
   assert.match(homepageSource, /alt=\{article\.imageAlt \|\| ""\}/);
   assert.match(homepageSource, /loading="lazy"/);
   assert.match(homepageSource, /decoding="async"/);
@@ -190,8 +266,9 @@ function verifyRenderContracts(): void {
 }
 
 async function main(): Promise<void> {
-  const cardUrl = await verifySanityImageVariants();
-  await verifyHomepageCardRelay(cardUrl);
+  const { featuredCardUrl, secondaryCardUrl } =
+    await verifySanityImageVariants();
+  await verifyHomepageCardRelay(featuredCardUrl, secondaryCardUrl);
   await verifyLegacyImageConservatism();
   verifyRenderContracts();
   console.log("PASS: SEO-B11B public image delivery boundaries");

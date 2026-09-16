@@ -29,6 +29,7 @@ export interface ContentItem {
   legacyBody?: string;
   imageUrl?: string;
   cardImageUrl?: string;
+  secondaryCardImageUrl?: string;
   featuredImageUrl?: string;
   imageAlt?: string;
   imageCaption?: string;
@@ -259,6 +260,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   // --- Automated Featured Image Fallback ---
   let resolvedImageUrl: string | undefined;
   let resolvedCardImageUrl: string | undefined;
+  let resolvedSecondaryCardImageUrl: string | undefined;
   if (post.mainImage?.asset) {
     try {
       resolvedImageUrl = urlForOptimized(post.mainImage as never)
@@ -269,6 +271,12 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
       resolvedCardImageUrl = urlForOptimized(post.mainImage as never)
         .width(720)
         .height(405)
+        .fit("crop")
+        .url();
+      resolvedSecondaryCardImageUrl = urlForOptimized(post.mainImage as never)
+        .width(320)
+        .height(240)
+        .quality(75)
         .fit("crop")
         .url();
     } catch {
@@ -318,6 +326,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     legacyBody: sanitizeHtml(downgradeHeadings(post.legacyBody || "")),
     imageUrl: resolvedImageUrl,
     cardImageUrl: resolvedCardImageUrl,
+    secondaryCardImageUrl: resolvedSecondaryCardImageUrl,
     featuredImageUrl: post.mainImage?.asset ? resolvedImageUrl : undefined,
     imageAlt: post.mainImage?.alt?.trim() || undefined,
     imageCaption: post.mainImage?.caption?.trim() || undefined,

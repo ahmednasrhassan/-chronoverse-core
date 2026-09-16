@@ -54,7 +54,7 @@ export default async function ReportsPage() {
               >
                 <div>
                   <div className="flex items-center justify-between text-xs text-[#CFC5B8] mb-3">
-                    {article.categorySlug ? (
+                    {article.authoredCategory && article.categorySlug ? (
                       <Link
                         href={`/category/${article.categorySlug}`}
                         aria-label={`Browse ${article.category} category`}

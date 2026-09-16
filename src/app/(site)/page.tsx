@@ -36,12 +36,12 @@ const SECONDARY_CTA_CLASS =
 const EDITORIAL_HEADING_CLASS =
   "text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const projections = await getFiveProductFreeLiteProjectionMapV1();
+
   return (
     <div className="bg-[#050506] text-[#F3EBDD]">
-      <Suspense fallback={<MarketExperienceFallback />}>
-        <FreeMarketExperience />
-      </Suspense>
+      <FreeMarketExperience projections={projections} />
 
       <VipConversion />
 
@@ -56,9 +56,11 @@ export default function HomePage() {
   );
 }
 
-async function FreeMarketExperience() {
-  const projections = await getFiveProductFreeLiteProjectionMapV1();
-
+function FreeMarketExperience({
+  projections,
+}: {
+  projections: FiveProductFreeLiteProjectionMapV1;
+}) {
   return (
     <>
       <Hero projections={projections} />
@@ -116,29 +118,6 @@ function Hero({
         </div>
 
         <MarketIntelligenceBoard projections={projections} />
-      </div>
-    </section>
-  );
-}
-
-function MarketExperienceFallback() {
-  return (
-    <section
-      aria-label="Loading Free market intelligence"
-      className="border-b border-[#6F4C91]/35 bg-[#050506]"
-    >
-      <div className="mx-auto grid max-w-[88rem] items-center gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:px-8 xl:grid-cols-[minmax(0,1.48fr)_minmax(23rem,0.82fr)] xl:gap-0 xl:py-20">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#C8A7E8]">
-            Free Market Intelligence
-          </p>
-          <p className={`mt-7 max-w-[12ch] text-[clamp(2.85rem,5.5vw,4.75rem)] leading-none ${EDITORIAL_HEADING_CLASS}`}>
-            Five markets. One intelligence system.
-          </p>
-        </div>
-        <div className="border-l border-[#6F4C91]/40 bg-[#0D0D11] p-6 text-sm text-[#91889A]">
-          Loading verified Free Lite projections…
-        </div>
       </div>
     </section>
   );
@@ -204,7 +183,7 @@ function VipConversion() {
                         : ""
                 }`}
               >
-                <span className="font-mono text-[10px] text-[#6F4C91]">
+                <span className="font-mono text-[10px] text-[#91889A]">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <span className="text-sm font-medium text-[#F3EBDD]">
@@ -343,8 +322,11 @@ function EditorialImage({
 }) {
   const imageUrl = article.cardImageUrl || article.imageUrl;
   const imageSrc = article.cardImageUrl
-    ? `/api/research-image?url=${encodeURIComponent(article.cardImageUrl)}`
+    ? getResearchImageRelayUrl(article.cardImageUrl)
     : imageUrl;
+  const secondaryImageSrc = !featured && article.secondaryCardImageUrl
+    ? getResearchImageRelayUrl(article.secondaryCardImageUrl)
+    : undefined;
   const visualClass = featured
     ? "relative aspect-[16/10] overflow-hidden sm:aspect-auto"
     : "relative aspect-[4/3] overflow-hidden bg-[#15131A]";
@@ -352,17 +334,22 @@ function EditorialImage({
   return (
     <div className={`${visualClass} bg-[#15131A]`}>
       {imageSrc ? (
-        <Image
-          src={imageSrc}
-          alt={article.imageAlt || ""}
-          fill
-          sizes={featured
-            ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 36vw"
-            : "(max-width: 640px) 30vw, 136px"}
-          className="object-cover opacity-75 grayscale-[20%]"
-          loading="lazy"
-          decoding="async"
-        />
+        <picture>
+          {secondaryImageSrc ? (
+            <source media="(min-width: 640px)" srcSet={secondaryImageSrc} />
+          ) : null}
+          <Image
+            src={imageSrc}
+            alt={article.imageAlt || ""}
+            fill
+            sizes={featured
+              ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 36vw"
+              : "(max-width: 639px) 100vw, 136px"}
+            className="object-cover opacity-75 grayscale-[20%]"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
       ) : (
         <div
           aria-label="Editorial image unavailable"
@@ -375,6 +362,10 @@ function EditorialImage({
       />
     </div>
   );
+}
+
+function getResearchImageRelayUrl(url: string): string {
+  return `/api/research-image?url=${encodeURIComponent(url)}`;
 }
 
 function ArticleMeta({
@@ -477,7 +468,7 @@ function ServiceCard({
 
   return (
     <article className="relative min-h-72 bg-[#050506] p-6 sm:p-9 xl:first:mr-2 xl:last:ml-2 xl:last:bg-[#15131A]">
-      <span className="font-mono text-xs text-[#6F4C91]">{index}</span>
+      <span className="font-mono text-xs text-[#91889A]">{index}</span>
       <p className="mt-8 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
         {eyebrow}
       </p>
@@ -559,12 +550,12 @@ function TrustStrip() {
             className="group flex items-center justify-between gap-4 py-3 text-xs font-medium text-[#CFC5B8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
           >
             <span>
-              <span className="mr-3 font-mono text-[9px] text-[#6F4C91]">
+              <span className="mr-3 font-mono text-[9px] text-[#91889A]">
                 0{index + 1}
               </span>
               {link.label}
             </span>
-            <span aria-hidden="true" className="text-[#6F4C91] group-hover:text-[#C8A7E8]">↗</span>
+            <span aria-hidden="true" className="text-[#91889A] group-hover:text-[#C8A7E8]">↗</span>
           </Link>
         ))}
       </div>

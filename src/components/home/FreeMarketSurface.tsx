@@ -47,7 +47,7 @@ export function MarketIntelligenceBoard({
               key={market.productId}
               className="grid grid-cols-[1.6rem_minmax(0,0.8fr)_minmax(0,1fr)] items-center gap-3 py-3.5 first:border-t first:border-[#6F4C91]/25"
             >
-              <span className="font-mono text-[10px] tabular-nums text-[#6F4C91]">
+              <span className="font-mono text-[10px] tabular-nums text-[#91889A]">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="font-mono text-xs font-semibold tracking-[0.08em] text-[#F3EBDD]">
@@ -357,7 +357,7 @@ function SignalCell({
   return (
     <div className="border-[#6F4C91]/25 py-5 sm:odd:border-r sm:even:pl-5 xl:border-r xl:px-6 xl:first:pl-0 xl:[&:nth-child(3n)]:border-r-0">
       <dt className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[#91889A]">
-        <span className="text-[#6F4C91]">{index}</span>
+        <span className="text-[#91889A]">{index}</span>
         {label}
       </dt>
       <dd className="mt-3 text-sm font-semibold text-[#F3EBDD]">{value}</dd>
@@ -392,7 +392,7 @@ function BoundaryList({
       <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm leading-5 text-[#CFC5B8]">
         {items.map((item) => (
           <li key={item} className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-[#6F4C91]">/</span>
+            <span aria-hidden="true" className="text-[#91889A]">/</span>
             <span>{item}</span>
           </li>
         ))}

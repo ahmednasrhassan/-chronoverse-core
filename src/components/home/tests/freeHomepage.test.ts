@@ -44,6 +44,16 @@ assert.equal(
   1,
   "hero and market surface must share exactly one projection-map read",
 );
+assert.match(
+  homepageSource,
+  /export default async function HomePage\(\)[\s\S]{0,180}await getFiveProductFreeLiteProjectionMapV1\(\)/,
+  "the complete above-the-fold market experience must resolve before composition",
+);
+assert.doesNotMatch(
+  homepageSource,
+  /MarketExperienceFallback|<Suspense[^>]*>[\s\S]*?<FreeMarketExperience/,
+  "a short streaming fallback must not displace the downstream VIP section",
+);
 assert.match(projectionServiceSource, /Promise\.allSettled/);
 assert.match(projectionServiceSource, /getCachedCanonicalFxResultBundleV1\(\)/);
 assert.match(projectionServiceSource, /getCanonicalEstrResultV1\(\)/);
@@ -203,6 +213,11 @@ assert.doesNotMatch(
   combinedPresentationSource,
   /framer-motion|motion\/react|@react-spring|lottie|gsap/i,
   "homepage must not add an animation framework",
+);
+assert.doesNotMatch(
+  combinedHomepageSource,
+  /text-\[#6F4C91\]/,
+  "homepage foreground text must not use the low-contrast decorative purple",
 );
 
 assert.equal(

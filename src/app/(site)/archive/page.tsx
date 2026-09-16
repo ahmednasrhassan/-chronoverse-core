@@ -50,20 +50,34 @@ export default async function ArchiveIndexPage({
   // applied by the GROQ query above).
   const sectionsMap = new Map<
     string,
-    { category: { title: string; slug: string }; posts: ArchivePost[] }
+    {
+      category: { title: string; slug: string; href?: string };
+      posts: ArchivePost[];
+    }
   >();
 
   for (const post of posts) {
     const categoryTitle = post.category || DEFAULT_CATEGORY;
     const categorySlug = post.categorySlug || DEFAULT_CATEGORY_SLUG;
+    const categoryHref = post.category && post.categorySlug
+      ? `/category/${post.categorySlug}`
+      : undefined;
 
     if (!sectionsMap.has(categorySlug)) {
       sectionsMap.set(categorySlug, {
-        category: { title: categoryTitle, slug: categorySlug },
+        category: {
+          title: categoryTitle,
+          slug: categorySlug,
+          href: categoryHref,
+        },
         posts: [],
       });
     }
-    sectionsMap.get(categorySlug)!.posts.push(post);
+    const section = sectionsMap.get(categorySlug)!;
+    if (!section.category.href && categoryHref) {
+      section.category.href = categoryHref;
+    }
+    section.posts.push(post);
   }
 
   const populatedSections = Array.from(sectionsMap.values());
@@ -98,12 +112,18 @@ export default async function ArchiveIndexPage({
                 <span className="flex items-center gap-2">
                   <span>[PATH]</span> {section.category.title}
                 </span>
-                <Link
-                  href={`/category/${section.category.slug || section.category.title.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="text-[10px] text-muted hover:text-[#C8A7E8] normal-case font-sans transition-colors"
-                >
-                  View all →
-                </Link>
+                {section.category.href ? (
+                  <Link
+                    href={section.category.href}
+                    className="text-[10px] text-muted hover:text-[#C8A7E8] normal-case font-sans transition-colors"
+                  >
+                    View all →
+                  </Link>
+                ) : (
+                  <span className="text-[10px] text-muted normal-case font-sans">
+                    Uncategorized
+                  </span>
+                )}
               </h2>
 
               <ul className="divide-y divide-border/60">
