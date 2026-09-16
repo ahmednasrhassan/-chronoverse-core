@@ -20,6 +20,9 @@ const globalStylesSource = readSource("src/app/globals.css");
 const projectionServiceSource = readSource(
   "src/lib/markets/services/canonicalProductResults.ts",
 );
+const canonicalSnapshotSource = readSource(
+  "src/lib/markets/services/canonicalMarketSnapshot.ts",
+);
 const combinedHomepageSource = `${homepageSource}\n${marketSurfaceSource}`;
 const combinedPresentationSource = [
   combinedHomepageSource,
@@ -57,6 +60,19 @@ assert.doesNotMatch(
 assert.match(projectionServiceSource, /Promise\.allSettled/);
 assert.match(projectionServiceSource, /getCachedCanonicalFxResultBundleV1\(\)/);
 assert.match(projectionServiceSource, /getCanonicalEstrResultV1\(\)/);
+assert.match(projectionServiceSource, /import "server-only"/);
+assert.doesNotMatch(marketSurfaceSource, /^"use client"/);
+assert.doesNotMatch(marketSurfaceSource, /fetch\(|\/api\/markets?\//);
+assert.doesNotMatch(
+  canonicalSnapshotSource,
+  /import\s*\{[\s\S]*?getHistoricalMarketData[\s\S]*?\}\s*from\s*["']\.\/historicalMarketData["']/,
+  "Free's injected ECB path must not eagerly load the generic provider stack",
+);
+assert.match(
+  canonicalSnapshotSource,
+  /async function defaultHistoricalLoader[\s\S]{0,320}await import\("\.\/historicalMarketData"\)/,
+  "the generic historical provider must load only when the default loader is invoked",
+);
 
 for (const forbiddenProduct of ["Gold", "Bitcoin", "S&P 500", "Nasdaq", "Oil"]) {
   assert.doesNotMatch(

@@ -15,10 +15,7 @@ import {
   type CanonicalObservationSeriesKindV1,
   type CanonicalObservationSeriesV1,
 } from "./canonicalObservationSeries";
-import {
-  getHistoricalMarketData,
-  type HistoricalMarketResult,
-} from "./historicalMarketData";
+import type { HistoricalMarketResult } from "./historicalMarketData";
 
 export const CANONICAL_MARKET_SNAPSHOT_SCHEMA_VERSION_V1 =
   "canonical-market-snapshot-v1" as const;
@@ -344,12 +341,14 @@ async function loadAsset(
   );
 }
 
-function defaultHistoricalLoader(
+async function defaultHistoricalLoader(
   symbol: string,
   range: string,
   interval: CandleInterval,
   assetClass: AssetClass,
 ): Promise<HistoricalMarketResult> {
+  const { getHistoricalMarketData } = await import("./historicalMarketData");
+
   return getHistoricalMarketData(symbol, range, interval, {
     assetClass,
     cacheMode: "shared",
