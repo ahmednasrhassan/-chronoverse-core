@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import AnalyticsProductView from
+  "@/components/analytics/AnalyticsProductView";
 import VipOverviewSurface from "@/components/vip/VipOverviewSurface";
 import { requireVipV1 } from "@/lib/auth/guards";
 import { enforceVipPageAccessV1 } from "@/lib/auth/vipPageAccess";
@@ -32,15 +34,23 @@ interface VipOverviewPageProps {
 export default async function VipOverviewPage({
   searchParams,
 }: VipOverviewPageProps) {
-  await enforceVipPageAccessV1(requireVipV1, redirect);
+  const access = await enforceVipPageAccessV1(requireVipV1, redirect);
 
   const projections = await getFiveProductVipDeepProjectionMapV1();
   const selectedMarket = selectVipMarketV1((await searchParams).market);
 
   return (
-    <VipOverviewSurface
-      projections={projections}
-      selectedMarket={selectedMarket}
-    />
+    <>
+      {access.state === "vip_active" ? (
+        <AnalyticsProductView
+          contentId={selectedMarket}
+          accessState="vip_active"
+        />
+      ) : null}
+      <VipOverviewSurface
+        projections={projections}
+        selectedMarket={selectedMarket}
+      />
+    </>
   );
 }

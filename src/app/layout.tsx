@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 
 import CookieConsentWrapper from "@/components/CookieConsentWrapper";
+import AnalyticsPageViewTracker from
+  "@/components/analytics/AnalyticsPageViewTracker";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 import { canonicalSiteOrigin } from "@/lib/seo/site-url";
 
@@ -95,6 +98,45 @@ export default function RootLayout({
                 window.dataLayer.push(arguments);
               };
 
+              function hasChronoverseAnalyticsConsent() {
+                try {
+                  var detailedConsent = localStorage.getItem('chrono_cookie_consent');
+                  if (detailedConsent) {
+                    var parsedConsent = JSON.parse(detailedConsent);
+                    return parsedConsent && parsedConsent.analytics === true;
+                  }
+                  return localStorage.getItem('cookie_consent') === 'granted';
+                } catch (_) {
+                  return false;
+                }
+              }
+
+              function isChronoverseAnalyticsLocation() {
+                var pathname = window.location.pathname;
+                return window.location.hostname.toLowerCase() === 'chronoversecapital.com'
+                  && pathname !== '/studio'
+                  && !pathname.startsWith('/studio/')
+                  && pathname !== '/api'
+                  && !pathname.startsWith('/api/')
+                  && pathname !== '/auth'
+                  && !pathname.startsWith('/auth/')
+                  && pathname !== '/_next'
+                  && !pathname.startsWith('/_next/');
+              }
+
+              function currentAnalyticsPagePath() {
+                var source = new URLSearchParams(window.location.search);
+                var safe = new URLSearchParams();
+                ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'market']
+                  .forEach(function copySafeAnalyticsParameter(key) {
+                    source.getAll(key).forEach(function appendSafeAnalyticsParameter(value) {
+                      safe.append(key, value);
+                    });
+                  });
+                var query = safe.toString();
+                return window.location.pathname + (query ? '?' + query : '');
+              }
+
               window.gtag('consent', 'default', {
                 analytics_storage: 'denied',
                 ad_storage: 'denied',
@@ -104,6 +146,7 @@ export default function RootLayout({
               });
 
               window.loadChronoverseAnalytics = function loadChronoverseAnalytics() {
+                if (!hasChronoverseAnalyticsConsent() || !isChronoverseAnalyticsLocation()) return;
                 if (window.__chronoverseAnalyticsLoaded) return;
                 window.__chronoverseAnalyticsLoaded = true;
 
@@ -116,8 +159,15 @@ export default function RootLayout({
                 });
                 window.gtag('js', new Date());
                 window.gtag('config', measurementId, {
-                  page_path: window.location.pathname,
-                  send_page_view: true
+                  send_page_view: false
+                });
+
+                var pagePath = currentAnalyticsPagePath();
+                window.gtag('event', 'page_view', {
+                  page_path: pagePath,
+                  page_location: window.location.origin + pagePath,
+                  page_title: document.title,
+                  page_referrer: document.referrer
                 });
 
                 var s = document.createElement('script');
@@ -126,21 +176,10 @@ export default function RootLayout({
                 s.async = true;
                 s.dataset.chronoverseAnalytics = 'true';
                 document.head.appendChild(s);
+                window.dispatchEvent(new Event('chronoverse:analytics-ready'));
               };
 
-              var analyticsAllowed = false;
-              try {
-                var detailedConsent = localStorage.getItem('chrono_cookie_consent');
-                if (detailedConsent) {
-                  var parsedConsent = JSON.parse(detailedConsent);
-                  analyticsAllowed = parsedConsent && parsedConsent.analytics === true;
-                } else {
-                  analyticsAllowed = localStorage.getItem('cookie_consent') === 'granted';
-                }
-              } catch (_) {
-                analyticsAllowed = false;
-              }
-
+              var analyticsAllowed = hasChronoverseAnalyticsConsent();
               if (analyticsAllowed) window.loadChronoverseAnalytics();
             `,
           }}
@@ -150,6 +189,9 @@ export default function RootLayout({
       <body className="min-h-full font-sans overflow-x-hidden">
         {children}
 
+        <Suspense fallback={null}>
+          <AnalyticsPageViewTracker />
+        </Suspense>
         <CookieConsentWrapper />
       </body>
     </html>

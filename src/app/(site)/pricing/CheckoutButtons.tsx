@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { continueToSuccessfulCheckoutV1 } from "@/lib/analytics/client";
+
 type CheckoutPlan = "monthly" | "annual";
 
 const CHECKOUT_OPTIONS: ReadonlyArray<{
@@ -41,7 +43,11 @@ export default function CheckoutButtons() {
         throw new Error("Checkout unavailable");
       }
 
-      window.location.assign(payload.url);
+      continueToSuccessfulCheckoutV1(
+        plan,
+        payload.url,
+        (url) => window.location.assign(url),
+      );
     } catch {
       setPendingPlan(null);
       setMessage("Checkout is temporarily unavailable. Please try again.");
