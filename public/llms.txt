@@ -1,17 +1,18 @@
 # Chronoverse Capital
 
-Chronoverse Capital publishes independent market intelligence for a focused five-market universe.
-Canonical site: https://chronoversecapital.com
+> Independent market intelligence for a focused five-market universe: EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.
 
-Public destinations:
-- https://chronoversecapital.com/
-- https://chronoversecapital.com/markets
-- https://chronoversecapital.com/pricing
-- https://chronoversecapital.com/reports
-- https://chronoversecapital.com/methodology
-- https://chronoversecapital.com/data-sources
-- https://chronoversecapital.com/freshness
-- https://chronoversecapital.com/about
-- https://chronoversecapital.com/contact
+Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
+
+## Public destinations
+
+- [Markets](https://chronoversecapital.com/markets)
+- [Pricing](https://chronoversecapital.com/pricing)
+- [Research](https://chronoversecapital.com/reports)
+- [Methodology](https://chronoversecapital.com/methodology)
+- [Data Sources](https://chronoversecapital.com/data-sources)
+- [Freshness & Availability](https://chronoversecapital.com/freshness)
+- [About](https://chronoversecapital.com/about)
+- [Contact](https://chronoversecapital.com/contact)
 
 Public information is analytical and informational, not personalized financial advice.
