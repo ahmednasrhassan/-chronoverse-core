@@ -212,8 +212,8 @@ async function handleSendNewsletter(): Promise<{
     } catch (error) {
       failed += 1;
       console.error(
-        `[send-newsletter] Failed to send to ${subscriber.email}:`,
-        error
+        "[send-newsletter] Failed to send one newsletter email:",
+        error instanceof Error ? error.message : "unknown SES error",
       );
     }
   }
@@ -257,4 +257,3 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return GET(request);
 }
-

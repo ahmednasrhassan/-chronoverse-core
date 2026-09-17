@@ -80,6 +80,29 @@ async function verifyWebhookSecurity(): Promise<void> {
   assert.equal(verified.operation, "create");
   assert.equal(verified.idempotencyKey, "delivery-test-1");
 
+  for (const operation of ["create", "update", "delete"] as const) {
+    const operationRequest = await verifySanityWebhookRequest(
+      await signedRequest(
+        { _type: "post", slug: operation === "delete" ? "before-slug" : "after-slug" },
+        {
+          "sanity-operation": operation,
+          "idempotency-key": `delivery-${operation}`,
+        },
+      ),
+      {
+        secret,
+        expectedProjectId: "project-test",
+        expectedDataset: "production",
+        now,
+      },
+    );
+    assert.equal(operationRequest.operation, operation);
+    assert.equal(
+      operationRequest.payload.slug,
+      operation === "delete" ? "before-slug" : "after-slug",
+    );
+  }
+
   await expectWebhookError(
     async () =>
       verifySanityWebhookRequest(
@@ -154,11 +177,54 @@ async function verifyWebhookSecurity(): Promise<void> {
     "invalid_source",
   );
 
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(
+        await signedRequest(
+          { documentId: "post-1" },
+          { "sanity-dataset": "staging" },
+        ),
+        {
+          secret,
+          expectedProjectId: "project-test",
+          expectedDataset: "production",
+          now,
+        },
+      ),
+    401,
+    "invalid_source",
+  );
+
   for (const invalidId of ["", "../post", "versions.release.post", "post/one", "x".repeat(129)]) {
     assert.equal(isValidSanityDocumentId(invalidId), false, `rejects ${invalidId}`);
   }
   assert.equal(isValidSanityDocumentId("post-one"), true);
   assert.equal(isValidSanityDocumentId("drafts.post-one"), true);
+}
+
+function verifyRevalidationContract(): void {
+  const route = readSource("src/app/api/revalidate/route.ts");
+  assert.match(route, /REVALIDATED_TYPES = new Set\(\["post", "page", "category"\]\)/);
+  assert.match(route, /SLUG_PATTERN = \/\^\[a-z0-9\]\+\(\?:-\[a-z0-9\]\+\)\*\$\//);
+  assert.match(route, /verifySanityWebhookRequest/);
+  assert.match(route, /secret: process\.env\.SANITY_WEBHOOK_SECRET/);
+  assert.match(route, /expectedProjectId: projectId/);
+  assert.match(route, /expectedDataset: dataset/);
+
+  for (const publicPath of [
+    "/",
+    "/reports",
+    "/archive",
+    "/sitemap.xml",
+    "/feed.xml",
+    "/rss.xml",
+  ]) {
+    assert.match(route, new RegExp(`revalidatePath\\(\\"${publicPath.replace("/", "\\/")}\\"\\)`));
+  }
+
+  assert.match(route, /revalidatePath\(`\/\$\{slug\}`\)/);
+  assert.match(route, /revalidatePath\("\/\[slug\]", "page"\)/);
+  assert.match(route, /revalidatePath\("\/category\/\[slug\]", "page"\)/);
 }
 
 function verifyBloggerBoundaries(): void {
@@ -267,6 +333,10 @@ async function verifyCronFailsClosed(): Promise<void> {
     if (previous === undefined) delete process.env.CRON_SECRET;
     else process.env.CRON_SECRET = previous;
   }
+
+  const route = readSource("src/app/api/cron/send-newsletter/route.ts");
+  assert.match(route, /Failed to send one newsletter email/);
+  assert.doesNotMatch(route, /Failed to send to \$\{subscriber\.email\}/);
 }
 
 function verifyAuthoringContracts(): void {
@@ -340,14 +410,22 @@ function verifyPublishWebhookOrdering(): void {
   assert.match(route, /verified\.operation !== "create"/);
   assert.match(route, /documentType !== "post"/);
   assert.match(route, /becamePublished !== true/);
+  assert.match(route, /documentId\.startsWith\("drafts\."\)/);
   assert.match(route, /_rev == \$revision/);
+  assert.match(route, /publishedAt <= now\(\)/);
   assert.match(route, /_type == "subscriber" && active != false/);
   assert.match(route, /\[0\.\.\.1000\]/);
+  assert.match(route, /if \(subscribers\.length === 0\)/);
+  assert.match(route, /if \(!lease\)/);
+  assert.match(route, /Webhook delivery already processed/);
+  assert.match(route, /Failed to send one article email/);
   assert.doesNotMatch(route, /SUBSCRIBER_EMAILS/);
+  assert.doesNotMatch(route, /Failed to send.*\$\{email\}/);
 }
 
 async function main(): Promise<void> {
   await verifyWebhookSecurity();
+  verifyRevalidationContract();
   verifyBloggerBoundaries();
   await verifyDisabledLegacyMutations();
   await verifyRouteGuardsAndWriteConfiguration();
