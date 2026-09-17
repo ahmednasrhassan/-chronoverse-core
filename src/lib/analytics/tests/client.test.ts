@@ -137,7 +137,7 @@ function verifyCheckoutMeasurementIsolation(): void {
   let destination = "";
   continueToSuccessfulCheckoutV1(
     "annual",
-    "https://chronoverse.lemonsqueezy.com/checkout/custom/id",
+    "https://vault.chronoversecapital.com/checkout/custom/id",
     (url) => {
       destination = url;
     },
@@ -147,7 +147,7 @@ function verifyCheckoutMeasurementIsolation(): void {
   );
   assert.equal(
     destination,
-    "https://chronoverse.lemonsqueezy.com/checkout/custom/id",
+    "https://vault.chronoversecapital.com/checkout/custom/id",
     "analytics failure must not block successful checkout navigation",
   );
 

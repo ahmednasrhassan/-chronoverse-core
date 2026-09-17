@@ -50,15 +50,24 @@ function harness(
   return { dependencies, calls };
 }
 
-function providerResponse(variantId: string): unknown {
+function providerResponse(
+  variantId: string,
+  overrides: Record<string, unknown> = {},
+): unknown {
   return {
+    jsonapi: { version: "1.0" },
+    links: {
+      self: "https://api.lemonsqueezy.com/v1/checkouts/synthetic-checkout-id",
+    },
     data: {
       type: "checkouts",
+      id: "synthetic-checkout-id",
       attributes: {
         store_id: 294379,
         variant_id: Number(variantId),
         test_mode: false,
-        url: "https://chronoverse.lemonsqueezy.com/checkout/custom/checkout-id?signature=fake",
+        url: "https://vault.chronoversecapital.com/checkout/custom/checkout-id?signature=fake",
+        ...overrides,
       },
     },
   };
@@ -68,7 +77,7 @@ async function verifyPlanMapping(plan: LemonCheckoutPlanV1, variantId: string) {
   const current = harness({}, providerResponse(variantId));
   const url = await createLemonCheckoutV1(plan, current.dependencies);
 
-  assert.match(url, /^https:\/\/chronoverse\.lemonsqueezy\.com\/checkout\//);
+  assert.match(url, /^https:\/\/vault\.chronoversecapital\.com\/checkout\//);
   assert.equal(current.calls.length, 1);
 
   const request = current.calls[0];
@@ -147,17 +156,27 @@ async function verifyProviderFailures(): Promise<void> {
     { current: harness({}, { errors: [] }, 422), code: "provider-unavailable" },
     { current: harness({}, { data: {} }), code: "invalid-provider-response" },
     {
-      current: harness({}, {
-        data: {
-          type: "checkouts",
-          attributes: {
-            store_id: 294379,
-            variant_id: 2112907,
-            test_mode: false,
-            url: "https://attacker.example/checkout/custom/id",
-          },
-        },
-      }),
+      current: harness({}, providerResponse("2112907", { store_id: 999999 })),
+      code: "invalid-provider-response",
+    },
+    {
+      current: harness({}, providerResponse("2112907", { variant_id: 999999 })),
+      code: "invalid-provider-response",
+    },
+    {
+      current: harness({}, providerResponse("2112907", { test_mode: true })),
+      code: "invalid-provider-response",
+    },
+    {
+      current: harness({}, providerResponse("2112907", {
+        url: "https://attacker.example/checkout/custom/id",
+      })),
+      code: "invalid-provider-response",
+    },
+    {
+      current: harness({}, providerResponse("2112907", {
+        url: "https://evil.chronoversecapital.com/checkout/custom/id",
+      })),
       code: "invalid-provider-response",
     },
     {
@@ -197,6 +216,14 @@ async function verifyProviderFailures(): Promise<void> {
     createLemonCheckoutV1("monthly", timedOut.dependencies),
     (error) => error instanceof LemonCheckoutErrorV1
       && error.code === "provider-unavailable",
+  );
+
+  const lemonHosted = harness({}, providerResponse("2112907", {
+    url: "https://chronoverse.lemonsqueezy.com/checkout/custom/id?signature=fake",
+  }));
+  assert.equal(
+    await createLemonCheckoutV1("monthly", lemonHosted.dependencies),
+    "https://chronoverse.lemonsqueezy.com/checkout/custom/id?signature=fake",
   );
 }
 

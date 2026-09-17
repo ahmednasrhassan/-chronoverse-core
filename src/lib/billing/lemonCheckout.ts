@@ -1,5 +1,6 @@
 import "server-only";
 
+import { siteConfig } from "../../config/siteConfig";
 import { buildCanonicalUrl } from "../seo/site-url";
 import {
   resolveLemonCheckoutCustomDataV1,
@@ -192,13 +193,16 @@ function safeLemonCheckoutUrlV1(value: string): string | null {
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();
+    const isTrustedCheckoutHost =
+      hostname.endsWith(".lemonsqueezy.com")
+      || hostname === siteConfig.commerce.lemonStoreHost;
 
     if (
       url.protocol !== "https:"
       || url.username.length > 0
       || url.password.length > 0
       || (url.port.length > 0 && url.port !== "443")
-      || !hostname.endsWith(".lemonsqueezy.com")
+      || !isTrustedCheckoutHost
       || !url.pathname.startsWith("/checkout/")
       || url.hash.length > 0
     ) {

@@ -10,10 +10,16 @@ export const runtime = "nodejs";
 
 interface CheckoutRouteDependenciesV1 {
   readonly createCheckout: (plan: LemonCheckoutPlanV1) => Promise<string>;
+  readonly reportFailure?: (
+    code: LemonCheckoutErrorV1["code"] | "unexpected",
+  ) => void;
 }
 
 const PRODUCTION_DEPENDENCIES_V1: CheckoutRouteDependenciesV1 = Object.freeze({
   createCheckout: createLemonCheckoutV1,
+  reportFailure: (code: LemonCheckoutErrorV1["code"] | "unexpected") => {
+    console.error(`[billing/checkout] failure code=${code}`);
+  },
 });
 
 export function createCheckoutRouteHandlerV1(
@@ -46,9 +52,11 @@ export function createCheckoutRouteHandlerV1(
       }
 
       if (error instanceof LemonCheckoutErrorV1) {
+        dependencies.reportFailure?.(error.code);
         return errorResponse("checkout-unavailable", 503);
       }
 
+      dependencies.reportFailure?.("unexpected");
       return errorResponse("checkout-unavailable", 503);
     }
   };

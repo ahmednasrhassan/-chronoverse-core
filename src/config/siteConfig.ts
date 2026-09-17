@@ -10,6 +10,8 @@ export const siteConfig = {
   commerce: {
     // Existing first-party storefront for standalone research products.
     gumroadResearchUrl: "https://shop.chronoversecapital.com",
+    // Lemon-managed custom domain returned by the live Checkout API.
+    lemonStoreHost: "vault.chronoversecapital.com",
   },
   founder: {
     name: "Ahmed N. Hassan",

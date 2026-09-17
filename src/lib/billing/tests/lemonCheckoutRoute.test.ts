@@ -17,7 +17,7 @@ async function main(): Promise<void> {
   const successHandler = createCheckoutRouteHandlerV1({
     createCheckout: async (plan) => {
       plans.push(plan);
-      return "https://chronoverse.lemonsqueezy.com/checkout/custom/id";
+      return "https://vault.chronoversecapital.com/checkout/custom/id";
     },
   });
 
@@ -25,7 +25,7 @@ async function main(): Promise<void> {
     const response = await successHandler(request(JSON.stringify({ plan })));
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
-      url: "https://chronoverse.lemonsqueezy.com/checkout/custom/id",
+      url: "https://vault.chronoversecapital.com/checkout/custom/id",
     });
   }
   assert.deepEqual(plans, ["monthly", "annual"]);
@@ -60,10 +60,12 @@ async function main(): Promise<void> {
   });
   assert.equal(anonymousProviderCalls, 1);
 
+  const reportedFailures: string[] = [];
   const unavailableHandler = createCheckoutRouteHandlerV1({
     createCheckout: async () => {
       throw new LemonCheckoutErrorV1("provider-unavailable");
     },
+    reportFailure: (code) => reportedFailures.push(code),
   });
   const unavailableResponse = await unavailableHandler(
     request(JSON.stringify({ plan: "monthly" })),
@@ -72,6 +74,22 @@ async function main(): Promise<void> {
   const publicError = JSON.stringify(await unavailableResponse.json());
   assert.equal(publicError.includes("test-api-key"), false);
   assert.equal(publicError.includes("provider"), false);
+  assert.deepEqual(reportedFailures, ["provider-unavailable"]);
+
+  const unexpectedHandler = createCheckoutRouteHandlerV1({
+    createCheckout: async () => {
+      throw new Error("secret-api-key user@example.test");
+    },
+    reportFailure: (code) => reportedFailures.push(code),
+  });
+  const unexpectedResponse = await unexpectedHandler(
+    request(JSON.stringify({ plan: "annual" })),
+  );
+  assert.equal(unexpectedResponse.status, 503);
+  const unexpectedPublicError = JSON.stringify(await unexpectedResponse.json());
+  assert.equal(unexpectedPublicError.includes("secret-api-key"), false);
+  assert.equal(unexpectedPublicError.includes("user@example.test"), false);
+  assert.deepEqual(reportedFailures, ["provider-unavailable", "unexpected"]);
 
   console.log("PASS: Lemon checkout route authentication and request boundary");
 }
