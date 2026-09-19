@@ -7,7 +7,8 @@ import {
 const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
 const MAX_SIGNATURE_AGE_MS = 5 * 60 * 1000;
 const MAX_SIGNATURE_FUTURE_SKEW_MS = 60 * 1000;
-const HEADER_VALUE_PATTERN = /^[A-Za-z0-9._:-]{1,200}$/;
+const MAX_IDEMPOTENCY_KEY_BYTES = 200;
+const UNSAFE_HEADER_VALUE_PATTERN = /[\u0000-\u001F\u007F-\u009F]/;
 const DOCUMENT_ID_PATTERN = /^(?:drafts\.)?[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/;
 
 export class SanityWebhookRequestError extends Error {
@@ -40,6 +41,15 @@ export function isValidSanityDocumentId(value: unknown): value is string {
     value.length <= 128 &&
     DOCUMENT_ID_PATTERN.test(value) &&
     !value.startsWith("versions.")
+  );
+}
+
+function isValidIdempotencyKey(value: string | null): value is string {
+  return (
+    value !== null &&
+    value.length > 0 &&
+    new TextEncoder().encode(value).byteLength <= MAX_IDEMPOTENCY_KEY_BYTES &&
+    !UNSAFE_HEADER_VALUE_PATTERN.test(value)
   );
 }
 
@@ -99,8 +109,8 @@ export async function verifySanityWebhookRequest<
     throw new SanityWebhookRequestError(400, "invalid_operation", "Invalid webhook operation");
   }
 
-  const idempotencyKey = request.headers.get("idempotency-key") || "";
-  if (!HEADER_VALUE_PATTERN.test(idempotencyKey)) {
+  const idempotencyKey = request.headers.get("idempotency-key");
+  if (!isValidIdempotencyKey(idempotencyKey)) {
     throw new SanityWebhookRequestError(400, "invalid_idempotency_key", "Invalid idempotency key");
   }
 

@@ -6,6 +6,7 @@ import { encodeSignatureHeader } from "@sanity/webhook";
 
 import { POST as disabledCommentPost } from "@/app/api/comment/route";
 import { GET as newsletterCronGet } from "@/app/api/cron/send-newsletter/route";
+import { handleSanityRevalidation } from "@/app/api/revalidate/handler";
 import { POST as revalidatePost } from "@/app/api/revalidate/route";
 import { POST as bloggerWebhookPost } from "@/app/api/webhook/blogger-images/route";
 import { POST as publishWebhookPost } from "@/app/api/webhook/sanity/route";
@@ -22,6 +23,7 @@ import {
   SanityWebhookRequestError,
   verifySanityWebhookRequest,
 } from "@/lib/sanity/webhookSecurity";
+import { dataset, projectId } from "@/sanity/client";
 
 const repositoryRoot = process.cwd();
 const readSource = (relativePath: string) =>
@@ -29,27 +31,39 @@ const readSource = (relativePath: string) =>
 const secret = "local-test-webhook-secret";
 const now = Date.now();
 
-async function signedRequest(
-  payload: Record<string, unknown>,
-  overrides: Record<string, string> = {},
+async function signedRawRequest(
+  body: string,
+  overrides: Record<string, string | null> = {},
   timestamp = now,
 ): Promise<Request> {
-  const body = JSON.stringify(payload);
   const signature = await encodeSignatureHeader(body, timestamp, secret);
+  const headers = new Headers({
+    "content-type": "application/json",
+    "sanity-webhook-signature": signature,
+    "sanity-project-id": "project-test",
+    "sanity-dataset": "production",
+    "sanity-document-id": "post-1",
+    "sanity-operation": "create",
+    "idempotency-key": "delivery-test-1",
+  });
+  for (const [name, value] of Object.entries(overrides)) {
+    if (value === null) headers.delete(name);
+    else headers.set(name, value);
+  }
+
   return new Request("https://chronoversecapital.com/api/webhook/test", {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "sanity-webhook-signature": signature,
-      "sanity-project-id": "project-test",
-      "sanity-dataset": "production",
-      "sanity-document-id": "post-1",
-      "sanity-operation": "create",
-      "idempotency-key": "delivery-test-1",
-      ...overrides,
-    },
+    headers,
     body,
   });
+}
+
+async function signedRequest(
+  payload: Record<string, unknown>,
+  overrides: Record<string, string | null> = {},
+  timestamp = now,
+): Promise<Request> {
+  return signedRawRequest(JSON.stringify(payload), overrides, timestamp);
 }
 
 async function expectWebhookError(
@@ -79,6 +93,21 @@ async function verifyWebhookSecurity(): Promise<void> {
   assert.equal(verified.payload.documentId, "post-1");
   assert.equal(verified.operation, "create");
   assert.equal(verified.idempotencyKey, "delivery-test-1");
+
+  const opaqueIdempotencyKey = '"delivery/opaque?part=1 value"';
+  const opaqueKeyRequest = await verifySanityWebhookRequest(
+    await signedRequest(
+      { documentId: "post-1" },
+      { "idempotency-key": opaqueIdempotencyKey },
+    ),
+    {
+      secret,
+      expectedProjectId: "project-test",
+      expectedDataset: "production",
+      now,
+    },
+  );
+  assert.equal(opaqueKeyRequest.idempotencyKey, opaqueIdempotencyKey);
 
   for (const operation of ["create", "update", "delete"] as const) {
     const operationRequest = await verifySanityWebhookRequest(
@@ -182,6 +211,106 @@ async function verifyWebhookSecurity(): Promise<void> {
       verifySanityWebhookRequest(
         await signedRequest(
           { documentId: "post-1" },
+          { "sanity-operation": "publish" },
+        ),
+        {
+          secret,
+          expectedProjectId: "project-test",
+          expectedDataset: "production",
+          now,
+        },
+      ),
+    400,
+    "invalid_operation",
+  );
+
+  for (const idempotencyKey of [null, "", "x".repeat(201)]) {
+    await expectWebhookError(
+      async () =>
+        verifySanityWebhookRequest(
+          await signedRequest(
+            { documentId: "post-1" },
+            { "idempotency-key": idempotencyKey },
+          ),
+          {
+            secret,
+            expectedProjectId: "project-test",
+            expectedDataset: "production",
+            now,
+          },
+        ),
+      400,
+      "invalid_idempotency_key",
+    );
+  }
+
+  const controlCharacterRequest = await signedRequest({ documentId: "post-1" });
+  const unsafeRequest = {
+    headers: {
+      get(name: string) {
+        return name.toLowerCase() === "idempotency-key"
+          ? "delivery\nkey"
+          : controlCharacterRequest.headers.get(name);
+      },
+    },
+    text: () => controlCharacterRequest.text(),
+  } as unknown as Request;
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(unsafeRequest, {
+        secret,
+        expectedProjectId: "project-test",
+        expectedDataset: "production",
+        now,
+      }),
+    400,
+    "invalid_idempotency_key",
+  );
+
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(await signedRawRequest("{"), {
+        secret,
+        expectedProjectId: "project-test",
+        expectedDataset: "production",
+        now,
+      }),
+    400,
+    "invalid_json",
+  );
+
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(await signedRawRequest("[]"), {
+        secret,
+        expectedProjectId: "project-test",
+        expectedDataset: "production",
+        now,
+      }),
+    400,
+    "invalid_payload",
+  );
+
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(
+        await signedRawRequest("x".repeat(64 * 1024 + 1)),
+        {
+          secret,
+          expectedProjectId: "project-test",
+          expectedDataset: "production",
+          now,
+        },
+      ),
+    413,
+    "payload_too_large",
+  );
+
+  await expectWebhookError(
+    async () =>
+      verifySanityWebhookRequest(
+        await signedRequest(
+          { documentId: "post-1" },
           { "sanity-dataset": "staging" },
         ),
         {
@@ -204,12 +333,14 @@ async function verifyWebhookSecurity(): Promise<void> {
 
 function verifyRevalidationContract(): void {
   const route = readSource("src/app/api/revalidate/route.ts");
-  assert.match(route, /REVALIDATED_TYPES = new Set\(\["post", "page", "category"\]\)/);
-  assert.match(route, /SLUG_PATTERN = \/\^\[a-z0-9\]\+\(\?:-\[a-z0-9\]\+\)\*\$\//);
-  assert.match(route, /verifySanityWebhookRequest/);
-  assert.match(route, /secret: process\.env\.SANITY_WEBHOOK_SECRET/);
-  assert.match(route, /expectedProjectId: projectId/);
-  assert.match(route, /expectedDataset: dataset/);
+  const handler = readSource("src/app/api/revalidate/handler.ts");
+  assert.match(route, /handleSanityRevalidation\(request, revalidatePath\)/);
+  assert.match(handler, /REVALIDATED_TYPES = new Set\(\["post", "page", "category"\]\)/);
+  assert.match(handler, /SLUG_PATTERN = \/\^\[a-z0-9\]\+\(\?:-\[a-z0-9\]\+\)\*\$\//);
+  assert.match(handler, /verifySanityWebhookRequest/);
+  assert.match(handler, /secret: process\.env\.SANITY_WEBHOOK_SECRET/);
+  assert.match(handler, /expectedProjectId: projectId/);
+  assert.match(handler, /expectedDataset: dataset/);
 
   for (const publicPath of [
     "/",
@@ -219,12 +350,104 @@ function verifyRevalidationContract(): void {
     "/feed.xml",
     "/rss.xml",
   ]) {
-    assert.match(route, new RegExp(`revalidatePath\\(\\"${publicPath.replace("/", "\\/")}\\"\\)`));
+    assert.match(handler, new RegExp(`invalidatePath\\(\\"${publicPath.replace("/", "\\/")}\\"\\)`));
   }
 
-  assert.match(route, /revalidatePath\(`\/\$\{slug\}`\)/);
-  assert.match(route, /revalidatePath\("\/\[slug\]", "page"\)/);
-  assert.match(route, /revalidatePath\("\/category\/\[slug\]", "page"\)/);
+  assert.match(handler, /invalidatePath\(`\/\$\{slug\}`\)/);
+  assert.match(handler, /invalidatePath\("\/\[slug\]", "page"\)/);
+  assert.match(handler, /invalidatePath\("\/category\/\[slug\]", "page"\)/);
+}
+
+async function verifySignedRevalidationRoute(): Promise<void> {
+  const previousWebhookSecret = process.env.SANITY_WEBHOOK_SECRET;
+  process.env.SANITY_WEBHOOK_SECRET = secret;
+
+  try {
+    for (const documentType of ["post", "page", "category"] as const) {
+      const slug = `${documentType}-slug`;
+      const calls: Array<[string, "layout" | "page" | undefined]> = [];
+      const response = await handleSanityRevalidation(
+        await signedRequest(
+          { _type: documentType, slug },
+          {
+            "sanity-project-id": projectId,
+            "sanity-dataset": dataset,
+            "idempotency-key": `"revalidation/${documentType}?attempt=1"`,
+          },
+        ),
+        (path, type) => {
+          calls.push([path, type]);
+        },
+      );
+
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { revalidated: true, slug });
+      assert.deepEqual(calls, [
+        ["/", undefined],
+        ["/reports", undefined],
+        ["/archive", undefined],
+        ["/sitemap.xml", undefined],
+        ["/feed.xml", undefined],
+        ["/rss.xml", undefined],
+        documentType === "category"
+          ? ["/[slug]", "page"]
+          : [`/${slug}`, undefined],
+        ["/category/[slug]", "page"],
+      ]);
+    }
+  } finally {
+    if (previousWebhookSecret === undefined) delete process.env.SANITY_WEBHOOK_SECRET;
+    else process.env.SANITY_WEBHOOK_SECRET = previousWebhookSecret;
+  }
+}
+
+async function verifyPublishWebhookSharedVerifier(): Promise<void> {
+  const previousWebhookSecret = process.env.SANITY_WEBHOOK_SECRET;
+  process.env.SANITY_WEBHOOK_SECRET = secret;
+
+  try {
+    const response = await publishWebhookPost(
+      await signedRequest(
+        { documentType: "page", becamePublished: true },
+        {
+          "sanity-project-id": projectId,
+          "sanity-dataset": dataset,
+          "idempotency-key": '"newsletter/opaque?attempt=1"',
+        },
+      ),
+    );
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      status: "skipped",
+      message: "Not a new published post",
+    });
+
+    const bloggerResponse = await bloggerWebhookPost(
+      await signedRequest(
+        { documentType: "post" },
+        {
+          "sanity-project-id": projectId,
+          "sanity-dataset": dataset,
+          "sanity-operation": "delete",
+          "idempotency-key": '"blogger-images/opaque?attempt=1"',
+        },
+      ),
+    );
+    assert.equal(bloggerResponse.status, 200);
+    assert.deepEqual(await bloggerResponse.json(), {
+      status: "skipped",
+      message: "Unsupported document operation",
+    });
+
+    const route = readSource("src/app/api/webhook/sanity/route.ts");
+    assert.match(
+      route,
+      /beginSanityWebhookOperation\("publish", verified\.idempotencyKey\)/,
+    );
+  } finally {
+    if (previousWebhookSecret === undefined) delete process.env.SANITY_WEBHOOK_SECRET;
+    else process.env.SANITY_WEBHOOK_SECRET = previousWebhookSecret;
+  }
 }
 
 function verifyBloggerBoundaries(): void {
@@ -426,6 +649,8 @@ function verifyPublishWebhookOrdering(): void {
 async function main(): Promise<void> {
   await verifyWebhookSecurity();
   verifyRevalidationContract();
+  await verifySignedRevalidationRoute();
+  await verifyPublishWebhookSharedVerifier();
   verifyBloggerBoundaries();
   await verifyDisabledLegacyMutations();
   await verifyRouteGuardsAndWriteConfiguration();
