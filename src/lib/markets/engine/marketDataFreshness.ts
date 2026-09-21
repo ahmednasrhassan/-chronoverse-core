@@ -8,7 +8,7 @@ export type EngineMarketDataFreshnessV3 =
   | "unavailable";
 
 export interface ClassifyEngineMarketDataFreshnessV3Input {
-  readonly asset: MarketAssetId;
+  readonly asset: MarketAssetId | "estr";
   readonly interval: CandleInterval;
   readonly provider: string | null;
   readonly status: MarketDataStatus;
@@ -101,7 +101,7 @@ function classifyByNominalPeriods(
   return "stale";
 }
 
-function isContinuousCrypto(asset: MarketAssetId): boolean {
+function isContinuousCrypto(asset: MarketAssetId | "estr"): boolean {
   return asset === "bitcoin" || asset === "ethereum";
 }
 

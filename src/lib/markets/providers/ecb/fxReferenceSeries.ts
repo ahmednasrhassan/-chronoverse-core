@@ -1,4 +1,5 @@
 import {
+  CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   normalizeCanonicalObservationSeriesV1,
   type CanonicalObservationSeriesV1,
   type CanonicalObservationValueV1,
@@ -110,13 +111,17 @@ export async function loadEcbFxReferenceSeriesBundleV1(
     const series = normalizeCanonicalObservationSeriesV1({
       observations,
       metadata: {
+        provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
         provider: "ecb",
         source: "European Central Bank",
+        originalPublisher: "European Central Bank",
+        substitution: { status: "none" },
         seriesId: product.seriesId,
         requestedProductId: productId,
         canonicalProductId: product.canonicalProductId,
         interval: "1d",
         fetchedAt,
+        observationTimestamp: sourceTimestamp,
         sourceTimestamp,
         status: "end_of_day",
         unit: product.unit,

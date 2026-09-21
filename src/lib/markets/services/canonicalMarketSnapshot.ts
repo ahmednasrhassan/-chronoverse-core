@@ -12,8 +12,10 @@ import { activeCrossAssetRelationshipsV1 } from "../engine/crossAssetRelationshi
 import {
   isCanonicalObservationSeriesV1,
   normalizeCanonicalObservationSeriesV1,
+  type CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   type CanonicalObservationSeriesKindV1,
   type CanonicalObservationSeriesV1,
+  type CanonicalSourceSubstitutionV1,
 } from "./canonicalObservationSeries";
 import type { HistoricalMarketResult } from "./historicalMarketData";
 
@@ -57,11 +59,16 @@ export interface NormalizedCanonicalMarketSnapshotRequestV1 {
 }
 
 export interface CanonicalMarketSnapshotProvenanceV1 {
+  readonly provenanceVersion?: typeof CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1;
   readonly source: string;
   readonly provider: string | null;
+  readonly originalPublisher?: string;
+  readonly substitution?: CanonicalSourceSubstitutionV1;
   readonly requestedSymbol: string;
   readonly interval: CandleInterval;
   readonly fetchedAt?: number;
+  readonly observationTimestamp?: number;
+  readonly releaseTimestamp?: number;
   readonly sourceTimestamp?: number;
   readonly seriesId?: string;
   readonly requestedProductId?: string;
@@ -440,11 +447,26 @@ function freezeObservationSeriesProvenance(
   requestedSymbol: string,
 ): CanonicalMarketSnapshotProvenanceV1 {
   return Object.freeze({
+    ...(series.metadata.provenanceVersion === undefined
+      ? {}
+      : { provenanceVersion: series.metadata.provenanceVersion }),
     source: series.metadata.source,
     provider: series.metadata.provider,
+    ...(series.metadata.originalPublisher === undefined
+      ? {}
+      : { originalPublisher: series.metadata.originalPublisher }),
+    ...(series.metadata.substitution === undefined
+      ? {}
+      : { substitution: series.metadata.substitution }),
     requestedSymbol,
     interval: series.metadata.interval,
     fetchedAt: series.metadata.fetchedAt,
+    ...(series.metadata.observationTimestamp === undefined
+      ? {}
+      : { observationTimestamp: series.metadata.observationTimestamp }),
+    ...(series.metadata.releaseTimestamp === undefined
+      ? {}
+      : { releaseTimestamp: series.metadata.releaseTimestamp }),
     ...(series.metadata.sourceTimestamp === undefined
       ? {}
       : { sourceTimestamp: series.metadata.sourceTimestamp }),

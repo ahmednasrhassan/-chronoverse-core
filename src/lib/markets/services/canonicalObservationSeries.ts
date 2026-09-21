@@ -5,6 +5,17 @@ import type {
 
 export const CANONICAL_OBSERVATION_SERIES_SCHEMA_VERSION_V1 =
   "canonical-observation-series-v1" as const;
+export const CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1 =
+  "canonical-observation-provenance-v1" as const;
+
+export type CanonicalSourceSubstitutionV1 =
+  | { readonly status: "none" }
+  | { readonly status: "unknown" }
+  | {
+      readonly status: "substituted";
+      readonly provider: string;
+      readonly source: string;
+    };
 
 export type CanonicalObservationSeriesKindV1 =
   | "spot-price"
@@ -19,13 +30,21 @@ export interface CanonicalObservationValueV1 {
 }
 
 export interface CanonicalObservationSeriesMetadataV1 {
+  readonly provenanceVersion?: typeof CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1;
   readonly provider: string;
   readonly source: string;
+  readonly originalPublisher?: string;
+  readonly substitution?: CanonicalSourceSubstitutionV1;
   readonly seriesId: string;
   readonly requestedProductId: string;
   readonly canonicalProductId: string;
   readonly interval: CandleInterval;
   readonly fetchedAt: number;
+  /** Observation/reference time, distinct from fetch and publication time. */
+  readonly observationTimestamp?: number;
+  /** Only present when the original publisher supplies a release time. */
+  readonly releaseTimestamp?: number;
+  /** Compatibility alias for the latest observation/reference timestamp. */
   readonly sourceTimestamp?: number;
   readonly status: MarketDataStatus;
   readonly unit: string;
@@ -125,8 +144,15 @@ function normalizeMetadata(
 
   if (
     !Number.isFinite(metadata.fetchedAt) ||
+    (metadata.observationTimestamp !== undefined &&
+      !Number.isFinite(metadata.observationTimestamp)) ||
+    (metadata.releaseTimestamp !== undefined &&
+      !Number.isFinite(metadata.releaseTimestamp)) ||
     (metadata.sourceTimestamp !== undefined &&
-      !Number.isFinite(metadata.sourceTimestamp))
+      !Number.isFinite(metadata.sourceTimestamp)) ||
+    (metadata.observationTimestamp !== undefined &&
+      metadata.sourceTimestamp !== undefined &&
+      metadata.observationTimestamp !== metadata.sourceTimestamp)
   ) {
     throw new TypeError("Canonical observation-series provenance timestamp is invalid.");
   }
@@ -135,14 +161,45 @@ function normalizeMetadata(
     throw new TypeError("Canonical observation-series kind is invalid.");
   }
 
+  if (metadata.provenanceVersion !== undefined &&
+    metadata.provenanceVersion !== CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1) {
+    throw new TypeError("Canonical observation-series provenance version is invalid.");
+  }
+  const originalPublisher = metadata.originalPublisher === undefined
+    ? undefined
+    : requireIdentifier(metadata.originalPublisher, "original publisher");
+  const substitution = metadata.substitution;
+  if (substitution !== undefined &&
+    substitution.status !== "none" &&
+    substitution.status !== "unknown" &&
+    substitution.status !== "substituted") {
+    throw new TypeError("Canonical observation-series substitution is invalid.");
+  }
+  const normalizedSubstitution = substitution?.status === "substituted"
+    ? Object.freeze({
+        status: "substituted" as const,
+        provider: requireIdentifier(substitution.provider, "substitute provider"),
+        source: requireIdentifier(substitution.source, "substitute source"),
+      })
+    : substitution === undefined ? undefined : Object.freeze({ status: substitution.status });
+
   return Object.freeze({
+    ...(metadata.provenanceVersion === undefined ? {} : { provenanceVersion: metadata.provenanceVersion }),
     provider,
     source,
+    ...(originalPublisher === undefined ? {} : { originalPublisher }),
+    ...(normalizedSubstitution === undefined ? {} : { substitution: normalizedSubstitution }),
     seriesId,
     requestedProductId,
     canonicalProductId,
     interval: metadata.interval,
     fetchedAt: metadata.fetchedAt,
+    ...(metadata.observationTimestamp === undefined
+      ? {}
+      : { observationTimestamp: metadata.observationTimestamp }),
+    ...(metadata.releaseTimestamp === undefined
+      ? {}
+      : { releaseTimestamp: metadata.releaseTimestamp }),
     ...(metadata.sourceTimestamp === undefined
       ? {}
       : { sourceTimestamp: metadata.sourceTimestamp }),

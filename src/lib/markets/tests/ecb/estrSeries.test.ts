@@ -212,6 +212,10 @@ async function main(): Promise<void> {
     [-0.125, 0, 2.189], "negative, zero, and positive WT accepted");
   assertEqual(canonical.metadata.provider, "ecb", "canonical provider");
   assertEqual(canonical.metadata.source, "European Central Bank", "canonical source");
+  assertEqual(canonical.metadata.originalPublisher, "European Central Bank",
+    "canonical original publisher");
+  assertEqual(canonical.metadata.substitution?.status, "none",
+    "no substitute rate source");
   assertEqual(canonical.metadata.seriesId, ECB_ESTR_SERIES_ID_V1, "canonical series ID");
   assertEqual(canonical.metadata.requestedProductId, "estr", "requested product");
   assertEqual(canonical.metadata.canonicalProductId, "estr", "canonical product");
@@ -224,6 +228,10 @@ async function main(): Promise<void> {
   assertEqual(canonical.metadata.sourceTimestamp,
     Date.parse("2026-09-09T00:00:00.000Z") / 1000,
     "source timestamp is latest UTC-midnight reference date");
+  assertEqual(canonical.metadata.observationTimestamp, canonical.metadata.sourceTimestamp,
+    "observation time is the reference date");
+  assertEqual("releaseTimestamp" in canonical.metadata, false,
+    "reference date is not promoted to release time");
   assertEqual("publicationTimestamp" in canonical.metadata, false,
     "no publication timestamp fabricated");
 

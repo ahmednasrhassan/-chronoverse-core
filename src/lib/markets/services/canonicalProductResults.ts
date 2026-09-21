@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { connection } from "next/server";
 
 import {
   getEstrProductionRuntimeV1,
@@ -150,6 +151,7 @@ export const getCanonicalProductResultV1 = canonicalProductResultOwnerV1.get;
 export async function getFiveProductFreeLiteProjectionV1(
   productId: CanonicalProductIdV1,
 ): Promise<MarketProductFreeLiteProjectionV1> {
+  await connection();
   return projectFiveProductFreeLiteV1(
     await getCanonicalProjectionInputV1(productId),
   );
@@ -164,6 +166,7 @@ export async function getFiveProductFreeLiteProjectionV1(
 export async function getFiveProductFreeLiteProjectionMapV1(): Promise<
   FiveProductFreeLiteProjectionMapV1
 > {
+  await connection();
   const [fxResult, estrResult] = await Promise.allSettled([
     getCachedCanonicalFxResultBundleV1(),
     getCanonicalEstrResultV1(),
@@ -205,6 +208,7 @@ export async function getFiveProductFreeLiteProjectionMapV1(): Promise<
 export async function getFiveProductVipDeepProjectionV1(
   productId: CanonicalProductIdV1,
 ): Promise<MarketProductVipDeepProjectionV1> {
+  await connection();
   return projectFiveProductVipDeepV1(
     await getCanonicalProjectionInputV1(productId),
   );
@@ -218,6 +222,7 @@ export async function getFiveProductVipDeepProjectionV1(
 export async function getFiveProductVipDeepProjectionMapV1(): Promise<
   FiveProductVipDeepProjectionMapV1
 > {
+  await connection();
   const [fxResult, estrResult] = await Promise.allSettled([
     getCachedCanonicalFxResultBundleV1(),
     getCanonicalEstrResultV1(),

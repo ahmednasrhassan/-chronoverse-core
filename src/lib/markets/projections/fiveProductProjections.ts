@@ -2,6 +2,10 @@ import type { EcbFxProductionIntelligenceV1 } from
   "../assets/ecbFxProductionRuntime";
 import type { EstrProductionRuntimeResultV1 } from
   "../assets/estr/runtime";
+import { classifyEngineMarketDataFreshnessV3 } from
+  "../engine/marketDataFreshness";
+import { CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1 } from
+  "../services/canonicalObservationSeries";
 
 import {
   MARKET_PRODUCT_PROJECTION_VERSION_V1,
@@ -33,23 +37,26 @@ const PRODUCT_IDENTITIES = Object.freeze({
 
 export function projectFiveProductFreeLiteV1(
   input: FiveProductCanonicalProjectionInputV1,
+  assessedAt: string = new Date().toISOString(),
 ): MarketProductFreeLiteProjectionV1 {
   return input.productId === "estr"
-    ? projectEstrFreeLite(input.canonical)
-    : projectFxFreeLite(input.productId, input.canonical);
+    ? projectEstrFreeLite(input.canonical, assessedAt)
+    : projectFxFreeLite(input.productId, input.canonical, assessedAt);
 }
 
 export function projectFiveProductVipDeepV1(
   input: FiveProductCanonicalProjectionInputV1,
+  assessedAt: string = new Date().toISOString(),
 ): MarketProductVipDeepProjectionV1 {
   return input.productId === "estr"
-    ? projectEstrVipDeep(input.canonical)
-    : projectFxVipDeep(input.productId, input.canonical);
+    ? projectEstrVipDeep(input.canonical, assessedAt)
+    : projectFxVipDeep(input.productId, input.canonical, assessedAt);
 }
 
 function projectFxFreeLite(
   productId: FxProjectionProductIdV1,
   canonical: FxCanonicalProjectionResultV1,
+  assessedAt: string,
 ): FxFreeLiteProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
     return unavailableProjection(
@@ -73,7 +80,7 @@ function projectFxFreeLite(
   const intelligence = canonical.intelligence;
 
   return Object.freeze({
-    ...availableBase(productId, "free-lite", canonical),
+    ...availableBase(productId, "free-lite", canonical, assessedAt),
     details: freeFxDetails(intelligence),
   });
 }
@@ -81,6 +88,7 @@ function projectFxFreeLite(
 function projectFxVipDeep(
   productId: FxProjectionProductIdV1,
   canonical: FxCanonicalProjectionResultV1,
+  assessedAt: string,
 ): FxVipDeepProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
     return unavailableProjection(
@@ -128,13 +136,14 @@ function projectFxVipDeep(
   });
 
   return Object.freeze({
-    ...availableBase(productId, "vip-deep", canonical),
+    ...availableBase(productId, "vip-deep", canonical, assessedAt),
     details,
   });
 }
 
 function projectEstrFreeLite(
   canonical: EstrProductionRuntimeResultV1,
+  assessedAt: string,
 ): EstrFreeLiteProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
     return unavailableProjection(
@@ -152,13 +161,14 @@ function projectEstrFreeLite(
   }
 
   return Object.freeze({
-    ...availableEstrBase("free-lite", canonical),
+    ...availableEstrBase("free-lite", canonical, assessedAt),
     details: freeEstrDetails(canonical.data),
   });
 }
 
 function projectEstrVipDeep(
   canonical: EstrProductionRuntimeResultV1,
+  assessedAt: string,
 ): EstrVipDeepProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
     return unavailableProjection(
@@ -186,7 +196,7 @@ function projectEstrVipDeep(
   });
 
   return Object.freeze({
-    ...availableEstrBase("vip-deep", canonical),
+    ...availableEstrBase("vip-deep", canonical, assessedAt),
     details,
   });
 }
@@ -195,11 +205,13 @@ function availableBase<TTier extends MarketProductProjectionTierV1>(
   productId: FxProjectionProductIdV1,
   tier: TTier,
   canonical: EcbFxProductionIntelligenceV1,
+  assessedAt: string,
 ) {
   const provenance = projectionProvenance(
     productId,
     toReferenceDate(canonical.provenance.sourceTimestamp!),
     canonical.provenance,
+    assessedAt,
   );
 
   return {
@@ -229,12 +241,15 @@ function availableEstrBase<TTier extends MarketProductProjectionTierV1>(
     EstrProductionRuntimeResultV1,
     { readonly availability: "available" }
   >,
+  assessedAt: string,
 ) {
   const data = canonical.data;
   const provenance = projectionProvenance(
     "estr",
     data.latestReferenceDate,
     data.source.provenance,
+    assessedAt,
+    data.source.latestObservationMetadata.publicationType,
   );
 
   return {
@@ -262,10 +277,21 @@ function projectionProvenance(
   productId: keyof typeof PRODUCT_IDENTITIES,
   referenceDate: string,
   canonical: EcbFxProductionIntelligenceV1["provenance"],
+  assessedAt: string,
+  publicationType?: "standard" | "republication",
 ): MarketProjectionProvenanceV1 {
+  const observationTimestamp =
+    canonical.observationTimestamp ?? canonical.sourceTimestamp!;
   return Object.freeze({
+    version: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
     provider: canonical.provider,
     source: canonical.source,
+    originalPublisher: canonical.originalPublisher ?? (
+      canonical.provider === "ecb" && canonical.source === "European Central Bank"
+        ? "European Central Bank"
+        : null
+    ),
+    substitution: canonical.substitution ?? { status: "unknown" as const },
     seriesId: canonical.seriesId,
     canonicalProductId: productId,
     interval: canonical.interval,
@@ -274,8 +300,22 @@ function projectionProvenance(
     seriesKind: canonical.seriesKind,
     referenceDate,
     fetchedAt: canonical.fetchedAt,
+    observationTimestamp,
     sourceTimestamp: canonical.sourceTimestamp!,
-    freshness: "not-assessed",
+    releaseTimestamp: canonical.releaseTimestamp ?? null,
+    ...(publicationType === undefined ? {} : { publicationType }),
+    freshness: classifyEngineMarketDataFreshnessV3({
+      asset: productId,
+      interval: canonical.interval,
+      provider: canonical.provider,
+      status: canonical.status,
+      latestTimestampSeconds: observationTimestamp,
+      evaluatedAt: assessedAt,
+      hasUsableData: true,
+    }),
+    freshnessAssessedAt: Number.isFinite(Date.parse(assessedAt))
+      ? assessedAt
+      : null,
   });
 }
 

@@ -1,4 +1,5 @@
 import {
+  CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   normalizeCanonicalObservationSeriesV1,
   type CanonicalObservationSeriesV1,
   type CanonicalObservationValueV1,
@@ -112,14 +113,18 @@ export function normalizeEcbEstrSeriesV1(
     normalizeCanonicalObservationSeriesV1({
       observations,
       metadata: {
+        provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
         provider: "ecb",
         source: "European Central Bank",
+        originalPublisher: "European Central Bank",
+        substitution: { status: "none" },
         seriesId: ECB_ESTR_SERIES_ID_V1,
         requestedProductId: "estr",
         canonicalProductId: "estr",
         interval: "1d",
         fetchedAt,
         // This is the latest ECB reference date, not a publication timestamp.
+        observationTimestamp: timestamps.at(-1)!,
         sourceTimestamp: timestamps.at(-1)!,
         status: "end_of_day",
         unit: "percent",
@@ -173,6 +178,7 @@ export function mergeEcbEstrOverlapV1(
     observations: mergedObservations,
     metadata: {
       ...overlap.canonicalSeries.metadata,
+      observationTimestamp: mergedLatest,
       sourceTimestamp: mergedLatest,
     },
   });

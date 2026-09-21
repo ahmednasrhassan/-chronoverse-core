@@ -113,6 +113,10 @@ async function main(): Promise<void> {
       `${productId} observations positive and finite`);
     assertEqual(series.metadata.provider, "ecb", `${productId} provider`);
     assertEqual(series.metadata.source, "European Central Bank", `${productId} source`);
+    assertEqual(series.metadata.originalPublisher, "European Central Bank",
+      `${productId} original publisher`);
+    assertEqual(series.metadata.substitution?.status, "none",
+      `${productId} has no fallback source`);
     assertEqual(series.metadata.seriesId, product.seriesId, `${productId} series ID`);
     assertEqual(series.metadata.requestedProductId, productId, `${productId} requested product`);
     assertEqual(series.metadata.canonicalProductId, productId, `${productId} canonical product`);
@@ -124,6 +128,10 @@ async function main(): Promise<void> {
       `${productId} fetchedAt`);
     assertEqual(series.metadata.sourceTimestamp, Date.parse("2026-09-09T00:00:00.000Z") / 1000,
       `${productId} latest real sourceTimestamp`);
+    assertEqual(series.metadata.observationTimestamp, series.metadata.sourceTimestamp,
+      `${productId} observation is reference time`);
+    assertEqual("releaseTimestamp" in series.metadata, false,
+      `${productId} release time is not fabricated`);
     for (const field of ["open", "high", "low", "close", "volume"] as const) {
       assertEqual(field in series.observations[0]!, false, `${productId} no synthesized ${field}`);
     }

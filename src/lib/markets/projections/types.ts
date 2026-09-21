@@ -2,8 +2,14 @@ import type { EcbFxProductionIntelligenceV1 } from
   "../assets/ecbFxProductionRuntime";
 import type { EstrProductionRuntimeResultV1 } from
   "../assets/estr/runtime";
-import type { CanonicalObservationSeriesMetadataV1 } from
+import type {
+  CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
+  CanonicalObservationSeriesMetadataV1,
+  CanonicalSourceSubstitutionV1,
+} from
   "../services/canonicalObservationSeries";
+import type { EngineMarketDataFreshnessV3 } from
+  "../engine/marketDataFreshness";
 
 export const MARKET_PRODUCT_PROJECTION_VERSION_V1 =
   "market-product-projection-v1" as const;
@@ -46,8 +52,11 @@ export type FiveProductCanonicalProjectionInputV1 =
     };
 
 export interface MarketProjectionProvenanceV1 {
+  readonly version: typeof CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1;
   readonly provider: string;
   readonly source: string;
+  readonly originalPublisher: string | null;
+  readonly substitution: CanonicalSourceSubstitutionV1;
   readonly seriesId: string;
   readonly canonicalProductId: MarketProjectionProductIdV1;
   readonly interval: CanonicalObservationSeriesMetadataV1["interval"];
@@ -56,9 +65,14 @@ export interface MarketProjectionProvenanceV1 {
   readonly seriesKind: CanonicalObservationSeriesMetadataV1["seriesKind"];
   readonly referenceDate: string;
   readonly fetchedAt: number;
+  /** Latest observation/reference time; never a publication timestamp. */
+  readonly observationTimestamp: number;
   readonly sourceTimestamp: number;
-  /** Cache age is not currently established by the canonical result. */
-  readonly freshness: "not-assessed";
+  /** Null means no source-supplied publication time is known. */
+  readonly releaseTimestamp: number | null;
+  readonly publicationType?: "standard" | "republication";
+  readonly freshness: EngineMarketDataFreshnessV3 | "not-assessed";
+  readonly freshnessAssessedAt: string | null;
 }
 
 export type MarketProjectionCurrentValueV1 =

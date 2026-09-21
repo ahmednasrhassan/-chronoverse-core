@@ -38,6 +38,7 @@ import type {
   MarketProductProjectionV1,
 } from "../../projections/types";
 import {
+  CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   normalizeCanonicalObservationSeriesV1,
   type CanonicalObservationSeriesV1,
 } from "../../services/canonicalObservationSeries";
@@ -68,6 +69,7 @@ const FX_CONFIGURATIONS = Object.freeze([
     run: getCanonicalLiveEurChfIntelligence,
   }),
 ]);
+const ASSESSED_AT = "2025-09-10T12:00:00.000Z";
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
@@ -103,13 +105,17 @@ function officialFxSeries(
   return normalizeCanonicalObservationSeriesV1({
     observations,
     metadata: {
+      provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
       provider: "ecb",
       source: "European Central Bank",
+      originalPublisher: "European Central Bank",
+      substitution: { status: "none" },
       seriesId: product.seriesId,
       requestedProductId: productId,
       canonicalProductId: productId,
       interval: "1d",
       fetchedAt: 1_757_491_200,
+      observationTimestamp: observations.at(-1)!.timestamp,
       sourceTimestamp: observations.at(-1)!.timestamp,
       status: "end_of_day",
       unit: product.unit,
@@ -144,13 +150,17 @@ function officialEstrSource(): EcbEstrSeriesV1 {
   const canonicalSeries = normalizeCanonicalObservationSeriesV1({
     observations,
     metadata: {
+      provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
       provider: "ecb",
       source: "European Central Bank",
+      originalPublisher: "European Central Bank",
+      substitution: { status: "none" },
       seriesId: ECB_ESTR_SERIES_ID_V1,
       requestedProductId: "estr",
       canonicalProductId: "estr",
       interval: "1d",
       fetchedAt: 1_757_491_200,
+      observationTimestamp: observations.at(-1)!.timestamp,
       sourceTimestamp: observations.at(-1)!.timestamp,
       status: "end_of_day",
       unit: "percent",
@@ -316,8 +326,8 @@ async function main(): Promise<void> {
 
   for (const input of inputs) {
     const before = JSON.stringify(input.canonical);
-    const free = projectFiveProductFreeLiteV1(input);
-    const vip = projectFiveProductVipDeepV1(input);
+    const free = projectFiveProductFreeLiteV1(input, ASSESSED_AT);
+    const vip = projectFiveProductVipDeepV1(input, ASSESSED_AT);
 
     assertAvailable(free, `${input.productId} Free`);
     assertAvailable(vip, `${input.productId} VIP`);
@@ -339,13 +349,40 @@ async function main(): Promise<void> {
       `${input.productId} fetchedAt preserved`);
     assertEqual(free.sourceTimestamp, free.provenance.sourceTimestamp,
       `${input.productId} source timestamp preserved`);
-    assertEqual(free.provenance.freshness, "not-assessed",
-      `${input.productId} freshness remains truthful`);
+    assertEqual(free.provenance.version, CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
+      `${input.productId} provenance version`);
+    assertEqual(free.provenance.originalPublisher, "European Central Bank",
+      `${input.productId} original publisher preserved`);
+    assertEqual(free.provenance.substitution.status, "none",
+      `${input.productId} no substitute provider`);
+    assertEqual(free.provenance.observationTimestamp, free.sourceTimestamp,
+      `${input.productId} observation time preserved`);
+    assertEqual(free.provenance.observationTimestamp !== free.fetchedAt, true,
+      `${input.productId} observation and fetch time remain distinct`);
+    assertEqual(free.provenance.releaseTimestamp, null,
+      `${input.productId} unsourced release time remains unknown`);
+    assertEqual(free.provenance.freshness, "stale",
+      `${input.productId} old reference observation is stale`);
+    assertEqual(free.provenance.freshnessAssessedAt, ASSESSED_AT,
+      `${input.productId} freshness clock preserved`);
+    const withinCadenceAt = new Date(
+      (free.sourceTimestamp + 86_400) * 1_000,
+    ).toISOString();
+    const fresh = projectFiveProductFreeLiteV1(input, withinCadenceAt);
+    assertAvailable(fresh, `${input.productId} current daily observation`);
+    assertEqual(fresh.provenance.freshness, "within-cadence",
+      `${input.productId} current daily observation is fresh`);
+    const unknown = projectFiveProductFreeLiteV1(input, "invalid-time");
+    assertAvailable(unknown, `${input.productId} unknown assessment time`);
+    assertEqual(unknown.provenance.freshness, "unknown",
+      `${input.productId} missing valid assessment time is unknown`);
+    assertEqual(unknown.provenance.freshnessAssessedAt, null,
+      `${input.productId} invalid assessment time is not published`);
     assertEqual(JSON.stringify(input.canonical), before,
       `${input.productId} canonical input is not mutated`);
-    assertDeepEqual(projectFiveProductFreeLiteV1(input), free,
+    assertDeepEqual(projectFiveProductFreeLiteV1(input, ASSESSED_AT), free,
       `${input.productId} repeated Free projection deterministic`);
-    assertDeepEqual(projectFiveProductVipDeepV1(input), vip,
+    assertDeepEqual(projectFiveProductVipDeepV1(input, ASSESSED_AT), vip,
       `${input.productId} repeated VIP projection deterministic`);
 
     if (input.productId === "estr") {
@@ -357,6 +394,30 @@ async function main(): Promise<void> {
       }
 
       const state = input.canonical.data.marketState.data;
+      assertEqual(free.provenance.publicationType, "standard",
+        "€STR publication type preserved");
+      const republished = Object.freeze({
+        productId: "estr" as const,
+        canonical: Object.freeze({
+          ...input.canonical,
+          data: Object.freeze({
+            ...input.canonical.data,
+            source: Object.freeze({
+              ...input.canonical.data.source,
+              latestObservationMetadata: Object.freeze({
+                ...input.canonical.data.source.latestObservationMetadata,
+                publicationType: "republication" as const,
+              }),
+            }),
+          }),
+        }),
+      });
+      const republishedProjection = projectFiveProductVipDeepV1(
+        republished, ASSESSED_AT,
+      );
+      assertAvailable(republishedProjection, "€STR republication projection");
+      assertEqual(republishedProjection.provenance.publicationType, "republication",
+        "€STR republication metadata survives Deep projection");
       assertEqual(free.details.currentRatePercent,
         input.canonical.data.currentRatePercent, "Free current rate preserved");
       assertEqual(free.details.direction, state.direction,
@@ -435,6 +496,31 @@ async function main(): Promise<void> {
     }
   }
 
+  const legacyFx = inputs.find((input) => input.productId === "eurusd");
+  if (legacyFx?.productId !== "eurusd" ||
+    legacyFx.canonical.availability !== "available") {
+    throw new Error("Expected available legacy FX fixture.");
+  }
+  const legacyProjection = projectFiveProductFreeLiteV1({
+    productId: "eurusd",
+    canonical: {
+      ...legacyFx.canonical,
+      provenance: {
+        ...legacyFx.canonical.provenance,
+        observationTimestamp: undefined,
+        originalPublisher: undefined,
+        substitution: undefined,
+      },
+    },
+  }, ASSESSED_AT);
+  assertAvailable(legacyProjection, "legacy cached FX projection");
+  assertEqual(legacyProjection.provenance.observationTimestamp,
+    legacyProjection.sourceTimestamp, "legacy reference timestamp remains usable");
+  assertEqual(legacyProjection.provenance.originalPublisher, "European Central Bank",
+    "verified ECB publisher remains identifiable during cache rollover");
+  assertEqual(legacyProjection.provenance.substitution.status, "unknown",
+    "legacy cache does not invent a no-substitution claim");
+
   const fxUnavailable = Object.freeze({
     productId: "eurusd",
     canonical: Object.freeze({
@@ -454,8 +540,8 @@ async function main(): Promise<void> {
 
   for (const unavailableInput of [fxUnavailable, estrUnavailable]) {
     for (const projection of [
-      projectFiveProductFreeLiteV1(unavailableInput),
-      projectFiveProductVipDeepV1(unavailableInput),
+      projectFiveProductFreeLiteV1(unavailableInput, ASSESSED_AT),
+      projectFiveProductVipDeepV1(unavailableInput, ASSESSED_AT),
     ]) {
       assertEqual(projection.availability, "unavailable",
         `${unavailableInput.productId} unavailable fails closed`);
@@ -487,8 +573,8 @@ async function main(): Promise<void> {
       productId: "estr",
       canonical,
     } satisfies FiveProductCanonicalProjectionInputV1);
-    const free = projectFiveProductFreeLiteV1(input);
-    const vip = projectFiveProductVipDeepV1(input);
+    const free = projectFiveProductFreeLiteV1(input, ASSESSED_AT);
+    const vip = projectFiveProductVipDeepV1(input, ASSESSED_AT);
 
     assertAvailable(free, `${direction} Free rate projection`);
     assertAvailable(vip, `${direction} VIP rate projection`);

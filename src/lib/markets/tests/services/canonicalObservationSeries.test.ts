@@ -1,4 +1,5 @@
 import {
+  CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   CANONICAL_OBSERVATION_SERIES_SCHEMA_VERSION_V1,
   normalizeCanonicalObservationSeriesV1,
   type CanonicalObservationSeriesInputV1,
@@ -23,13 +24,17 @@ function assertThrows(run: () => unknown, label: string): void {
 }
 
 const metadata = Object.freeze({
+  provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   provider: "official-test-provider",
   source: "official-test-publisher",
+  originalPublisher: "official-test-publisher",
+  substitution: { status: "none" as const },
   seriesId: "OFFICIAL.SERIES.1",
   requestedProductId: "official-request-code",
   canonicalProductId: "oil",
   interval: "1d" as const,
   fetchedAt: 1_800_000_000,
+  observationTimestamp: 300,
   sourceTimestamp: 300,
   status: "end_of_day" as const,
   unit: "USD/barrel",
@@ -54,6 +59,12 @@ assertEqual(normalized.observations.length, 3, "identical duplicate removal");
 assertEqual(normalized.observations.map(({ timestamp }) => timestamp).join(","), "100,200,300", "strict ordering");
 assertEqual(normalized.observations.map(({ value }) => value).join(","), "0,2,-1", "finite zero and negative values");
 assertEqual(JSON.stringify(normalized.metadata), JSON.stringify(metadata), "metadata survives normalization");
+assertEqual(normalized.metadata.observationTimestamp !== normalized.metadata.fetchedAt,
+  true, "reference time differs from fetch time");
+assertEqual("releaseTimestamp" in normalized.metadata, false,
+  "no publication time is invented");
+assertEqual(normalized.metadata.substitution?.status, "none",
+  "no substitute source is invented");
 assertEqual(Object.isFrozen(normalized), true, "series is frozen");
 assertEqual(Object.isFrozen(normalized.observations), true, "observations are frozen");
 assertEqual(
@@ -80,6 +91,13 @@ assertThrows(
 assertThrows(
   () => normalizeCanonicalObservationSeriesV1(input([{ timestamp: 1, value: Number.POSITIVE_INFINITY }])),
   "non-finite value rejection",
+);
+assertThrows(
+  () => normalizeCanonicalObservationSeriesV1({
+    observations: [{ timestamp: 300, value: 1 }],
+    metadata: { ...metadata, observationTimestamp: 301 },
+  }),
+  "observation timestamp cannot contradict compatibility alias",
 );
 
 console.log("PASS: Canonical Observation Series V1");

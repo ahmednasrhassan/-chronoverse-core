@@ -33,6 +33,8 @@ function assertEqual<T>(actual: T, expected: T, label: string): void {
 }
 
 assertEqual(classify(), "within-cadence", "Friday daily close remains current through Sunday");
+assertEqual(classify({ asset: "estr", status: "end_of_day" }), "within-cadence",
+  "daily ECB rate reference remains current through the weekend");
 assertEqual(
   classify({ evaluatedAt: "2026-09-09T12:00:00.000Z" }),
   "unknown",
