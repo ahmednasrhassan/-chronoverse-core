@@ -1,4 +1,4 @@
-import { defineType, defineField } from 'sanity'
+import { defineType, defineField, defineArrayMember } from 'sanity'
 import { MarkdownPasteInput } from '../components/MarkdownPasteInput'
 import { validatePublicRootSlug } from '../../lib/content/reservedSlugs'
 
@@ -89,11 +89,21 @@ export default defineType({
       name: 'tags',
       title: 'Tags / Keywords',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [
+        defineArrayMember({
+          type: 'string',
+          validation: (Rule) =>
+            Rule.max(48).warning('Keep tags to 48 characters or fewer.'),
+        }),
+      ],
       group: 'content',
       options: { layout: 'tags' },
       description:
-        'Used to power automated internal linking ("Related Articles") when posts share a category or overlapping tags.',
+        'Type a tag and press Enter to add it. Free-form tags are supported. When relevant, reuse established topics such as macro, liquidity, inflation, monetary policy, bitcoin, or volatility. Tags appear on the article and help select related articles.',
+      validation: (Rule) => [
+        Rule.unique().warning('Remove duplicate tags.'),
+        Rule.max(12).warning('Use no more than 12 focused tags.'),
+      ],
     }),
     defineField({
       name: 'mainImage',
