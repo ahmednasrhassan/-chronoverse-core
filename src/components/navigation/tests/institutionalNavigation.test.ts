@@ -79,6 +79,7 @@ assert.deepEqual(
       label: "Research",
       links: [
         { label: "Research", href: "/reports" },
+        { label: "Newsletter", href: "/newsletter" },
         { label: "Methodology", href: "/methodology" },
         { label: "Data Sources", href: "/data-sources" },
         { label: "Freshness & Availability", href: "/freshness" },
@@ -88,6 +89,7 @@ assert.deepEqual(
       label: "Company",
       links: [
         { label: "About", href: "/about" },
+        { label: "FAQ", href: "/faq" },
         { label: "Account", href: "/account" },
         { label: "Billing", href: "/billing" },
         { label: "Contact", href: "/contact" },
@@ -124,8 +126,31 @@ assert.equal(
   "public header, mobile navigation, and footer must not link to protected VIP",
 );
 
+const footerLinks: readonly {
+  readonly label: string;
+  readonly href: string;
+}[] = FOOTER_NAV_GROUPS_V1.flatMap((group) =>
+  group.links.map(({ label, href }) => ({ label, href }))
+);
+
+for (const [label, href] of [
+  ["Newsletter", "/newsletter"],
+  ["FAQ", "/faq"],
+] as const) {
+  assert.deepEqual(
+    footerLinks.filter((link) => link.href === href),
+    [{ label, href }],
+    `${label} must appear exactly once in the public footer`,
+  );
+}
+
+assert.deepEqual(
+  footerLinks.filter((link) => link.label === "VIP"),
+  [{ label: "VIP", href: "/pricing" }],
+  "the single footer VIP link must use public Pricing",
+);
+
 for (const contextualOnlyRoute of [
-  "/faq",
   "/manifesto",
   "/sponsors",
   "/intelligence",

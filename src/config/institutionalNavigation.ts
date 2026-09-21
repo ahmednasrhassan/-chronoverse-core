@@ -49,6 +49,7 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
     label: "Research",
     links: [
       { label: "Research", href: "/reports" },
+      { label: "Newsletter", href: "/newsletter" },
       { label: "Methodology", href: "/methodology" },
       { label: "Data Sources", href: "/data-sources" },
       { label: "Freshness & Availability", href: "/freshness" },
@@ -58,6 +59,7 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
     label: "Company",
     links: [
       { label: "About", href: "/about" },
+      { label: "FAQ", href: "/faq" },
       { label: "Account", href: "/account" },
       { label: "Billing", href: "/billing" },
       { label: "Contact", href: "/contact" },
