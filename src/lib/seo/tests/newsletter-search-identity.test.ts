@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { NextRequest, NextResponse } from "next/server";
 
 import { metadata } from "@/app/newsletter/layout";
+import { publicSocialImage } from "@/lib/seo/metadata";
 import {
   CANONICAL_NEWSLETTER_URL_V1,
   createChronoverseProxyV1,
@@ -44,13 +45,13 @@ function verifyNewsletterMetadata(): void {
   assert.equal(openGraph.description, metadata.description);
   assert.equal(openGraph.siteName, "Chronoverse Capital");
   assert.equal(openGraph.locale, "en_US");
-  assert.equal(openGraph.images, undefined);
+  assert.deepEqual(openGraph.images, [publicSocialImage]);
 
   const twitter = requireRecord(metadata.twitter, "Newsletter Twitter");
   assert.equal(twitter.card, "summary_large_image");
   assert.equal(twitter.title, metadata.title);
   assert.equal(twitter.description, metadata.description);
-  assert.equal(twitter.images, undefined);
+  assert.deepEqual(twitter.images, [publicSocialImage]);
 
   assert.deepEqual(metadata.alternates?.types?.["application/rss+xml"], [
     {

@@ -11,12 +11,17 @@ const readSource = (relativePath: string) =>
   readFileSync(resolveRepositoryPath(relativePath), "utf8");
 
 const publicLogoPath = resolveRepositoryPath("public/logo.svg");
+const publicSocialImagePath = resolveRepositoryPath(
+  "public/chronoverse-social.png",
+);
 const appIconPath = resolveRepositoryPath("src/app/icon.svg");
 const publicLogo = readFileSync(publicLogoPath);
+const publicSocialImage = readFileSync(publicSocialImagePath);
 const appIcon = readFileSync(appIconPath);
 const appIconSource = appIcon.toString("utf8");
 
 assert.equal(existsSync(publicLogoPath), true);
+assert.equal(existsSync(publicSocialImagePath), true);
 assert.equal(existsSync(appIconPath), true);
 assert.equal(
   appIcon.equals(publicLogo),
@@ -29,6 +34,13 @@ assert.equal(
   "0 0 512 512",
   "the selected icon must remain a parseable square SVG",
 );
+assert.equal(
+  publicSocialImage.subarray(1, 4).toString("ascii"),
+  "PNG",
+  "the public social image must be a PNG",
+);
+assert.equal(publicSocialImage.readUInt32BE(16), 1200);
+assert.equal(publicSocialImage.readUInt32BE(20), 630);
 
 for (const invalidLegacyAsset of [
   "src/app/favicon.jpeg",

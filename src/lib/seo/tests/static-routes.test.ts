@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 import type { Metadata } from "next";
 
+import { metadata as homeMetadata } from "@/app/(site)/page";
 import { metadata as aboutMetadata } from "@/app/(site)/about/page";
 import { metadata as contactMetadata } from "@/app/(site)/contact/page";
 import { metadata as dataSourcesMetadata } from "@/app/(site)/data-sources/page";
@@ -16,6 +17,7 @@ import { metadata as pricingMetadata } from "@/app/(site)/pricing/page";
 import { metadata as privacyPolicyMetadata } from "@/app/(site)/privacy-policy/page";
 import { metadata as reportsMetadata } from "@/app/(site)/reports/page";
 import { metadata as termsMetadata } from "@/app/(site)/terms-of-service/page";
+import { publicSocialImage } from "../metadata";
 import { canonicalSiteOrigin } from "../site-url";
 
 const HOMEPAGE_TITLE = "Chronoverse Capital | Five-Market Intelligence";
@@ -35,6 +37,11 @@ type StaticRouteExpectation = {
 };
 
 const STATIC_ROUTES = [
+  {
+    pathname: "/",
+    title: "Free Market Intelligence",
+    metadata: homeMetadata,
+  },
   { pathname: "/markets", title: "Markets", metadata: marketsMetadata },
   { pathname: "/pricing", title: "Pricing", metadata: pricingMetadata },
   {
@@ -138,12 +145,12 @@ for (const route of STATIC_ROUTES) {
   assert.equal(openGraph.description, description);
   assert.equal(openGraph.siteName, "Chronoverse Capital");
   assert.equal(openGraph.locale, "en_US");
-  assert.equal(openGraph.images, undefined);
+  assert.deepEqual(openGraph.images, [publicSocialImage]);
 
   assert.equal(twitter.card, "summary_large_image");
   assert.equal(twitter.title, title);
   assert.equal(twitter.description, description);
-  assert.equal(twitter.images, undefined);
+  assert.deepEqual(twitter.images, [publicSocialImage]);
 
   assert.deepEqual(route.metadata.alternates?.types?.["application/rss+xml"], [
     {

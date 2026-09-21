@@ -9,6 +9,7 @@ import {
   resolveArticleDescription,
   serializeJsonForHtml,
 } from "../article";
+import { publicSocialImage } from "../metadata";
 
 const repositoryRoot = process.cwd();
 const readSource = (relativePath: string) =>
@@ -94,6 +95,9 @@ function verifyArticleIdentityAndMetadata(): void {
     const twitterImages = twitter.images as Array<Record<string, unknown>>;
     assert.equal(openGraphImages[0]?.alt, authoredAlt);
     assert.equal(twitterImages[0]?.alt, authoredAlt);
+    assert.equal(openGraphImages[0]?.url, article.featuredImage?.url);
+    assert.equal(twitterImages[0]?.url, article.featuredImage?.url);
+    assert.notEqual(openGraphImages[0]?.url, publicSocialImage.url);
   } finally {
     if (previousSiteUrl === undefined) {
       delete process.env.NEXT_PUBLIC_SITE_URL;

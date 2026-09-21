@@ -5,6 +5,12 @@ import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
 export const siteLocale = "en_US";
 export const primaryRssPath = "/rss.xml";
+export const publicSocialImage = {
+  url: buildCanonicalUrl("/chronoverse-social.png"),
+  width: 1200,
+  height: 630,
+  alt: `${siteConfig.name} institutional macroeconomic intelligence`,
+} as const;
 
 export type PublicPageMetadataInput = {
   title: string;
@@ -54,11 +60,13 @@ export function buildPublicPageMetadata({
       title: openGraphTitle,
       description: openGraphDescription,
       locale: siteLocale,
+      images: [publicSocialImage],
     },
     twitter: {
       card: "summary_large_image",
       title: twitterTitle,
       description: twitterDescription,
+      images: [publicSocialImage],
     },
   };
 }

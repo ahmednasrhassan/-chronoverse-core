@@ -17,15 +17,14 @@ import type { FiveProductFreeLiteProjectionMapV1 } from
   "@/lib/markets/services/canonicalProductResults";
 import { getFiveProductFreeLiteProjectionMapV1 } from
   "@/lib/markets/services/canonicalProductResults";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPublicPageMetadata({
   title: "Free Market Intelligence",
   description:
     "Free Lite market intelligence for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
-  alternates: {
-    canonical: "/",
-  },
-};
+  pathname: "/",
+});
 
 const PRIMARY_CTA_CLASS =
   "chronoverse-primary-cta inline-flex items-center justify-center border border-[#A77BD8] px-5 py-3 text-sm font-semibold transition-colors hover:border-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";

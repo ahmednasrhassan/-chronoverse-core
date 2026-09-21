@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { buildPublicPageMetadata, siteLocale } from "../metadata";
+import {
+  buildPublicPageMetadata,
+  publicSocialImage,
+  siteLocale,
+} from "../metadata";
 import { buildCanonicalUrl, canonicalSiteOrigin } from "../site-url";
 
 const PERSONAL_PORTRAIT_ID = "a03a88e45b450a8f347633edf76d251bd9881fea";
@@ -93,15 +97,21 @@ function verifyMetadataFoundation(): void {
   );
   assert.equal(metadata.openGraph?.siteName, "Chronoverse Capital");
   assert.equal(metadata.openGraph?.locale, siteLocale);
-  assert.equal(metadata.twitter?.images, undefined);
   assert.deepEqual(metadata.twitter, {
     card: "summary_large_image",
     title: "About on X",
     description: "Truthful Twitter description.",
+    images: [publicSocialImage],
   });
   assert.equal(metadata.authors, undefined);
   assert.equal(metadata.icons, undefined);
-  assert.equal(metadata.openGraph?.images, undefined);
+  assert.deepEqual(metadata.openGraph?.images, [publicSocialImage]);
+  assert.equal(
+    publicSocialImage.url,
+    "https://chronoversecapital.com/chronoverse-social.png",
+  );
+  assert.equal(publicSocialImage.width, 1200);
+  assert.equal(publicSocialImage.height, 630);
   assert.equal(JSON.stringify(metadata).includes(PERSONAL_PORTRAIT_ID), false);
 }
 
