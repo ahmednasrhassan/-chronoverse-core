@@ -20,7 +20,9 @@ interface SitemapContent {
 }
 
 const ROOT_POST_SLUG_FORMAT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const CATEGORY_SLUG_FORMAT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Category routes and canonicals preserve stored legacy slug casing. Keep the
+// segment path-safe without silently rewriting an existing public URL.
+const CATEGORY_SLUG_FORMAT = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/;
 
 /** Static routes whose existing route metadata permits indexing. */
 const STATIC_ROUTES: ReadonlyArray<{

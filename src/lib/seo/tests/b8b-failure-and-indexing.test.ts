@@ -240,7 +240,15 @@ async function verifySitemapPolicyAndAtomicity(): Promise<void> {
       { slug: "account", updatedAt: "2026-09-14T00:00:00.000Z" },
       { slug: "invalid/path", updatedAt: "2026-09-14T00:00:00.000Z" },
     ],
-    categorySlugs: ["macro-liquidity", "account", "invalid/path", ""],
+    categorySlugs: [
+      "macro-liquidity",
+      "alpha-insight",
+      "alpha-Insights",
+      "alpha-insight",
+      "account",
+      "invalid/path",
+      "",
+    ],
   });
   const byUrl = new Map(sitemap.map((entry) => [entry.url, entry]));
   const urls = new Set(byUrl.keys());
@@ -287,6 +295,23 @@ async function verifySitemapPolicyAndAtomicity(): Promise<void> {
 
   assert.equal(urls.has(`${origin}/${post.slug}`), true);
   assert.equal(urls.has(`${origin}/category/macro-liquidity`), true);
+  assert.equal(
+    urls.has(`${origin}/category/alpha-insight`),
+    true,
+    "the reported lowercase category slug is supported",
+  );
+  assert.equal(
+    urls.has(`${origin}/category/alpha-Insights`),
+    true,
+    "stored legacy category casing survives into its canonical sitemap URL",
+  );
+  assert.equal(
+    sitemap.filter(
+      (entry) => entry.url === `${origin}/category/alpha-insight`,
+    ).length,
+    1,
+    "duplicate category slugs emit one sitemap URL",
+  );
   assert.equal(
     urls.has(`${origin}/category/account`),
     true,
