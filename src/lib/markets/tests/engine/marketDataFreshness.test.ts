@@ -35,6 +35,48 @@ function assertEqual<T>(actual: T, expected: T, label: string): void {
 assertEqual(classify(), "within-cadence", "Friday daily close remains current through Sunday");
 assertEqual(classify({ asset: "estr", status: "end_of_day" }), "within-cadence",
   "daily ECB rate reference remains current through the weekend");
+
+const fridayReference = timestamp("2026-09-04T00:00:00.000Z");
+for (const asset of ["eurusd", "eurjpy", "eurgbp", "eurchf", "estr"] as const) {
+  const ecbDaily = (evaluatedAt: string) => classify({
+    asset,
+    provider: "ecb",
+    status: "end_of_day",
+    latestTimestampSeconds: fridayReference,
+    evaluatedAt,
+  });
+
+  assertEqual(ecbDaily("2026-09-04T12:00:00.000Z"), "within-cadence",
+    `${asset} same-day reference`);
+  assertEqual(ecbDaily("2026-09-05T12:00:00.000Z"), "within-cadence",
+    `${asset} Friday reference on Saturday`);
+  assertEqual(ecbDaily("2026-09-06T12:00:00.000Z"), "within-cadence",
+    `${asset} Friday reference on Sunday`);
+  assertEqual(ecbDaily("2026-09-07T23:59:00.000Z"), "within-cadence",
+    `${asset} Friday reference through Monday`);
+  assertEqual(ecbDaily("2026-09-08T00:00:00.000Z"), "stale",
+    `${asset} second weekday begins on Tuesday`);
+  assertEqual(ecbDaily("2026-09-08T23:59:00.000Z"), "stale",
+    `${asset} Friday reference is stale Tuesday late`);
+  assertEqual(ecbDaily("2026-09-09T00:00:00.000Z"), "stale",
+    `${asset} stale result does not wait until Wednesday`);
+  assertEqual(ecbDaily("2026-09-16T12:00:00.000Z"), "stale",
+    `${asset} clearly old reference remains stale`);
+  assertEqual(classify({
+    asset,
+    provider: "ecb",
+    status: "end_of_day",
+    latestTimestampSeconds: undefined,
+  }), "unknown", `${asset} missing observation time`);
+  assertEqual(classify({
+    asset,
+    provider: "ecb",
+    status: "end_of_day",
+    latestTimestampSeconds: fridayReference,
+    evaluatedAt: "invalid",
+  }), "unknown", `${asset} invalid assessment time`);
+}
+
 assertEqual(
   classify({ evaluatedAt: "2026-09-09T12:00:00.000Z" }),
   "unknown",

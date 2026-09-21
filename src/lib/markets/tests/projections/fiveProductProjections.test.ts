@@ -394,6 +394,19 @@ async function main(): Promise<void> {
       }
 
       const state = input.canonical.data.marketState.data;
+      assertEqual(input.canonical.data.latestReferenceDate, "2025-08-08",
+        "rate fixture ends on a Friday reference date");
+      const boundaryAssessedAt = "2025-08-12T23:59:00.000Z";
+      const boundaryFree = projectFiveProductFreeLiteV1(input, boundaryAssessedAt);
+      const boundaryVip = projectFiveProductVipDeepV1(input, boundaryAssessedAt);
+      assertAvailable(boundaryFree, "Tuesday rate Free projection");
+      assertAvailable(boundaryVip, "Tuesday rate VIP projection");
+      assertEqual(boundaryFree.provenance.freshness, "stale",
+        "Friday rate reference is stale Tuesday late in Free");
+      assertEqual(boundaryVip.provenance.freshness, "stale",
+        "Friday rate reference is stale Tuesday late in VIP");
+      assertDeepEqual(commonTruth(boundaryFree), commonTruth(boundaryVip),
+        "rate tiers share corrected boundary freshness");
       assertEqual(free.provenance.publicationType, "standard",
         "€STR publication type preserved");
       const republished = Object.freeze({

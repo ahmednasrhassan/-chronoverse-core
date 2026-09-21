@@ -75,13 +75,21 @@ export function classifyEngineMarketDataFreshnessV3(
   }
 
   if (input.interval === "1d") {
-    const interveningWeekdays = countCompletedInterveningUtcWeekdays(
+    // ECB launch observations identify reference dates, so the assessment date
+    // counts toward their weekday cadence. Other daily bars retain the prior rule.
+    const isEcbReference = isEcbLaunchDailyReference(input);
+    const weekdays = countUtcWeekdaysAfterObservationDate(
       latestTimestampSeconds,
       evaluatedAtSeconds,
+      isEcbReference,
     );
 
-    if (interveningWeekdays <= 1) return "within-cadence";
-    if (interveningWeekdays <= 5) return "unknown";
+    if (isEcbReference) {
+      return weekdays <= 1 ? "within-cadence" : "stale";
+    }
+
+    if (weekdays <= 1) return "within-cadence";
+    if (weekdays <= 5) return "unknown";
     return "stale";
   }
 
@@ -109,9 +117,20 @@ function isIntraday(interval: CandleInterval): boolean {
   return interval !== "1d" && interval !== "1wk" && interval !== "1mo";
 }
 
-function countCompletedInterveningUtcWeekdays(
+function isEcbLaunchDailyReference(
+  input: ClassifyEngineMarketDataFreshnessV3Input,
+): boolean {
+  return input.provider === "ecb" &&
+    input.status === "end_of_day" &&
+    (input.asset === "eurusd" || input.asset === "eurjpy" ||
+      input.asset === "eurgbp" || input.asset === "eurchf" ||
+      input.asset === "estr");
+}
+
+function countUtcWeekdaysAfterObservationDate(
   latestTimestampSeconds: number,
   evaluatedAtSeconds: number,
+  includeAssessmentDate: boolean,
 ): number {
   const cursor = new Date(latestTimestampSeconds * 1000);
   cursor.setUTCHours(0, 0, 0, 0);
@@ -122,7 +141,7 @@ function countCompletedInterveningUtcWeekdays(
 
   let weekdays = 0;
 
-  while (cursor < evaluationDate) {
+  while (includeAssessmentDate ? cursor <= evaluationDate : cursor < evaluationDate) {
     const day = cursor.getUTCDay();
     if (day !== 0 && day !== 6) weekdays += 1;
     cursor.setUTCDate(cursor.getUTCDate() + 1);
