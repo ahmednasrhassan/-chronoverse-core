@@ -54,10 +54,10 @@ export default function MarketsPage() {
           View Free
         </Link>
         <Link
-          href="/vip"
+          href="/pricing"
           className="rounded-md border border-purple-border bg-raised px-5 py-3 text-center text-sm font-semibold text-primary hover:border-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
         >
-          Enter VIP
+          Explore VIP
         </Link>
         <Link
           href="/methodology"

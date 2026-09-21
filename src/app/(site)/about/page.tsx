@@ -41,7 +41,7 @@ export default function AboutPage() {
       <InstitutionalSection title="Free, VIP, and Research">
         <p>
           <Link href="/">Free</Link> is the Lite projection.{" "}
-          <Link href="/vip">VIP</Link> is the Deep projection of the same
+          <Link href="/pricing">VIP</Link> is the Deep projection of the same
           canonical five-product truth, delivered through protected VIP Market
           Rooms for verified access.
         </p>

@@ -265,7 +265,7 @@ function verifySitemapAndPricing(): void {
   assert.match(pricingSource, /\$15\.99 monthly/);
   assert.match(pricingSource, /\$150\.99 annually/);
   assert.match(pricingSource, /<CheckoutButtons \/>/);
-  assert.match(pricingSource, /billing-portal controls are not currently/i);
+  assert.match(pricingSource, /billing-portal controls are available/i);
   assert.doesNotMatch(pricingSource, /checkout[^.]*not currently available/i);
 }
 
@@ -285,16 +285,23 @@ function verifyPublicVipLinks(): void {
   const marketsSource = readSource("src/app/(site)/markets/page.tsx");
   assert.match(
     marketsSource,
-    /href="\/vip"[\s\S]{0,400}Enter VIP/,
-    "explicit application entry remains pointed at protected VIP",
+    /href="\/pricing"[\s\S]{0,400}Explore VIP/,
+    "public Markets VIP CTA uses Pricing",
   );
+  assert.doesNotMatch(marketsSource, /href="\/vip"/);
 
   const navigationSource = readSource("src/config/institutionalNavigation.ts");
-  assert.match(navigationSource, /label: "VIP", href: "\/vip"/);
+  assert.equal(
+    (navigationSource.match(/label: "VIP", href: "\/pricing"/g) || []).length,
+    2,
+    "public primary navigation and footer route VIP through Pricing",
+  );
+  assert.doesNotMatch(navigationSource, /label: "VIP", href: "\/vip"/);
   assert.match(navigationSource, /label: "Pricing", href: "\/pricing"/);
 
   const aboutSource = readSource("src/app/(site)/about/page.tsx");
-  assert.match(aboutSource, /<Link href="\/vip">VIP<\/Link>/);
+  assert.match(aboutSource, /<Link href="\/pricing">VIP<\/Link>/);
+  assert.doesNotMatch(aboutSource, /href="\/vip"/);
   assert.match(aboutSource, /protected VIP Market[\s\S]{0,40}Rooms/);
 
   const vipOverviewSource = readSource(

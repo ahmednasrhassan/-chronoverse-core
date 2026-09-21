@@ -39,7 +39,7 @@ assert.deepEqual(
   [
     { label: "Markets", href: "/markets" },
     { label: "Free", href: "/" },
-    { label: "VIP", href: "/vip" },
+    { label: "VIP", href: "/pricing" },
     { label: "Pricing", href: "/pricing" },
     { label: "Research", href: "/reports" },
   ],
@@ -71,7 +71,7 @@ assert.deepEqual(
       links: [
         { label: "Markets", href: "/markets" },
         { label: "Free", href: "/" },
-        { label: "VIP", href: "/vip" },
+        { label: "VIP", href: "/pricing" },
         { label: "Pricing", href: "/pricing" },
       ],
     },
@@ -117,6 +117,12 @@ const discoverableHrefs: readonly string[] = [
     group.links.map((item) => item.href)
   ),
 ];
+
+assert.equal(
+  discoverableHrefs.includes("/vip"),
+  false,
+  "public header, mobile navigation, and footer must not link to protected VIP",
+);
 
 for (const contextualOnlyRoute of [
   "/faq",

@@ -25,7 +25,7 @@ export const LAUNCH_MARKETS_V1 = Object.freeze([
 export const PUBLIC_PRIMARY_NAV_V1 = Object.freeze([
   { label: "Markets", href: "/markets" },
   { label: "Free", href: "/" },
-  { label: "VIP", href: "/vip" },
+  { label: "VIP", href: "/pricing" },
   { label: "Pricing", href: "/pricing" },
   { label: "Research", href: "/reports" },
 ] as const satisfies readonly NavigationItemV1[]);
@@ -41,7 +41,7 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
     links: [
       { label: "Markets", href: "/markets" },
       { label: "Free", href: "/" },
-      { label: "VIP", href: "/vip" },
+      { label: "VIP", href: "/pricing" },
       { label: "Pricing", href: "/pricing" },
     ],
   },
