@@ -396,6 +396,24 @@ async function main(): Promise<void> {
       const state = input.canonical.data.marketState.data;
       assertEqual(input.canonical.data.latestReferenceDate, "2025-08-08",
         "rate fixture ends on a Friday reference date");
+      const beforePublication = projectFiveProductFreeLiteV1(
+        input, "2025-08-12T00:00:00.000Z",
+      );
+      assertAvailable(beforePublication, "Tuesday pre-publication rate projection");
+      assertEqual(beforePublication.provenance.freshness, "within-cadence",
+        "Friday rate reference remains current before Tuesday publication");
+      const publicationWindow = projectFiveProductVipDeepV1(
+        input, "2025-08-12T06:00:00.000Z",
+      );
+      assertAvailable(publicationWindow, "Tuesday publication-time rate projection");
+      assertEqual(publicationWindow.provenance.freshness, "unknown",
+        "Friday rate reference is uncertain during the publication window");
+      const afterPublication = projectFiveProductVipDeepV1(
+        input, "2025-08-12T07:00:00.000Z",
+      );
+      assertAvailable(afterPublication, "Tuesday post-publication rate projection");
+      assertEqual(afterPublication.provenance.freshness, "stale",
+        "Friday rate reference becomes stale after 09:00 CEST");
       const boundaryAssessedAt = "2025-08-12T23:59:00.000Z";
       const boundaryFree = projectFiveProductFreeLiteV1(input, boundaryAssessedAt);
       const boundaryVip = projectFiveProductVipDeepV1(input, boundaryAssessedAt);
@@ -533,6 +551,19 @@ async function main(): Promise<void> {
     "verified ECB publisher remains identifiable during cache rollover");
   assertEqual(legacyProjection.provenance.substitution.status, "unknown",
     "legacy cache does not invent a no-substitution claim");
+  const recentlyFetched = projectFiveProductFreeLiteV1({
+    productId: "eurusd",
+    canonical: {
+      ...legacyFx.canonical,
+      provenance: {
+        ...legacyFx.canonical.provenance,
+        fetchedAt: Date.parse(ASSESSED_AT) / 1_000,
+      },
+    },
+  }, ASSESSED_AT);
+  assertAvailable(recentlyFetched, "recently fetched old FX reference");
+  assertEqual(recentlyFetched.provenance.freshness, "stale",
+    "recent cache fetch cannot refresh an old observation");
 
   const fxUnavailable = Object.freeze({
     productId: "eurusd",
@@ -591,6 +622,12 @@ async function main(): Promise<void> {
 
     assertAvailable(free, `${direction} Free rate projection`);
     assertAvailable(vip, `${direction} VIP rate projection`);
+    if (direction === "range-bound") {
+      assertEqual(free.availability, "available",
+        "neutral rate analysis remains available");
+      assertEqual(projectFiveProductFreeLiteV1(estrUnavailable, ASSESSED_AT).availability,
+        "unavailable", "missing rate source remains unavailable");
+    }
     assertEqual(free.details.kind, "rate", `${direction} Free rate kind`);
     assertEqual(vip.details.kind, "rate", `${direction} VIP rate kind`);
     if (free.details.kind === "rate" && vip.details.kind === "rate") {
