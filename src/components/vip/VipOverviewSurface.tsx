@@ -60,6 +60,9 @@ export default function VipOverviewSurface({
   selectedMarket,
 }: VipOverviewSurfaceProps) {
   const selected = projections[selectedMarket];
+  const selectedDefinition = LAUNCH_MARKETS_V1.find(
+    (market) => market.productId === selectedMarket,
+  ) ?? LAUNCH_MARKETS_V1[0];
   const freshness = selected?.availability === "available"
     ? formatLabel(selected.provenance.freshness)
     : "Unavailable";
@@ -100,6 +103,7 @@ export default function VipOverviewSurface({
           projections={projections}
           selectedMarket={selectedMarket}
         />
+        <SelectedMarketRoomAction market={selectedDefinition} />
 
         {selected?.availability === "available" ? (
           <AvailableMarketSurface projection={selected} />
@@ -146,6 +150,7 @@ function MarketSelector({ projections, selectedMarket }: {
               href={market.productId === "eurusd"
                 ? "/vip"
                 : `/vip?market=${market.productId}`}
+              prefetch={false}
               aria-current={isSelected ? "page" : undefined}
               className={`group relative grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[#6F4C91]/20 px-3 py-2 last:border-b-0 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C8A7E8] sm:min-h-16 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:min-h-[4.5rem] lg:border-b-0 lg:border-r lg:last:border-r-0 ${
                 isSelected ? "bg-[#15131A]" : "hover:bg-[#0D0D11]"
@@ -180,6 +185,42 @@ function MarketSelector({ projections, selectedMarket }: {
         })}
       </div>
     </nav>
+  );
+}
+
+function SelectedMarketRoomAction({
+  market,
+}: {
+  readonly market: (typeof LAUNCH_MARKETS_V1)[number];
+}) {
+  return (
+    <section className="mb-4 grid gap-4 border border-[#6F4C91]/35 bg-[#0D0D11]/90 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-5">
+      <div className="min-w-0">
+        <div className={EYEBROW}>Dedicated Market Room</div>
+        <h2 className="mt-1 text-lg font-bold tracking-tight text-[#F3EBDD]">
+          Continue with {market.label}
+        </h2>
+        <p className="mt-1 text-xs leading-5 text-[#CFC5B8]">
+          {market.roomDescription}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <Link
+          href="/vip/markets"
+          prefetch={false}
+          className="inline-flex min-h-11 items-center px-3 text-xs font-semibold text-[#CFC5B8] underline decoration-[#6F4C91] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+        >
+          View all five rooms
+        </Link>
+        <Link
+          href={`/vip/markets/${market.productId}`}
+          prefetch={false}
+          className="inline-flex min-h-11 items-center border border-[#C8A7E8] bg-[#A77BD8]/15 px-4 text-xs font-bold text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090C]"
+        >
+          Open {market.label} Market Room
+        </Link>
+      </div>
+    </section>
   );
 }
 

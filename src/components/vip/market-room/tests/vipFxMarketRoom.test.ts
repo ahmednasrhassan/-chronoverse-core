@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { LAUNCH_MARKETS_V1 } from "../../../../config/institutionalNavigation";
 import VipFxMarketRoom from "../VipFxMarketRoom";
+import VipMarketRoomNavigation from "../VipMarketRoomNavigation";
 import {
   deriveFxHistoricalRangeViewV1,
 } from "../VipFxHistoricalPanel";
@@ -326,13 +328,37 @@ function verifyRoomRendering(): void {
   ]) {
     assertEqual(html.includes(required), true, `room renders ${required}`);
   }
-  assertEqual((html.match(/href="\/vip\/markets\/eur(?:usd|jpy|gbp|chf)"/g) ?? []).length, 4,
-    "room selector links exactly four FX rooms");
-  assertEqual(html.includes("€STR"), false, "FX room contains no rate room");
+  assertEqual((html.match(/href="\/vip\/markets\/(?:eurusd|eurjpy|eurgbp|eurchf|estr)"/g) ?? []).length, 5,
+    "room selector links exactly five VIP rooms");
+  assertEqual(html.includes("€STR"), true,
+    "FX room selector includes the rate room");
+  assertEqual((html.match(/aria-current="page"/g) ?? []).length, 1,
+    "FX room selector exposes exactly one current room");
   assertEqual(html.includes("price target"), false, "room invents no price target");
   assertEqual(html.includes('role="img"'), true, "chart has a meaningful text alternative");
   assertEqual(html.includes("ECB daily reference-rate line chart"), true,
     "chart text alternative describes reference-rate semantics");
+}
+
+function verifySharedRoomNavigation(): void {
+  for (const market of LAUNCH_MARKETS_V1) {
+    const html = renderToStaticMarkup(VipMarketRoomNavigation({
+      selectedMarket: market.productId,
+    }));
+
+    assertEqual(
+      (html.match(/href="\/vip\/markets\/(?:eurusd|eurjpy|eurgbp|eurchf|estr)"/g) ?? []).length,
+      5,
+      `${market.productId} navigation exposes exactly five Market Rooms`,
+    );
+    assertEqual((html.match(/aria-current="page"/g) ?? []).length, 1,
+      `${market.productId} navigation has one current-room marker`);
+    const selectedLink = html.match(
+      new RegExp(`<a[^>]*href="/vip/markets/${market.productId}"[^>]*>`),
+    )?.[0] ?? "";
+    assertEqual(selectedLink.includes('aria-current="page"'), true,
+      `${market.productId} navigation marks its own route current`);
+  }
 }
 
 function verifyRangeSemantics(): void {
@@ -452,6 +478,8 @@ function verifyArchitectureBoundary(): void {
     "src/components/vip/market-room/HistoricalReferenceLineChart.tsx",
     "src/components/vip/market-room/HistoricalRangeSelector.tsx",
     "src/lib/markets/services/vipMarketRoomDelivery.ts",
+    "src/components/vip/market-room/VipMarketRoomNavigation.tsx",
+    "src/config/institutionalNavigation.ts",
   ];
   const sources = files.map((file) =>
     readFileSync(`${repositoryRoot}${file}`, "utf8")
@@ -506,6 +534,7 @@ function buttonOpening(html: string, label: string): string {
 
 function main(): void {
   verifyRoomRendering();
+  verifySharedRoomNavigation();
   verifyRangeSemantics();
   verifyDegradedRendering();
   verifyArchitectureBoundary();

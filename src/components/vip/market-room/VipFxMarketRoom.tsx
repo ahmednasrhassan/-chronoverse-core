@@ -4,11 +4,11 @@ import type {
   FxVipDeepProjectionV1,
 } from "@/lib/markets/projections/types";
 import {
-  VIP_FX_MARKET_ROOM_IDS_V1,
   type VipFxMarketRoomIdV1,
   type VipFxMarketRoomV1,
 } from "@/lib/markets/services/vipMarketRoomDelivery";
 import VipFxHistoricalPanel from "./VipFxHistoricalPanel";
+import VipMarketRoomNavigation from "./VipMarketRoomNavigation";
 
 interface VipFxMarketRoomProps {
   readonly room: VipFxMarketRoomV1;
@@ -54,7 +54,7 @@ export default function VipFxMarketRoom({ room }: VipFxMarketRoomProps) {
       <MarketRoomCommandBar room={room} />
 
       <div className="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">
-        <MarketRoomNavigation selected={room.productId} />
+        <VipMarketRoomNavigation selectedMarket={room.productId} />
 
         <section className="overflow-hidden border-y border-[#6F4C91]/40 bg-[#0D0D11]">
           <MarketIdentityHeader room={room} />
@@ -116,7 +116,7 @@ function MarketRoomCommandBar({ room }: { room: VipFxMarketRoomV1 }) {
         </div>
 
         <dl className="grid grid-cols-3 divide-x divide-[#6F4C91]/30 border-l border-[#6F4C91]/30">
-          <CommandDatum label="Universe" value="04 FX pairs" />
+          <CommandDatum label="Universe" value="05 products" />
           <CommandDatum label="History" value={historyState} />
           <CommandDatum label="Deep" value={deepState} />
         </dl>
@@ -134,51 +134,6 @@ function CommandDatum({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 truncate text-[11px] font-semibold text-[#CFC5B8]">
         {value}
       </dd>
-    </div>
-  );
-}
-
-function MarketRoomNavigation({ selected }: {
-  selected: VipFxMarketRoomIdV1;
-}) {
-  return (
-    <div className="py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-h-11 items-center gap-3 text-[11px]">
-          <Link
-            href="/vip"
-            className="rounded-sm px-1 py-2 text-[#CFC5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-          >
-            VIP Overview
-          </Link>
-          <span aria-hidden="true" className="text-[#6F4C91]">/</span>
-          <Link
-            href="/vip/markets"
-            className="rounded-sm px-1 py-2 text-[#CFC5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-          >
-            Markets
-          </Link>
-        </div>
-
-        <nav aria-label="VIP FX Market Rooms" className="max-w-full">
-          <div className="flex max-w-full flex-wrap gap-1">
-            {VIP_FX_MARKET_ROOM_IDS_V1.map((productId) => (
-              <Link
-                key={productId}
-                href={`/vip/markets/${productId}`}
-                aria-current={productId === selected ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] ${
-                  productId === selected
-                    ? "border-[#C8A7E8] bg-[#A77BD8]/15 text-[#F3EBDD]"
-                    : "border-[#6F4C91]/35 bg-[#09090C] text-[#CFC5B8] hover:border-[#A77BD8]"
-                }`}
-              >
-                {MARKET_IDENTITIES_V1[productId].displayName}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      </div>
     </div>
   );
 }

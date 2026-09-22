@@ -46,6 +46,13 @@ function verifySelectionContract(): void {
     JSON.stringify(["EUR/USD", "EUR/JPY", "EUR/GBP", "EUR/CHF", "€STR"]),
     "rendered selector uses the exact five public labels",
   );
+  assertEqual(
+    LAUNCH_MARKETS_V1.every(({ roomDescription }) =>
+      roomDescription.length > 0
+    ),
+    true,
+    "every launch product has canonical Market Room description metadata",
+  );
 
   for (const market of VIP_MARKET_IDS_V1) {
     assertEqual(selectVipMarketV1(market), market, `${market} is selectable`);
@@ -161,6 +168,36 @@ function verifyVipProductSurface(): void {
     "VIP terminal links to the canonical disclaimer");
 }
 
+function verifyMarketRoomDirectory(): void {
+  const page = source("src/app/(vip)/vip/markets/page.tsx");
+  const lower = page.toLowerCase();
+
+  assertEqual(
+    page.includes("await enforceVipPageAccessV1(requireVipV1, redirect)"),
+    true,
+    "Market Room directory preserves the VIP leaf-page guard",
+  );
+  assertEqual(page.includes("LAUNCH_MARKETS_V1.map"), true,
+    "Market Room directory renders the canonical five-product list");
+  assertEqual(page.includes("/vip/markets/${market.productId}"), true,
+    "Market Room directory links every canonical product to its room");
+  assertEqual(page.includes("prefetch={false}"), true,
+    "protected directory navigation disables route prefetch reads");
+
+  for (const forbidden of [
+    "getfiveproduct",
+    "fetch(",
+    "online",
+    "operational",
+    "private preview",
+    "infrastructure ready",
+    "this workspace will host",
+  ]) {
+    assertEqual(lower.includes(forbidden), false,
+      `Market Room directory excludes ${forbidden}`);
+  }
+}
+
 function verifyRenderedDecisionTerminal(): void {
   const projections = projectionMap();
 
@@ -178,12 +215,30 @@ function verifyRenderedDecisionTerminal(): void {
       `${selectedMarket} render has exactly one current selection`);
     assertEqual(html.includes(displayName(selectedMarket)), true,
       `${selectedMarket} render identifies the selected market`);
+    assertEqual(
+      html.includes(`href="/vip/markets/${selectedMarket}"`),
+      true,
+      `${selectedMarket} render links to its dedicated Market Room`,
+    );
+    assertEqual(
+      html.includes(`Open ${displayName(selectedMarket)} Market Room`),
+      true,
+      `${selectedMarket} render labels its selected-room action`,
+    );
+    assertEqual(html.includes('href="/vip/markets"'), true,
+      `${selectedMarket} render links to the five-room directory`);
   }
 
   const fxHtml = renderToStaticMarkup(VipOverviewSurface({
     projections,
     selectedMarket: "eurusd",
   }));
+  assertEqual(fxHtml.includes('href="/vip"'), true,
+    "EUR/USD keeps the canonical Overview selection route");
+  assertEqual(fxHtml.includes('href="/vip?market=eurusd"'), false,
+    "EUR/USD does not invent a query-string Overview route");
+  assertEqual(fxHtml.includes('href="/vip/markets/eurusd"'), true,
+    "EUR/USD dedicated room remains distinct from its Overview route");
   assertEqual(fxHtml.includes("1.08420"), true,
     "FX selected value is rendered from the Deep projection");
   assertEqual(fxHtml.includes("What matters now?"), true,
@@ -220,6 +275,8 @@ function verifyRenderedDecisionTerminal(): void {
     projections,
     selectedMarket: "estr",
   }));
+  assertEqual(rateHtml.includes('href="/vip/markets/estr"'), true,
+    "€STR selected action routes to the dedicated rate room");
   for (const required of [
     "€STR",
     "Rising rate",
@@ -293,6 +350,10 @@ function verifyUnavailableRendering(): void {
     "selector remains usable when the selected result is unavailable");
   assertEqual(html.includes('href="/disclaimer"'), true,
     "disclaimer remains available when market data is unavailable");
+  assertEqual(html.includes('href="/vip/markets/eurusd"'), true,
+    "selected-room action remains available when Deep is unavailable");
+  assertEqual(html.includes("Open EUR/USD Market Room"), true,
+    "unavailable state preserves the selected-room action label");
 }
 
 function verifyApprovedChrome(): void {
@@ -309,6 +370,7 @@ function main(): void {
   verifyProtectedPageComposition();
   verifySharedCanonicalOwnership();
   verifyVipProductSurface();
+  verifyMarketRoomDirectory();
   verifyRenderedDecisionTerminal();
   verifyUnavailableRendering();
   verifyApprovedChrome();

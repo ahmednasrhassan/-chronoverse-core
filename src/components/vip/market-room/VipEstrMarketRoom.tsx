@@ -5,18 +5,11 @@ import type { EstrVipDeepProjectionV1 } from
 import type { VipEstrMarketRoomV1 } from
   "@/lib/markets/services/vipMarketRoomDelivery";
 import VipEstrHistoricalPanel from "./VipEstrHistoricalPanel";
+import VipMarketRoomNavigation from "./VipMarketRoomNavigation";
 
 interface VipEstrMarketRoomProps {
   readonly room: VipEstrMarketRoomV1;
 }
-
-const MARKET_LINKS = Object.freeze([
-  Object.freeze({ productId: "eurusd", label: "EUR/USD" }),
-  Object.freeze({ productId: "eurjpy", label: "EUR/JPY" }),
-  Object.freeze({ productId: "eurgbp", label: "EUR/GBP" }),
-  Object.freeze({ productId: "eurchf", label: "EUR/CHF" }),
-  Object.freeze({ productId: "estr", label: "€STR" }),
-]);
 
 const EYEBROW =
   "font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#C8A7E8]";
@@ -34,7 +27,7 @@ export default function VipEstrMarketRoom({ room }: VipEstrMarketRoomProps) {
       <RateRoomCommandBar room={room} />
 
       <div className="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">
-        <MarketRoomNavigation />
+        <VipMarketRoomNavigation selectedMarket="estr" />
 
         <section className="overflow-hidden border-y border-[#6F4C91]/40 bg-[#0D0D11]">
           <RateIdentityHeader deep={deep} />
@@ -96,7 +89,7 @@ function RateRoomCommandBar({ room }: { room: VipEstrMarketRoomV1 }) {
         </div>
 
         <dl className="grid grid-cols-3 divide-x divide-[#6F4C91]/30 border-l border-[#6F4C91]/30">
-          <CommandDatum label="Product" value="€STR" />
+          <CommandDatum label="Universe" value="05 products" />
           <CommandDatum label="History" value={historyState} />
           <CommandDatum label="Deep" value={deepState} />
         </dl>
@@ -114,49 +107,6 @@ function CommandDatum({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 truncate text-[11px] font-semibold text-[#CFC5B8]">
         {value}
       </dd>
-    </div>
-  );
-}
-
-function MarketRoomNavigation() {
-  return (
-    <div className="py-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-h-11 items-center gap-3 text-[11px]">
-          <Link
-            href="/vip"
-            className="rounded-sm px-1 py-2 text-[#CFC5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-          >
-            VIP Overview
-          </Link>
-          <span aria-hidden="true" className="text-[#6F4C91]">/</span>
-          <Link
-            href="/vip/markets"
-            className="rounded-sm px-1 py-2 text-[#CFC5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-          >
-            Markets
-          </Link>
-        </div>
-
-        <nav aria-label="VIP Market Rooms" className="max-w-full">
-          <div className="flex max-w-full flex-wrap gap-1">
-            {MARKET_LINKS.map((market) => (
-              <Link
-                key={market.productId}
-                href={`/vip/markets/${market.productId}`}
-                aria-current={market.productId === "estr" ? "page" : undefined}
-                className={`inline-flex min-h-11 items-center border px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] ${
-                  market.productId === "estr"
-                    ? "border-[#C8A7E8] bg-[#A77BD8]/15 text-[#F3EBDD]"
-                    : "border-[#6F4C91]/35 bg-[#09090C] text-[#CFC5B8] hover:border-[#A77BD8]"
-                }`}
-              >
-                {market.label}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      </div>
     </div>
   );
 }

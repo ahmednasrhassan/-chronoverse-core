@@ -279,6 +279,8 @@ function verifyRateRoomRendering(): void {
     5, "rate room selector contains exactly five products");
   assertEqual(html.includes('aria-current="page"'), true,
     "€STR is the selected room");
+  assertEqual((html.match(/aria-current="page"/g) ?? []).length, 1,
+    "rate room selector exposes exactly one current room");
   assertEqual(html.includes('role="img"'), true,
     "chart has a meaningful text alternative");
   assertEqual(html.includes("€STR ECB daily reference-rate line chart"), true,
@@ -390,6 +392,7 @@ function verifyArchitectureBoundaries(): void {
     "src/components/vip/market-room/HistoricalReferenceLineChart.tsx",
     "src/components/vip/market-room/HistoricalRangeSelector.tsx",
     "src/lib/markets/services/vipMarketRoomDelivery.ts",
+    "src/components/vip/market-room/VipMarketRoomNavigation.tsx",
   ];
   const sources = files.map((file) =>
     readFileSync(`${repositoryRoot}${file}`, "utf8")
@@ -436,8 +439,26 @@ function verifyArchitectureBoundaries(): void {
   );
   assertEqual(index.includes('href={`/vip/markets/${market.productId}`}'), true,
     "VIP index links every canonical product room");
-  assertEqual(index.includes("Open €STR Market Room"), true,
-    "VIP index labels the €STR room explicitly");
+  assertEqual(index.includes("LAUNCH_MARKETS_V1.map"), true,
+    "VIP index renders the canonical product directory");
+  assertEqual(index.includes("Open {market.label} Market Room"), true,
+    "VIP index labels each room with its canonical product name");
+  assertEqual(index.includes("prefetch={false}"), true,
+    "VIP index avoids background protected-route reads");
+
+  const lowerIndex = index.toLowerCase();
+  for (const forbidden of [
+    "getfiveproduct",
+    "fetch(",
+    "online",
+    "operational",
+    "private preview",
+    "infrastructure ready",
+    "this workspace will host",
+  ]) {
+    assertEqual(lowerIndex.includes(forbidden), false,
+      `VIP index excludes ${forbidden}`);
+  }
 }
 
 function buttonOpening(html: string, label: string): string {

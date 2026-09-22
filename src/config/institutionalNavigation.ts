@@ -12,14 +12,40 @@ interface LaunchMarketDisplayV1 {
   readonly productId: MarketProjectionProductIdV1;
   readonly label: MarketProjectionDisplayNameV1;
   readonly kind: "fx" | "rate";
+  readonly roomDescription: string;
 }
 
 export const LAUNCH_MARKETS_V1 = Object.freeze([
-  { productId: "eurusd", label: "EUR/USD", kind: "fx" },
-  { productId: "eurjpy", label: "EUR/JPY", kind: "fx" },
-  { productId: "eurgbp", label: "EUR/GBP", kind: "fx" },
-  { productId: "eurchf", label: "EUR/CHF", kind: "fx" },
-  { productId: "estr", label: "€STR", kind: "rate" },
+  {
+    productId: "eurusd",
+    label: "EUR/USD",
+    kind: "fx",
+    roomDescription: "ECB reference-rate history · Deep FX intelligence",
+  },
+  {
+    productId: "eurjpy",
+    label: "EUR/JPY",
+    kind: "fx",
+    roomDescription: "ECB reference-rate history · Deep FX intelligence",
+  },
+  {
+    productId: "eurgbp",
+    label: "EUR/GBP",
+    kind: "fx",
+    roomDescription: "ECB reference-rate history · Deep FX intelligence",
+  },
+  {
+    productId: "eurchf",
+    label: "EUR/CHF",
+    kind: "fx",
+    roomDescription: "ECB reference-rate history · Deep FX intelligence",
+  },
+  {
+    productId: "estr",
+    label: "€STR",
+    kind: "rate",
+    roomDescription: "Official €STR history · Rate intelligence",
+  },
 ] as const satisfies readonly LaunchMarketDisplayV1[]);
 
 export const PUBLIC_PRIMARY_NAV_V1 = Object.freeze([
