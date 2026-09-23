@@ -10,6 +10,7 @@ import {
 import {
   advanceEcbMonetaryPolicyEventMemoryV1,
   buildEcbMonetaryPolicyEventSnapshotV1,
+  parseEcbMonetaryPolicyEventMemoryV1,
   selectEcbMonetaryPolicyEventAsKnownAtV1,
   type EcbMonetaryPolicyEventMemoryV1,
   type EcbMonetaryPolicyEventSnapshotV1,
@@ -285,6 +286,144 @@ assert.notEqual(firstSnapshot.event, scheduleOnly,
 const mutableSnapshots = history.snapshots as EcbMonetaryPolicyEventSnapshotV1[];
 assert.throws(() => mutableSnapshots.push(firstSnapshot), TypeError);
 
+const parsedHistory = parseEcbMonetaryPolicyEventMemoryV1(
+  JSON.parse(JSON.stringify(history)) as unknown,
+);
+assert.notEqual(parsedHistory, null, "valid serialized history parses");
+assert.equal(Object.isFrozen(parsedHistory), true);
+assert.equal(Object.isFrozen(parsedHistory?.snapshots), true);
+assert.equal(Object.isFrozen(parsedHistory?.snapshots[0]), true);
+assert.equal(Object.isFrozen(parsedHistory?.snapshots[0]?.event), true);
+assert.equal(Object.isFrozen(parsedHistory?.snapshots[0]?.event.schedule), true);
+assert.equal(
+  Object.isFrozen(parsedHistory?.snapshots.at(-1)?.event.decision),
+  true,
+);
+
+const wrongSchema = mutableMemory(history);
+wrongSchema.schemaVersion = "wrong-schema";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(wrongSchema), null);
+
+const emptyHistory = mutableMemory(history);
+emptyHistory.snapshots = [];
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(emptyHistory), null);
+
+const identityMismatch = mutableMemory(history);
+identityMismatch.snapshots[0]!.canonicalEventId = "ECB:other:2026-09-10";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(identityMismatch), null);
+
+const sourceVersionMismatch = mutableMemory(history);
+sourceVersionMismatch.snapshots[0]!.event.sourceVersionId = "different";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(sourceVersionMismatch), null);
+
+const forgedScheduleVersion = mutableMemory(history);
+forgedScheduleVersion.snapshots[0]!.event.schedule.sourceVersionId =
+  "forged-schedule-version";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(forgedScheduleVersion), null);
+
+const forgedAlignedEventVersion = mutableMemory(history);
+forgedAlignedEventVersion.snapshots[0]!.event.sourceVersionId =
+  "forged-event-version";
+forgedAlignedEventVersion.snapshots[0]!.eventSourceVersionId =
+  "forged-event-version";
+assert.equal(
+  parseEcbMonetaryPolicyEventMemoryV1(forgedAlignedEventVersion),
+  null,
+);
+
+const forgedDecisionVersion = mutableMemory(history);
+forgedDecisionVersion.snapshots.at(-1)!.event.decision!.sourceVersionId =
+  "forged-decision-version";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(forgedDecisionVersion), null);
+
+const mutuallyForgedVersions = mutableMemory(history);
+const forgedFinal = mutuallyForgedVersions.snapshots.at(-1)!;
+forgedFinal.event.schedule.sourceVersionId = "forged-schedule-version";
+forgedFinal.event.decision!.sourceVersionId = "forged-decision-version";
+forgedFinal.event.sourceVersionId = "forged-event-version";
+forgedFinal.eventSourceVersionId = "forged-event-version";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(mutuallyForgedVersions), null);
+
+const malformedCanonicalIdentity = mutableMemory(history);
+malformedCanonicalIdentity.canonicalEventId =
+  "ECB:ecb-monetary-policy-decision:2026-99-99";
+for (const snapshot of malformedCanonicalIdentity.snapshots) {
+  snapshot.canonicalEventId = malformedCanonicalIdentity.canonicalEventId;
+  snapshot.event.canonicalEventId = malformedCanonicalIdentity.canonicalEventId;
+}
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(malformedCanonicalIdentity), null);
+
+const nonMonotonic = mutableMemory(history);
+nonMonotonic.snapshots.reverse();
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(nonMonotonic), null);
+
+const sameTimeA = buildEcbMonetaryPolicyEventSnapshotV1(event());
+const sameTimeB = buildEcbMonetaryPolicyEventSnapshotV1(event({
+  scheduledLocalTime: "14:30",
+}));
+const duplicateKnownAt = {
+  schemaVersion: history.schemaVersion,
+  canonicalEventId: history.canonicalEventId,
+  snapshots: [sameTimeA, sameTimeB],
+};
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(duplicateKnownAt), null);
+
+const wrongKnownAt = mutableMemory(history);
+wrongKnownAt.snapshots[0]!.knownAt += 1;
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(wrongKnownAt), null);
+
+const reversedObservation = mutableMemory(history);
+const finalDecision = reversedObservation.snapshots.at(-1)!.event.decision!;
+finalDecision.firstObservedAt = finalDecision.fetchedAt + 1;
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(reversedObservation), null);
+
+const releaseBoundaryEvent = event({
+  decision: {
+    fetchedAt: unix("2026-09-10T12:16:00.000Z"),
+    actualReleasedAt: "2026-09-10T12:16:00.000Z",
+  },
+});
+const releaseBoundaryMemory = advanceEcbMonetaryPolicyEventMemoryV1(
+  null,
+  releaseBoundaryEvent,
+).memory;
+assert.notEqual(
+  parseEcbMonetaryPolicyEventMemoryV1(releaseBoundaryMemory),
+  null,
+  "exact actual-release/knownAt millisecond boundary parses",
+);
+const futureReleaseMemory = mutableMemory(releaseBoundaryMemory);
+futureReleaseMemory.snapshots[0]!.event.decision!.actualReleasedAt =
+  "2026-09-10T12:16:00.001Z";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(futureReleaseMemory), null);
+
+const malformedSchedule = mutableMemory(history);
+malformedSchedule.snapshots[0]!.event.schedule.scheduledAt = "not-an-instant";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(malformedSchedule), null);
+
+const malformedEvent = mutableMemory(history);
+malformedEvent.snapshots[0]!.event.eventFamily = "not-ecb-policy";
+assert.equal(parseEcbMonetaryPolicyEventMemoryV1(malformedEvent), null);
+
+for (const malformed of [
+  undefined,
+  null,
+  42,
+  "not-json",
+  [],
+  { snapshots: null },
+  { schemaVersion: history.schemaVersion, canonicalEventId: "x" },
+]) {
+  assert.doesNotThrow(() => parseEcbMonetaryPolicyEventMemoryV1(malformed));
+  assert.equal(parseEcbMonetaryPolicyEventMemoryV1(malformed), null);
+}
+
+assert.notEqual(
+  parseEcbMonetaryPolicyEventMemoryV1(aAgainResult.memory),
+  null,
+  "chronologically valid A-B-A history parses",
+);
+
 const source = readFileSync(join(
   process.cwd(),
   "src/lib/markets/events/ecbMonetaryPolicyMemory.ts",
@@ -314,4 +453,34 @@ function buildHistory(): EcbMonetaryPolicyEventMemoryV1 {
 
 function unix(value: string): number {
   return Math.floor(Date.parse(value) / 1_000);
+}
+
+interface MutableMemory {
+  schemaVersion: string;
+  canonicalEventId: string;
+  snapshots: Array<{
+    schemaVersion: string;
+    canonicalEventId: string;
+    knownAt: number;
+    eventSourceVersionId: string;
+    event: {
+      canonicalEventId: string;
+      eventFamily: string;
+      sourceVersionId: string;
+      schedule: {
+        scheduledAt: string;
+        sourceVersionId: string;
+      };
+      decision: null | {
+        fetchedAt: number;
+        firstObservedAt: number;
+        actualReleasedAt: string | null;
+        sourceVersionId: string;
+      };
+    };
+  }>;
+}
+
+function mutableMemory(memoryValue: EcbMonetaryPolicyEventMemoryV1): MutableMemory {
+  return JSON.parse(JSON.stringify(memoryValue)) as MutableMemory;
 }
