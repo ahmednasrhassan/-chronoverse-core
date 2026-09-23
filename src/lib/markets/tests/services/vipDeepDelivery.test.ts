@@ -111,16 +111,13 @@ async function verifyVipApiDenials(): Promise<void> {
     [malformedAccess, 500, "access-unavailable", "malformed access"],
   ] as const) {
     let canonicalCalls = 0;
-    let projectionCalls = 0;
+    let eventRuntimeCalls = 0;
     const guards = createAccessGuardsV1(async () => access);
     const response = await handleVipDeepApiRequestV1({
       requireVip: guards.requireVip,
-      loadCanonical: async () => {
+      loadDeep: async () => {
         canonicalCalls += 1;
-        return { source: "canonical" };
-      },
-      buildProjection: () => {
-        projectionCalls += 1;
+        eventRuntimeCalls += 1;
         return availableProjection();
       },
     });
@@ -132,8 +129,8 @@ async function verifyVipApiDenials(): Promise<void> {
       `${label} public error code`);
     assertEqual(canonicalCalls, 0,
       `${label} does not read canonical data`);
-    assertEqual(projectionCalls, 0,
-      `${label} does not build VIP output`);
+    assertEqual(eventRuntimeCalls, 0,
+      `${label} does not evaluate ECB event runtime`);
   }
 }
 
@@ -142,21 +139,17 @@ async function verifyAllowedVipApi(
   label: "admin" | "owner",
 ): Promise<void> {
   const events: string[] = [];
-  const canonical = Object.freeze({ source: "shared-canonical-result" });
   const projection = availableProjection();
+  let eventRuntimeCalls = 0;
   const response = await handleVipDeepApiRequestV1({
     requireVip: async () => {
       events.push("authorize");
       return access;
     },
-    loadCanonical: async () => {
+    loadDeep: async () => {
       events.push("canonical");
-      return canonical;
-    },
-    buildProjection: (receivedCanonical) => {
+      eventRuntimeCalls += 1;
       events.push("projection");
-      assertEqual(receivedCanonical, canonical,
-        `${label} projects the shared canonical result`);
       return projection;
     },
   });
@@ -169,6 +162,52 @@ async function verifyAllowedVipApi(
     `${label} reads canonical result exactly once`);
   assertEqual(events.filter((event) => event === "projection").length, 1,
     `${label} builds VIP projection exactly once`);
+  assertEqual(eventRuntimeCalls, 1,
+    `${label} evaluates ECB event runtime exactly once`);
+  const body = await response.json() as MarketProductVipDeepProjectionV1;
+  assertEqual(JSON.stringify(body).includes('"ecbPolicyEvent"'), true,
+    `${label} JSON preserves ECB event context`);
+}
+
+async function verifyEventFailureIsolation(): Promise<void> {
+  for (const [eventStatus, expectedStatus] of [
+    ["source-unavailable", 200],
+    ["runtime-unavailable", 200],
+  ] as const) {
+    let calls = 0;
+    const response = await handleVipDeepApiRequestV1({
+      requireVip: async () => ADMIN_ACCESS,
+      loadDeep: async () => {
+        calls += 1;
+        return availableProjection(eventStatus);
+      },
+    });
+    const body = await response.json() as {
+      readonly details: {
+        readonly ecbPolicyEvent: { readonly status: string };
+      };
+    };
+    assertEqual(response.status, expectedStatus,
+      `${eventStatus} event does not change valid market HTTP status`);
+    assertEqual(body.details.ecbPolicyEvent.status, eventStatus,
+      `${eventStatus} survives JSON response`);
+    assertEqual(calls, 1, `${eventStatus} Deep service invoked once`);
+  }
+
+  const unavailableResponse = await handleVipDeepApiRequestV1({
+    requireVip: async () => ADMIN_ACCESS,
+    loadDeep: async () => Object.freeze({
+      version: "market-product-projection-v1",
+      tier: "vip-deep",
+      availability: "unavailable",
+      productId: "eurusd",
+      displayName: "EUR/USD",
+      productKind: "fx",
+      reason: "Canonical market data unavailable.",
+    }),
+  });
+  assertEqual(unavailableResponse.status, 503,
+    "market Deep unavailable retains existing HTTP semantics");
 }
 
 function verifyFreeLiteRemainsPublic(): void {
@@ -234,14 +273,40 @@ function auditProtectedRoutes(): void {
     assertEqual(deliverySource.includes(forbidden), false,
       `VIP delivery contains no ${forbidden} dependency or bypass`);
   }
+  assertEqual(deliverySource.includes("getfiveproductvipdeepprojectionv1"), true,
+    "VIP API reuses the event-aware production Deep service");
+  assertEqual(deliverySource.includes("getcanonicalproductresultv1"), false,
+    "VIP API owns no separate canonical/event-less assembly path");
+  assertEqual(deliverySource.includes("projectfiveproductvipdeepv1"), false,
+    "VIP API owns no duplicate Deep mapper");
 }
 
-function availableProjection(): MarketProductVipDeepProjectionV1 {
+function availableProjection(
+  eventStatus: "available" | "source-unavailable" | "runtime-unavailable" =
+    "available",
+): MarketProductVipDeepProjectionV1 {
   return Object.freeze({
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
     productId: "eurusd",
+    details: Object.freeze({
+      ecbPolicyEvent: eventStatus === "available"
+        ? Object.freeze({
+            status: "available",
+            canonicalEventId:
+              "ECB:ecb-monetary-policy-decision:2026-10-29",
+            selectedSnapshotKnownAt: 1_758_000_000,
+            relevance: "euro-policy-context",
+          })
+        : Object.freeze({
+            status: eventStatus,
+            reason: eventStatus === "runtime-unavailable"
+              ? "unexpected-runtime-error"
+              : "request-failed",
+            relevance: "euro-policy-context",
+          }),
+    }),
   }) as unknown as MarketProductVipDeepProjectionV1;
 }
 
@@ -254,6 +319,7 @@ async function main(): Promise<void> {
   await verifyVipApiDenials();
   await verifyAllowedVipApi(ADMIN_ACCESS, "admin");
   await verifyAllowedVipApi(OWNER_ACCESS, "owner");
+  await verifyEventFailureIsolation();
   verifyFreeLiteRemainsPublic();
   auditProtectedRoutes();
 

@@ -21,6 +21,8 @@ import {
   type FxVipDeepDetailsV1,
   type FxVipDeepProjectionV1,
   type MarketProductFreeLiteProjectionV1,
+  type MarketProductVipEcbPolicyEventContextV1,
+  type MarketProductVipEcbPolicyEventStateV1,
   type MarketProductProjectionTierV1,
   type MarketProductUnavailableProjectionV1,
   type MarketProductVipDeepProjectionV1,
@@ -46,11 +48,17 @@ export function projectFiveProductFreeLiteV1(
 
 export function projectFiveProductVipDeepV1(
   input: FiveProductCanonicalProjectionInputV1,
-  assessedAt: string = new Date().toISOString(),
+  ecbPolicyEvent: MarketProductVipEcbPolicyEventStateV1,
+  assessedAt: string,
 ): MarketProductVipDeepProjectionV1 {
   return input.productId === "estr"
-    ? projectEstrVipDeep(input.canonical, assessedAt)
-    : projectFxVipDeep(input.productId, input.canonical, assessedAt);
+    ? projectEstrVipDeep(input.canonical, ecbPolicyEvent, assessedAt)
+    : projectFxVipDeep(
+        input.productId,
+        input.canonical,
+        ecbPolicyEvent,
+        assessedAt,
+      );
 }
 
 function projectFxFreeLite(
@@ -88,6 +96,7 @@ function projectFxFreeLite(
 function projectFxVipDeep(
   productId: FxProjectionProductIdV1,
   canonical: FxCanonicalProjectionResultV1,
+  ecbPolicyEvent: MarketProductVipEcbPolicyEventStateV1,
   assessedAt: string,
 ): FxVipDeepProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
@@ -113,6 +122,10 @@ function projectFxVipDeep(
   const engine = canonical.engineResult;
   const details: FxVipDeepDetailsV1 = Object.freeze({
     ...freeFxDetails(intelligence),
+    ecbPolicyEvent: withEventRelevance(
+      ecbPolicyEvent,
+      "euro-policy-context",
+    ),
     confidence: intelligence.confidence,
     technical: intelligence.technical,
     signal: intelligence.signal,
@@ -168,6 +181,7 @@ function projectEstrFreeLite(
 
 function projectEstrVipDeep(
   canonical: EstrProductionRuntimeResultV1,
+  ecbPolicyEvent: MarketProductVipEcbPolicyEventStateV1,
   assessedAt: string,
 ): EstrVipDeepProjectionV1 | MarketProductUnavailableProjectionV1 {
   if (canonical.availability === "unavailable") {
@@ -188,6 +202,10 @@ function projectEstrVipDeep(
   const data = canonical.data;
   const details: EstrVipDeepDetailsV1 = Object.freeze({
     ...freeEstrDetails(data),
+    ecbPolicyEvent: withEventRelevance(
+      ecbPolicyEvent,
+      "direct-euro-rate-policy-context",
+    ),
     rateFeatures: data.features,
     signal: data.signal.data,
     risk: data.risk.data,
@@ -199,6 +217,15 @@ function projectEstrVipDeep(
     ...availableEstrBase("vip-deep", canonical, assessedAt),
     details,
   });
+}
+
+function withEventRelevance<
+  TRelevance extends MarketProductVipEcbPolicyEventContextV1["relevance"],
+>(
+  event: MarketProductVipEcbPolicyEventStateV1,
+  relevance: TRelevance,
+): MarketProductVipEcbPolicyEventContextV1<TRelevance> {
+  return Object.freeze({ ...event, relevance });
 }
 
 function availableBase<TTier extends MarketProductProjectionTierV1>(

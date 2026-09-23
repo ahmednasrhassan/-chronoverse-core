@@ -16,6 +16,13 @@ import {
 
 const DAY = 86_400;
 const ANCHOR = 2_000_000_000;
+const ECB_EVENT_CONTEXT = Object.freeze({
+  status: "source-unavailable",
+  sourceUrl:
+    "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html",
+  reason: "request-failed",
+  relevance: "euro-policy-context",
+});
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
@@ -38,6 +45,7 @@ function availableDeep(
     productId,
     productKind: "fx",
     provenance: { sourceTimestamp: ANCHOR },
+    details: { ecbPolicyEvent: ECB_EVENT_CONTEXT },
   } as unknown as MarketProductVipDeepProjectionV1;
 }
 
@@ -125,6 +133,13 @@ async function verifyAuthorizationOrdering(): Promise<void> {
     room?.history.fiveDay?.availability,
     "available",
     "five-day conditional result",
+  );
+  assertEqual(
+    room?.deep?.availability === "available"
+      ? room.deep.details.ecbPolicyEvent
+      : null,
+    ECB_EVENT_CONTEXT,
+    "Deep ECB event context survives FX Market Room delivery unchanged",
   );
 }
 

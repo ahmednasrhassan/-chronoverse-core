@@ -10,6 +10,8 @@ import type {
   "../services/canonicalObservationSeries";
 import type { EngineMarketDataFreshnessV3 } from
   "../engine/marketDataFreshness";
+import type { EcbMonetaryPolicyEventIntelligenceV1 } from
+  "../events/ecbMonetaryPolicyIntelligence";
 
 export const MARKET_PRODUCT_PROJECTION_VERSION_V1 =
   "market-product-projection-v1" as const;
@@ -30,6 +32,73 @@ export type MarketProjectionDisplayNameV1 =
   | "EUR/GBP"
   | "EUR/CHF"
   | "\u20acSTR";
+
+export type MarketProductVipEcbPolicyEventRelevanceV1 =
+  | "euro-policy-context"
+  | "direct-euro-rate-policy-context";
+
+/** Stable Deep projection state; deliberately independent of the runtime type. */
+export type MarketProductVipEcbPolicyEventStateV1 =
+  | {
+      readonly status: "available";
+      readonly canonicalEventId: string;
+      readonly canonicalMeetingDate: string;
+      readonly currentMeetingDate: string;
+      readonly selectedSnapshotKnownAt: number;
+      readonly selectionState: "current-window" | "next-scheduled";
+      readonly intelligence: EcbMonetaryPolicyEventIntelligenceV1;
+      readonly source: {
+        readonly sourceUrl: string;
+        readonly fetchedAt: number;
+      };
+    }
+  | {
+      readonly status: "source-unavailable" | "source-malformed";
+      readonly sourceUrl: string;
+      readonly reason: string;
+    }
+  | {
+      readonly status: "no-relevant-event";
+      readonly sourceUrl: string;
+      readonly fetchedAt: number;
+    }
+  | {
+      readonly status: "reconciliation-required";
+      readonly reason:
+        | "active-date-missing"
+        | "new-earlier-event"
+        | "schedule-normalization"
+        | "decision-date-mismatch";
+      readonly canonicalEventId?: string;
+      readonly currentMeetingDate?: string;
+      readonly conflictingMeetingDate?: string;
+    }
+  | {
+      readonly status: "persistence-unavailable";
+      readonly owner: "active-event" | "event-memory";
+      readonly reason: string;
+    }
+  | {
+      readonly status: "stored-state-invalid";
+      readonly owner: "active-event" | "event-memory";
+    }
+  | {
+      readonly status: "insufficient-as-known-state";
+      readonly canonicalEventId: string;
+      readonly evaluatedAt: string;
+    }
+  | {
+      readonly status: "runtime-unavailable";
+      readonly reason: "unexpected-runtime-error";
+    };
+
+export type MarketProductVipEcbPolicyEventContextV1<
+  TRelevance extends MarketProductVipEcbPolicyEventRelevanceV1 =
+    MarketProductVipEcbPolicyEventRelevanceV1,
+> =
+  MarketProductVipEcbPolicyEventStateV1 & {
+    readonly relevance: TRelevance;
+  };
 
 export interface CanonicalProjectionUnavailableInputV1 {
   readonly availability: "unavailable";
@@ -159,6 +228,9 @@ export type FxVipEngineProjectionV1 = Pick<
 >;
 
 export interface FxVipDeepDetailsV1 extends FxFreeLiteDetailsV1 {
+  readonly ecbPolicyEvent: MarketProductVipEcbPolicyEventContextV1<
+    "euro-policy-context"
+  >;
   readonly confidence: EcbFxProductionIntelligenceV1["intelligence"]["confidence"];
   readonly technical: EcbFxProductionIntelligenceV1["intelligence"]["technical"];
   readonly signal: EcbFxProductionIntelligenceV1["intelligence"]["signal"];
@@ -169,6 +241,9 @@ export interface FxVipDeepDetailsV1 extends FxFreeLiteDetailsV1 {
 }
 
 export interface EstrVipDeepDetailsV1 extends EstrFreeLiteDetailsV1 {
+  readonly ecbPolicyEvent: MarketProductVipEcbPolicyEventContextV1<
+    "direct-euro-rate-policy-context"
+  >;
   readonly rateFeatures: EstrAvailableRuntimeV1["features"];
   readonly signal: EstrAvailableRuntimeV1["signal"]["data"];
   readonly risk: EstrAvailableRuntimeV1["risk"]["data"];

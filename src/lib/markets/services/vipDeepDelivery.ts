@@ -5,30 +5,23 @@ import {
   requireVipV1,
   type VipAuthorizedAccessV1,
 } from "@/lib/auth/guards";
-import {
-  projectFiveProductVipDeepV1,
-} from "../projections/fiveProductProjections";
 import type {
   MarketProductVipDeepProjectionV1,
 } from "../projections/types";
 import {
-  getCanonicalProductResultV1,
-  type CanonicalProductResultMapV1,
+  getFiveProductVipDeepProjectionV1,
 } from "./canonicalProductResults";
 import type { CanonicalProductIdV1 } from
   "./canonicalProductResultOwnership";
 
-export interface VipDeepApiDependenciesV1<TCanonical> {
+export interface VipDeepApiDependenciesV1 {
   readonly requireVip: () => PromiseLike<VipAuthorizedAccessV1>;
-  readonly loadCanonical: () => PromiseLike<TCanonical>;
-  readonly buildProjection: (
-    canonical: TCanonical,
-  ) => MarketProductVipDeepProjectionV1;
+  readonly loadDeep: () => PromiseLike<MarketProductVipDeepProjectionV1>;
 }
 
-/** Authorizes first, then reads shared truth and builds the Deep projection. */
-export async function handleVipDeepApiRequestV1<TCanonical>(
-  dependencies: VipDeepApiDependenciesV1<TCanonical>,
+/** Authorizes first, then invokes the shared event-aware Deep service. */
+export async function handleVipDeepApiRequestV1(
+  dependencies: VipDeepApiDependenciesV1,
 ): Promise<Response> {
   try {
     await dependencies.requireVip();
@@ -37,8 +30,7 @@ export async function handleVipDeepApiRequestV1<TCanonical>(
   }
 
   try {
-    const canonical = await dependencies.loadCanonical();
-    const projection = dependencies.buildProjection(canonical);
+    const projection = await dependencies.loadDeep();
 
     return Response.json(projection, {
       status: projection.availability === "unavailable" ? 503 : 200,
@@ -74,42 +66,8 @@ function handleProductV1<TProductId extends CanonicalProductIdV1>(
 ): Promise<Response> {
   return handleVipDeepApiRequestV1({
     requireVip: requireVipV1,
-    loadCanonical: () => getCanonicalProductResultV1(productId),
-    buildProjection: (canonical) => projectProductV1(productId, canonical),
+    loadDeep: () => getFiveProductVipDeepProjectionV1(productId),
   });
-}
-
-function projectProductV1<TProductId extends CanonicalProductIdV1>(
-  productId: TProductId,
-  canonical: CanonicalProductResultMapV1[TProductId],
-): MarketProductVipDeepProjectionV1 {
-  switch (productId) {
-    case "eurusd":
-      return projectFiveProductVipDeepV1({
-        productId,
-        canonical: canonical as CanonicalProductResultMapV1["eurusd"],
-      });
-    case "eurjpy":
-      return projectFiveProductVipDeepV1({
-        productId,
-        canonical: canonical as CanonicalProductResultMapV1["eurjpy"],
-      });
-    case "eurgbp":
-      return projectFiveProductVipDeepV1({
-        productId,
-        canonical: canonical as CanonicalProductResultMapV1["eurgbp"],
-      });
-    case "eurchf":
-      return projectFiveProductVipDeepV1({
-        productId,
-        canonical: canonical as CanonicalProductResultMapV1["eurchf"],
-      });
-    case "estr":
-      return projectFiveProductVipDeepV1({
-        productId,
-        canonical: canonical as CanonicalProductResultMapV1["estr"],
-      });
-  }
 }
 
 function accessFailureResponseV1(error: unknown): Response {

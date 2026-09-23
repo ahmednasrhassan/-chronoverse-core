@@ -18,6 +18,14 @@ import {
   getCanonicalLiveEurUsdIntelligence,
 } from "../../assets/eurusd/productionRuntime";
 import {
+  ECB_GOVERNING_COUNCIL_CALENDAR_URL,
+  normalizeEcbMonetaryPolicyEventV1,
+} from "../../events/ecbMonetaryPolicy";
+import { buildEcbMonetaryPolicyEventIntelligenceV1 } from
+  "../../events/ecbMonetaryPolicyIntelligence";
+import { buildEcbMonetaryPolicyEventSnapshotV1 } from
+  "../../events/ecbMonetaryPolicyMemory";
+import {
   ECB_ESTR_DATAFLOW_V1,
   ECB_ESTR_SERIES_ID_V1,
   ECB_ESTR_SERIES_KEY_V1,
@@ -36,6 +44,7 @@ import type {
   FiveProductCanonicalProjectionInputV1,
   FxProjectionProductIdV1,
   MarketProductProjectionV1,
+  MarketProductVipEcbPolicyEventStateV1,
 } from "../../projections/types";
 import {
   CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
@@ -70,6 +79,45 @@ const FX_CONFIGURATIONS = Object.freeze([
   }),
 ]);
 const ASSESSED_AT = "2025-09-10T12:00:00.000Z";
+const ECB_EVENT = normalizeEcbMonetaryPolicyEventV1({
+  canonicalMeetingDate: "2025-09-10",
+  schedule: {
+    meetingDate: "2025-09-10",
+    fetchedAt: Date.parse("2025-09-10T10:00:00.000Z") / 1_000,
+  },
+  decision: {
+    decisionDate: "2025-09-10",
+    documentUrl:
+      "https://www.ecb.europa.eu/press/pr/date/2025/html/ecb.mp250910~abcdef1234.en.html",
+    contentDigest: "ab".repeat(32),
+    fetchedAt: Date.parse("2025-09-10T11:30:00.000Z") / 1_000,
+    firstObservedAt: Date.parse("2025-09-10T11:30:00.000Z") / 1_000,
+    actualReleasedAt: "2025-09-10T11:00:00.000Z",
+    rates: {
+      depositFacility: 2,
+      mainRefinancingOperations: 2.15,
+      marginalLendingFacility: 2.4,
+      effectiveDate: "2025-09-17",
+    },
+  },
+});
+const ECB_SNAPSHOT = buildEcbMonetaryPolicyEventSnapshotV1(ECB_EVENT);
+const AVAILABLE_ECB_POLICY_EVENT = Object.freeze({
+  status: "available",
+  canonicalEventId: ECB_EVENT.canonicalEventId,
+  canonicalMeetingDate: ECB_EVENT.canonicalMeetingDate,
+  currentMeetingDate: ECB_EVENT.schedule.meetingDate,
+  selectedSnapshotKnownAt: ECB_SNAPSHOT.knownAt,
+  selectionState: "current-window",
+  intelligence: buildEcbMonetaryPolicyEventIntelligenceV1({
+    snapshot: ECB_SNAPSHOT,
+    evaluatedAt: ASSESSED_AT,
+  }),
+  source: Object.freeze({
+    sourceUrl: ECB_GOVERNING_COUNCIL_CALENDAR_URL,
+    fetchedAt: ECB_EVENT.schedule.fetchedAt,
+  }),
+} as const satisfies MarketProductVipEcbPolicyEventStateV1);
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
@@ -327,7 +375,11 @@ async function main(): Promise<void> {
   for (const input of inputs) {
     const before = JSON.stringify(input.canonical);
     const free = projectFiveProductFreeLiteV1(input, ASSESSED_AT);
-    const vip = projectFiveProductVipDeepV1(input, ASSESSED_AT);
+    const vip = projectFiveProductVipDeepV1(
+      input,
+      AVAILABLE_ECB_POLICY_EVENT,
+      ASSESSED_AT,
+    );
 
     assertAvailable(free, `${input.productId} Free`);
     assertAvailable(vip, `${input.productId} VIP`);
@@ -349,6 +401,42 @@ async function main(): Promise<void> {
       `${input.productId} fetchedAt preserved`);
     assertEqual(free.sourceTimestamp, free.provenance.sourceTimestamp,
       `${input.productId} source timestamp preserved`);
+    assertEqual("ecbPolicyEvent" in free.details, false,
+      `${input.productId} Free excludes ECB event context`);
+    assertEqual(vip.details.ecbPolicyEvent.status, "available",
+      `${input.productId} Deep includes ECB event context`);
+    assertEqual(vip.details.ecbPolicyEvent.relevance,
+      input.productId === "estr"
+        ? "direct-euro-rate-policy-context"
+        : "euro-policy-context",
+    `${input.productId} has factual event relevance`);
+    if (vip.details.ecbPolicyEvent.status !== "available") {
+      throw new Error("Expected available ECB event fixture.");
+    }
+    assertEqual(vip.details.ecbPolicyEvent.canonicalEventId,
+      AVAILABLE_ECB_POLICY_EVENT.canonicalEventId,
+    `${input.productId} preserves canonical event identity`);
+    assertEqual(vip.details.ecbPolicyEvent.selectedSnapshotKnownAt,
+      AVAILABLE_ECB_POLICY_EVENT.selectedSnapshotKnownAt,
+    `${input.productId} preserves selected knownAt`);
+    assertEqual(vip.details.ecbPolicyEvent.intelligence,
+      AVAILABLE_ECB_POLICY_EVENT.intelligence,
+    `${input.productId} preserves intelligence without reconstruction`);
+    assertEqual(vip.details.ecbPolicyEvent.intelligence.phase,
+      AVAILABLE_ECB_POLICY_EVENT.intelligence.phase,
+    `${input.productId} preserves lifecycle phase`);
+    assertEqual(vip.details.ecbPolicyEvent.intelligence.decisionEvidence,
+      AVAILABLE_ECB_POLICY_EVENT.intelligence.decisionEvidence,
+    `${input.productId} preserves Decision evidence`);
+    assertEqual(vip.details.ecbPolicyEvent.intelligence.releaseTiming,
+      AVAILABLE_ECB_POLICY_EVENT.intelligence.releaseTiming,
+    `${input.productId} preserves release timing`);
+    assertEqual(vip.details.ecbPolicyEvent.intelligence.rateFacts,
+      AVAILABLE_ECB_POLICY_EVENT.intelligence.rateFacts,
+    `${input.productId} preserves rate facts`);
+    assertDeepEqual(vip.details.ecbPolicyEvent.source,
+      AVAILABLE_ECB_POLICY_EVENT.source,
+    `${input.productId} preserves event source provenance`);
     assertEqual(free.provenance.version, CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
       `${input.productId} provenance version`);
     assertEqual(free.provenance.originalPublisher, "European Central Bank",
@@ -382,7 +470,11 @@ async function main(): Promise<void> {
       `${input.productId} canonical input is not mutated`);
     assertDeepEqual(projectFiveProductFreeLiteV1(input, ASSESSED_AT), free,
       `${input.productId} repeated Free projection deterministic`);
-    assertDeepEqual(projectFiveProductVipDeepV1(input, ASSESSED_AT), vip,
+    assertDeepEqual(projectFiveProductVipDeepV1(
+      input,
+      AVAILABLE_ECB_POLICY_EVENT,
+      ASSESSED_AT,
+    ), vip,
       `${input.productId} repeated VIP projection deterministic`);
 
     if (input.productId === "estr") {
@@ -403,20 +495,24 @@ async function main(): Promise<void> {
       assertEqual(beforePublication.provenance.freshness, "within-cadence",
         "Friday rate reference remains current before Tuesday publication");
       const publicationWindow = projectFiveProductVipDeepV1(
-        input, "2025-08-12T06:00:00.000Z",
+        input, AVAILABLE_ECB_POLICY_EVENT, "2025-08-12T06:00:00.000Z",
       );
       assertAvailable(publicationWindow, "Tuesday publication-time rate projection");
       assertEqual(publicationWindow.provenance.freshness, "unknown",
         "Friday rate reference is uncertain during the publication window");
       const afterPublication = projectFiveProductVipDeepV1(
-        input, "2025-08-12T07:00:00.000Z",
+        input, AVAILABLE_ECB_POLICY_EVENT, "2025-08-12T07:00:00.000Z",
       );
       assertAvailable(afterPublication, "Tuesday post-publication rate projection");
       assertEqual(afterPublication.provenance.freshness, "stale",
         "Friday rate reference becomes stale after 09:00 CEST");
       const boundaryAssessedAt = "2025-08-12T23:59:00.000Z";
       const boundaryFree = projectFiveProductFreeLiteV1(input, boundaryAssessedAt);
-      const boundaryVip = projectFiveProductVipDeepV1(input, boundaryAssessedAt);
+      const boundaryVip = projectFiveProductVipDeepV1(
+        input,
+        AVAILABLE_ECB_POLICY_EVENT,
+        boundaryAssessedAt,
+      );
       assertAvailable(boundaryFree, "Tuesday rate Free projection");
       assertAvailable(boundaryVip, "Tuesday rate VIP projection");
       assertEqual(boundaryFree.provenance.freshness, "stale",
@@ -444,7 +540,7 @@ async function main(): Promise<void> {
         }),
       });
       const republishedProjection = projectFiveProductVipDeepV1(
-        republished, ASSESSED_AT,
+        republished, AVAILABLE_ECB_POLICY_EVENT, ASSESSED_AT,
       );
       assertAvailable(republishedProjection, "€STR republication projection");
       assertEqual(republishedProjection.provenance.publicationType, "republication",
@@ -565,6 +661,56 @@ async function main(): Promise<void> {
   assertEqual(recentlyFetched.provenance.freshness, "stale",
     "recent cache fetch cannot refresh an old observation");
 
+  const degradedEventStates = Object.freeze([
+    Object.freeze({
+      status: "source-unavailable",
+      sourceUrl: ECB_GOVERNING_COUNCIL_CALENDAR_URL,
+      reason: "request-failed",
+    }),
+    Object.freeze({
+      status: "reconciliation-required",
+      reason: "active-date-missing",
+      canonicalEventId: AVAILABLE_ECB_POLICY_EVENT.canonicalEventId,
+      currentMeetingDate: AVAILABLE_ECB_POLICY_EVENT.currentMeetingDate,
+    }),
+    Object.freeze({
+      status: "stored-state-invalid",
+      owner: "event-memory",
+    }),
+    Object.freeze({
+      status: "insufficient-as-known-state",
+      canonicalEventId: AVAILABLE_ECB_POLICY_EVENT.canonicalEventId,
+      evaluatedAt: ASSESSED_AT,
+    }),
+  ] as const satisfies readonly MarketProductVipEcbPolicyEventStateV1[]);
+  const availableEventProjection = projectFiveProductVipDeepV1(
+    legacyFx,
+    AVAILABLE_ECB_POLICY_EVENT,
+    ASSESSED_AT,
+  );
+  assertAvailable(availableEventProjection, "available event Deep baseline");
+  if (availableEventProjection.details.kind !== "fx") {
+    throw new Error("Expected available FX Deep baseline.");
+  }
+  for (const eventState of degradedEventStates) {
+    const projection = projectFiveProductVipDeepV1(
+      legacyFx,
+      eventState,
+      ASSESSED_AT,
+    );
+    assertAvailable(projection, `${eventState.status} event degradation`);
+    if (projection.details.kind !== "fx") {
+      throw new Error("Expected degraded FX Deep projection.");
+    }
+    assertEqual(projection.details.ecbPolicyEvent.status, eventState.status,
+      `${eventState.status} remains explicit`);
+    assertDeepEqual(projection.details.engine, availableEventProjection.details.engine,
+      `${eventState.status} does not mutate FX Engine output`);
+    assertEqual(projection.details.direction,
+      availableEventProjection.details.direction,
+    `${eventState.status} does not mutate FX direction`);
+  }
+
   const fxUnavailable = Object.freeze({
     productId: "eurusd",
     canonical: Object.freeze({
@@ -585,7 +731,11 @@ async function main(): Promise<void> {
   for (const unavailableInput of [fxUnavailable, estrUnavailable]) {
     for (const projection of [
       projectFiveProductFreeLiteV1(unavailableInput, ASSESSED_AT),
-      projectFiveProductVipDeepV1(unavailableInput, ASSESSED_AT),
+      projectFiveProductVipDeepV1(
+        unavailableInput,
+        AVAILABLE_ECB_POLICY_EVENT,
+        ASSESSED_AT,
+      ),
     ]) {
       assertEqual(projection.availability, "unavailable",
         `${unavailableInput.productId} unavailable fails closed`);
@@ -618,7 +768,11 @@ async function main(): Promise<void> {
       canonical,
     } satisfies FiveProductCanonicalProjectionInputV1);
     const free = projectFiveProductFreeLiteV1(input, ASSESSED_AT);
-    const vip = projectFiveProductVipDeepV1(input, ASSESSED_AT);
+    const vip = projectFiveProductVipDeepV1(
+      input,
+      AVAILABLE_ECB_POLICY_EVENT,
+      ASSESSED_AT,
+    );
 
     assertAvailable(free, `${direction} Free rate projection`);
     assertAvailable(vip, `${direction} VIP rate projection`);

@@ -15,6 +15,11 @@ import {
 
 const DAY = 86_400;
 const ANCHOR = 2_000_000_000;
+const ECB_EVENT_CONTEXT = Object.freeze({
+  status: "stored-state-invalid",
+  owner: "event-memory",
+  relevance: "direct-euro-rate-policy-context",
+});
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
@@ -37,6 +42,7 @@ function availableDeep(
     productId,
     productKind: productId === "estr" ? "rate" : "fx",
     provenance: { sourceTimestamp: ANCHOR },
+    details: { ecbPolicyEvent: ECB_EVENT_CONTEXT },
   } as unknown as MarketProductVipDeepProjectionV1;
 }
 
@@ -143,6 +149,10 @@ async function verifyEstrAuthorizationAndDelivery(): Promise<void> {
     "RP sidecar is not serialized");
   assertEqual(serialized.includes('"cm"'), false,
     "CM sidecar is not serialized");
+  assertEqual(room.deep?.availability === "available"
+    ? room.deep.details.ecbPolicyEvent
+    : null, ECB_EVENT_CONTEXT,
+  "Deep ECB event context survives \u20acSTR Market Room delivery unchanged");
 }
 
 async function verifyUnauthorizedBoundary(): Promise<void> {
