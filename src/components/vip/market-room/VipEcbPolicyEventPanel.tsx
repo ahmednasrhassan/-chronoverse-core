@@ -216,7 +216,10 @@ function AvailableEventPanel({ event }: { event: AvailableEventContext }) {
         </section>
       )}
 
-      <section className="border-t border-[#6F4C91]/30 px-5 py-5 sm:px-7">
+      <section
+        aria-label="Provenance / as-known boundary"
+        className="border-t border-[#6F4C91]/30 px-5 py-5 sm:px-7"
+      >
         <div className={EYEBROW}>Provenance / as-known boundary</div>
         <dl className="mt-4 grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
           <SourceDatum sourceUrl={event.source.sourceUrl} />
@@ -258,21 +261,23 @@ function DegradedEventPanel({ event }: { event: DegradedEventContext }) {
       {sourceUrl === null && fetchedAt === null && evaluatedAt === null
         ? null
         : (
-          <dl className="mt-5 grid gap-4 border-t border-[#6F4C91]/25 pt-4 sm:grid-cols-3">
-            {sourceUrl === null ? null : <SourceDatum sourceUrl={sourceUrl} />}
-            {fetchedAt === null ? null : (
-              <EventDatum
-                label="Source fetched"
-                value={formatUtcInstant(fetchedAt)}
-              />
-            )}
-            {evaluatedAt === null ? null : (
-              <EventDatum
-                label="Evaluation point"
-                value={formatUtcInstant(evaluatedAt)}
-              />
-            )}
-          </dl>
+          <section aria-label="Provenance / as-known boundary">
+            <dl className="mt-5 grid gap-4 border-t border-[#6F4C91]/25 pt-4 sm:grid-cols-3">
+              {sourceUrl === null ? null : <SourceDatum sourceUrl={sourceUrl} />}
+              {fetchedAt === null ? null : (
+                <EventDatum
+                  label="Source fetched"
+                  value={formatUtcInstant(fetchedAt)}
+                />
+              )}
+              {evaluatedAt === null ? null : (
+                <EventDatum
+                  label="Evaluation point"
+                  value={formatUtcInstant(evaluatedAt)}
+                />
+              )}
+            </dl>
+          </section>
         )}
     </section>
   );
@@ -393,15 +398,16 @@ function RateDatum({ label, value }: { label: string; value: number }) {
 function SourceDatum({ sourceUrl }: { sourceUrl: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] text-[#91889A]">Official source</dt>
-      <dd className="mt-1 break-words text-xs font-semibold leading-5 text-[#F3EBDD]">
+      <dt className="sr-only">Source</dt>
+      <dd className="break-words text-[11px] leading-5 text-[#91889A]">
+        Source <span aria-hidden="true">·</span>{" "}
         <a
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline decoration-[#6F4C91] underline-offset-4 transition-colors hover:text-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
+          className="text-[#AFA5B4] transition-colors hover:text-[#C8A7E8] hover:underline hover:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
         >
-          Open ECB source
+          European Central Bank <span aria-hidden="true">↗</span>
         </a>
       </dd>
     </div>

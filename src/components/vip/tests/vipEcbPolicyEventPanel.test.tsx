@@ -149,7 +149,7 @@ function verifyAvailableFx(): void {
     "Percent",
     "Session review",
     "Not computed",
-    "Official source",
+    "European Central Bank",
     SOURCE_URL,
     "Source fetched",
     "Selected snapshot known-at",
@@ -159,6 +159,13 @@ function verifyAvailableFx(): void {
     assert.ok(html.includes(expected), `available FX renders ${expected}`);
   }
 
+  assert.ok(html.includes(`href="${SOURCE_URL}"`));
+  assert.match(
+    html,
+    /<section aria-label="Provenance \/ as-known boundary"[\s\S]*European Central Bank[\s\S]*<\/section>/,
+    "source metadata remains inside the available provenance presentation",
+  );
+  assert.doesNotMatch(html, /Open ECB source|Official source/);
   assert.doesNotMatch(html, /internal-content-digest|internal-source-version/);
 }
 
@@ -277,10 +284,26 @@ function verifyDegradedStates(): void {
     );
     assert.ok(html.includes(fixture.title), `${fixture.event.status} renders`);
     assert.doesNotMatch(html, /Scheduled decision|Deposit facility|2\.00%/);
+    assert.doesNotMatch(html, /Open ECB source|Official source/);
     assert.doesNotMatch(
       html,
       /raw provider failure|raw parser failure|raw persistence failure|internal-event-id/,
     );
+    if ("sourceUrl" in fixture.event) {
+      assert.ok(
+        html.includes("European Central Bank"),
+        `${fixture.event.status} renders compact provenance`,
+      );
+      assert.ok(
+        html.includes(`href="${SOURCE_URL}"`),
+        `${fixture.event.status} preserves the official source destination`,
+      );
+      assert.match(
+        html,
+        /<section aria-label="Provenance \/ as-known boundary"[\s\S]*European Central Bank[\s\S]*<\/section>/,
+        `${fixture.event.status} keeps source metadata inside provenance`,
+      );
+    }
   }
 }
 
@@ -332,6 +355,11 @@ function verifyIntegrationAndBoundaries(): void {
     "probability",
     "trade recommendation",
     "Decision Lifecycle",
+    "unstable_cache",
+    "ecbMonetaryPolicyClient",
+    "getEcbMonetaryPolicy",
+    "/providers/ecb/",
+    "eventRuntime",
   ]) {
     assert.equal(
       panelSource.toLowerCase().includes(forbidden.toLowerCase()),
