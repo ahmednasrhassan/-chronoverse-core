@@ -145,6 +145,11 @@ function availableDeepFixture(): NonNullable<VipFxMarketRoomV1["deep"]> {
     },
     details: {
       kind: "fx",
+      ecbPolicyEvent: {
+        status: "runtime-unavailable",
+        reason: "unexpected-runtime-error",
+        relevance: "euro-policy-context",
+      },
       direction: "bullish",
       signalStrength: "moderate",
       marketState: "caution",

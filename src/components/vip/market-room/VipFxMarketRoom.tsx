@@ -7,6 +7,7 @@ import {
   type VipFxMarketRoomIdV1,
   type VipFxMarketRoomV1,
 } from "@/lib/markets/services/vipMarketRoomDelivery";
+import VipEcbPolicyEventPanel from "./VipEcbPolicyEventPanel";
 import VipFxHistoricalPanel from "./VipFxHistoricalPanel";
 import VipMarketRoomNavigation from "./VipMarketRoomNavigation";
 
@@ -78,7 +79,10 @@ export default function VipFxMarketRoom({ room }: VipFxMarketRoomProps) {
         {deep === null ? (
           <DeepUnavailableBand reason={deepUnavailableReason(room)} />
         ) : (
-          <DeepIntelligenceLayers deep={deep} />
+          <>
+            <VipEcbPolicyEventPanel event={deep.details.ecbPolicyEvent} />
+            <DeepIntelligenceLayers deep={deep} />
+          </>
         )}
 
         <ReferenceDateReconciliation room={room} deep={deep} />

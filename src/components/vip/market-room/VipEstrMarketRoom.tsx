@@ -4,6 +4,7 @@ import type { EstrVipDeepProjectionV1 } from
   "@/lib/markets/projections/types";
 import type { VipEstrMarketRoomV1 } from
   "@/lib/markets/services/vipMarketRoomDelivery";
+import VipEcbPolicyEventPanel from "./VipEcbPolicyEventPanel";
 import VipEstrHistoricalPanel from "./VipEstrHistoricalPanel";
 import VipMarketRoomNavigation from "./VipMarketRoomNavigation";
 
@@ -51,7 +52,10 @@ export default function VipEstrMarketRoom({ room }: VipEstrMarketRoomProps) {
             reason={deepUnavailableReason(room)}
           />
         ) : (
-          <RateIntelligence deep={deep} />
+          <>
+            <VipEcbPolicyEventPanel event={deep.details.ecbPolicyEvent} />
+            <RateIntelligence deep={deep} />
+          </>
         )}
 
         <ReferenceDateReconciliation room={room} deep={deep} />

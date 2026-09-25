@@ -127,6 +127,11 @@ function availableDeep() {
     },
     details: {
       kind: "rate",
+      ecbPolicyEvent: {
+        status: "runtime-unavailable",
+        reason: "unexpected-runtime-error",
+        relevance: "direct-euro-rate-policy-context",
+      },
       currentRatePercent: -0.5,
       direction: "falling-rate",
       signalStrength: "directional",
