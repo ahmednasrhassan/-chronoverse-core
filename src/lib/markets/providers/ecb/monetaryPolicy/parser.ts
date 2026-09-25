@@ -107,17 +107,38 @@ const HTML_PARSER = new XMLParser({
 const DAY_TWO_PATTERN = /(\d{2}\/\d{2}\/\d{4})\s+Governing\s+Council\s+of\s+the\s+ECB:\s*monetary\s+policy\s+meeting(?:\s+in\s+[^()]{1,80})?\s+\(Day\s+2\),?\s+followed\s+by\s+press\s+conference/gi;
 const DECISION_PATH_PATTERN = /^\/press\/pr\/date\/(\d{4})\/html\/ecb\.mp(\d{6})~[a-f\d]+\.en\.html$/;
 const ECB_ORIGIN_PREFIX = "https://www.ecb.europa.eu/";
+const SCHEDULE_NON_CONTENT_PATTERNS = Object.freeze([
+  /<!--[\s\S]*?(?:-->|$)/g,
+  /<script\b[^>]*>[\s\S]*?(?:<\/script\s*>|$)/gi,
+  /<style\b[^>]*>[\s\S]*?(?:<\/style\s*>|$)/gi,
+  /<noscript\b[^>]*>[\s\S]*?(?:<\/noscript\s*>|$)/gi,
+]);
+const HTML_ENTITY_PATTERN = /&(?:#([0-9]{1,7})|#x([0-9a-f]{1,6})|([a-z][a-z0-9]{1,31}));/gi;
+const HTML_TAG_PATTERN = /<(?:[^>"']|"[^"]*"|'[^']*')*>/g;
+const UNICODE_WHITESPACE_PATTERN =
+  /[\s\u00a0\u1680\u2000-\u200b\u2028\u2029\u202f\u205f\u2060\u3000\ufeff]+/g;
+const COMMON_HTML_ENTITIES: Readonly<Record<string, string>> = Object.freeze({
+  amp: "&",
+  apos: "'",
+  colon: ":",
+  emsp: " ",
+  ensp: " ",
+  gt: ">",
+  lt: "<",
+  nbsp: " ",
+  quot: "\"",
+  thinsp: " ",
+});
 
 export function parseEcbMonetaryPolicyScheduleHtmlV1(
   html: string,
 ): EcbSourceParseResultV1<readonly EcbMonetaryPolicyScheduleCandidateV1[]> {
-  const document = parseHtml(html);
-  if (document.status === "source-malformed") return document;
+  const extraction = extractScheduleVisibleText(html);
+  if (extraction.status === "source-malformed") return extraction;
 
-  const visibleText = collectVisibleText(document.data).join(" ").replace(/\s+/g, " ").trim();
   const meetingDates = new Set<string>();
 
-  for (const match of visibleText.matchAll(DAY_TWO_PATTERN)) {
+  for (const match of extraction.data.matchAll(DAY_TWO_PATTERN)) {
     const sourceDate = match[1];
     if (sourceDate === undefined) continue;
     const meetingDate = normalizeDayMonthYear(sourceDate);
@@ -139,6 +160,50 @@ export function parseEcbMonetaryPolicyScheduleHtmlV1(
       meetingDate,
     }))),
   });
+}
+
+/**
+ * The ECB calendar is HTML, not XML. Keep schedule extraction tolerant while
+ * making entity expansion one-pass and bounded by the reference length.
+ */
+function extractScheduleVisibleText(html: string): EcbSourceParseResultV1<string> {
+  if (typeof html !== "string" || html.trim().length === 0) {
+    return malformed("ECB HTML source is empty.");
+  }
+
+  let visibleText = html;
+  for (const pattern of SCHEDULE_NON_CONTENT_PATTERNS) {
+    visibleText = visibleText.replace(pattern, " ");
+  }
+  visibleText = visibleText
+    .replace(HTML_TAG_PATTERN, " ")
+    .replace(HTML_ENTITY_PATTERN, decodeHtmlEntity)
+    .replace(UNICODE_WHITESPACE_PATTERN, " ")
+    .trim();
+
+  return visibleText.length > 0
+    ? Object.freeze({ status: "available", data: visibleText })
+    : malformed("ECB HTML source has no visible content.");
+}
+
+function decodeHtmlEntity(
+  reference: string,
+  decimalDigits: string | undefined,
+  hexadecimalDigits: string | undefined,
+  entityName: string | undefined,
+): string {
+  if (entityName !== undefined) {
+    return COMMON_HTML_ENTITIES[entityName.toLowerCase()] ?? reference;
+  }
+
+  const digits = decimalDigits ?? hexadecimalDigits;
+  if (digits === undefined) return reference;
+  const codePoint = Number.parseInt(digits, decimalDigits === undefined ? 16 : 10);
+  if (!Number.isSafeInteger(codePoint) || codePoint <= 0 || codePoint > 0x10ffff ||
+      (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+    return "\ufffd";
+  }
+  return String.fromCodePoint(codePoint);
 }
 
 /** Identity mode must come from the caller's first-capture or persistence context. */

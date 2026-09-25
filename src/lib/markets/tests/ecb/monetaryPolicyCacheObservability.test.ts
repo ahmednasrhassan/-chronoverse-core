@@ -160,9 +160,10 @@ async function main(): Promise<void> {
   ), "utf8");
   assert.match(
     cacheSource,
-    /\["chronoverse", "providers", "ecb", "monetary-policy-schedule-v2"\]/,
-    "only the schedule key advances to generation v2",
+    /\["chronoverse", "providers", "ecb", "monetary-policy-schedule-v3"\]/,
+    "only the schedule key advances to generation v3",
   );
+  assert.doesNotMatch(cacheSource, /"monetary-policy-schedule-v2"/);
   assert.match(cacheSource, /tags: \["ecb-monetary-policy-schedule-v1"\]/);
   assert.equal(
     (cacheSource.match(/ecbMonetaryPolicyClientV1\.getSchedule\(\)/g) ?? [])

@@ -26,6 +26,31 @@ const SCHEDULE_HTML = `
   <section><time>10/06/2027</time><p>Governing Council of the ECB: monetary <strong>policy meeting</strong> in Frankfurt (Day 2), followed by press conference</p></section>
   <section><time>24/06/2027</time><p>General Council meeting of the ECB</p></section>
 </main></body></html>`;
+const REALISTIC_SCHEDULE_HTML = `
+<!doctype html>
+<html lang=en>
+<head>
+  <meta charset=utf-8>
+  <style>.hidden { display: none }</style>
+  <script>const fake = "01/01/2028 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference";</script>
+</head>
+<body>
+  <!-- 02/01/2028 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference -->
+  <noscript>03/01/2028 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference</noscript>
+  <main class=calendar>
+    <article><time>17/12/2026</time><span>Governing&nbsp;Council of the ECB&#58;</span>
+      <span>monetary&#32;policy meeting in Frankfurt</span>
+      <span>(Day&#x20;2), followed by press conference</span></article>
+    <article><time>29/10/2026</time><span>Governing Council of the ECB:</span>
+      <span>monetary policy meeting in Frankfurt (Day 2), followed by press conference</span></article>
+    <article><time>29/10/2026</time><span>Governing Council of the ECB:</span>
+      <span>monetary policy meeting in Frankfurt (Day 2), followed by press conference</span></article>
+    <article><time>28/10/2026</time><span>Governing Council of the ECB: monetary policy meeting in Frankfurt (Day 1)</span></article>
+    <article><time>18/11/2026</time><span>Governing Council of the ECB: non-monetary policy meeting</span></article>
+    <article><time>19/11/2026</time><span>General Council meeting of the ECB</span></article>
+  </main>
+</body>
+</html>`;
 const DECISION_URL =
   "https://www.ecb.europa.eu/press/pr/date/2026/html/ecb.mp260910~314e508016.en.html";
 const KNOWN_REFERENCE = Object.freeze({
@@ -53,6 +78,39 @@ async function run(): Promise<void> {
   assert.equal(schedule[0]?.sourceInstitution, "ECB");
   assert.equal(schedule.some((entry) => entry.meetingDate === "2027-02-24"), false);
   assert.equal(schedule.some((entry) => entry.meetingDate === "2027-06-24"), false);
+
+  const realisticSchedule = available(
+    parseEcbMonetaryPolicyScheduleHtmlV1(REALISTIC_SCHEDULE_HTML),
+  );
+  assert.deepEqual(
+    realisticSchedule.map((entry) => entry.meetingDate),
+    ["2026-10-29", "2026-12-17"],
+    "real HTML is decoded, deduplicated, sorted, and limited to visible Day-2 entries",
+  );
+
+  for (const unsupportedEntry of [
+    "03/02/2027 Governing Council of the ECB: monetary policy meeting in Frankfurt (Day 1)",
+    "24/02/2027 Governing Council of the ECB: non-monetary policy meeting (virtual)",
+    "24/06/2027 General Council meeting of the ECB",
+  ]) {
+    assert.equal(
+      parseEcbMonetaryPolicyScheduleHtmlV1(`<html><main>${unsupportedEntry}</main></html>`).status,
+      "source-malformed",
+      `${unsupportedEntry} is not a supported Day-2 entry`,
+    );
+  }
+  assert.equal(
+    parseEcbMonetaryPolicyScheduleHtmlV1(`
+      <html><head>
+        <style>04/02/2027 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference</style>
+        <script>05/02/2027 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference</script>
+      </head><body>
+        <!-- 06/02/2027 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference -->
+        <noscript>07/02/2027 Governing Council of the ECB: monetary policy meeting (Day 2), followed by press conference</noscript>
+      </body></html>`).status,
+    "source-malformed",
+    "non-content regions cannot create schedule candidates",
+  );
 
   const winter = normalized(schedule[0]!, 100, { status: "initial" });
   const summer = normalized(schedule[1]!, 100, { status: "initial" });

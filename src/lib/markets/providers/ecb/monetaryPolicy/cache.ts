@@ -62,11 +62,11 @@ export function observeEcbMonetaryPolicyScheduleSourceV1(
 }
 
 /** One shared server entry owns the complete Governing Council schedule. */
-const getCachedScheduleV2 = unstable_cache(
+const getCachedScheduleV3 = unstable_cache(
   async () => observeEcbMonetaryPolicyScheduleSourceV1(
     await ecbMonetaryPolicyClientV1.getSchedule(),
   ),
-  ["chronoverse", "providers", "ecb", "monetary-policy-schedule-v2"],
+  ["chronoverse", "providers", "ecb", "monetary-policy-schedule-v3"],
   {
     revalidate: ECB_MONETARY_POLICY_SCHEDULE_CACHE_SECONDS_V1,
     tags: ["ecb-monetary-policy-schedule-v1"],
@@ -88,7 +88,7 @@ const getCachedKnownDecisionDocumentV1 = unstable_cache(
 );
 
 export async function getEcbMonetaryPolicyScheduleSourceV1() {
-  return getCachedScheduleV2();
+  return getCachedScheduleV3();
 }
 
 /** Automatic discovery is deferred; callers must supply a verified official reference. */
