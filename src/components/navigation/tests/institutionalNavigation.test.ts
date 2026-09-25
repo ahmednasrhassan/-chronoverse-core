@@ -220,6 +220,46 @@ assert.match(aboutSource, /siteConfig\.founder\.linkedInUrl/);
 assert.match(aboutSource, /Ahmed N\. Hassan — LinkedIn/);
 assert.match(aboutSource, /rel="noopener noreferrer"/);
 
+for (const [name, imageUrl] of [
+  [
+    "Ahmed Sayed Younis",
+    "https://cdn.sanity.io/images/xfs4j01p/production/be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png",
+  ],
+  [
+    "Mohamed Younes",
+    "https://cdn.sanity.io/images/xfs4j01p/production/a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp",
+  ],
+  [
+    "Heba Sayed Ahmed",
+    "https://cdn.sanity.io/images/xfs4j01p/production/c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp",
+  ],
+] as const) {
+  assert.ok(aboutSource.includes(name), `${name} must appear on the About page`);
+  assert.ok(
+    aboutSource.includes(imageUrl),
+    `${name} must retain the historical Sanity image reference`,
+  );
+}
+
+for (const currentSection of [
+  "Current platform",
+  "Free, VIP, and Research",
+  "Independent analytical position",
+  "Founder and leadership",
+  "Trust and contact",
+]) {
+  assert.ok(
+    aboutSource.includes(currentSection),
+    `About must retain the ${currentSection} section`,
+  );
+}
+
+assert.match(aboutSource, /LAUNCH_MARKETS_V1\.map/);
+assert.doesNotMatch(
+  aboutSource,
+  /Ahmed Abdel Fattah|Temporal Alpha|crypto|digital.asset|AfriKDP|\bXM\b|strategic partner|ecosystem alliance|affiliate/i,
+);
+
 for (const genericHomepage of [
   "https://x.com",
   "https://www.pinterest.com",

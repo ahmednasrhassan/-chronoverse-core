@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -15,6 +16,33 @@ export const metadata: Metadata = buildPublicPageMetadata({
     "Learn about Chronoverse Capital's independent, evidence-led market intelligence for four euro FX pairs and €STR.",
   pathname: "/about",
 });
+
+const ACTIVE_TEAM_MEMBERS = [
+  {
+    name: "Ahmed Sayed Younis",
+    role: "Trading and market analysis",
+    description:
+      "Contributes to active trading work, market analysis, and analytical review.",
+    imageUrl:
+      "https://cdn.sanity.io/images/xfs4j01p/production/be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png",
+  },
+  {
+    name: "Mohamed Younes",
+    role: "Trading and market analysis",
+    description:
+      "Contributes to active trading work, market analysis, and market interpretation.",
+    imageUrl:
+      "https://cdn.sanity.io/images/xfs4j01p/production/a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp",
+  },
+  {
+    name: "Heba Sayed Ahmed",
+    role: "Market analysis and analytical review",
+    description:
+      "Contributes to market analysis, analytical review, and market interpretation.",
+    imageUrl:
+      "https://cdn.sanity.io/images/xfs4j01p/production/c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp",
+  },
+] as const;
 
 export default function AboutPage() {
   const launchMarkets = LAUNCH_MARKETS_V1.map((market) => market.label).join(", ");
@@ -66,6 +94,40 @@ export default function AboutPage() {
           arrangements do not determine Free Lite intelligence, VIP Deep
           intelligence, or editorial conclusions.
         </p>
+      </InstitutionalSection>
+
+      <InstitutionalSection title="Trading and market analysis team">
+        <p>
+          These active Chronoverse Capital team members contribute to trading,
+          market analysis, and the review and interpretation of market
+          information.
+        </p>
+        <ul className="grid gap-4 pt-2 md:grid-cols-3">
+          {ACTIVE_TEAM_MEMBERS.map((member) => (
+            <li
+              key={member.name}
+              className="flex flex-col items-center rounded-lg border border-border bg-background/40 p-5 text-center"
+            >
+              <Image
+                src={member.imageUrl}
+                alt={`${member.name}, Chronoverse Capital team member`}
+                width={112}
+                height={112}
+                sizes="112px"
+                className="h-28 w-28 rounded-full border border-border object-cover"
+              />
+              <h3 className="mt-4 text-base font-semibold text-primary">
+                {member.name}
+              </h3>
+              <p className="mt-1 font-mono text-xs font-medium uppercase tracking-wide text-mauve">
+                {member.role}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-secondary">
+                {member.description}
+              </p>
+            </li>
+          ))}
+        </ul>
       </InstitutionalSection>
 
       <InstitutionalSection title="Founder and leadership">
