@@ -3,8 +3,23 @@ import { fileURLToPath } from "node:url";
 
 import {
   getCanonicalLiveEurUsdIntelligence,
+  type EurUsdProductionIntelligenceV1,
+  type EurUsdProductionRuntimeDependenciesV1,
 } from "../../assets/eurusd/productionRuntime";
 import { eurusdProfile } from "../../assets/eurusd/profile";
+import {
+  calculateDecisionLifecycleV3,
+} from "../../core/decisionLifecycle";
+import {
+  integrateCanonicalDecisionLifecycleV3,
+} from "../../engine/decisionLifecycleRuntime";
+import {
+  buildCanonicalDecisionSnapshot,
+  type CanonicalDecisionSnapshot,
+} from "../../engine/decisionPersistence";
+import type {
+  EngineDecisionSectionV3,
+} from "../../engine/contracts";
 import {
   calculateMinimumTechnicalObservationCountV1,
 } from "../../engine/preparedAssetEvaluation";
@@ -19,6 +34,23 @@ import {
   type CanonicalObservationSeriesV1,
 } from "../../services/canonicalObservationSeries";
 
+type LifecycleMode =
+  | "initialized"
+  | "unchanged"
+  | "advanced"
+  | "stale"
+  | "failure";
+
+interface LifecycleCapture {
+  integrationCalls: number;
+  persistenceCalls: number;
+  assetId: string | null;
+  computedAt: string | null;
+  currentDecision: EngineDecisionSectionV3 | null;
+  current: CanonicalDecisionSnapshot | null;
+  previous: CanonicalDecisionSnapshot | null;
+}
+
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
     throw new Error(
@@ -29,6 +61,99 @@ function assertEqual<T>(actual: T, expected: T, label: string): void {
 
 function assertDeepEqual(actual: unknown, expected: unknown, label: string): void {
   assertEqual(JSON.stringify(actual), JSON.stringify(expected), label);
+}
+
+function lifecycleDependencies(mode: LifecycleMode): {
+  readonly capture: LifecycleCapture;
+  readonly dependencies: Pick<
+    EurUsdProductionRuntimeDependenciesV1,
+    "integrateDecisionLifecycle" | "advanceDecisionSnapshot"
+  >;
+} {
+  const capture: LifecycleCapture = {
+    integrationCalls: 0,
+    persistenceCalls: 0,
+    assetId: null,
+    computedAt: null,
+    currentDecision: null,
+    current: null,
+    previous: null,
+  };
+
+  return {
+    capture,
+    dependencies: {
+      integrateDecisionLifecycle: async (input) => {
+        capture.integrationCalls += 1;
+        capture.assetId = input.assetId;
+        capture.computedAt = input.computedAt;
+        capture.currentDecision = input.currentDecision;
+        return integrateCanonicalDecisionLifecycleV3(input);
+      },
+      advanceDecisionSnapshot: async (snapshot) => {
+        capture.persistenceCalls += 1;
+        capture.current = snapshot;
+
+        if (mode === "failure") {
+          throw new Error("Injected EUR/USD Decision persistence failure.");
+        }
+        if (mode === "initialized") {
+          return { status: "initialized", previous: null };
+        }
+
+        const previous = buildCanonicalDecisionSnapshot({
+          assetId: snapshot.assetId,
+          computedAt: snapshot.computedAt,
+          decision: mode === "advanced"
+            ? changedStanceDecision(snapshot.decision)
+            : snapshot.decision,
+        });
+        capture.previous = previous;
+
+        return { status: mode, previous };
+      },
+    },
+  };
+}
+
+function changedStanceDecision(
+  decision: EngineDecisionSectionV3,
+): EngineDecisionSectionV3 {
+  if (
+    decision.availability !== "available" &&
+    decision.availability !== "partial"
+  ) {
+    throw new Error("A persistable Decision is required by this test.");
+  }
+
+  return decision.data.stance === "bullish"
+    ? { availability: "available", data: { score: -0.25, stance: "bearish" } }
+    : { availability: "available", data: { score: 0.25, stance: "bullish" } };
+}
+
+function usableLifecycle(
+  result: EurUsdProductionIntelligenceV1,
+  label: string,
+) {
+  const lifecycle = result.engineResult.decisionLifecycle;
+
+  if (
+    lifecycle.availability !== "available" &&
+    lifecycle.availability !== "partial"
+  ) {
+    throw new Error(`${label}: expected usable Decision Lifecycle.`);
+  }
+
+  return lifecycle.data;
+}
+
+function engineWithoutDecisionLifecycle(
+  result: EurUsdProductionIntelligenceV1,
+) {
+  const { decision, decisionLifecycle, ...unchanged } = result.engineResult;
+  void decision;
+  void decisionLifecycle;
+  return unchanged;
 }
 
 async function assertRejects(
@@ -87,16 +212,24 @@ async function main(): Promise<void> {
 
   const series = officialSeries();
   let loadCount = 0;
-  const dependencies = {
+  const baseDependencies = {
     loadCanonicalSeries: async () => {
       loadCount += 1;
       return series;
     },
     now: () => new Date("2026-09-10T12:00:00.000Z"),
   };
-  const first = await getCanonicalLiveEurUsdIntelligence(dependencies);
+  const initializedLifecycle = lifecycleDependencies("initialized");
+  const first = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...initializedLifecycle.dependencies,
+  });
 
   assertEqual(loadCount, 1, "one shared canonical-series load per computation");
+  assertEqual(initializedLifecycle.capture.integrationCalls, 1,
+    "lifecycle integrated once");
+  assertEqual(initializedLifecycle.capture.persistenceCalls, 1,
+    "Decision persisted once");
   assertEqual(first.availability, "available", "production runtime available");
   assertEqual(first.calibration.productionCalibrated, true,
     "explicit Risk and Signal calibration used");
@@ -115,8 +248,19 @@ async function main(): Promise<void> {
     "Positioning follows current lifecycle semantics");
   assertEqual(first.engineResult.regime.availability, "unavailable",
     "Regime Memory follows pure runtime semantics");
-  assertEqual(first.engineResult.decisionLifecycle.availability, "not-computed",
-    "Decision lifecycle is not falsely marked available");
+  assertEqual(initializedLifecycle.capture.assetId, "eurusd",
+    "lifecycle uses exact EUR/USD identity");
+  assertEqual(initializedLifecycle.capture.computedAt,
+    first.engineResult.evaluatedAt, "lifecycle uses Engine evaluatedAt");
+  assertEqual(initializedLifecycle.capture.currentDecision,
+    first.engineResult.decision, "lifecycle receives exact raw Decision");
+  assertEqual(initializedLifecycle.capture.current?.assetId, "eurusd",
+    "persisted snapshot uses exact EUR/USD identity");
+  assertEqual(initializedLifecycle.capture.current?.computedAt,
+    first.engineResult.evaluatedAt, "persisted snapshot uses Engine evaluatedAt");
+  const initialized = usableLifecycle(first, "initialized EUR/USD lifecycle");
+  assertEqual(initialized.comparison, "initialized",
+    "EUR/USD lifecycle initialized");
   assertEqual(first.provenance, series.metadata, "full source provenance retained");
   assertEqual(first.provenance.sourceTimestamp, series.metadata.sourceTimestamp,
     "sourceTimestamp retained");
@@ -141,9 +285,100 @@ async function main(): Promise<void> {
   }
 
   loadCount = 0;
-  const second = await getCanonicalLiveEurUsdIntelligence(dependencies);
+  const repeatLifecycle = lifecycleDependencies("initialized");
+  const second = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...repeatLifecycle.dependencies,
+  });
   assertEqual(loadCount, 1, "repeat computation performs one canonical load");
   assertDeepEqual(second, first, "deterministic input produces deterministic result");
+
+  const maintainedLifecycle = lifecycleDependencies("unchanged");
+  const maintained = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...maintainedLifecycle.dependencies,
+  });
+  const maintainedData = usableLifecycle(
+    maintained,
+    "maintained EUR/USD lifecycle",
+  );
+  assertEqual(maintainedData.comparison, "compared",
+    "EUR/USD prior snapshot compared");
+  if (maintainedData.comparison !== "compared") {
+    throw new Error("EUR/USD maintained lifecycle was not compared.");
+  }
+  assertEqual(maintainedData.transition.kind, "maintained",
+    "EUR/USD stance maintained");
+
+  const changedLifecycle = lifecycleDependencies("advanced");
+  const changed = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...changedLifecycle.dependencies,
+  });
+  const changedData = usableLifecycle(changed, "changed EUR/USD lifecycle");
+  if (
+    changedData.comparison !== "compared" ||
+    changedLifecycle.capture.current === null ||
+    changedLifecycle.capture.previous === null ||
+    changedLifecycle.capture.currentDecision === null
+  ) {
+    throw new Error("EUR/USD changed lifecycle was not compared.");
+  }
+  const expectedChanged = calculateDecisionLifecycleV3({
+    currentDecision: changedLifecycle.capture.current.decision,
+    previousDecision: changedLifecycle.capture.previous.decision,
+  });
+  assertDeepEqual(changed.engineResult.decisionLifecycle, expectedChanged,
+    "EUR/USD canonical changed-stance transition");
+  assertEqual(changedData.transition.kind === "maintained", false,
+    "EUR/USD changed stance is not maintained");
+
+  const staleLifecycle = lifecycleDependencies("stale");
+  const stale = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...staleLifecycle.dependencies,
+  });
+  assertEqual(stale.availability, "available", "stale EUR/USD runtime survives");
+  assertEqual(stale.engineResult.decision,
+    staleLifecycle.capture.currentDecision, "stale EUR/USD Decision preserved");
+  assertDeepEqual(stale.engineResult.decisionLifecycle, {
+    availability: "unavailable",
+    reason: "Decision Lifecycle is unavailable because this Decision did not become the canonical snapshot.",
+  }, "canonical EUR/USD stale semantics");
+
+  const failureLifecycle = lifecycleDependencies("failure");
+  const failure = await getCanonicalLiveEurUsdIntelligence({
+    ...baseDependencies,
+    ...failureLifecycle.dependencies,
+  });
+  assertEqual(failure.availability, "available",
+    "persistence-failure EUR/USD runtime survives");
+  assertEqual(failure.engineResult.decision,
+    failureLifecycle.capture.currentDecision,
+    "persistence-failure EUR/USD Decision preserved");
+  assertDeepEqual(failure.engineResult.decisionLifecycle, {
+    availability: "unavailable",
+    reason: "Decision Lifecycle is unavailable because canonical Decision persistence failed.",
+  }, "canonical EUR/USD persistence-failure semantics");
+
+  for (const [label, result, capture] of [
+    ["maintained", maintained, maintainedLifecycle.capture],
+    ["changed", changed, changedLifecycle.capture],
+    ["stale", stale, staleLifecycle.capture],
+    ["failure", failure, failureLifecycle.capture],
+  ] as const) {
+    assertEqual(capture.integrationCalls, 1,
+      `${label} lifecycle integrated once`);
+    assertEqual(capture.persistenceCalls, 1,
+      `${label} Decision persisted once`);
+    assertEqual(result.engineResult.decision, capture.currentDecision,
+      `${label} exact current Decision preserved`);
+    assertDeepEqual(engineWithoutDecisionLifecycle(result),
+      engineWithoutDecisionLifecycle(first),
+      `${label} non-lifecycle Engine sections unchanged`);
+    assertEqual(result.provenance, series.metadata,
+      `${label} source provenance unchanged`);
+  }
 
   await assertRejects(
     () => getCanonicalLiveEurUsdIntelligence({
@@ -167,7 +402,7 @@ async function main(): Promise<void> {
         observations: series.observations.slice(0, 199),
         metadata: series.metadata,
       }),
-      now: dependencies.now,
+      now: baseDependencies.now,
     }),
     "insufficient canonical history fails closed",
   );

@@ -1,6 +1,9 @@
 import type { MarketAssetProfile } from "../core/assetProfile";
 import type { MarketAssetId } from "../core/assets";
 import {
+  integrateCanonicalDecisionLifecycleV3,
+} from "../engine/decisionLifecycleRuntime";
+import {
   runGenericAssetRuntimeV1,
   type GenericAssetRuntimeOutputV1,
 } from "../engine/genericAssetRuntime";
@@ -19,6 +22,9 @@ import {
   getCanonicalEcbFxReferenceSeriesV1,
 } from "../providers/ecb/fxReferenceSeriesCache";
 import type { EcbFxReferenceProductIdV1 } from "../providers/ecb/types";
+import {
+  advanceCanonicalDecisionSnapshot,
+} from "../persistence/decisionSnapshotRedis";
 import {
   createCanonicalMarketSnapshotV1,
 } from "../services/canonicalMarketSnapshot";
@@ -46,6 +52,10 @@ export type EcbFxProductionIntelligenceV1 =
 export interface EcbFxProductionRuntimeDependenciesV1 {
   readonly loadCanonicalSeries?: () => Promise<CanonicalObservationSeriesV1>;
   readonly now?: () => Date;
+  readonly integrateDecisionLifecycle?:
+    typeof integrateCanonicalDecisionLifecycleV3;
+  readonly advanceDecisionSnapshot?:
+    typeof advanceCanonicalDecisionSnapshot;
 }
 
 export async function runCanonicalLiveEcbFxIntelligenceV1(
@@ -97,8 +107,25 @@ export async function runCanonicalLiveEcbFxIntelligenceV1(
     );
   }
 
+  const integrateDecisionLifecycle =
+    dependencies.integrateDecisionLifecycle ??
+    integrateCanonicalDecisionLifecycleV3;
+  const decisionIntegration = await integrateDecisionLifecycle({
+    assetId: runtime.engineResult.asset,
+    computedAt: runtime.engineResult.evaluatedAt,
+    currentDecision: runtime.engineResult.decision,
+    advanceSnapshot:
+      dependencies.advanceDecisionSnapshot ??
+      advanceCanonicalDecisionSnapshot,
+  });
+  const engineResult = {
+    ...runtime.engineResult,
+    ...decisionIntegration,
+  };
+
   return Object.freeze({
     ...runtime,
+    engineResult,
     provenance: series.metadata,
   });
 }
