@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import type { MarketAssetId } from "../../core/assets";
 import {
   areDecisionSnapshotsSemanticallyEqual,
@@ -113,6 +116,17 @@ function assertEqual<T>(actual: T, expected: T, label: string): void {
 }
 
 async function main(): Promise<void> {
+  const adapterSource = readFileSync(fileURLToPath(new URL(
+    "../../persistence/decisionSnapshotRedis.ts",
+    import.meta.url,
+  )), "utf8");
+  assertEqual(
+    /new Redis\(\{\s*url,\s*token,\s*automaticDeserialization: false,\s*\}\)/
+      .test(adapterSource),
+    true,
+    "production Redis disables automatic deserialization",
+  );
+
   const first = snapshot(0.4, "bullish", EARLIER);
   const changed = snapshot(-0.6, "bearish", LATER);
 
@@ -214,6 +228,30 @@ async function main(): Promise<void> {
       : null,
     "redis-failure",
     "Redis failure classification",
+  );
+
+  const objectResponseAdvance = createDecisionSnapshotRedisAdapter(
+    async () => ["unchanged", first],
+  );
+  let objectResponseFailure: unknown = null;
+
+  try {
+    await objectResponseAdvance(first);
+  } catch (error) {
+    objectResponseFailure = error;
+  }
+
+  assertEqual(
+    objectResponseFailure instanceof DecisionSnapshotPersistenceError,
+    true,
+    "auto-deserialized object response is rejected",
+  );
+  assertEqual(
+    objectResponseFailure instanceof DecisionSnapshotPersistenceError
+      ? objectResponseFailure.code
+      : null,
+    "invalid-response",
+    "auto-deserialized object keeps invalid-response classification",
   );
 
   console.log("PASS: Atomic Redis Decision Snapshot adapter");

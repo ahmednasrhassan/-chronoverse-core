@@ -217,7 +217,11 @@ function getRedisClient(): Redis {
     );
   }
 
-  redisClient = new Redis({ url, token });
+  redisClient = new Redis({
+    url,
+    token,
+    automaticDeserialization: false,
+  });
   return redisClient;
 }
 
