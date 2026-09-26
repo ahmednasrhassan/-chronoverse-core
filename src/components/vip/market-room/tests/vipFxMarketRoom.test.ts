@@ -12,9 +12,14 @@ import type { HistoricalChartSeriesV1 } from
   "../../../../lib/markets/services/historicalChartSeries";
 import type { VipFxMarketRoomV1 } from
   "../../../../lib/markets/services/vipMarketRoomDelivery";
+import type { FxVipDeepProjectionV1 } from
+  "../../../../lib/markets/projections/types";
 
 const DAY = 86_400;
 const ANCHOR = 2_000_000_000;
+
+type FxDecisionLifecycleSectionV1 =
+  FxVipDeepProjectionV1["details"]["engine"]["decisionLifecycle"];
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
@@ -76,6 +81,7 @@ function roomFixture(options: {
   readonly deep?: "available" | "unavailable" | "failed";
   readonly history?: "available" | "unavailable" | "partial" | "failed";
   readonly fiveDay?: "available" | "insufficient" | "failed";
+  readonly decisionLifecycle?: FxDecisionLifecycleSectionV1;
 } = {}): VipFxMarketRoomV1 {
   const deepState = options.deep ?? "available";
   const historyState = options.history ?? "available";
@@ -95,7 +101,7 @@ function roomFixture(options: {
           productKind: "fx",
           reason: "Canonical Deep projection is temporarily unavailable.",
         }
-        : availableDeepFixture(),
+        : availableDeepFixture(options.decisionLifecycle),
     history: {
       twoYear: historyState === "failed"
         ? null
@@ -111,7 +117,15 @@ function roomFixture(options: {
   } as VipFxMarketRoomV1;
 }
 
-function availableDeepFixture(): NonNullable<VipFxMarketRoomV1["deep"]> {
+function availableDeepFixture(
+  decisionLifecycle: FxDecisionLifecycleSectionV1 = {
+    availability: "available",
+    data: {
+      comparison: "initialized",
+      current: { score: 0.48, stance: "bullish" },
+    },
+  },
+): NonNullable<VipFxMarketRoomV1["deep"]> {
   return {
     version: "market-product-projection-v1",
     tier: "vip-deep",
@@ -217,7 +231,7 @@ function availableDeepFixture(): NonNullable<VipFxMarketRoomV1["deep"]> {
           availability: "available",
           data: { score: 0.48, stance: "bullish" },
         },
-        decisionLifecycle: { availability: "not-computed" },
+        decisionLifecycle,
         recommendation: {
           availability: "available",
           data: {
@@ -309,6 +323,193 @@ function unavailableHistory(
   };
 }
 
+function renderLifecycle(
+  decisionLifecycle: FxDecisionLifecycleSectionV1,
+): string {
+  return renderToStaticMarkup(VipFxMarketRoom({
+    room: roomFixture({ decisionLifecycle }),
+  }));
+}
+
+function lifecycleSection(html: string): string {
+  const start = html.indexOf("Decision lifecycle");
+  const end = html.indexOf("Confidence / risk", start);
+
+  if (start === -1 || end === -1) {
+    throw new Error("Decision lifecycle section boundaries were not rendered.");
+  }
+
+  return html.slice(start, end);
+}
+
+function verifyDecisionLifecycleRendering(): void {
+  const initializedHtml = renderLifecycle({
+    availability: "available",
+    data: {
+      comparison: "initialized",
+      current: { score: -0.48, stance: "bearish" },
+    },
+  });
+  const labels = [
+    "Executive posture",
+    "Decision lifecycle",
+    "Confidence / risk",
+    "Evidence tension",
+  ];
+  let previousIndex = -1;
+
+  for (const label of labels) {
+    const index = initializedHtml.indexOf(label);
+    assertEqual(index > previousIndex, true, `${label} follows the prior rail section`);
+    previousIndex = index;
+  }
+  for (const [number, label] of labels.map((label, index) =>
+    [String(index + 1).padStart(2, "0"), label] as const
+  )) {
+    assertEqual(
+      new RegExp(`>${number}</span><h3[^>]*>${label}</h3>`).test(initializedHtml),
+      true,
+      `${label} renders as rail section ${number}`,
+    );
+  }
+
+  const initialized = lifecycleSection(initializedHtml);
+  for (const expected of [
+    "Decision lifecycle",
+    "Initialized",
+    "Canonical decision baseline established",
+    "Current / Bearish · Decision score -0.480",
+  ]) {
+    assertEqual(initialized.includes(expected), true,
+      `initialized lifecycle renders ${expected}`);
+  }
+  assertEqual(initialized.includes("transition"), false,
+    "initialized baseline is not described as a transition");
+
+  const maintained = lifecycleSection(renderLifecycle({
+    availability: "available",
+    data: {
+      comparison: "compared",
+      previous: { score: -0.4, stance: "bearish" },
+      current: { score: -0.48, stance: "bearish" },
+      transition: { kind: "maintained", stance: "bearish" },
+      decisionScoreDelta: -0.08,
+      convictionDelta: 0.08,
+      convictionChange: "increased",
+    },
+  }));
+  for (const expected of [
+    "Maintained / Bearish",
+    "Decision score Δ -0.080",
+    "Conviction Increased / Δ +0.080",
+  ]) {
+    assertEqual(maintained.includes(expected), true,
+      `maintained lifecycle renders ${expected}`);
+  }
+  assertEqual(maintained.includes("%"), false,
+    "normalized lifecycle deltas do not render as percentages");
+
+  const emerged = lifecycleSection(renderLifecycle({
+    availability: "available",
+    data: {
+      comparison: "compared",
+      previous: { score: 0, stance: "neutral" },
+      current: { score: 0.48, stance: "bullish" },
+      transition: { kind: "emerged", to: "bullish" },
+      decisionScoreDelta: 0.48,
+      convictionDelta: 0.48,
+      convictionChange: "increased",
+    },
+  }));
+  assertEqual(emerged.includes("Emerged / Bullish"), true,
+    "emerged lifecycle renders canonical destination");
+
+  const neutralized = lifecycleSection(renderLifecycle({
+    availability: "available",
+    data: {
+      comparison: "compared",
+      previous: { score: -0.4, stance: "bearish" },
+      current: { score: 0, stance: "neutral" },
+      transition: { kind: "neutralized", from: "bearish" },
+      decisionScoreDelta: 0.4,
+      convictionDelta: -0.4,
+      convictionChange: "decreased",
+    },
+  }));
+  assertEqual(neutralized.includes("Neutralized / from Bearish"), true,
+    "neutralized lifecycle renders canonical origin");
+
+  const reversed = lifecycleSection(renderLifecycle({
+    availability: "available",
+    data: {
+      comparison: "compared",
+      previous: { score: 0.35, stance: "bullish" },
+      current: { score: -0.48, stance: "bearish" },
+      transition: { kind: "reversed", from: "bullish", to: "bearish" },
+      decisionScoreDelta: -0.83,
+      convictionDelta: 0.13,
+      convictionChange: "increased",
+    },
+  }));
+  assertEqual(reversed.includes("Reversed / Bullish → Bearish"), true,
+    "reversed lifecycle renders canonical origin and destination");
+
+  const partial = lifecycleSection(renderLifecycle({
+    availability: "partial",
+    data: {
+      comparison: "compared",
+      previous: { score: 0.4, stance: "bullish" },
+      current: { score: 0.48, stance: "bullish" },
+      transition: { kind: "maintained", stance: "bullish" },
+      decisionScoreDelta: 0.08,
+      convictionDelta: 0.08,
+      convictionChange: "increased",
+    },
+    missing: ["marketData", "INTERNAL_REDIS_STATE"],
+  }));
+  assertEqual(partial.includes("Maintained / Bullish"), true,
+    "partial lifecycle retains canonical data");
+  assertEqual(partial.includes("Partial lifecycle evidence"), true,
+    "partial lifecycle is identified");
+  assertEqual(partial.includes("marketData"), false,
+    "partial lifecycle hides raw missing codes");
+  assertEqual(partial.includes("INTERNAL_REDIS_STATE"), false,
+    "partial lifecycle hides backend missing codes");
+
+  const unavailable = lifecycleSection(renderLifecycle({
+    availability: "unavailable",
+    reason: "Redis persistence backend unavailable.",
+  }));
+  assertEqual(unavailable.includes("Lifecycle comparison unavailable"), true,
+    "unavailable lifecycle remains explicit");
+  assertEqual(unavailable.includes("Redis persistence backend unavailable"), false,
+    "unavailable lifecycle hides its raw backend reason");
+
+  const notComputed = lifecycleSection(renderLifecycle({
+    availability: "not-computed",
+  }));
+  assertEqual(notComputed.includes("Lifecycle not computed"), true,
+    "not-computed lifecycle remains explicit");
+
+  for (const forbidden of [
+    "probability",
+    "target",
+    "trade recommendation",
+    "buy instruction",
+    "sell instruction",
+    "persistence",
+    "redis",
+  ]) {
+    assertEqual(
+      `${initialized}${maintained}${emerged}${neutralized}${reversed}${partial}${unavailable}${notComputed}`
+        .toLowerCase()
+        .includes(forbidden),
+      false,
+      `lifecycle presentation excludes ${forbidden}`,
+    );
+  }
+}
+
 function verifyRoomRendering(): void {
   const html = renderToStaticMarkup(VipFxMarketRoom({ room: roomFixture() }));
 
@@ -319,6 +520,10 @@ function verifyRoomRendering(): void {
     "Official daily observations only",
     "Executive readout",
     "Selective posture",
+    "Decision lifecycle",
+    "Initialized",
+    "Confidence / risk",
+    "Evidence tension",
     "Technical evidence",
     "RSI",
     "Scenario architecture",
@@ -538,6 +743,7 @@ function buttonOpening(html: string, label: string): string {
 }
 
 function main(): void {
+  verifyDecisionLifecycleRendering();
   verifyRoomRendering();
   verifySharedRoomNavigation();
   verifyRangeSemantics();

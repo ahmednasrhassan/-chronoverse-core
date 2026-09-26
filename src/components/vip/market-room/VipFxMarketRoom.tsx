@@ -27,6 +27,16 @@ type FxInvalidationV1 = Extract<
   FxVipDeepProjectionV1["details"]["engine"]["invalidation"],
   { readonly availability: "available" | "partial" }
 >["data"];
+type FxDecisionLifecycleSectionV1 =
+  FxVipDeepProjectionV1["details"]["engine"]["decisionLifecycle"];
+type FxDecisionLifecycleDataV1 = Extract<
+  FxDecisionLifecycleSectionV1,
+  { readonly availability: "available" | "partial" }
+>["data"];
+type FxDecisionTransitionV1 = Extract<
+  FxDecisionLifecycleDataV1,
+  { readonly comparison: "compared" }
+>["transition"];
 
 const MARKET_IDENTITIES_V1 = Object.freeze({
   eurusd: Object.freeze({ displayName: "EUR/USD", quoteUnit: "USD per EUR" }),
@@ -258,6 +268,10 @@ function DecisionRail({
         ],
     },
     {
+      label: "Decision lifecycle",
+      values: decisionLifecycleValues(engine.decisionLifecycle),
+    },
+    {
       label: "Confidence / risk",
       values: [
         `State confidence ${formatPercent(details.confidence)}`,
@@ -315,6 +329,59 @@ function DecisionRail({
       </div>
     </aside>
   );
+}
+
+function decisionLifecycleValues(
+  lifecycle: FxDecisionLifecycleSectionV1,
+): readonly string[] {
+  if (lifecycle.availability === "not-computed") {
+    return ["Lifecycle not computed"];
+  }
+
+  if (lifecycle.availability === "unavailable") {
+    return ["Lifecycle comparison unavailable"];
+  }
+
+  const partial = lifecycle.availability === "partial"
+    ? ["Partial lifecycle evidence"]
+    : [];
+
+  if (lifecycle.data.comparison === "initialized") {
+    return [
+      "Initialized",
+      "Canonical decision baseline established",
+      `Current / ${formatLabel(lifecycle.data.current.stance)} \u00B7 Decision score ${formatSigned(lifecycle.data.current.score)}`,
+      ...partial,
+    ];
+  }
+
+  return [
+    formatDecisionTransition(lifecycle.data.transition),
+    `Decision score \u0394 ${formatSigned(lifecycle.data.decisionScoreDelta)}`,
+    `Conviction ${formatLabel(lifecycle.data.convictionChange)} / \u0394 ${formatSigned(lifecycle.data.convictionDelta)}`,
+    ...partial,
+  ];
+}
+
+function formatDecisionTransition(
+  transition: FxDecisionTransitionV1,
+): string {
+  switch (transition.kind) {
+    case "maintained":
+      return `Maintained / ${formatLabel(transition.stance)}`;
+    case "emerged":
+      return `Emerged / ${formatLabel(transition.to)}`;
+    case "neutralized":
+      return `Neutralized / from ${formatLabel(transition.from)}`;
+    case "reversed":
+      return `Reversed / ${formatLabel(transition.from)} \u2192 ${formatLabel(transition.to)}`;
+    default:
+      return exhaustiveTransition(transition);
+  }
+}
+
+function exhaustiveTransition(transition: never): never {
+  throw new TypeError(`Unsupported Decision transition: ${String(transition)}`);
 }
 
 function DeepUnavailableBand({ reason }: { reason: string }) {
