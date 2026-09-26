@@ -7,6 +7,8 @@ export const CANONICAL_OBSERVATION_SERIES_SCHEMA_VERSION_V1 =
   "canonical-observation-series-v1" as const;
 export const CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1 =
   "canonical-observation-provenance-v1" as const;
+export const CANONICAL_STATISTICAL_SERIES_SCHEMA_VERSION_V1 =
+  "canonical-statistical-series-v1" as const;
 
 export type CanonicalSourceSubstitutionV1 =
   | { readonly status: "none" }
@@ -22,6 +24,8 @@ export type CanonicalObservationSeriesKindV1 =
   | "reference-rate"
   | "yield"
   | "index-level";
+
+export type CanonicalStatisticalFrequencyV1 = "monthly" | "quarterly";
 
 export interface CanonicalObservationValueV1 {
   /** Unix timestamp in seconds. */
@@ -60,6 +64,47 @@ export interface CanonicalObservationSeriesV1 {
 export interface CanonicalObservationSeriesInputV1 {
   readonly observations: readonly CanonicalObservationValueV1[];
   readonly metadata: CanonicalObservationSeriesMetadataV1;
+}
+
+export interface CanonicalStatisticalObservationValueV1 {
+  /** Explicit economic period identity; never inferred from capture time. */
+  readonly referencePeriod: string;
+  readonly value: number;
+  /** Opaque official marker preserved without provider-specific interpretation. */
+  readonly officialStatus?: string;
+}
+
+export interface CanonicalStatisticalSeriesMetadataV1 {
+  readonly provenanceVersion?: typeof CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1;
+  readonly provider: string;
+  readonly source: string;
+  readonly originalPublisher?: string;
+  readonly substitution?: CanonicalSourceSubstitutionV1;
+  /** Stable provider-neutral identity; this is not a market product ID. */
+  readonly canonicalSeriesId: string;
+  /** Official dataset/series identity supplied by the source adapter. */
+  readonly sourceSeriesId: string;
+  /** Absolute locator for the official source dataset or series. */
+  readonly sourceUrl: string;
+  /** Identity of this captured official source state; never inferred from fetchedAt. */
+  readonly sourceVersionId: string;
+  readonly frequency: CanonicalStatisticalFrequencyV1;
+  /** Unix seconds at which Chronoverse possessed this source state. */
+  readonly fetchedAt: number;
+  /** Actual publisher-supplied release time, when known; never inferred. */
+  readonly releaseTimestamp?: number;
+  readonly unit: string;
+}
+
+export interface CanonicalStatisticalSeriesV1 {
+  readonly schemaVersion: typeof CANONICAL_STATISTICAL_SERIES_SCHEMA_VERSION_V1;
+  readonly observations: readonly CanonicalStatisticalObservationValueV1[];
+  readonly metadata: CanonicalStatisticalSeriesMetadataV1;
+}
+
+export interface CanonicalStatisticalSeriesInputV1 {
+  readonly observations: readonly CanonicalStatisticalObservationValueV1[];
+  readonly metadata: CanonicalStatisticalSeriesMetadataV1;
 }
 
 /**
@@ -116,6 +161,77 @@ export function isCanonicalObservationSeriesV1(
     value !== null &&
     "schemaVersion" in value &&
     value.schemaVersion === CANONICAL_OBSERVATION_SERIES_SCHEMA_VERSION_V1;
+}
+
+/**
+ * Pure normalization for official statistical observations. Revisions belong
+ * to distinct source vintages, so one snapshot may contain only one value for
+ * each reference period.
+ */
+export function normalizeCanonicalStatisticalSeriesV1(
+  input: CanonicalStatisticalSeriesInputV1,
+): CanonicalStatisticalSeriesV1 {
+  const metadata = normalizeStatisticalMetadata(input.metadata);
+  const ordered = input.observations.map((observation) => {
+    const referencePeriod = normalizeReferencePeriod(
+      observation.referencePeriod,
+      metadata.frequency,
+    );
+
+    if (!Number.isFinite(observation.value)) {
+      throw new TypeError("Canonical statistical-series value is invalid.");
+    }
+
+    const officialStatus = observation.officialStatus === undefined
+      ? undefined
+      : requireStatisticalIdentifier(
+          observation.officialStatus,
+          "official status",
+        );
+
+    return Object.freeze({
+      referencePeriod,
+      value: observation.value,
+      ...(officialStatus === undefined ? {} : { officialStatus }),
+    });
+  }).sort((left, right) =>
+    left.referencePeriod.localeCompare(right.referencePeriod)
+  );
+  const observations: CanonicalStatisticalObservationValueV1[] = [];
+
+  for (const observation of ordered) {
+    const previous = observations.at(-1);
+
+    if (previous?.referencePeriod === observation.referencePeriod) {
+      if (
+        previous.value !== observation.value ||
+        previous.officialStatus !== observation.officialStatus
+      ) {
+        throw new TypeError(
+          "Canonical statistical series contains conflicting duplicate reference periods.",
+        );
+      }
+
+      continue;
+    }
+
+    observations.push(observation);
+  }
+
+  return Object.freeze({
+    schemaVersion: CANONICAL_STATISTICAL_SERIES_SCHEMA_VERSION_V1,
+    observations: Object.freeze(observations),
+    metadata,
+  });
+}
+
+export function isCanonicalStatisticalSeriesV1(
+  value: unknown,
+): value is CanonicalStatisticalSeriesV1 {
+  return typeof value === "object" &&
+    value !== null &&
+    "schemaVersion" in value &&
+    value.schemaVersion === CANONICAL_STATISTICAL_SERIES_SCHEMA_VERSION_V1;
 }
 
 function normalizeMetadata(
@@ -209,6 +325,160 @@ function normalizeMetadata(
   });
 }
 
+function normalizeStatisticalMetadata(
+  metadata: CanonicalStatisticalSeriesMetadataV1,
+): CanonicalStatisticalSeriesMetadataV1 {
+  const provider = requireStatisticalIdentifier(metadata.provider, "provider");
+  const source = requireStatisticalIdentifier(metadata.source, "source");
+  const canonicalSeriesId = requireStatisticalIdentifier(
+    metadata.canonicalSeriesId,
+    "canonical series ID",
+  );
+  const sourceSeriesId = requireStatisticalIdentifier(
+    metadata.sourceSeriesId,
+    "source series ID",
+  );
+  const sourceVersionId = requireStatisticalIdentifier(
+    metadata.sourceVersionId,
+    "source version ID",
+  );
+  const unit = requireStatisticalIdentifier(metadata.unit, "unit");
+  const sourceUrl = normalizeOfficialSourceUrl(metadata.sourceUrl);
+
+  if (!isStatisticalFrequency(metadata.frequency)) {
+    throw new TypeError("Canonical statistical-series frequency is invalid.");
+  }
+
+  if (
+    !Number.isSafeInteger(metadata.fetchedAt) ||
+    metadata.fetchedAt < 0 ||
+    (metadata.releaseTimestamp !== undefined &&
+      (!Number.isSafeInteger(metadata.releaseTimestamp) ||
+        metadata.releaseTimestamp < 0 ||
+        metadata.releaseTimestamp > metadata.fetchedAt))
+  ) {
+    throw new TypeError("Canonical statistical-series provenance timestamp is invalid.");
+  }
+
+  if (
+    metadata.provenanceVersion !== undefined &&
+    metadata.provenanceVersion !== CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1
+  ) {
+    throw new TypeError("Canonical statistical-series provenance version is invalid.");
+  }
+
+  const originalPublisher = metadata.originalPublisher === undefined
+    ? undefined
+    : requireStatisticalIdentifier(
+        metadata.originalPublisher,
+        "original publisher",
+      );
+  const substitution = normalizeSourceSubstitution(
+    metadata.substitution,
+    "Canonical statistical-series",
+  );
+
+  return Object.freeze({
+    ...(metadata.provenanceVersion === undefined
+      ? {}
+      : { provenanceVersion: metadata.provenanceVersion }),
+    provider,
+    source,
+    ...(originalPublisher === undefined ? {} : { originalPublisher }),
+    ...(substitution === undefined ? {} : { substitution }),
+    canonicalSeriesId,
+    sourceSeriesId,
+    sourceUrl,
+    sourceVersionId,
+    frequency: metadata.frequency,
+    fetchedAt: metadata.fetchedAt,
+    ...(metadata.releaseTimestamp === undefined
+      ? {}
+      : { releaseTimestamp: metadata.releaseTimestamp }),
+    unit,
+  });
+}
+
+function normalizeReferencePeriod(
+  value: string,
+  frequency: CanonicalStatisticalFrequencyV1,
+): string {
+  const normalized = value.trim();
+  const valid = frequency === "monthly"
+    ? /^\d{4}-(?:0[1-9]|1[0-2])$/.test(normalized)
+    : /^\d{4}-Q[1-4]$/.test(normalized);
+
+  if (!valid) {
+    throw new TypeError(
+      "Canonical statistical-series reference period is invalid for its frequency.",
+    );
+  }
+
+  return normalized;
+}
+
+function normalizeOfficialSourceUrl(value: string): string {
+  const normalized = requireStatisticalIdentifier(value, "source URL");
+  let sourceUrl: URL;
+
+  try {
+    sourceUrl = new URL(normalized);
+  } catch {
+    throw new TypeError("Canonical statistical-series source URL is invalid.");
+  }
+
+  if (
+    (sourceUrl.protocol !== "https:" && sourceUrl.protocol !== "http:") ||
+    sourceUrl.hostname.length === 0 ||
+    sourceUrl.username.length > 0 ||
+    sourceUrl.password.length > 0
+  ) {
+    throw new TypeError("Canonical statistical-series source URL is invalid.");
+  }
+
+  return sourceUrl.toString();
+}
+
+function requireStatisticalIdentifier(value: string, label: string): string {
+  const normalized = value.trim();
+
+  if (normalized.length === 0) {
+    throw new TypeError(`Canonical statistical-series ${label} is invalid.`);
+  }
+
+  return normalized;
+}
+
+function normalizeSourceSubstitution(
+  substitution: CanonicalSourceSubstitutionV1 | undefined,
+  contract: string,
+): CanonicalSourceSubstitutionV1 | undefined {
+  if (
+    substitution !== undefined &&
+    substitution.status !== "none" &&
+    substitution.status !== "unknown" &&
+    substitution.status !== "substituted"
+  ) {
+    throw new TypeError(`${contract} substitution is invalid.`);
+  }
+
+  return substitution?.status === "substituted"
+    ? Object.freeze({
+        status: "substituted" as const,
+        provider: requireStatisticalIdentifier(
+          substitution.provider,
+          "substitute provider",
+        ),
+        source: requireStatisticalIdentifier(
+          substitution.source,
+          "substitute source",
+        ),
+      })
+    : substitution === undefined
+      ? undefined
+      : Object.freeze({ status: substitution.status });
+}
+
 function requireIdentifier(value: string, label: string): string {
   const normalized = value.trim();
 
@@ -235,4 +505,10 @@ function isSeriesKind(value: unknown): value is CanonicalObservationSeriesKindV1
   return ["spot-price", "reference-rate", "yield", "index-level"].includes(
     value as CanonicalObservationSeriesKindV1,
   );
+}
+
+function isStatisticalFrequency(
+  value: unknown,
+): value is CanonicalStatisticalFrequencyV1 {
+  return value === "monthly" || value === "quarterly";
 }
