@@ -13,6 +13,7 @@ import { CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1 } from
   "../../services/canonicalObservationSeries";
 
 const UPDATED = "2026-09-27T11:00:00+0200";
+const DIFFERENT_UPDATED = "2026-09-28T09:30:00Z";
 const FETCHED_AT = 1_790_500_000;
 
 interface MutableDataset {
@@ -193,9 +194,17 @@ async function main(): Promise<void> {
   assert.equal(hicp.metadata.canonicalSeriesId, hicpSpec.canonicalSeriesId);
   assert.equal(hicp.metadata.sourceSeriesId, hicpSpec.sourceSeriesId);
   assert.equal(hicp.metadata.sourceUrl, hicpSpec.sourceUrl);
-  assert.equal(hicp.metadata.sourceVersionId,
-    `eurostat:prc_hicp_minr:${UPDATED}`);
+  assert.equal(
+    hicp.metadata.sourceVersionId,
+    "eurostat-selected-series-v1:sha256:" +
+      "9d6ef16dcd1bfacdd428f90b8d00d0794ac4710627d5be91d8158ef8fbbbef79",
+  );
+  assert.match(
+    hicp.metadata.sourceVersionId,
+    /^eurostat-selected-series-v1:sha256:[0-9a-f]{64}$/,
+  );
   assert.equal(hicp.metadata.sourceVersionId.includes(String(FETCHED_AT)), false);
+  assert.equal(hicp.metadata.sourceVersionId.includes(UPDATED), false);
   assert.equal(hicp.metadata.fetchedAt, FETCHED_AT);
   assert.equal(hicp.metadata.frequency, "monthly");
   assert.equal(hicp.metadata.unit, "RCH_A");
@@ -206,6 +215,99 @@ async function main(): Promise<void> {
   assert.equal(Object.isFrozen(hicp.observations), true);
   assert.equal(Object.isFrozen(hicp.metadata), true);
   assert.equal(Object.isFrozen(hicp.observations[0]), true);
+
+  const sameContentDifferentUpdated = await load("hicp", fixture("hicp", {
+    value: [2.4, null, 0],
+    status: ["p b", ":", ""],
+    updated: DIFFERENT_UPDATED,
+  }));
+  assert.equal(
+    sameContentDifferentUpdated.metadata.sourceVersionId,
+    hicp.metadata.sourceVersionId,
+    "dataset-wide updated timestamp is not selected-series identity",
+  );
+
+  const changedValueSameUpdated = await load("hicp", fixture("hicp", {
+    value: [2.5, null, 0],
+    status: ["p b", ":", ""],
+    updated: UPDATED,
+  }));
+  assert.notEqual(
+    changedValueSameUpdated.metadata.sourceVersionId,
+    hicp.metadata.sourceVersionId,
+    "a selected observation value changes identity",
+  );
+
+  const changedStatusSameUpdated = await load("hicp", fixture("hicp", {
+    value: [2.4, null, 0],
+    status: ["e", ":", ""],
+    updated: UPDATED,
+  }));
+  assert.notEqual(
+    changedStatusSameUpdated.metadata.sourceVersionId,
+    hicp.metadata.sourceVersionId,
+    "a selected observation status changes identity",
+  );
+
+  const sameContentDifferentFetchedAt = await load(
+    "hicp",
+    fixture("hicp", {
+      value: [2.4, null, 0],
+      status: ["p b", ":", ""],
+    }),
+    FETCHED_AT + 1,
+  );
+  assert.equal(
+    sameContentDifferentFetchedAt.metadata.sourceVersionId,
+    hicp.metadata.sourceVersionId,
+    "capture time is not selected-series identity",
+  );
+  assert.equal(
+    sameContentDifferentFetchedAt.metadata.fetchedAt,
+    FETCHED_AT + 1,
+  );
+
+  const reorderedSameContent = await load("hicp", fixture("hicp", {
+    dimensionOrder: ["time", "geo", "coicop18", "unit", "freq"],
+    times: ["2026-03", "2026-01", "2026-02"],
+    value: [0, 2.4, null],
+    status: ["", "p b", ":"],
+  }));
+  assert.deepEqual(reorderedSameContent.observations, hicp.observations);
+  assert.equal(
+    reorderedSameContent.metadata.sourceVersionId,
+    hicp.metadata.sourceVersionId,
+    "returned dimension and time ordering do not affect identity",
+  );
+
+  const absentStatus = await load("hicp", fixture("hicp"));
+  const explicitEmptyStatus = await load("hicp", fixture("hicp", {
+    status: ["", "", ""],
+  }));
+  assert.deepEqual(explicitEmptyStatus.observations, absentStatus.observations);
+  assert.equal(
+    explicitEmptyStatus.metadata.sourceVersionId,
+    absentStatus.metadata.sourceVersionId,
+    "absent and explicit empty statuses normalize identically",
+  );
+
+  await rejects(
+    () => load("hicp", fixture("hicp", { value: {} })),
+    /source is malformed: selected series contains no usable observations/,
+  );
+  await rejects(
+    () => load("hicp", fixture("hicp", {
+      value: [null, ":", null],
+    })),
+    /source is malformed: selected series contains no usable observations/,
+  );
+
+  const zeroOnly = await load("hicp", fixture("hicp", {
+    value: [null, null, 0],
+  }));
+  assert.deepEqual(zeroOnly.observations, [
+    { referencePeriod: "2026-03", value: 0 },
+  ]);
 
   const gdpDimensionOrder = [
     "time",

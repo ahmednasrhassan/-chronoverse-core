@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import {
   CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
   normalizeCanonicalStatisticalSeriesV1,
@@ -65,6 +67,11 @@ export const EUROSTAT_EURO_AREA_MACRO_SOURCE_SPECS_V1 = Object.freeze(
   sourceSpecs,
 );
 
+const EUROSTAT_SELECTED_SERIES_IDENTITY_VERSION_V1 =
+  "eurostat-selected-series-v1" as const;
+const PENDING_SOURCE_VERSION_ID =
+  `${EUROSTAT_SELECTED_SERIES_IDENTITY_VERSION_V1}:pending` as const;
+
 export async function loadEurostatEuroAreaMacroSeriesV1(
   family: EurostatEuroAreaMacroFamilyV1,
   options: LoadEurostatEuroAreaMacroSeriesOptionsV1,
@@ -87,24 +94,73 @@ export async function loadEurostatEuroAreaMacroSeriesV1(
   }
 
   const parsed = parseEurostatDataset(result.payload, spec);
+  const normalizedForIdentity = normalizeCanonicalStatisticalSeriesV1({
+    observations: parsed.observations,
+    metadata: canonicalMetadata(
+      spec,
+      options.fetchedAt,
+      PENDING_SOURCE_VERSION_ID,
+    ),
+  });
+
+  if (normalizedForIdentity.observations.length === 0) {
+    throw new TypeError(
+      "Eurostat source is malformed: selected series contains no usable observations.",
+    );
+  }
+
+  const sourceVersionId = buildSelectedSeriesSourceVersionId(
+    spec,
+    normalizedForIdentity.observations,
+  );
 
   return normalizeCanonicalStatisticalSeriesV1({
-    observations: parsed.observations,
-    metadata: {
-      provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
-      provider: "eurostat",
-      source: "Eurostat Statistics API",
-      originalPublisher: "Eurostat",
-      substitution: { status: "none" },
-      canonicalSeriesId: spec.canonicalSeriesId,
-      sourceSeriesId: spec.sourceSeriesId,
-      sourceUrl: spec.sourceUrl,
-      sourceVersionId: `eurostat:${spec.datasetCode}:${parsed.updated}`,
-      frequency: spec.frequency,
-      fetchedAt: options.fetchedAt,
-      unit: spec.unit,
-    },
+    observations: normalizedForIdentity.observations,
+    metadata: canonicalMetadata(spec, options.fetchedAt, sourceVersionId),
   });
+}
+
+function canonicalMetadata(
+  spec: EurostatEuroAreaMacroSourceSpecV1,
+  fetchedAt: number,
+  sourceVersionId: string,
+) {
+  return {
+    provenanceVersion: CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
+    provider: "eurostat",
+    source: "Eurostat Statistics API",
+    originalPublisher: "Eurostat",
+    substitution: { status: "none" as const },
+    canonicalSeriesId: spec.canonicalSeriesId,
+    sourceSeriesId: spec.sourceSeriesId,
+    sourceUrl: spec.sourceUrl,
+    sourceVersionId,
+    frequency: spec.frequency,
+    fetchedAt,
+    unit: spec.unit,
+  };
+}
+
+function buildSelectedSeriesSourceVersionId(
+  spec: EurostatEuroAreaMacroSourceSpecV1,
+  observations: readonly CanonicalStatisticalObservationValueV1[],
+): string {
+  const identityPayload = JSON.stringify([
+    EUROSTAT_SELECTED_SERIES_IDENTITY_VERSION_V1,
+    spec.sourceSeriesId,
+    spec.frequency,
+    spec.unit,
+    observations.map((observation) => [
+      observation.referencePeriod,
+      observation.value,
+      observation.officialStatus ?? null,
+    ]),
+  ]);
+  const digest = createHash("sha256")
+    .update(identityPayload, "utf8")
+    .digest("hex");
+
+  return `${EUROSTAT_SELECTED_SERIES_IDENTITY_VERSION_V1}:sha256:${digest}`;
 }
 
 interface SourceSpecInput {
@@ -152,7 +208,6 @@ function createSourceSpec(
 }
 
 interface ParsedEurostatDataset {
-  readonly updated: string;
   readonly observations: readonly CanonicalStatisticalObservationValueV1[];
 }
 
@@ -173,7 +228,7 @@ function parseEurostatDataset(
     throw new TypeError("Eurostat JSON-stat source is invalid.");
   }
 
-  const updated = parseUpdated(payload.updated);
+  parseUpdated(payload.updated);
   const dimensions = parseDimensionIdentity(payload.id, payload.size, spec);
 
   if (!isRecord(payload.dimension)) {
@@ -275,7 +330,6 @@ function parseEurostatDataset(
   }
 
   return Object.freeze({
-    updated,
     observations: Object.freeze(observations),
   });
 }
