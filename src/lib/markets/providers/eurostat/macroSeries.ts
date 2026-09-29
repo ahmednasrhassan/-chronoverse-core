@@ -109,8 +109,8 @@ export async function loadEurostatEuroAreaMacroSeriesV1(
     );
   }
 
-  const sourceVersionId = buildSelectedSeriesSourceVersionId(
-    spec,
+  const sourceVersionId = buildEurostatSelectedSeriesSourceVersionIdV1(
+    family,
     normalizedForIdentity.observations,
   );
 
@@ -141,10 +141,15 @@ function canonicalMetadata(
   };
 }
 
-function buildSelectedSeriesSourceVersionId(
-  spec: EurostatEuroAreaMacroSourceSpecV1,
+/** Deterministic identity of one normalized, locked Eurostat selected series. */
+export function buildEurostatSelectedSeriesSourceVersionIdV1(
+  family: EurostatEuroAreaMacroFamilyV1,
   observations: readonly CanonicalStatisticalObservationValueV1[],
 ): string {
+  if (!Object.prototype.hasOwnProperty.call(sourceSpecs, family)) {
+    throw new TypeError("Eurostat macro family is invalid.");
+  }
+  const spec = sourceSpecs[family];
   const identityPayload = JSON.stringify([
     EUROSTAT_SELECTED_SERIES_IDENTITY_VERSION_V1,
     spec.sourceSeriesId,
