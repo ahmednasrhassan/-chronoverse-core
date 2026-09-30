@@ -1,9 +1,7 @@
 import {
-  appendEurostatMacroSeriesVintageRedisV1,
   type AppendEurostatMacroSeriesVintageRedisResultV1,
 } from "../persistence/eurostatMacroSeriesVintageRedis";
 import {
-  eurostatClientV1,
   type EurostatDatasetLoaderV1,
 } from "../providers/eurostat/client";
 import {
@@ -34,16 +32,10 @@ export class EurostatMacroSeriesValidationError extends Error {
   }
 }
 
-const productionDependencies: EurostatMacroAcquisitionDependenciesV1 = {
-  loadDataset: (sourceUrl) => eurostatClientV1.getDataset(sourceUrl),
-  nowUnixSeconds: () => Math.floor(Date.now() / 1_000),
-  appendVintage: appendEurostatMacroSeriesVintageRedisV1,
-};
-
 /** Inactive until explicitly called; no polling or runtime registration. */
 export async function acquireEurostatMacroSeriesV1(
   family: EurostatEuroAreaMacroFamilyV1,
-  dependencies: EurostatMacroAcquisitionDependenciesV1 = productionDependencies,
+  dependencies: EurostatMacroAcquisitionDependenciesV1,
 ): Promise<AppendEurostatMacroSeriesVintageRedisResultV1> {
   if (!Object.prototype.hasOwnProperty.call(
     EUROSTAT_EURO_AREA_MACRO_SOURCE_SPECS_V1,
