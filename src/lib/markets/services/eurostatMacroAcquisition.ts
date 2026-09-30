@@ -23,6 +23,17 @@ export interface EurostatMacroAcquisitionDependenciesV1 {
   ) => Promise<AppendEurostatMacroSeriesVintageRedisResultV1>;
 }
 
+/** Only recognized source/schema/canonical errors at the normalization boundary. */
+export class EurostatMacroSeriesValidationError extends Error {
+  readonly originalError: TypeError;
+
+  constructor(error: TypeError) {
+    super(error.message);
+    this.name = "EurostatMacroSeriesValidationError";
+    this.originalError = error;
+  }
+}
+
 const productionDependencies: EurostatMacroAcquisitionDependenciesV1 = {
   loadDataset: (sourceUrl) => eurostatClientV1.getDataset(sourceUrl),
   nowUnixSeconds: () => Math.floor(Date.now() / 1_000),
@@ -48,9 +59,20 @@ export async function acquireEurostatMacroSeriesV1(
     throw new TypeError("Eurostat macro acquisition clock is invalid.");
   }
 
-  const series = await loadEurostatEuroAreaMacroSeriesV1(family, {
-    fetchedAt,
-    loadDataset: async () => fetched,
-  });
+  let series: CanonicalStatisticalSeriesV1;
+  try {
+    series = await loadEurostatEuroAreaMacroSeriesV1(family, {
+      fetchedAt,
+      loadDataset: async () => fetched,
+    });
+  } catch (error) {
+    if (error instanceof TypeError &&
+        /^(?:Eurostat |Canonical statistical(?:-series| series) )/.test(
+          error.message,
+        )) {
+      throw new EurostatMacroSeriesValidationError(error);
+    }
+    throw error;
+  }
   return dependencies.appendVintage(family, series);
 }
