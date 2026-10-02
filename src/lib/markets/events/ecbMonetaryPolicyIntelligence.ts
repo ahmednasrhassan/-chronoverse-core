@@ -1,5 +1,13 @@
 import type { EcbPolicyRateFactsV1 } from "./ecbMonetaryPolicy";
 import {
+  eventPhaseWithoutVerifiedReleaseV1 as phaseWithoutVerifiedRelease,
+  eventPhaseWithVerifiedReleaseV1 as phaseWithVerifiedRelease,
+  parseEventInstantV1 as parseAbsoluteInstant,
+  type EventPhaseV1,
+  type EventScheduleMilestonesV1,
+  type EventReleaseMilestonesV1,
+} from "./eventClock";
+import {
   ECB_MONETARY_POLICY_EVENT_SNAPSHOT_SCHEMA_VERSION_V1,
   type EcbMonetaryPolicyEventSnapshotV1,
 } from
@@ -11,32 +19,9 @@ export const ECB_MONETARY_POLICY_EVENT_INTELLIGENCE_SCHEMA_VERSION_V1 =
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 
-export type EcbMonetaryPolicyEventPhaseV1 =
-  | "pre-event"
-  | "t-24h"
-  | "t-1h"
-  | "t-15m"
-  | "release-time-unverified"
-  | "release"
-  | "post-5m"
-  | "post-15m"
-  | "post-30m"
-  | "post-1h";
-
-export interface EcbMonetaryPolicyScheduleMilestonesV1 {
-  readonly t24hAt: string;
-  readonly t1hAt: string;
-  readonly t15mAt: string;
-  readonly scheduledAt: string;
-}
-
-export interface EcbMonetaryPolicyReleaseMilestonesV1 {
-  readonly releaseAt: string;
-  readonly post5mAt: string;
-  readonly post15mAt: string;
-  readonly post30mAt: string;
-  readonly post1hAt: string;
-}
+export type EcbMonetaryPolicyEventPhaseV1 = EventPhaseV1;
+export type EcbMonetaryPolicyScheduleMilestonesV1 = EventScheduleMilestonesV1;
+export type EcbMonetaryPolicyReleaseMilestonesV1 = EventReleaseMilestonesV1;
 
 export type EcbMonetaryPolicyDecisionEvidenceV1 =
   | { readonly status: "not-observed" }
@@ -221,53 +206,6 @@ export function buildEcbMonetaryPolicyEventIntelligenceV1(
       reason: "No canonical session-review timestamp or policy is defined.",
     }),
   });
-}
-
-function phaseWithoutVerifiedRelease(
-  evaluatedAtMs: number,
-  scheduledAtMs: number,
-): EcbMonetaryPolicyEventPhaseV1 {
-  if (evaluatedAtMs >= scheduledAtMs) return "release-time-unverified";
-  if (evaluatedAtMs >= scheduledAtMs - 15 * MINUTE_MS) return "t-15m";
-  if (evaluatedAtMs >= scheduledAtMs - HOUR_MS) return "t-1h";
-  if (evaluatedAtMs >= scheduledAtMs - 24 * HOUR_MS) return "t-24h";
-  return "pre-event";
-}
-
-function phaseWithVerifiedRelease(
-  evaluatedAtMs: number,
-  releaseAtMs: number,
-): EcbMonetaryPolicyEventPhaseV1 {
-  if (evaluatedAtMs >= releaseAtMs + HOUR_MS) return "post-1h";
-  if (evaluatedAtMs >= releaseAtMs + 30 * MINUTE_MS) return "post-30m";
-  if (evaluatedAtMs >= releaseAtMs + 15 * MINUTE_MS) return "post-15m";
-  if (evaluatedAtMs >= releaseAtMs + 5 * MINUTE_MS) return "post-5m";
-  if (evaluatedAtMs >= releaseAtMs) return "release";
-
-  throw new RangeError(
-    "evaluatedAt cannot precede the verified release in a release-aware snapshot.",
-  );
-}
-
-function parseAbsoluteInstant(value: string, label: string): number {
-  const match = /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
-  if (match === null) {
-    throw new TypeError(`Invalid ${label}.`);
-  }
-  assertCivilDate(match[1]!, label);
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) {
-    throw new TypeError(`Invalid ${label}.`);
-  }
-  return parsed;
-}
-
-function assertCivilDate(value: string, label: string): void {
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year!, month! - 1, day));
-  if (date.toISOString().slice(0, 10) !== value) {
-    throw new TypeError(`Invalid ${label}.`);
-  }
 }
 
 function iso(value: number): string {
