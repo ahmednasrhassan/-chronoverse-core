@@ -1,6 +1,8 @@
-import type {
-  EcbMonetaryPolicyEventMemoryV1,
-  EcbMonetaryPolicyEventSnapshotV1,
+import { isDeepStrictEqual } from "node:util";
+import {
+  advanceEcbMonetaryPolicyEventMemoryV1,
+  type EcbMonetaryPolicyEventMemoryV1,
+  type EcbMonetaryPolicyEventSnapshotV1,
 } from "./ecbMonetaryPolicyMemory";
 import {
   selectEcbMonetaryPolicyPriorStateAsKnownAtV1,
@@ -29,6 +31,63 @@ export interface BuildEcbPolicyDecisionEvidenceStateInputV1 {
   /** Prior history cutoff remains separate from the current/target assessment boundary. */
   readonly knowledgeCutoff: number;
   readonly evaluatedAt: string;
+}
+
+/**
+ * Rebuild retained evidence through the canonical composition, without trusting
+ * derived members. The state retains the selected prior, not candidate history:
+ * this checks its canonical consistency, not whether omitted history was exhaustive.
+ * Unavailable current facts and rejected histories are not retained: validate
+ * closed reasons/dependencies without upgrading absence or substituting older facts.
+ */
+export function reconstructEcbPolicyDecisionEvidenceStateV1(
+  supplied: EcbPolicyDecisionEvidenceStateV1,
+): EcbPolicyDecisionEvidenceStateV1 {
+  let rebuilt: EcbPolicyDecisionEvidenceStateV1;
+  if (supplied.current.status === "unavailable") {
+    const reason = supplied.current.reason;
+    if (reason !== "EVENT_DATA_INCOMPLETE" && reason !== "KNOWLEDGE_INCONSISTENT") {
+      throw new TypeError("Invalid unavailable ECB current evidence reason.");
+    }
+    const empty = buildEcbPolicyDecisionEvidenceStateV1({ current: null, memories: [],
+      knowledgeCutoff: 0, evaluatedAt: supplied.evaluatedAt });
+    if (empty.canonicalEventId !== null) throw new TypeError("Expected unavailable ECB context.");
+    rebuilt = Object.freeze({ ...empty,
+      current: Object.freeze({ semantic: "source-fact", status: "unavailable", reason }),
+      clock: Object.freeze({ ...empty.clock, reason }),
+    });
+  } else if (supplied.current.status === "available") {
+    // Narrow through the shared top-level discriminator, then compare the entire
+    // state below; a forged null identity must not bypass canonical reconstruction.
+    if (supplied.canonicalEventId === null) throw new TypeError("Expected ECB event identity.");
+    const prior = supplied.prior;
+    let memories: readonly EcbMonetaryPolicyEventMemoryV1[] = [];
+    if (prior.status === "available") {
+      const selected = reconstructEcbMonetaryPolicyEventSnapshotV1(prior.selectedSnapshot);
+      // Only canonical data crosses the memory parser's domain-validation boundary.
+      memories = [advanceEcbMonetaryPolicyEventMemoryV1(null, selected.event).memory];
+    } else if (prior.status !== "unavailable") {
+      throw new TypeError("Invalid ECB prior dependency status.");
+    }
+    rebuilt = buildEcbPolicyDecisionEvidenceStateV1({ current: supplied.current.snapshot,
+      memories, knowledgeCutoff: prior.knowledgeCutoff, evaluatedAt: supplied.evaluatedAt });
+    if (prior.status === "unavailable" && rebuilt.canonicalEventId !== null) {
+      const unavailablePrior = Object.freeze({ status: "unavailable" as const,
+        coverage: "provided-history-only" as const, evaluatedAt: rebuilt.evaluatedAt,
+        knowledgeCutoff: prior.knowledgeCutoff, reason: prior.reason });
+      // The existing delta builder validates the closed prior reason vocabulary.
+      const delta = buildEcbPolicyDecisionDeltaV1({ current: rebuilt.current.snapshot.event,
+        prior: unavailablePrior, evaluatedAt: rebuilt.evaluatedAt });
+      rebuilt = Object.freeze({ ...rebuilt, prior: unavailablePrior, delta,
+        assessment: buildEcbPolicyDecisionAssessmentV1({ delta }) });
+    }
+  } else {
+    throw new TypeError("Invalid ECB current evidence status.");
+  }
+  if (!isDeepStrictEqual(supplied, rebuilt)) {
+    throw new TypeError("ECB evidence state does not match its canonical reconstruction.");
+  }
+  return rebuilt;
 }
 
 type UnavailableClock = Extract<EcbPolicyDecisionEventClockResultV1, { status: "unavailable" }>;
