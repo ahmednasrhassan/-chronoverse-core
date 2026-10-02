@@ -17,13 +17,20 @@ import {
   type EcbScheduleIdentityV1,
 } from "../providers/ecb/monetaryPolicy/parser";
 import type { CanonicalProductIdV1 } from "./canonicalProductResultOwnership";
+import {
+  attachEcbPolicyDecisionFactsV1,
+  extractEcbPolicyDecisionFactsV1,
+  type EcbPolicyDecisionFactsResultV1,
+} from "../providers/ecb/monetaryPolicy/policyDecisionFacts";
 
 export interface EcbEventAcquisitionInputV1 {
   readonly meetingDate: string;
   readonly identity: EcbScheduleIdentityV1;
   readonly affectedProducts: readonly CanonicalProductIdV1[];
-  /** Caller-verified official reference; discovery and prose rate extraction are deferred. */
+  /** Caller-verified official reference; discovery remains deferred. */
   readonly knownDecisionReference?: EcbKnownMonetaryPolicyDecisionReferenceInputV1;
+  /** Explicit opt-in to the narrow deterministic policy-rate section contract. */
+  readonly extractPolicyRates?: boolean;
 }
 
 export interface EcbEventAcquisitionDependenciesV1 {
@@ -35,7 +42,8 @@ export interface EcbEventAcquisitionDependenciesV1 {
 }
 
 export type EcbEventAcquisitionResultV1 =
-  | { readonly status: "acquired"; readonly event: EcbMonetaryPolicyEventFactV1; readonly fact: EventFactV1 }
+  | { readonly status: "acquired"; readonly event: EcbMonetaryPolicyEventFactV1; readonly fact: EventFactV1;
+      readonly policyRatesExtraction?: EcbPolicyDecisionFactsResultV1 }
   | { readonly status: "source-malformed"; readonly sourceUrl: string; readonly reason: string }
   | { readonly status: "schedule-unavailable"; readonly reason: "meeting-not-listed" | "unsupported-schedule-time" }
   | { readonly status: "invalid-reference"; readonly reason: string }
@@ -56,6 +64,9 @@ export async function acquireEcbEventV1(
 ): Promise<EcbEventAcquisitionResultV1> {
   if (typeof window !== "undefined") throw new Error("ECB event acquisition is server-only.");
   ecbMonetaryPolicyCanonicalEventIdV1(input.meetingDate);
+  if (input.extractPolicyRates !== undefined && typeof input.extractPolicyRates !== "boolean") {
+    throw new TypeError("ECB policy extraction opt-in must be boolean.");
+  }
   const products = { eurusd: true, eurjpy: true, eurgbp: true, eurchf: true, estr: true } satisfies Record<CanonicalProductIdV1, true>;
   if (!Array.isArray(input.affectedProducts) || input.affectedProducts.some((product) => !Object.hasOwn(products, product))) {
     throw new TypeError("ECB acquisition requires explicit canonical affected products.");
@@ -94,9 +105,10 @@ export async function acquireEcbEventV1(
     const schedule = normalizeEcbScheduleCandidateV1(candidate, fetchedAt, input.identity);
     if (schedule.status !== "available") return schedule;
     let event = schedule.event;
+    let policyRatesExtraction: EcbPolicyDecisionFactsResultV1 | undefined;
     if (reference !== undefined) {
       const html = await loadEcbEventHtmlV1(reference.documentUrl, dependencies);
-      // Only existing deterministic document capture, no interpretation of policy prose.
+      // Capture first; extraction can only use these exact verified source bytes.
       const documentFetchedAt = captureTime();
       if (documentFetchedAt < fetchedAt) throw new RangeError("ECB acquisition capture clock moved backwards.");
       const capture = captureKnownEcbDecisionDocumentHtmlV1(html, reference, documentFetchedAt);
@@ -108,8 +120,17 @@ export async function acquireEcbEventV1(
       const attached = attachKnownEcbDecisionCaptureV1(event, capture.data, documentFetchedAt);
       if (attached.status !== "available") throw new Error("Validated ECB decision could not attach to its schedule.");
       event = attached.event;
+      if (input.extractPolicyRates === true) {
+        policyRatesExtraction = extractEcbPolicyDecisionFactsV1(html, capture.data);
+        if (policyRatesExtraction.status === "available") {
+          const enriched = attachEcbPolicyDecisionFactsV1(event, policyRatesExtraction);
+          if (enriched.status === "available") event = enriched.event;
+          else policyRatesExtraction = enriched;
+        }
+      }
     }
-    return Object.freeze({ status: "acquired", event, fact: eventFactFromEcbMonetaryPolicyV1(event, input.affectedProducts) });
+    return Object.freeze({ status: "acquired", event, fact: eventFactFromEcbMonetaryPolicyV1(event, input.affectedProducts),
+      ...(policyRatesExtraction === undefined ? {} : { policyRatesExtraction }) });
   } catch (error) {
     if (error instanceof EcbEventTransportError) return { status: "provider-failure", error };
     throw error;

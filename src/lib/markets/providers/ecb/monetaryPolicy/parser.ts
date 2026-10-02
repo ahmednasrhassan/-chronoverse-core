@@ -351,6 +351,35 @@ export function attachKnownEcbDecisionCaptureV1(
   });
 }
 
+/** Reopen only the exact successfully captured bytes; no new source or version scheme. */
+export function readCapturedEcbDecisionMainV1(
+  html: string,
+  capture: EcbMonetaryPolicyDocumentCaptureV1,
+): EcbSourceParseResultV1<readonly unknown[]> {
+  const reference = validateKnownEcbDecisionReferenceV1(capture.reference);
+  if (reference.status !== "available" || !Number.isSafeInteger(capture.fetchedAt) ||
+      capture.fetchedAt < 0 || sha256(html) !== capture.rawCaptureDigest) {
+    return malformed("Captured ECB document provenance does not match its input.");
+  }
+  // These bytes have already parsed successfully at capture. Unexpected defects propagate.
+  const parsed: unknown = HTML_PARSER.parse(html);
+  const main = findFirstTag(parsed, "main");
+  if (main === null) return malformed("Captured ECB document has no main element.");
+  const text = ecbDecisionVisibleTextV1(main);
+  if (sha256(JSON.stringify([
+    "ecb-monetary-policy-decision-content-v1", reference.reference.documentUrl,
+    reference.reference.decisionDate, text,
+  ])) !== capture.semanticContentDigest) {
+    return malformed("Captured ECB document semantic provenance does not match.");
+  }
+  return Object.freeze({ status: "available", data: main });
+}
+
+/** Same visible-text normalization used by the canonical document capture. */
+export function ecbDecisionVisibleTextV1(nodes: readonly unknown[]): string {
+  return collectVisibleText(nodes).join(" ").replace(/\s+/g, " ").trim();
+}
+
 function parseHtml(html: string): EcbSourceParseResultV1<readonly unknown[]> {
   if (html.trim().length === 0) return malformed("ECB HTML source is empty.");
   try {
