@@ -102,6 +102,27 @@ export function buildEcbPolicyDecisionDeltaV1(
   const current = currentSnapshot.event;
   const currentKnownAt = currentSnapshot.knownAt;
   if (currentKnownAt * 1_000 > evaluatedMs) return unavailable("KNOWLEDGE_INCONSISTENT");
+
+  // Reconstruct caller-supplied target evidence outside the memory parser's
+  // permissive catch, just as for the selected prior. No historical reselection.
+  const suppliedTarget = prior.targetSnapshot;
+  const targetSnapshot = canonicalSnapshot(suppliedTarget.event);
+  if (!isDeepStrictEqual(suppliedTarget, targetSnapshot) || targetSnapshot.event.decision !== null) {
+    throw new TypeError("Prior target snapshot must agree with canonical schedule-only construction.");
+  }
+  if (targetSnapshot.knownAt * 1_000 > priorEvaluatedMs) {
+    return unavailable("KNOWLEDGE_INCONSISTENT");
+  }
+  // Canonical normalization requires decisionDate === schedule.meetingDate.
+  // Bind identity AND the semantic schedule version (date, clock, official
+  // provenance). Capture metadata is deliberately excluded from those versions:
+  // recapturing the same schedule and adding an observed decision are compatible;
+  // changing the schedule requires a new prior selection. The identity anchor
+  // need not equal the current meeting date, preserving legitimate rescheduling.
+  if (targetSnapshot.canonicalEventId !== current.canonicalEventId ||
+      targetSnapshot.event.schedule.sourceVersionId !== current.schedule.sourceVersionId) {
+    return unavailable("EVENT_IDENTITY_CONFLICT");
+  }
   const fact = eventFactFromEcbMonetaryPolicyV1(current, []);
   if (fact.actual.availability !== "available" || fact.actual.data.value.kind !== "ecb-policy-rates") {
     return unavailable("CURRENT_POLICY_FACTS_UNAVAILABLE");
@@ -152,12 +173,14 @@ export function buildEcbPolicyDecisionDeltaV1(
     : directions.every((direction) => direction === "INCREASE") ? "ALL_INCREASED"
       : directions.every((direction) => direction === "DECREASE") ? "ALL_DECREASED" : "MIXED";
   return Object.freeze({
-    ...context, status: "available", knownAt: Math.max(currentKnownAt, priorSnapshot.knownAt),
+    ...context, status: "available",
+    knownAt: Math.max(currentKnownAt, priorSnapshot.knownAt, targetSnapshot.knownAt),
     current: Object.freeze({ canonicalEventId: current.canonicalEventId,
       decisionDate: current.decision!.decisionDate, knownAt: currentKnownAt,
       eventSourceVersionId: current.sourceVersionId, announcement: freezeAnnouncement(currentAnnouncement) }),
     prior: Object.freeze({ ...prior, evaluatedAt: new Date(priorEvaluatedMs).toISOString(),
-      selectedSnapshot: priorSnapshot, announcement: freezeAnnouncement(priorAnnouncement) }),
+      selectedSnapshot: priorSnapshot, targetSnapshot,
+      announcement: freezeAnnouncement(priorAnnouncement) }),
     rates: Object.freeze({ depositFacility: deposit, mainRefinancingOperations: mro,
       marginalLendingFacility: marginal }),
     aggregate,

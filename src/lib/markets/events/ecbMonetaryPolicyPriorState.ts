@@ -24,6 +24,7 @@ export interface SelectEcbMonetaryPolicyPriorStateInputV1 {
     "canonicalEventId" | "canonicalMeetingDate" | "schedule">;
   /** Inclusive Unix-second source-knowledge boundary, not publication/effective time. */
   readonly knowledgeCutoff: number;
+  /** Target schedule evidence must be captured by this assessment, independently of the history cutoff. */
   readonly evaluatedAt: string;
 }
 
@@ -42,6 +43,8 @@ export type EcbMonetaryPolicyPriorStateResultV1 = SelectionContext & (
       readonly eventSourceVersionId: EcbMonetaryPolicyEventSnapshotV1["eventSourceVersionId"];
       /** Already-selected canonical evidence for downstream consistency validation. */
       readonly selectedSnapshot: EcbMonetaryPolicyEventSnapshotV1;
+      /** Schedule-only canonical evidence defining the target boundary, distinct from the selected prior. */
+      readonly targetSnapshot: EcbMonetaryPolicyEventSnapshotV1;
       readonly announcement: EventSourcedValueV1<Extract<EventPolicyValueV1,
         { readonly kind: "ecb-policy-rates" }>>;
     }
@@ -83,7 +86,7 @@ export function selectEcbMonetaryPolicyPriorStateAsKnownAtV1(
   }).memory;
   const validatedTarget = parseEcbMonetaryPolicyEventMemoryV1(targetHistory);
   if (validatedTarget === null) throw new TypeError("Inconsistent target ECB schedule facts.");
-  const targetDate = validatedTarget.snapshots[0]!.event.schedule.meetingDate;
+  const targetSnapshot = validatedTarget.snapshots[0]!;
   const context: SelectionContext = Object.freeze({
     coverage: "provided-history-only",
     knowledgeCutoff: input.knowledgeCutoff,
@@ -92,6 +95,16 @@ export function selectEcbMonetaryPolicyPriorStateAsKnownAtV1(
   const unavailable = (reason: Extract<EcbMonetaryPolicyPriorStateResultV1,
     { status: "unavailable" }>["reason"]): EcbMonetaryPolicyPriorStateResultV1 =>
     Object.freeze({ ...context, status: "unavailable", reason });
+
+  // The target input supplies only identity/schedule, not a historical target
+  // memory. Its required evidence must exist by the assessment; otherwise that
+  // boundary is incomplete. Candidate history alone is selected at knowledgeCutoff.
+  // Compare integer-second capture to milliseconds inclusively, without rounding
+  // the assessment up. A known schedule may legitimately postdate the history cutoff.
+  if (targetSnapshot.knownAt * 1_000 > evaluatedAtMs) {
+    return unavailable("EVENT_DATA_INCOMPLETE");
+  }
+  const targetDate = targetSnapshot.event.schedule.meetingDate;
 
   const statesByEvent = new Map<string, string>();
   const ownersByDecisionDate = new Map<string, string>();
@@ -151,6 +164,7 @@ export function selectEcbMonetaryPolicyPriorStateAsKnownAtV1(
     knownAt: latest.knownAt,
     eventSourceVersionId: latest.eventSourceVersionId,
     selectedSnapshot: latest,
+    targetSnapshot,
     announcement,
   });
 }

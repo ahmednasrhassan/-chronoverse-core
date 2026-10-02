@@ -3,7 +3,10 @@ import {
   normalizeEcbMonetaryPolicyEventV1,
   type EcbMonetaryPolicyEventFactV1,
 } from "../../events/ecbMonetaryPolicy";
-import { advanceEcbMonetaryPolicyEventMemoryV1 } from "../../events/ecbMonetaryPolicyMemory";
+import {
+  advanceEcbMonetaryPolicyEventMemoryV1,
+  buildEcbMonetaryPolicyEventSnapshotV1,
+} from "../../events/ecbMonetaryPolicyMemory";
 import {
   selectEcbMonetaryPolicyPriorStateAsKnownAtV1,
   type EcbMonetaryPolicyPriorStateResultV1,
@@ -149,6 +152,120 @@ unavailable(buildEcbPolicyDecisionDeltaV1({ current: event(BASE, { fetchedAt: CU
 assert.equal("inForce" in unchanged, false);
 assert.equal("surprise" in unchanged, false);
 
+// F2: genuine selections for different targets cannot be interchanged.
+const aprilCapture = Date.parse("2026-04-30T12:16:00Z") / 1_000;
+const aprilEvent = event([3, 3.15, 3.4], { date: "2026-04-30", fetchedAt: aprilCapture });
+const julyEvent = event([2.75, 2.9, 3.15], { date: "2026-07-23", fetchedAt: PRIOR_CAPTURE });
+const julyTarget = normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-07-23",
+  schedule: { meetingDate: "2026-07-23", fetchedAt: PRIOR_CAPTURE - 1 },
+});
+const septemberTarget = normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-10", fetchedAt: Date.parse("2026-09-08T12:00:00Z") / 1_000 },
+});
+const policyHistory = [memory(aprilEvent), memory(julyEvent), memory(current)];
+const genuineJulyPrior = priorAvailable(selectEcbMonetaryPolicyPriorStateAsKnownAtV1({
+  memories: policyHistory, target: julyTarget, knowledgeCutoff: PRIOR_CAPTURE - 1,
+  evaluatedAt: "2026-07-23T12:30:00Z",
+}));
+const genuineSeptemberPrior = priorAvailable(selectEcbMonetaryPolicyPriorStateAsKnownAtV1({
+  memories: policyHistory, target: septemberTarget, knowledgeCutoff: CURRENT_CAPTURE - 1,
+  evaluatedAt: EVALUATED_AT,
+}));
+assert.equal(genuineJulyPrior.canonicalEventId, aprilEvent.canonicalEventId);
+assert.equal(genuineSeptemberPrior.canonicalEventId, julyEvent.canonicalEventId);
+const septemberDelta = available(buildEcbPolicyDecisionDeltaV1({ current,
+  prior: genuineSeptemberPrior, evaluatedAt: EVALUATED_AT,
+}));
+for (const key of KEYS) assert.equal(septemberDelta.rates[key].deltaBasisPoints, -25);
+assert.equal(septemberDelta.rates.depositFacility.previousRate, 2.75);
+assert.equal(septemberDelta.rates.depositFacility.currentRate, 2.5);
+assert.equal(septemberDelta.aggregate, "ALL_DECREASED");
+unavailable(buildEcbPolicyDecisionDeltaV1({ current, prior: genuineJulyPrior,
+  evaluatedAt: EVALUATED_AT }), "EVENT_IDENTITY_CONFLICT");
+
+// A timely revision retains its original identity and progresses to an observed
+// decision with the same schedule version; capture and decision versions may change.
+const revisedSchedule = normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-17", fetchedAt: Date.parse("2026-09-14T12:00:00Z") / 1_000 },
+});
+const interveningEvent = event([2.75, 2.9, 3.15], { date: "2026-09-12",
+  fetchedAt: Date.parse("2026-09-12T12:16:00Z") / 1_000,
+});
+const revisedSelection = priorAvailable(selectEcbMonetaryPolicyPriorStateAsKnownAtV1({
+  memories: [memory(julyEvent), memory(interveningEvent)], target: revisedSchedule,
+  knowledgeCutoff: Date.parse("2026-09-15T12:00:00Z") / 1_000,
+  evaluatedAt: "2026-09-15T12:00:00Z",
+}));
+const revisedDecision = event(BASE, { anchor: "2026-09-10", date: "2026-09-17",
+  fetchedAt: Date.parse("2026-09-17T12:16:00Z") / 1_000,
+});
+const revisedAssessment = "2026-09-17T12:30:00Z";
+const validRevisionDelta = available(buildEcbPolicyDecisionDeltaV1({ current: revisedDecision,
+  prior: revisedSelection, evaluatedAt: revisedAssessment,
+}));
+assert.equal(validRevisionDelta.current.canonicalEventId, current.canonicalEventId);
+assert.equal(validRevisionDelta.current.decisionDate, "2026-09-17");
+assert.equal(validRevisionDelta.prior.decisionDate, "2026-09-12");
+assert.equal(validRevisionDelta.prior.targetSnapshot.event.canonicalMeetingDate, "2026-09-10");
+for (const key of KEYS) assert.equal(validRevisionDelta.rates[key].deltaBasisPoints, -25);
+unavailable(buildEcbPolicyDecisionDeltaV1({ current: revisedDecision, prior: genuineSeptemberPrior,
+  evaluatedAt: revisedAssessment }), "EVENT_IDENTITY_CONFLICT");
+
+// Canonical reconstruction rejects contradictory target metadata without catches.
+const missingTarget = clone(prior);
+Reflect.deleteProperty(missingTarget, "targetSnapshot");
+const badTargetIdentity = clone(prior);
+Reflect.set(badTargetIdentity.targetSnapshot.event, "canonicalEventId", "another-target");
+const badTargetMeeting = clone(prior);
+Reflect.set(badTargetMeeting.targetSnapshot.event.schedule, "meetingDate", "2026-09-17");
+const badTargetKnowledge = clone(prior);
+Reflect.set(badTargetKnowledge.targetSnapshot, "knownAt", CURRENT_CAPTURE - 2);
+const badTargetCapture = clone(prior);
+Reflect.set(badTargetCapture.targetSnapshot.event.schedule, "fetchedAt", CURRENT_CAPTURE - 2);
+const badTargetVersion = clone(prior);
+Reflect.set(badTargetVersion.targetSnapshot, "eventSourceVersionId", "0".repeat(64));
+const badTargetScheduleVersion = clone(prior);
+Reflect.set(badTargetScheduleVersion.targetSnapshot.event.schedule, "sourceVersionId", "0".repeat(64));
+const badTargetProvenance = clone(prior);
+Reflect.set(badTargetProvenance.targetSnapshot.event.schedule, "sourceUrl", "https://example.com/calendar");
+for (const invalid of [missingTarget, badTargetIdentity, badTargetMeeting, badTargetKnowledge,
+  badTargetCapture, badTargetVersion, badTargetScheduleVersion, badTargetProvenance,
+  { ...prior, targetSnapshot: buildEcbMonetaryPolicyEventSnapshotV1(current) }]) {
+  assert.throws(() => buildEcbPolicyDecisionDeltaV1({ current, prior: invalid,
+    evaluatedAt: EVALUATED_AT }), TypeError);
+}
+
+// Internally coherent identity/schedule replacements still disagree with current.
+for (const target of [
+  normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-03", schedule: current.schedule }),
+  normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-10",
+    schedule: { meetingDate: "2026-09-17", fetchedAt: current.schedule.fetchedAt } }),
+  normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-10",
+    schedule: { ...current.schedule, scheduledLocalTime: "14:30" } }),
+]) {
+  unavailable(buildEcbPolicyDecisionDeltaV1({ current,
+    prior: { ...prior, targetSnapshot: buildEcbMonetaryPolicyEventSnapshotV1(target) },
+    evaluatedAt: EVALUATED_AT }), "EVENT_IDENTITY_CONFLICT");
+}
+const assessmentSecond = Date.parse(EVALUATED_AT) / 1_000;
+const targetAt = (fetchedAt: number) => buildEcbMonetaryPolicyEventSnapshotV1(
+  normalizeEcbMonetaryPolicyEventV1({ canonicalMeetingDate: "2026-09-10",
+    schedule: { ...current.schedule, fetchedAt } }),
+);
+const targetBoundaryPrior = priorAvailable(selectEcbMonetaryPolicyPriorStateAsKnownAtV1({
+  memories: [memory(julyEvent)], target: targetAt(assessmentSecond).event,
+  knowledgeCutoff: CURRENT_CAPTURE - 1, evaluatedAt: EVALUATED_AT,
+}));
+assert.equal(available(buildEcbPolicyDecisionDeltaV1({ current, prior: targetBoundaryPrior,
+  evaluatedAt: EVALUATED_AT })).knownAt, assessmentSecond,
+"derived knowledge includes required target evidence even when its recapture follows current capture");
+unavailable(buildEcbPolicyDecisionDeltaV1({ current,
+  prior: { ...targetBoundaryPrior, targetSnapshot: targetAt(assessmentSecond + 1) },
+  evaluatedAt: "2026-09-10T12:31:00Z" }), "KNOWLEDGE_INCONSISTENT");
+unavailable(buildEcbPolicyDecisionDeltaV1({ current,
+  prior: { ...targetBoundaryPrior, evaluatedAt: "2026-09-10T12:29:59.999Z" },
+  evaluatedAt: EVALUATED_AT }), "KNOWLEDGE_INCONSISTENT");
+
 const context = { target: current, knowledgeCutoff: CURRENT_CAPTURE - 1, evaluatedAt: EVALUATED_AT };
 const old = event(BASE, { date: "2026-07-23", fetchedAt: PRIOR_CAPTURE });
 const conflict = event([2.75, 2.9, 3.15], { date: "2026-07-23", fetchedAt: PRIOR_CAPTURE + 1 });
@@ -243,6 +360,8 @@ assert.equal(falsifiedDate.selectedSnapshot, octoberPrior.selectedSnapshot);
 assert.equal(falsifiedDate.announcement, octoberPrior.announcement);
 unavailable(buildEcbPolicyDecisionDeltaV1({ current, prior: falsifiedDate,
   evaluatedAt: octoberEvaluation }), "EVENT_IDENTITY_CONFLICT");
+unavailable(buildEcbPolicyDecisionDeltaV1({ current: decemberEvent, prior: falsifiedDate,
+  evaluatedAt: "2026-12-17T12:30:00Z" }), "EVENT_IDENTITY_CONFLICT");
 
 // P2: the canonical prior schedule capture is later than current knowledge.
 const delayedPriorEvent = event(BASE, { date: "2026-07-23", fetchedAt: PRIOR_CAPTURE,
@@ -333,15 +452,22 @@ assert.deepEqual(mutable, before);
 assert.equal(Object.isFrozen(mutable.current.decision!.rates), false);
 assert.equal(Object.isFrozen(mutable.prior.announcement.provenance), false);
 assert.equal(Object.isFrozen(mutable.prior.selectedSnapshot.event.schedule), false);
+assert.equal(Object.isFrozen(mutable.prior.targetSnapshot.event.schedule), false);
 for (const object of [result, result.rates, result.rates.depositFacility, result.current,
   result.prior, result.current.announcement.value.rates, result.prior.announcement.provenance,
   result.prior.announcement.provenance.substitution, result.prior.selectedSnapshot,
   result.prior.selectedSnapshot.event, result.prior.selectedSnapshot.event.schedule,
-  result.prior.selectedSnapshot.event.decision!.rates]) assert.equal(Object.isFrozen(object), true);
+  result.prior.selectedSnapshot.event.decision!.rates, result.prior.targetSnapshot,
+  result.prior.targetSnapshot.event, result.prior.targetSnapshot.event.schedule]) {
+  assert.equal(Object.isFrozen(object), true);
+}
 Reflect.set(mutable.prior.announcement.value.rates, "depositFacility", 99);
 assert.equal(result.prior.announcement.value.rates.depositFacility, 2.5);
 Reflect.set(mutable.prior.selectedSnapshot.event.schedule, "fetchedAt", 0);
 assert.equal(result.prior.selectedSnapshot.event.schedule.fetchedAt, PRIOR_CAPTURE - 1);
+assert.notEqual(result.prior.targetSnapshot, mutable.prior.targetSnapshot);
+Reflect.set(mutable.prior.targetSnapshot.event.schedule, "meetingDate", "2026-09-17");
+assert.equal(result.prior.targetSnapshot.event.schedule.meetingDate, "2026-09-10");
 
 for (const defect of [new ReferenceError("internal defect"), new TypeError("internal defect")]) {
   const currentFault = clone(current);
@@ -365,6 +491,19 @@ for (const defect of [new ReferenceError("internal defect"), new TypeError("inte
     },
   }));
   assert.throws(() => buildEcbPolicyDecisionDeltaV1({ current, prior: proxyFault, evaluatedAt: EVALUATED_AT }),
+    (error) => error === defect);
+  const targetFault = clone(prior);
+  Object.defineProperty(targetFault.targetSnapshot.event.schedule, "fetchedAt", { get() { throw defect; } });
+  assert.throws(() => buildEcbPolicyDecisionDeltaV1({ current, prior: targetFault, evaluatedAt: EVALUATED_AT }),
+    (error) => error === defect);
+  const targetProxyFault = clone(prior);
+  Reflect.set(targetProxyFault.targetSnapshot, "event", new Proxy(targetProxyFault.targetSnapshot.event, {
+    get(target, key, receiver) {
+      if (key === "schedule") throw defect;
+      return Reflect.get(target, key, receiver);
+    },
+  }));
+  assert.throws(() => buildEcbPolicyDecisionDeltaV1({ current, prior: targetProxyFault, evaluatedAt: EVALUATED_AT }),
     (error) => error === defect);
 }
 

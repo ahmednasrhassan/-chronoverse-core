@@ -173,6 +173,59 @@ assert.equal(rescheduledResult.canonicalEventId, septemberPrior.canonicalEventId
 assert.equal(rescheduledResult.decisionDate, "2026-09-12");
 assert.equal(rescheduledTarget.canonicalEventId, TARGET.canonicalEventId);
 
+// F1: a September 16 schedule revision cannot rewrite a September 15 assessment.
+// The September 12 decision changes eligibility only if the revised date is trusted.
+const originalSeptemberTarget = normalizeEcbMonetaryPolicyEventV1({
+  canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-10", fetchedAt: unix("2026-09-08T12:00:00Z") },
+});
+const futureSeptemberTarget = normalizeEcbMonetaryPolicyEventV1({
+  canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-17", fetchedAt: unix("2026-09-16T12:00:00Z") },
+});
+const septemberQuery = { knowledgeCutoff: septemberCutoff, evaluatedAt: "2026-09-15T12:00:00Z" };
+const septemberHistory = [memory(septemberPrior)];
+assert.deepEqual(select(septemberHistory, { ...septemberQuery, target: originalSeptemberTarget }), {
+  status: "unavailable", reason: "INSUFFICIENT_HISTORY", coverage: "provided-history-only",
+  knowledgeCutoff: septemberCutoff, evaluatedAt: "2026-09-15T12:00:00.000Z",
+});
+assert.deepEqual(select(septemberHistory, { ...septemberQuery, target: futureSeptemberTarget }), {
+  status: "unavailable", reason: "EVENT_DATA_INCOMPLETE", coverage: "provided-history-only",
+  knowledgeCutoff: septemberCutoff, evaluatedAt: "2026-09-15T12:00:00.000Z",
+});
+assert.equal(rescheduledResult.targetSnapshot.event.canonicalMeetingDate, "2026-09-10");
+assert.equal(rescheduledResult.targetSnapshot.event.schedule.meetingDate, "2026-09-17");
+assert.equal(rescheduledResult.targetSnapshot.event.decision, null);
+assert.equal(rescheduledResult.targetSnapshot.knownAt, rescheduledTarget.schedule.fetchedAt);
+
+const exactTarget = normalizeEcbMonetaryPolicyEventV1({
+  canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-17", fetchedAt: septemberCutoff },
+});
+assert.equal(available(select(septemberHistory, { ...septemberQuery, target: exactTarget })).decisionDate,
+  "2026-09-12", "target capture exactly at evaluatedAt is inclusive");
+assert.equal(available(select(septemberHistory, { ...septemberQuery, target: exactTarget,
+  evaluatedAt: "2026-09-15T12:00:00.999Z",
+})).decisionDate, "2026-09-12");
+assert.deepEqual(select(septemberHistory, { target: exactTarget, knowledgeCutoff: septemberCutoff - 1,
+  evaluatedAt: "2026-09-15T11:59:59.999Z",
+}), {
+  status: "unavailable", reason: "EVENT_DATA_INCOMPLETE", coverage: "provided-history-only",
+  knowledgeCutoff: septemberCutoff - 1, evaluatedAt: "2026-09-15T11:59:59.999Z",
+}, "assessment must not be rounded up to the target capture second");
+
+// knowledgeCutoff applies to candidates, evaluatedAt applies to the supplied target.
+// A schedule captured after the history cutoff is valid if known by assessment.
+const earlierCutoff = unix("2026-09-12T13:00:00Z");
+const laterKnownTarget = normalizeEcbMonetaryPolicyEventV1({
+  canonicalMeetingDate: "2026-09-10",
+  schedule: { meetingDate: "2026-09-17", fetchedAt: unix("2026-09-14T12:00:00Z") },
+});
+assert.equal(available(select([...septemberHistory,
+  memory(announced("2026-09-13", unix("2026-09-14T12:00:00Z"))),
+], { ...septemberQuery, target: laterKnownTarget, knowledgeCutoff: earlierCutoff })).decisionDate,
+"2026-09-12", "later target knowledge must not advance candidate history knowledge");
+
 // A revised civil date cannot override retained, contradictory schedule facts.
 const octoberCutoff = unix("2026-10-02T12:00:00Z");
 const intervening = memory(announced("2026-10-01", octoberCutoff - 1));
@@ -279,6 +332,16 @@ assert.equal(Object.isFrozen(chosen.selectedSnapshot), true);
 assert.equal(Object.isFrozen(chosen.selectedSnapshot.event.schedule), true);
 assert.equal(Object.isFrozen(chosen.selectedSnapshot.event.decision!.rates), true);
 assert.notEqual(chosen.selectedSnapshot, b.snapshots[0]);
+const mutableTarget = clone(TARGET);
+const targetBefore = clone(mutableTarget);
+const copiedTargetResult = available(select(mutable, { target: mutableTarget }));
+assert.deepEqual(mutableTarget, targetBefore);
+assert.equal(Object.isFrozen(mutableTarget.schedule), false);
+for (const object of [copiedTargetResult.targetSnapshot, copiedTargetResult.targetSnapshot.event,
+  copiedTargetResult.targetSnapshot.event.schedule]) assert.equal(Object.isFrozen(object), true);
+assert.notEqual(copiedTargetResult.targetSnapshot.event.schedule, mutableTarget.schedule);
+Reflect.set(mutableTarget.schedule, "meetingDate", "2026-10-29");
+assert.equal(copiedTargetResult.targetSnapshot.event.schedule.meetingDate, "2026-09-10");
 
 for (const knowledgeCutoff of [-1, 1.5, NaN, Infinity]) {
   assert.throws(() => select([b], { knowledgeCutoff }), TypeError);
@@ -317,6 +380,16 @@ for (const defect of [new ReferenceError("internal defect"), new TypeError("inte
     get() { throw defect; },
   });
   assert.throws(() => select([nested]), (error) => error === defect);
+  const targetFault = clone(TARGET);
+  Object.defineProperty(targetFault.schedule, "fetchedAt", { get() { throw defect; } });
+  assert.throws(() => select([b], { target: targetFault }), (error) => error === defect);
+  const targetProxy = new Proxy(TARGET, {
+    get(target, key, receiver) {
+      if (key === "schedule") throw defect;
+      return Reflect.get(target, key, receiver);
+    },
+  });
+  assert.throws(() => select([b], { target: targetProxy }), (error) => error === defect);
 }
 
 console.log("PASS: prior ECB announcement as-of selection, atomic provenance, no stale fallback, ambiguity and knowledge safety");
