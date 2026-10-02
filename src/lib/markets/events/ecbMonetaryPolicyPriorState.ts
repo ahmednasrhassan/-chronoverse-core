@@ -40,6 +40,8 @@ export type EcbMonetaryPolicyPriorStateResultV1 = SelectionContext & (
       readonly decisionDate: string;
       readonly knownAt: EcbMonetaryPolicyEventSnapshotV1["knownAt"];
       readonly eventSourceVersionId: EcbMonetaryPolicyEventSnapshotV1["eventSourceVersionId"];
+      /** Already-selected canonical evidence for downstream consistency validation. */
+      readonly selectedSnapshot: EcbMonetaryPolicyEventSnapshotV1;
       readonly announcement: EventSourcedValueV1<Extract<EventPolicyValueV1,
         { readonly kind: "ecb-policy-rates" }>>;
     }
@@ -148,6 +150,7 @@ export function selectEcbMonetaryPolicyPriorStateAsKnownAtV1(
     decisionDate: latest.event.decision!.decisionDate,
     knownAt: latest.knownAt,
     eventSourceVersionId: latest.eventSourceVersionId,
+    selectedSnapshot: latest,
     announcement,
   });
 }

@@ -99,6 +99,7 @@ assert.deepEqual(chosen.announcement.provenance, {
 });
 assert.equal(chosen.knownAt, b.snapshots[0].knownAt);
 assert.equal(chosen.eventSourceVersionId, bEvent.sourceVersionId);
+assert.deepEqual(chosen.selectedSnapshot, b.snapshots[0]);
 assert.equal(chosen.coverage, "provided-history-only");
 assert.equal(chosen.knowledgeCutoff, CUTOFF);
 assert.equal(chosen.evaluatedAt, EVALUATED_AT);
@@ -132,6 +133,20 @@ const laterSchedule = memory(announced("2026-07-23", CUTOFF - 10, {
   scheduleFetchedAt: CUTOFF + 1, firstObservedAt: CUTOFF - 100,
 }));
 unavailable([laterSchedule], "INSUFFICIENT_HISTORY");
+const selectedLaterSchedule = available(select([laterSchedule], {
+  knowledgeCutoff: CUTOFF + 1, evaluatedAt: "2026-08-20T12:00:01Z",
+}));
+assert.deepEqual(selectedLaterSchedule.selectedSnapshot, laterSchedule.snapshots[0]);
+assert.equal(selectedLaterSchedule.knownAt, CUTOFF + 1);
+assert.equal(selectedLaterSchedule.selectedSnapshot.event.schedule.fetchedAt, CUTOFF + 1);
+
+const revisedPriorEvent = announced("2026-07-30", unix("2026-07-30T12:16:00Z"), {
+  canonicalMeetingDate: "2026-07-23",
+});
+const revisedPrior = available(select([memory(revisedPriorEvent)]));
+assert.equal(revisedPrior.canonicalEventId, bEvent.canonicalEventId);
+assert.equal(revisedPrior.decisionDate, "2026-07-30");
+assert.deepEqual(revisedPrior.selectedSnapshot.event, revisedPriorEvent);
 
 const self = memory(announced("2026-09-10", CUTOFF - 1));
 const later = memory(announced("2026-10-29", CUTOFF - 1));
@@ -260,6 +275,10 @@ assert.equal(Object.isFrozen(chosen.announcement.value), true);
 assert.equal(Object.isFrozen(chosen.announcement.value.rates), true);
 assert.equal(Object.isFrozen(chosen.announcement.provenance), true);
 assert.equal(Object.isFrozen(chosen.announcement.provenance.substitution), true);
+assert.equal(Object.isFrozen(chosen.selectedSnapshot), true);
+assert.equal(Object.isFrozen(chosen.selectedSnapshot.event.schedule), true);
+assert.equal(Object.isFrozen(chosen.selectedSnapshot.event.decision!.rates), true);
+assert.notEqual(chosen.selectedSnapshot, b.snapshots[0]);
 
 for (const knowledgeCutoff of [-1, 1.5, NaN, Infinity]) {
   assert.throws(() => select([b], { knowledgeCutoff }), TypeError);
