@@ -362,7 +362,9 @@ export function readCapturedEcbDecisionMainV1(
     return malformed("Captured ECB document provenance does not match its input.");
   }
   // These bytes have already parsed successfully at capture. Unexpected defects propagate.
-  const parsed: unknown = HTML_PARSER.parse(html);
+  const parseOnly = decisionHtmlWithoutRawText(html);
+  if (parseOnly === null) return malformed("ECB HTML has malformed script/style raw text.");
+  const parsed: unknown = HTML_PARSER.parse(parseOnly);
   const main = findFirstTag(parsed, "main");
   if (main === null) return malformed("Captured ECB document has no main element.");
   const text = ecbDecisionVisibleTextV1(main);
@@ -382,14 +384,89 @@ export function ecbDecisionVisibleTextV1(nodes: readonly unknown[]): string {
 
 function parseHtml(html: string): EcbSourceParseResultV1<readonly unknown[]> {
   if (html.trim().length === 0) return malformed("ECB HTML source is empty.");
+  const parseOnly = decisionHtmlWithoutRawText(html);
+  if (parseOnly === null) return malformed("ECB HTML has malformed script/style raw text.");
   try {
-    const parsed: unknown = HTML_PARSER.parse(html);
+    const parsed: unknown = HTML_PARSER.parse(parseOnly);
     return Array.isArray(parsed) && parsed.length > 0
       ? Object.freeze({ status: "available", data: parsed })
       : malformed("ECB HTML source has an unsupported structure.");
-  } catch {
+  } catch (error) {
+    if (error instanceof ReferenceError || error instanceof TypeError) throw error;
     return malformed("ECB HTML source could not be parsed.");
   }
+}
+
+/**
+ * Parse-only copy: script/style are HTML raw text, not nested XML. Their bodies
+ * end at the first appropriate HTML closing tag, including inside JS strings.
+ * HTML escaped-script modes introduced by <!-- are unsupported and fail closed.
+ * Scan ordinary tags with quote awareness so attribute/comment text cannot open
+ * a raw-text element. All evidence-bearing bytes outside those elements stay intact.
+ * The original input alone remains the source of rawCaptureDigest.
+ */
+function decisionHtmlWithoutRawText(html: string): string | null {
+  const parts: string[] = [];
+  let copiedThrough = 0;
+  let cursor = 0;
+  while (cursor < html.length) {
+    const start = html.indexOf("<", cursor);
+    if (start === -1) break;
+    if (html.startsWith("<!--", start) || html.startsWith("<![CDATA[", start)) {
+      const terminator = html.startsWith("<!--", start) ? "-->" : "]]>";
+      const end = html.indexOf(terminator, start + 4);
+      if (end === -1) return null;
+      cursor = end + terminator.length;
+      continue;
+    }
+    const tag = /^<(\/?)([A-Za-z][A-Za-z0-9:-]*)(?=[\t\n\f\r />])/.exec(html.slice(start));
+    if (tag === null && !html.startsWith("<!", start) && !html.startsWith("<?", start)) {
+      cursor = start + 1;
+      continue;
+    }
+    const openingEnd = decisionTagEnd(html, start + 1);
+    if (openingEnd === null) return null;
+    const name = tag?.[2].toLowerCase();
+    if (name !== "script" && name !== "style") {
+      cursor = openingEnd + 1;
+      continue;
+    }
+    // HTML raw-text elements are not void/self-closing; reject unsupported forms.
+    if (tag![1] === "/" || /\/\s*>$/.test(html.slice(start, openingEnd + 1))) return null;
+    const closing = new RegExp(`</${name}(?=[\\t\\n\\f\\r />])`, "gi");
+    closing.lastIndex = openingEnd + 1;
+    const match = closing.exec(html);
+    if (match === null) return null;
+    // <!-- can enter escaped/double-escaped HTML script states, where the first
+    // </script> need not close the element. Reject rather than expose hidden text.
+    if (name === "script" && html.slice(openingEnd + 1, match.index).includes("<!--")) return null;
+    const closingEnd = decisionTagEnd(html, match.index + 2);
+    if (closingEnd === null ||
+        !new RegExp(`^</${name}[\\t\\n\\f\\r ]*>$`, "i").test(html.slice(match.index, closingEnd + 1))) {
+      return null;
+    }
+    parts.push(html.slice(copiedThrough, start), `<${name}></${name}>`);
+    copiedThrough = closingEnd + 1;
+    cursor = copiedThrough;
+  }
+  return parts.length === 0 ? html : parts.join("") + html.slice(copiedThrough);
+}
+
+/** Only locate a tag boundary; never interpret attribute values or embedded code. */
+function decisionTagEnd(html: string, start: number): number | null {
+  let quote: string | null = null;
+  let subsetDepth = 0;
+  const declaration = html.startsWith("!", start);
+  for (let cursor = start; cursor < html.length; cursor++) {
+    const character = html[cursor];
+    if (quote !== null) {
+      if (character === quote) quote = null;
+    } else if (character === "\"" || character === "'") quote = character;
+    else if (declaration && character === "[") subsetDepth++;
+    else if (declaration && character === "]") subsetDepth--;
+    else if (character === ">" && subsetDepth === 0) return cursor;
+  }
+  return null;
 }
 
 function collectVisibleText(value: unknown, output: string[] = []): string[] {
