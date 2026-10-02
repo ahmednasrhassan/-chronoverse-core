@@ -50,6 +50,8 @@ export type EcbPolicyDecisionDeltaResultV1 = DeltaContext & (
       readonly status: "available";
       readonly knownAt: number;
       readonly current: Evidence;
+      /** Complete canonical current evidence for downstream delta reconstruction. */
+      readonly currentSnapshot: EcbMonetaryPolicyEventSnapshotV1;
       readonly prior: AvailablePrior;
       readonly rates: {
         readonly depositFacility: EcbPolicyRateDeltaV1;
@@ -175,6 +177,7 @@ export function buildEcbPolicyDecisionDeltaV1(
   return Object.freeze({
     ...context, status: "available",
     knownAt: Math.max(currentKnownAt, priorSnapshot.knownAt, targetSnapshot.knownAt),
+    currentSnapshot,
     current: Object.freeze({ canonicalEventId: current.canonicalEventId,
       decisionDate: current.decision!.decisionDate, knownAt: currentKnownAt,
       eventSourceVersionId: current.sourceVersionId, announcement: freezeAnnouncement(currentAnnouncement) }),
@@ -185,6 +188,35 @@ export function buildEcbPolicyDecisionDeltaV1(
       marginalLendingFacility: marginal }),
     aggregate,
   });
+}
+
+/**
+ * Reconstruct an AVAILABLE caller result through the same evidence, chronology
+ * and arithmetic rules as construction. No history selection or permissive catch.
+ * Return rebuilt immutable evidence, never freeze or retain caller-owned aliases.
+ */
+export function reconstructAvailableEcbPolicyDecisionDeltaV1(
+  supplied: Extract<EcbPolicyDecisionDeltaResultV1, { status: "available" }>,
+): Extract<EcbPolicyDecisionDeltaResultV1, { status: "available" }> {
+  const prior = supplied.prior;
+  const rebuilt = buildEcbPolicyDecisionDeltaV1({
+    current: supplied.currentSnapshot.event,
+    // Project the canonical fields: the builder preserves prior context through
+    // a spread, so unknown caller fields must not survive as mutable aliases.
+    prior: {
+      status: prior.status, coverage: prior.coverage,
+      knowledgeCutoff: prior.knowledgeCutoff, evaluatedAt: prior.evaluatedAt,
+      canonicalEventId: prior.canonicalEventId, decisionDate: prior.decisionDate,
+      knownAt: prior.knownAt, eventSourceVersionId: prior.eventSourceVersionId,
+      selectedSnapshot: prior.selectedSnapshot, targetSnapshot: prior.targetSnapshot,
+      announcement: prior.announcement,
+    },
+    evaluatedAt: supplied.evaluatedAt,
+  });
+  if (rebuilt.status !== "available" || !isDeepStrictEqual(supplied, rebuilt)) {
+    throw new TypeError("Supplied ECB policy delta disagrees with canonical reconstruction.");
+  }
+  return rebuilt;
 }
 
 function canonicalSnapshot(supplied: EcbMonetaryPolicyEventFactV1): EcbMonetaryPolicyEventSnapshotV1 {
