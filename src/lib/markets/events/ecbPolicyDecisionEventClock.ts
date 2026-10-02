@@ -67,17 +67,8 @@ export function buildEcbPolicyDecisionEventClockV1(input: {
   if (supplied === null) {
     return Object.freeze({ ...base, status: "unavailable", reason: "EVENT_DATA_INCOMPLETE" });
   }
-  // Rebuild identity, source versions, schedule, release and capture chronology.
-  // Compare the entire supplied state before trusting its derived metadata.
-  const event = normalizeEcbMonetaryPolicyEventV1({
-    canonicalMeetingDate: supplied.event.canonicalMeetingDate,
-    schedule: supplied.event.schedule,
-    decision: supplied.event.decision,
-  });
-  const snapshot = buildEcbMonetaryPolicyEventSnapshotV1(event);
-  if (!isDeepStrictEqual(supplied, snapshot)) {
-    throw new TypeError("ECB clock snapshot disagrees with canonical reconstruction.");
-  }
+  const snapshot = reconstructEcbMonetaryPolicyEventSnapshotV1(supplied);
+  const event = snapshot.event;
   if (snapshot.knownAt * 1_000 > evaluatedMs) {
     return Object.freeze({ ...base, status: "unavailable", reason: "KNOWLEDGE_INCONSISTENT" });
   }
@@ -91,4 +82,20 @@ export function buildEcbPolicyDecisionEventClockV1(input: {
     scheduledAt: clock.schedule.scheduledAt, actualReleasedAt, phase: clock.phase,
     milestones: Object.freeze({ schedule: clock.schedule, release: clock.release }),
   });
+}
+
+/** Reuse the clock's canonical trust boundary; return copies without a permissive catch. */
+export function reconstructEcbMonetaryPolicyEventSnapshotV1(
+  supplied: EcbMonetaryPolicyEventSnapshotV1,
+): EcbMonetaryPolicyEventSnapshotV1 {
+  const event = normalizeEcbMonetaryPolicyEventV1({
+    canonicalMeetingDate: supplied.event.canonicalMeetingDate,
+    schedule: supplied.event.schedule,
+    decision: supplied.event.decision,
+  });
+  const snapshot = buildEcbMonetaryPolicyEventSnapshotV1(event);
+  if (!isDeepStrictEqual(supplied, snapshot)) {
+    throw new TypeError("ECB clock snapshot disagrees with canonical reconstruction.");
+  }
+  return snapshot;
 }
