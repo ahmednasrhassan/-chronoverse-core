@@ -25,7 +25,7 @@ export type CanonicalObservationSeriesKindV1 =
   | "yield"
   | "index-level";
 
-export type CanonicalStatisticalFrequencyV1 = "monthly" | "quarterly";
+export type CanonicalStatisticalFrequencyV1 = "monthly" | "quarterly" | "daily" | "event-date";
 
 export interface CanonicalObservationValueV1 {
   /** Unix timestamp in seconds. */
@@ -406,7 +406,11 @@ function normalizeReferencePeriod(
   const normalized = value.trim();
   const valid = frequency === "monthly"
     ? /^\d{4}-(?:0[1-9]|1[0-2])$/.test(normalized)
-    : /^\d{4}-Q[1-4]$/.test(normalized);
+    : frequency === "quarterly"
+      ? /^\d{4}-Q[1-4]$/.test(normalized)
+      : /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/.test(normalized) &&
+        Number(normalized.slice(0, 4)) >= 1000 &&
+        new Date(`${normalized}T00:00:00Z`).toISOString().slice(0, 10) === normalized;
 
   if (!valid) {
     throw new TypeError(
@@ -510,5 +514,5 @@ function isSeriesKind(value: unknown): value is CanonicalObservationSeriesKindV1
 function isStatisticalFrequency(
   value: unknown,
 ): value is CanonicalStatisticalFrequencyV1 {
-  return value === "monthly" || value === "quarterly";
+  return value === "monthly" || value === "quarterly" || value === "daily" || value === "event-date";
 }

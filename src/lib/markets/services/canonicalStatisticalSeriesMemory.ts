@@ -412,7 +412,7 @@ function assertCaptureTime(value: number, label: string): number {
 function isStatisticalFrequency(
   value: unknown,
 ): value is CanonicalStatisticalFrequencyV1 {
-  return value === "monthly" || value === "quarterly";
+  return value === "monthly" || value === "quarterly" || value === "daily" || value === "event-date";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
