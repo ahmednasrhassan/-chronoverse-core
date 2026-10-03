@@ -409,11 +409,11 @@ async function main(): Promise<void> {
 
 function assertAppendOnlyLua(): void {
   const source = readFileSync(fileURLToPath(new URL(
-    "../../persistence/eurostatMacroSeriesVintageRedis.ts",
+    "../../persistence/canonicalStatisticalSeriesVintageRedis.ts",
     import.meta.url,
   )), "utf8");
   const script =
-    /const EUROSTAT_MACRO_VINTAGE_COMPARE_AND_APPEND_SCRIPT = String\.raw`([\s\S]*?)`;/.exec(
+    /const CANONICAL_STATISTICAL_VINTAGE_COMPARE_AND_APPEND_SCRIPT = String\.raw`([\s\S]*?)`;/.exec(
       source,
     )?.[1];
   assert.notEqual(script, undefined, "atomic Lua script is present");
