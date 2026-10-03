@@ -4,7 +4,7 @@ import { CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1,
 import { buildCanonicalStatisticalSeriesSnapshotV1,
   type CanonicalStatisticalSeriesSnapshotV1,
 } from "../services/canonicalStatisticalSeriesMemory";
-import { assertBlsMacroFamilyV1, BLS_CPI_ALL_ITEMS_NSA_SOURCE_SPEC_V1,
+import { assertBlsMacroFamilyV1, getBlsMacroSourceSpecV1,
   buildBlsSelectedSeriesSourceVersionIdV1, isBlsOfficialStatusV1,
   type BlsMacroFamilyV1,
 } from "../providers/bls/macroSeries";
@@ -33,11 +33,11 @@ export interface BlsMacroSeriesVintageRedisAdapterV1 {
 
 export function buildBlsMacroSeriesVintageRedisKeyV1(family: BlsMacroFamilyV1): string {
   assertBlsMacroFamilyV1(family);
-  return `chronoverse:markets:bls:macro-series-vintages-v1:${BLS_CPI_ALL_ITEMS_NSA_SOURCE_SPEC_V1.canonicalSeriesId}`;
+  return `chronoverse:markets:bls:macro-series-vintages-v1:${getBlsMacroSourceSpecV1(family).canonicalSeriesId}`;
 }
 
-function isLockedMetadata(metadata: CanonicalStatisticalSeriesInputV1["metadata"]): boolean {
-  const spec = BLS_CPI_ALL_ITEMS_NSA_SOURCE_SPEC_V1;
+function isLockedMetadata(family: BlsMacroFamilyV1, metadata: CanonicalStatisticalSeriesInputV1["metadata"]): boolean {
+  const spec = getBlsMacroSourceSpecV1(family);
   return metadata.provenanceVersion === CANONICAL_OBSERVATION_PROVENANCE_VERSION_V1 &&
     metadata.provider === spec.provider && metadata.source === spec.source &&
     metadata.originalPublisher === spec.originalPublisher &&
@@ -50,7 +50,7 @@ function isLockedMetadata(metadata: CanonicalStatisticalSeriesInputV1["metadata"
 function isLockedSnapshot(family: BlsMacroFamilyV1, snapshot: CanonicalStatisticalSeriesSnapshotV1): boolean {
   assertBlsMacroFamilyV1(family);
   const { metadata, observations } = snapshot.series;
-  return isLockedMetadata(metadata) && observations.length > 0 &&
+  return isLockedMetadata(family, metadata) && observations.length > 0 &&
     observations.every((entry) => isBlsOfficialStatusV1(entry.officialStatus)) &&
     snapshot.canonicalSeriesId === metadata.canonicalSeriesId && snapshot.knownAt === metadata.fetchedAt &&
     snapshot.sourceVersionId === metadata.sourceVersionId &&
@@ -61,11 +61,11 @@ const binding: CanonicalStatisticalVintageBindingV1 = {
   buildKey: (family) => buildBlsMacroSeriesVintageRedisKeyV1(family as BlsMacroFamilyV1),
   canonicalSeriesId: (family) => {
     assertBlsMacroFamilyV1(family as BlsMacroFamilyV1);
-    return BLS_CPI_ALL_ITEMS_NSA_SOURCE_SPEC_V1.canonicalSeriesId;
+    return getBlsMacroSourceSpecV1(family as BlsMacroFamilyV1).canonicalSeriesId;
   },
   validateCandidate: (family, series) => {
     assertBlsMacroFamilyV1(family as BlsMacroFamilyV1);
-    if (!isLockedMetadata(series.metadata)) throw new BlsMacroSeriesVintagePersistenceError("invalid-current");
+    if (!isLockedMetadata(family as BlsMacroFamilyV1, series.metadata)) throw new BlsMacroSeriesVintagePersistenceError("invalid-current");
     const snapshot = buildCanonicalStatisticalSeriesSnapshotV1(series);
     if (!isLockedSnapshot(family as BlsMacroFamilyV1, snapshot)) throw new BlsMacroSeriesVintagePersistenceError("invalid-current");
     return snapshot;

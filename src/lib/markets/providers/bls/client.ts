@@ -1,6 +1,9 @@
 export const BLS_TIMESERIES_API_URL_V1 =
   "https://api.bls.gov/publicAPI/v2/timeseries/data/" as const;
 export const BLS_CPI_ALL_ITEMS_NSA_SERIES_ID_V1 = "CUUR0000SA0" as const;
+export const BLS_LABOR_SERIES_IDS_V1 = Object.freeze([
+  "CES0000000001", "LNS14000000", "CES0500000003",
+] as const);
 export const BLS_MAX_RESPONSE_BYTES_V1 = 2 * 1024 * 1024;
 
 /** Static diagnostics only: upstream messages/request bodies are never exposed. */
@@ -26,6 +29,16 @@ export interface BlsTimeseriesResponseV1 {
   readonly payload: unknown;
 }
 
+/** Exactly the locked labor bundle; not an arbitrary multi-series API. */
+export interface BlsLaborTimeseriesRequestV1 {
+  readonly seriesIds: typeof BLS_LABOR_SERIES_IDS_V1;
+  readonly startYear: number;
+  readonly endYear: number;
+}
+export type BlsLaborTimeseriesLoaderV1 = (
+  request: BlsLaborTimeseriesRequestV1, signal: AbortSignal,
+) => Promise<BlsTimeseriesResponseV1>;
+
 export type BlsTimeseriesLoaderV1 = (
   request: BlsTimeseriesRequestV1,
   signal: AbortSignal,
@@ -37,8 +50,22 @@ export interface BlsTransportDependenciesV1 {
 }
 
 export function assertBlsTimeseriesRequestV1(request: BlsTimeseriesRequestV1): void {
-  if (request.seriesId !== BLS_CPI_ALL_ITEMS_NSA_SERIES_ID_V1 ||
-      !Number.isSafeInteger(request.startYear) || !Number.isSafeInteger(request.endYear) ||
+  if (request.seriesId !== BLS_CPI_ALL_ITEMS_NSA_SERIES_ID_V1) {
+    throw new BlsTransportError("invalid-request");
+  }
+  assertYearRange(request);
+}
+
+export function assertBlsLaborTimeseriesRequestV1(request: BlsLaborTimeseriesRequestV1): void {
+  if (!Array.isArray(request.seriesIds) || request.seriesIds.length !== BLS_LABOR_SERIES_IDS_V1.length ||
+      BLS_LABOR_SERIES_IDS_V1.some((id, index) => request.seriesIds[index] !== id)) {
+    throw new BlsTransportError("invalid-request");
+  }
+  assertYearRange(request);
+}
+
+function assertYearRange(request: { readonly startYear: number; readonly endYear: number }): void {
+  if (!Number.isSafeInteger(request.startYear) || !Number.isSafeInteger(request.endYear) ||
       request.startYear < 1000 || request.endYear > 9999 ||
       request.endYear < request.startYear || request.endYear - request.startYear >= 10) {
     throw new BlsTransportError("invalid-request");
@@ -46,7 +73,7 @@ export function assertBlsTimeseriesRequestV1(request: BlsTimeseriesRequestV1): v
 }
 
 /** Validates the application envelope independently of observation normalization. */
-export function assertBlsResponseEnvelopeV1(payload: unknown): void {
+export function assertBlsResponseEnvelopeV1(payload: unknown, requestedIds?: readonly string[]): void {
   if (!isRecord(payload) || typeof payload.status !== "string" ||
       !Array.isArray(payload.message) || payload.message.some((entry) => typeof entry !== "string")) {
     throw new BlsTransportError("schema");
@@ -56,12 +83,22 @@ export function assertBlsResponseEnvelopeV1(payload: unknown): void {
     throw new BlsTransportError("application-failure");
   }
   if (!isRecord(payload.Results) || !Array.isArray(payload.Results.series) ||
-      payload.Results.series.length !== 1 ||
-      !isRecord(payload.Results.series[0]) ||
-      typeof payload.Results.series[0].seriesID !== "string" ||
-      !Array.isArray(payload.Results.series[0].data)) {
+      payload.Results.series.length !== (requestedIds?.length ?? 1)) {
     throw new BlsTransportError("schema");
   }
+  const seen = new Set<string>();
+  for (const series of payload.Results.series) {
+    if (!isRecord(series) || typeof series.seriesID !== "string" || !Array.isArray(series.data)) {
+      throw new BlsTransportError("schema");
+    }
+    if (requestedIds !== undefined) {
+      if (!requestedIds.includes(series.seriesID) || seen.has(series.seriesID)) {
+        throw new BlsTransportError("schema");
+      }
+      seen.add(series.seriesID);
+    }
+  }
+  if (requestedIds?.some((id) => !seen.has(id))) throw new BlsTransportError("schema");
 }
 
 /** No registration-key/env access, cache, retry or import-time request. Caller owns deadline. */
@@ -71,6 +108,25 @@ export async function loadBlsTimeseriesV1(
 ): Promise<BlsTimeseriesResponseV1> {
   if (typeof window !== "undefined") throw new Error("BLS acquisition is server-only.");
   assertBlsTimeseriesRequestV1(request);
+  return loadBlsResponseV1(request, [request.seriesId], dependencies);
+}
+
+export async function loadBlsLaborTimeseriesV1(
+  request: BlsLaborTimeseriesRequestV1,
+  dependencies: BlsTransportDependenciesV1,
+): Promise<BlsTimeseriesResponseV1> {
+  if (typeof window !== "undefined") throw new Error("BLS acquisition is server-only.");
+  assertBlsLaborTimeseriesRequestV1(request);
+  return loadBlsResponseV1(request, BLS_LABOR_SERIES_IDS_V1, dependencies, BLS_LABOR_SERIES_IDS_V1);
+}
+
+/** Shared bounded transport; CPI keeps its existing envelope contract. */
+async function loadBlsResponseV1(
+  request: { readonly startYear: number; readonly endYear: number },
+  seriesIds: readonly string[],
+  dependencies: BlsTransportDependenciesV1,
+  requestedIds?: readonly string[],
+): Promise<BlsTimeseriesResponseV1> {
   const { signal } = dependencies;
   const fetchImpl = dependencies.fetchImpl ?? fetch;
   const usesDefaultFetch = dependencies.fetchImpl === undefined;
@@ -80,7 +136,7 @@ export async function loadBlsTimeseriesV1(
   try {
     response = await cancellable(() => fetchImpl(BLS_TIMESERIES_API_URL_V1, {
       method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ seriesid: [request.seriesId], startyear: String(request.startYear),
+      body: JSON.stringify({ seriesid: seriesIds, startyear: String(request.startYear),
         endyear: String(request.endYear) }),
       redirect: "error", cache: "no-store", signal,
     }), signal);
@@ -116,7 +172,7 @@ export async function loadBlsTimeseriesV1(
           error.code === "ERR_ENCODING_INVALID_ENCODED_DATA")) throw new BlsTransportError("invalid-json");
       throw error;
     }
-    assertBlsResponseEnvelopeV1(payload);
+    assertBlsResponseEnvelopeV1(payload, requestedIds);
     return Object.freeze({ sourceUrl: BLS_TIMESERIES_API_URL_V1, payload });
   } catch (error) {
     if (error instanceof DOMException && ["AbortError", "TimeoutError"].includes(error.name)) {
