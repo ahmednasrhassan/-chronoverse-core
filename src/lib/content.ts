@@ -7,6 +7,7 @@ import {
 } from "./metadataFallback";
 import type { PortableTextBlock } from "@portabletext/types";
 import DOMPurify from "isomorphic-dompurify";
+import { normalizeEditorialArtifacts, normalizeEditorialBlocks } from "./editorialArtifacts";
 
 
 // Default/fallback category applied whenever a post has no category
@@ -250,12 +251,15 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   // raw `legacyBody` HTML (Blogger imports) — stripping all HTML tags so
   // every downstream fallback (description, tags, category) operates on
   // clean text only.
+  const legacyBody = sanitizeHtml(downgradeHeadings(
+    normalizeEditorialArtifacts(sanitizeHtml(post.legacyBody || "")),
+  ));
   const bodyContent =
-    post.bodyPlainText ||
-    stripHtml(sanitizeHtml(post.legacyBody || "")) ||
+    normalizeEditorialArtifacts(post.bodyPlainText || "").trim() ||
+    stripHtml(legacyBody) ||
     "";
 
-  const title = post.title || "Untitled";
+  const title = normalizeEditorialArtifacts(post.title || "").trim() || "Untitled";
 
   // --- Automated Featured Image Fallback ---
   let resolvedImageUrl: string | undefined;
@@ -287,11 +291,11 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
   }
 
   resolvedImageUrl =
-    resolvedImageUrl || extractFirstImageSrc(post.legacyBody || "");
+    resolvedImageUrl || extractFirstImageSrc(legacyBody);
 
   // --- Automated SEO Description / Excerpt Fallback ---
-  const authoredSeoDescription = post.seoDescription?.trim() || undefined;
-  const authoredExcerpt = post.excerpt?.trim() || undefined;
+  const authoredSeoDescription = normalizeEditorialArtifacts(post.seoDescription || "").trim() || undefined;
+  const authoredExcerpt = normalizeEditorialArtifacts(post.excerpt || "").trim() || undefined;
   const resolvedSeoDescription =
     authoredSeoDescription
       ? authoredSeoDescription
@@ -300,9 +304,10 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
         : generateExcerpt(bodyContent);
 
   // --- Automated Tags Fallback ---
+  const authoredKeywords = (post.keywords || []).map(normalizeEditorialArtifacts).map((keyword) => keyword.trim()).filter(Boolean);
   const resolvedKeywords =
-    post.keywords && post.keywords.length > 0
-      ? post.keywords
+    authoredKeywords.length > 0
+      ? authoredKeywords
       : generateFallbackTags(title, bodyContent);
 
   // --- Automated Category Fallback ---
@@ -319,11 +324,11 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     authoredCategory: post.category?.trim() || undefined,
     categorySlug: resolvedCategorySlug,
     keywords: resolvedKeywords,
-    content: typeof post.content === "string" ? post.content : "",
+    content: normalizeEditorialArtifacts(typeof post.content === "string" ? post.content : ""),
     // `downgradeHeadings` runs BEFORE `sanitizeHtml` so any raw <h1> tags
     // from Blogger-imported content are demoted to <h2> and never collide
     // with the page-level <h1> (the post title) rendered by the template.
-    legacyBody: sanitizeHtml(downgradeHeadings(post.legacyBody || "")),
+    legacyBody,
     imageUrl: resolvedImageUrl,
     cardImageUrl: resolvedCardImageUrl,
     secondaryCardImageUrl: resolvedSecondaryCardImageUrl,
@@ -335,7 +340,7 @@ function mapSanityPost(post: SanityRawPost): ContentItem {
     seoDescription: resolvedSeoDescription || undefined,
     excerpt: authoredExcerpt,
     bodyContent,
-    body: post.body && post.body.length > 0 ? post.body : undefined,
+    body: post.body && post.body.length > 0 ? normalizeEditorialBlocks(post.body) : undefined,
     manualRelatedLinks:
       post.manualRelatedLinks && post.manualRelatedLinks.length > 0
         ? post.manualRelatedLinks
@@ -355,6 +360,13 @@ export async function getSanityArticleBySlug(slug: string): Promise<ContentItem 
 type SanityArticleCollectionLoader = () => Promise<
   SanityRawPost[] | null | undefined
 >;
+
+/** Build-time route enumeration needs identities only, never article bodies. */
+export async function getSanityArticleSlugs(
+  loadSlugs: (query: string) => Promise<{ slug: string }[] | null> = (query) => client.fetch(query),
+): Promise<{ slug: string }[]> {
+  return await loadSlugs(`*[${PUBLISHED_POST_FILTER}] | order(publishedAt desc) { "slug": slug.current }`) || [];
+}
 
 // 2. Fetch articles directly from Sanity CMS
 export async function getSanityArticles(
@@ -498,17 +510,17 @@ export async function getRelatedArticleCandidates(
   return (posts || [])
     .slice(0, RELATED_ARTICLE_CANDIDATE_LIMIT)
     .map((post) => {
-      const excerpt = post.excerpt?.trim() || undefined;
+      const excerpt = normalizeEditorialArtifacts(post.excerpt || "").trim() || undefined;
 
       return {
         slug: post.slug || "",
-        title: post.title || "Untitled",
+        title: normalizeEditorialArtifacts(post.title || "").trim() || "Untitled",
         date: post.publishedAt ? post.publishedAt.split("T")[0] : "",
         publishedAt: post.publishedAt || undefined,
         category: post.category || DEFAULT_CATEGORY,
         authoredCategory: post.category?.trim() || undefined,
         categorySlug: post.categorySlug || DEFAULT_CATEGORY_SLUG,
-        keywords: post.keywords || [],
+        keywords: (post.keywords || []).map(normalizeEditorialArtifacts).map((keyword) => keyword.trim()).filter(Boolean),
         content: "",
         excerpt,
         bodyContent: excerpt || "",

@@ -53,8 +53,12 @@ export default function FaqPage() {
         <p>
           VIP checkout is available from <Link href="/pricing">Pricing</Link>
           {" "}at $15.99 monthly or $150.99 annually after you authenticate.
-          Subscription-management and billing-portal controls are not yet
-          available. The <Link href="/account">Account page</Link> verifies
+          Eligible authenticated customers with a trusted persisted customer
+          mapping may access Lemon Squeezy-hosted subscription-management
+          controls through <Link href="/billing">Billing</Link>. Portal
+          availability is conditional. Opening or returning from the portal
+          does not grant VIP access; payment and entitlement remain based on
+          trusted persisted subscription facts. The <Link href="/account">Account page</Link> verifies
           identity and displays the access state trusted by the server.
         </p>
       </InstitutionalSection>

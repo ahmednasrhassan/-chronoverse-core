@@ -42,6 +42,11 @@ export function createChronoverseProxyV1(
   refreshSession: SessionRefresherV1 = refreshSupabaseSessionV1,
 ) {
   return async function handleProxy(request: NextRequest) {
+    const canonicalHostUrl = getWwwCanonicalRedirectUrlV1(request);
+    if (canonicalHostUrl !== null) {
+      // Redirect before authentication: apex owns the session and private route.
+      return NextResponse.redirect(canonicalHostUrl, 308);
+    }
     const sessionResponse = requiresAuthSessionRefreshV1(
       request.nextUrl.pathname,
     )
@@ -73,6 +78,14 @@ export function createChronoverseProxyV1(
 
     return applySearchRobotsHeaderV1(request, rewriteResponse);
   };
+}
+
+export function getWwwCanonicalRedirectUrlV1(request: NextRequest): URL | null {
+  if (getRequestHostV1(request) !== 'www.chronoversecapital.com') return null;
+  const url = new URL(buildCanonicalUrl('/'));
+  url.pathname = request.nextUrl.pathname;
+  url.search = request.nextUrl.search;
+  return url;
 }
 
 export function getPreviewRobotsHeaderValueV1(
@@ -143,7 +156,7 @@ export function getNewsletterRewriteUrlV1(request: NextRequest): URL | null {
 }
 
 function getRequestHostV1(request: NextRequest): string {
-  const hostHeader = request.headers.get('host') || '';
+  const hostHeader = request.headers.get('host') || request.nextUrl.host;
   return hostHeader.split(':')[0].toLowerCase();
 }
 
@@ -151,6 +164,8 @@ export const proxy = createChronoverseProxyV1();
 
 export const config = {
   matcher: [
+    // Include asset requests on this exact alias, too.
+    { source: '/:path*', has: [{ type: 'host', value: 'www\\.chronoversecapital\\.com' }] },
     /*
      * Match all request paths except for:
      * - _next/static (static files)

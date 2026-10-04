@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import {
   InstitutionalPage,
@@ -22,7 +23,7 @@ export default function PrivacyPolicyPage() {
       summary="This policy describes the information processed by the current Chronoverse Capital website and the choices available on its account, newsletter, contact, and analytics surfaces."
     >
       <p className="text-xs font-mono text-muted">
-        Last updated: September 2026
+        Last updated: October 2026
       </p>
 
       <InstitutionalSection title="1. Information processed">
@@ -113,9 +114,14 @@ export default function PrivacyPolicyPage() {
             Chronoverse research storefront
           </a>
           , whose privacy practices apply to that purchase flow. VIP checkout
-          is hosted by Lemon Squeezy, whose privacy practices apply to payment
-          processing. Subscription-management and billing-portal controls are
-          not currently available on Chronoverse.
+          is available after authentication and hosted by Lemon Squeezy, whose
+          privacy practices apply to payment processing. Eligible authenticated
+          customers with a trusted persisted customer mapping may access
+          Lemon Squeezy-hosted subscription-management controls through{" "}
+          <Link href="/billing">Billing</Link>. Portal availability is
+          conditional. Opening or returning from the portal does not grant
+          VIP access; payment and entitlement remain based on trusted
+          persisted subscription facts.
         </p>
       </InstitutionalSection>
 

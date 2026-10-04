@@ -24,6 +24,12 @@ const canonicalSnapshotSource = readSource(
   "src/lib/markets/services/canonicalMarketSnapshot.ts",
 );
 const combinedHomepageSource = `${homepageSource}\n${marketSurfaceSource}`;
+assert.match(marketSurfaceSource, /label="Freshness"\s+value=\{formatToken\(eurUsd\.provenance\.freshness\)\}/);
+assert.doesNotMatch(marketSurfaceSource, /value="Not assessed"/);
+const freshnessSource = readSource("src/app/(site)/freshness/page.tsx");
+assert.match(freshnessSource, /Current canonical product projections assess freshness/);
+assert.match(freshnessSource, /Historical chart series have separate provenance/);
+assert.match(freshnessSource, /not-assessed/);
 const combinedPresentationSource = [
   combinedHomepageSource,
   newsletterSource,

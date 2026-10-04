@@ -56,6 +56,7 @@ async function verifyLegacyArticleNormalization(): Promise<void> {
   assert.equal(getRootHtmlCandidate("known-article"), null);
   assert.equal(getRootHtmlCandidate("unknown.article.html"), null);
   assert.equal(getRootHtmlCandidate("markets.html"), null);
+  assert.equal(getRootHtmlCandidate("research.html"), null);
   assert.equal(getRootHtmlCandidate("Known-Article.html"), null);
 
   assert.equal(
@@ -162,6 +163,7 @@ function verifySearchPolicy(): void {
   for (const legacyOrPrivateUrl of [
     "/intelligence",
     "/products",
+    "/research",
     "/vip",
     "/2024/09/known-article.html",
     "/known-article.html",

@@ -1,6 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 
 import { buildCanonicalUrl } from "@/lib/seo/site-url";
+import { normalizeEditorialArtifacts } from "@/lib/editorialArtifacts";
 
 export const RSS_CHANNEL_TITLE = "Chronoverse Capital";
 export const RSS_CHANNEL_DESCRIPTION =
@@ -40,7 +41,7 @@ export function escapeXml(value: string): string {
 export function legacyHtmlToPlainText(html: string | null): string {
   if (!html) return "";
 
-  const text = DOMPurify.sanitize(html, {
+  const text = DOMPurify.sanitize(normalizeEditorialArtifacts(html), {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: [],
   });
@@ -72,11 +73,12 @@ function decodeHtmlCodePoint(
 }
 
 export function resolveRssDescription(post: RssArticle): string {
-  const authored = post.seoDescription?.trim() || post.excerpt?.trim();
+  const authored = normalizeEditorialArtifacts(post.seoDescription || "").trim() ||
+    normalizeEditorialArtifacts(post.excerpt || "").trim();
   if (authored) return authored;
 
   const bodyText =
-    post.bodyPlainText?.trim() || legacyHtmlToPlainText(post.bodyRaw);
+    normalizeEditorialArtifacts(post.bodyPlainText || "").trim() || legacyHtmlToPlainText(post.bodyRaw);
   if (bodyText.length <= 300) return bodyText;
 
   const candidate = bodyText.slice(0, 301);

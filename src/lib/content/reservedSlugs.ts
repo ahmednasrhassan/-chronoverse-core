@@ -30,6 +30,7 @@ export const RESERVED_ROOT_SLUGS = Object.freeze([
   "privacy-policy",
   "products",
   "reports",
+  "research",
   "robots.txt",
   "rss.xml",
   "sitemap.xml",

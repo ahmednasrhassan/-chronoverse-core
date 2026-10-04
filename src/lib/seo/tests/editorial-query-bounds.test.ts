@@ -9,6 +9,7 @@ import {
 } from "../../archive";
 import {
   getRelatedArticleCandidates,
+  getSanityArticleSlugs,
   RELATED_ARTICLE_CANDIDATE_LIMIT,
   type ContentItem,
 } from "../../content";
@@ -30,6 +31,25 @@ const makeContentItem = (slug: string): ContentItem => ({
   keywords: ["euro"],
   content: "",
 });
+
+async function verifyStaticParamsPayload(): Promise<void> {
+  let query = "";
+  const slugs = [{ slug: "euro-research" }, { slug: "research" }];
+  assert.deepEqual(await getSanityArticleSlugs(async (value) => {
+    query = value;
+    return slugs;
+  }), slugs);
+  assert.match(query, /defined\(publishedAt\).*publishedAt <= now\(\)/);
+  assert.match(query, /!\(_id in path\('drafts\.\*\*'\)\)/);
+  assert.match(query, /order\(publishedAt desc\) \{ "slug": slug\.current \}/);
+  assert.doesNotMatch(query, /body|mainImage|excerpt|manualRelatedLinks|author/);
+  const failure = new Error("slug provider unavailable");
+  await assert.rejects(() => getSanityArticleSlugs(async () => { throw failure; }), (error) => error === failure);
+  assert.deepEqual(await getSanityArticleSlugs(async () => null), []);
+  const source = readSource("src/app/(site)/[slug]/page.tsx");
+  assert.match(source, /generateStaticParams\(\)[\s\S]{0,100}getSanityArticleSlugs\(\)/);
+  assert.doesNotMatch(source, /\bgetSanityArticles\(/);
+}
 
 async function verifyRelatedCandidateBoundary(): Promise<void> {
   let capturedQuery = "";
@@ -180,6 +200,7 @@ async function verifyArchiveBoundary(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await verifyStaticParamsPayload();
   await verifyRelatedCandidateBoundary();
   verifyVisibleRelatedContract();
   await verifyArchiveBoundary();

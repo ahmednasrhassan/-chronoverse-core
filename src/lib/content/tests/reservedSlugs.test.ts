@@ -27,6 +27,7 @@ function verifyPurePolicy(): void {
     "auth",
     "methodology",
     "premium",
+    "research",
     "robots.txt",
     "sitemap.xml",
   ]) {
@@ -40,6 +41,9 @@ function verifyPurePolicy(): void {
   assert.equal(isReservedRootSlug("  account  "), true);
   assert.match(String(validatePublicRootSlug("ACCOUNT")), /reserved/);
   assert.match(String(validatePublicRootSlug(" account ")), /reserved/);
+  assert.match(String(validatePublicRootSlug("research")), /reserved/);
+  assert.match(String(validatePublicRootSlug(" ReSeArCh ")), /reserved/);
+  assert.equal(validatePublicRootSlug("research-outlook"), true);
 
   for (const malformed of [
     "research/article",

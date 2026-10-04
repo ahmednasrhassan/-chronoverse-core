@@ -263,6 +263,24 @@ function verifyRenderContracts(): void {
   assert.match(headerSource, /loading="eager"/);
   assert.doesNotMatch(headerSource, /\n\s+(?:priority|preload)\s*\n/);
   assert.match(nextConfigSource, /images:\s*\{\s*unoptimized:\s*true/);
+
+  const aboutSource = readSource("src/app/(site)/about/page.tsx");
+  const portraits = [...aboutSource.matchAll(/https:\/\/cdn\.sanity\.io\/images\/[^"\s]+/g)].map(([value]) => new URL(value));
+  assert.equal(portraits.length, 3);
+  assert.deepEqual(portraits.map((url) => url.pathname.split("/").at(-1)), [
+    "be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png",
+    "a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp",
+    "c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp",
+  ]);
+  for (const url of portraits) {
+    assert.equal(url.searchParams.get("w"), "336");
+    assert.equal(url.searchParams.get("h"), "336");
+    assert.equal(url.searchParams.get("fit"), "crop");
+    assert.equal(url.searchParams.get("crop"), "center");
+    assert.equal(url.searchParams.get("auto"), "format");
+  }
+  assert.match(aboutSource, /width=\{112\}[\s\S]*?height=\{112\}/);
+  assert.match(aboutSource, /alt=\{`\$\{member.name\}, Chronoverse Capital team member`\}/);
 }
 
 async function main(): Promise<void> {

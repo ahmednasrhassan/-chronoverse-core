@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import nextConfig from "../../../../next.config";
+import { buildSitemap } from "../../../app/sitemap";
+import { isReservedRootSlug, validatePublicRootSlug } from "../../content/reservedSlugs";
 
 async function main(): Promise<void> {
   const redirects = await nextConfig.redirects?.();
@@ -18,6 +20,13 @@ async function main(): Promise<void> {
     ],
     "/research must have exactly one permanent canonical redirect",
   );
+  assert.equal(isReservedRootSlug("research"), true);
+  assert.match(String(validatePublicRootSlug("research")), /reserved/);
+  const urls = buildSitemap({ posts: [{ slug: "research" }, { slug: "research-outlook" }], categorySlugs: ["research"] }).map((entry) => entry.url);
+  assert.equal(urls.includes("https://chronoversecapital.com/research"), false);
+  assert.equal(urls.includes("https://chronoversecapital.com/reports"), true);
+  assert.equal(urls.includes("https://chronoversecapital.com/research-outlook"), true);
+  assert.equal(urls.includes("https://chronoversecapital.com/category/research"), true);
 
   const llms = readFileSync(path.join(process.cwd(), "public/llms.txt"), "utf8");
   assert.match(llms, /^# Chronoverse Capital/m);

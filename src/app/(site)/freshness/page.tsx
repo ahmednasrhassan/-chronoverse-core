@@ -45,9 +45,18 @@ export default function FreshnessPage() {
           as the market reference time.
         </p>
         <p>
-          Current product provenance may report freshness as{" "}
-          <strong className="text-primary">not-assessed</strong>. That label is
-          intentionally not strengthened without an implemented assessment.
+          Current canonical product projections assess freshness against the
+          source&apos;s publication cadence. Provenance records the assessment
+          time and reports within-cadence, stale, unknown, or unavailable as
+          supported by the evidence. Within-cadence describes reference-data
+          timing; it does not mean live or real-time data. Unknown means the
+          available evidence cannot establish freshness.
+        </p>
+        <p>
+          Historical chart series have separate provenance and retain{" "}
+          <strong className="text-primary">not-assessed</strong> or stale
+          freshness. A current product&apos;s cadence assessment does not
+          assess every observation in a sibling historical series.
         </p>
       </InstitutionalSection>
 

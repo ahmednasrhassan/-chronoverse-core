@@ -254,7 +254,7 @@ export default function FreeMarketSurface({
                     <SignalCell
                       index="05"
                       label="Freshness"
-                      value="Not assessed"
+                      value={formatToken(eurUsd.provenance.freshness)}
                     />
                     <SignalCell
                       index="06"

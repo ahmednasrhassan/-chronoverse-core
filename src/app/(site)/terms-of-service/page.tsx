@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
       summary="These terms describe the boundaries for using the Chronoverse Capital website, market-intelligence surfaces, accounts, and published research."
     >
       <p className="text-xs font-mono text-muted">
-        Last updated: September 2026
+        Last updated: October 2026
       </p>
 
       <InstitutionalSection title="1. Acceptance and service scope">
@@ -81,9 +81,13 @@ export default function TermsOfServicePage() {
       <InstitutionalSection title="5. VIP pricing, billing, and research products">
         <p>
           Approved VIP pricing is $15.99 monthly or $150.99 annually. Secure
-          hosted checkout starts from <Link href="/pricing">Pricing</Link>.
-          Subscription-management and billing-portal controls are not
-          currently available. Access and billing questions must use the
+          hosted checkout starts from <Link href="/pricing">Pricing</Link>
+          {" "}after authentication. Eligible authenticated customers with a
+          trusted persisted customer mapping may access Lemon Squeezy-hosted
+          subscription-management controls through <Link href="/billing">Billing</Link>.
+          Portal availability is conditional. Opening or returning from the
+          portal does not grant VIP access; payment and entitlement remain
+          based on trusted persisted subscription facts. Access and billing questions use the
           published <Link href="/contact">support path</Link>.
         </p>
         <p>

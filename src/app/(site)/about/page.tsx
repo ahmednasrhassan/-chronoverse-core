@@ -24,7 +24,7 @@ const ACTIVE_TEAM_MEMBERS = [
     description:
       "Contributes to active trading work, market analysis, and analytical review.",
     imageUrl:
-      "https://cdn.sanity.io/images/xfs4j01p/production/be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png",
+      "https://cdn.sanity.io/images/xfs4j01p/production/be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png?w=336&h=336&fit=crop&crop=center&auto=format&q=80",
   },
   {
     name: "Mohamed Younes",
@@ -32,7 +32,7 @@ const ACTIVE_TEAM_MEMBERS = [
     description:
       "Contributes to active trading work, market analysis, and market interpretation.",
     imageUrl:
-      "https://cdn.sanity.io/images/xfs4j01p/production/a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp",
+      "https://cdn.sanity.io/images/xfs4j01p/production/a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp?w=336&h=336&fit=crop&crop=center&auto=format&q=80",
   },
   {
     name: "Heba Sayed Ahmed",
@@ -40,7 +40,7 @@ const ACTIVE_TEAM_MEMBERS = [
     description:
       "Contributes to market analysis, analytical review, and market interpretation.",
     imageUrl:
-      "https://cdn.sanity.io/images/xfs4j01p/production/c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp",
+      "https://cdn.sanity.io/images/xfs4j01p/production/c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp?w=336&h=336&fit=crop&crop=center&auto=format&q=80",
   },
 ] as const;
 

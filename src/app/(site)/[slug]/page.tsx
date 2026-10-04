@@ -16,7 +16,7 @@ import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
 import { isReservedRootSlug } from "@/lib/content/reservedSlugs";
 
 import {
-  getSanityArticles,
+  getSanityArticleSlugs,
   getRelatedArticleCandidates,
   stripHtml,
   sanitizeHtml,
@@ -75,7 +75,7 @@ function getArticleSeo(article: ContentItem) {
 // Sanity publishes, updates, or deletes a post through `/api/revalidate`.
 
 export async function generateStaticParams() {
-  const articles = await getSanityArticles();
+  const articles = await getSanityArticleSlugs();
   return articles
     .filter((article) => !isReservedRootSlug(article.slug))
     .map((article) => ({
@@ -256,23 +256,9 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // in src/lib/metadataFallback.ts), both surfaced via `currentPost.keywords`.
   const displayTags = (currentPost.keywords || []).slice(0, 8);
 
-  // Sanitize HTML body to prevent any XSS vulnerabilities
-  // Sanitize HTML body and strip entropy artifacts
-  //
-  // NOTE: this regex is a *runtime safety net*, not the fix. The
-  // "SYSTEM ENTROPY CHECK" placeholder blocks should be removed at the
-  // source in Sanity (see clean-sanity-articles.js). The `g` flag below
-  // was missing previously, which meant only the FIRST occurrence in a
-  // given article was stripped — any repeated occurrence in the same
-  // legacyBody stayed visible on the live page.
-  let strippedLegacyBody = currentPost.legacyBody || "";
-  if (strippedLegacyBody.includes("SYSTEM ENTROPY CHECK")) {
-    strippedLegacyBody = strippedLegacyBody
-      .replace(/["']?SYSTEM ENTROPY CHECK[\s\S]*?(Table of Contents|01\.|\n\n)/gi, "$1")
-      .trim();
-  }
-
-  const transformedLegacyBody = strippedLegacyBody;
+  // Content ingestion already normalizes editorial artifacts before derivation.
+  // Retain the final raw-render HTML sanitation boundary.
+  const transformedLegacyBody = currentPost.legacyBody || "";
   const sanitizedLegacyBody = transformedLegacyBody ? sanitizeHtml(transformedLegacyBody) : "";
   const articleSeo = getArticleSeo(currentPost);
   const articleSchema = buildArticleJsonLd(articleSeo);
