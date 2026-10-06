@@ -51,6 +51,16 @@ assert.deepEqual(changed.rates, {
   unit: "percent", effectiveDate: "2026-09-16",
 });
 assert.notEqual(changed.rates.depositFacility, 25, "basis-point delta is not a resulting rate");
+assert.deepEqual(Reflect.ownKeys(changed).sort(), ["capture", "rates", "status"], "legacy extraction remains rate-only");
+for (const opening of ["raise", "lower"]) {
+  for (const operative of ["will be increased to", "will be decreased to", "will remain unchanged at"]) {
+    if ((opening === "raise" && operative === "will be increased to") ||
+        (opening === "lower" && operative === "will be decreased to")) continue;
+    fails(extract(CHANGED.replace("decided to raise", `decided to ${opening}`).replace("will be increased to", operative)), "ambiguous-section");
+  }
+}
+assert.deepEqual(available(extract(CHANGED.slice(CHANGED.indexOf("Accordingly")))).rates, changed.rates,
+  "the ordered operative rate sentence alone is sufficient");
 const unchanged = available(extract(UNCHANGED));
 assert.equal(unchanged.rates.depositFacility, 2);
 assert.equal(unchanged.rates.mainRefinancingOperations, 2.15);

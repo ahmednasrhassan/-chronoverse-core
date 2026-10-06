@@ -21,13 +21,21 @@ export type EcbPolicyDecisionFactsResultV1 =
   | { readonly status: "available"; readonly rates: EcbPolicyRateFactsV1; readonly capture: EcbMonetaryPolicyDocumentCaptureV1 }
   | EcbPolicyFactsUnavailableV1;
 
+export type EcbPolicySourceActionV1 = "raise" | "lower" | "maintain";
+/** Transient parsed source facts; action is never attached to the legacy V1 event. */
+export type EcbPolicyDecisionSourceFactsResultV1 =
+  | { readonly status: "available"; readonly rates: EcbPolicyRateFactsV1;
+      readonly action: EcbPolicySourceActionV1; readonly capture: EcbMonetaryPolicyDocumentCaptureV1 }
+  | EcbPolicyFactsUnavailableV1;
+
 interface Block { readonly tag: string; readonly text: string }
 const NON_CONTENT = new Set(["script", "style", "noscript", "template", "nav", "footer", "aside"]);
 const OTHER_BLOCKS = new Set(["ul", "ol", "table", "blockquote", "pre"]);
 const RATE_MEMBERS = ["deposit facility", "main refinancing operations", "marginal lending facility"] as const;
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const CHANGE_SENTENCE = /^The Governing Council decided to (?:raise|lower) the three key ECB interest rates by (?:0|[1-9]\d*)(?:\.\d{1,2})? basis points\.\s*/i;
-const RATE_SENTENCE = /^(?:Accordingly, )?The interest rates on the deposit facility, the main refinancing operations and the marginal lending facility (?:will be (?:increased|decreased) to|will remain unchanged at) (.+?) respectively(?:, with effect from (.+?))?\.$/i;
+const CHANGE_SENTENCE = /^The Governing Council decided to (raise|lower) the three key ECB interest rates by (?:0|[1-9]\d*)(?:\.\d{1,2})? basis points\.\s*/i;
+const RATE_SENTENCE = /^(?:Accordingly, )?The interest rates on the deposit facility, the main refinancing operations and the marginal lending facility (will be (?:increased|decreased) to|will remain unchanged at) (.+?) respectively(?:, with effect from (.+?))?\.$/i;
+const SOURCE_ACTIONS = { "will be increased to": "raise", "will be decreased to": "lower", "will remain unchanged at": "maintain" } as const;
 
 /**
  * Only English h2 "Key ECB interest rates", paragraphs up to the next heading,
@@ -39,6 +47,17 @@ export function extractEcbPolicyDecisionFactsV1(
   html: string,
   capture: EcbMonetaryPolicyDocumentCaptureV1,
 ): EcbPolicyDecisionFactsResultV1 {
+  const extracted = extractEcbPolicyDecisionSourceFactsV1(html, capture);
+  if (extracted.status !== "available") return extracted;
+  // Preserve the exact legacy rate-only shape and attachment/hash behavior.
+  return Object.freeze({ status: "available", capture: extracted.capture, rates: extracted.rates });
+}
+
+/** The ordered three-rate sentence establishes one shared source action, without rate comparison. */
+export function extractEcbPolicyDecisionSourceFactsV1(
+  html: string,
+  capture: EcbMonetaryPolicyDocumentCaptureV1,
+): EcbPolicyDecisionSourceFactsResultV1 {
   if (typeof window !== "undefined") throw new Error("ECB policy extraction is server-only.");
   const main = readCapturedEcbDecisionMainV1(html, capture);
   if (main.status !== "available") return unavailable("source-mismatch");
@@ -55,7 +74,9 @@ export function extractEcbPolicyDecisionFactsV1(
   if (section.length === 0 || section.some((block) => block.tag !== "p")) {
     return unavailable("unsupported-structure");
   }
-  const text = section.map((block) => block.text).join(" ").replace(CHANGE_SENTENCE, "");
+  const sectionText = section.map((block) => block.text).join(" ");
+  const opening = CHANGE_SENTENCE.exec(sectionText);
+  const text = opening === null ? sectionText : sectionText.slice(opening[0].length);
   const members = RATE_MEMBERS.map((member) => text.match(new RegExp(member, "gi"))?.length ?? 0);
   if (members.some((count) => count > 1)) return unavailable("ambiguous-section");
   if (members.some((count) => count === 0)) return unavailable("incomplete-rate-set");
@@ -64,16 +85,18 @@ export function extractEcbPolicyDecisionFactsV1(
   if (percentages < 3) return unavailable("incomplete-rate-set");
   const sentence = RATE_SENTENCE.exec(text);
   if (sentence === null) return unavailable("malformed-section");
-  const values = /^(.+?), (.+?) and (.+?)$/.exec(sentence[1]);
+  const action = SOURCE_ACTIONS[sentence[1].toLowerCase() as keyof typeof SOURCE_ACTIONS];
+  if (opening !== null && opening[1].toLowerCase() !== action) return unavailable("ambiguous-section");
+  const values = /^(.+?), (.+?) and (.+?)$/.exec(sentence[2]);
   if (values === null) return unavailable("incomplete-rate-set");
   const rates = values.slice(1).map((value) => percentValue(value.trim()));
   if (rates.some((value) => value === null)) return unavailable("invalid-rate");
   let effectiveDate: string | null = null;
-  if (sentence[2] !== undefined) {
-    effectiveDate = englishCivilDate(sentence[2]);
+  if (sentence[3] !== undefined) {
+    effectiveDate = englishCivilDate(sentence[3]);
     if (effectiveDate === null) return unavailable("invalid-effective-date");
   }
-  return Object.freeze({ status: "available", capture, rates: Object.freeze({
+  return Object.freeze({ status: "available", action, capture, rates: Object.freeze({
     depositFacility: rates[0]!, mainRefinancingOperations: rates[1]!, marginalLendingFacility: rates[2]!,
     unit: "percent", effectiveDate,
   }) });
