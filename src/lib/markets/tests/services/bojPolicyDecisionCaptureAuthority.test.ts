@@ -8,12 +8,14 @@ import { XMLParser } from "fast-xml-parser";
 import ts from "typescript";
 import {
   acquireBojPolicyDecisionCaptureV1, createBojPolicyDecisionCaptureAuthorityV1, readBojPolicyDecisionCaptureAsKnownAtV1,
+  readBojPolicyDecisionActionCaptureAsKnownAtV1,
   type AcquireBojPolicyDecisionCaptureInputV1, type BojPolicyDecisionCaptureAuthorityV1,
   type BojPolicyDecisionCaptureDependenciesV1, type BojPolicyDecisionCaptureReceiptV1, type ReadBojPolicyDecisionCaptureInputV1,
 } from "../../services/bojPolicyDecisionCaptureAuthority";
 import { BOJ_POLICY_MAX_RESPONSE_BYTES_V1, BojPolicyTransportError, bojPolicyDocumentUrlV1 } from "../../providers/boj/transport";
 import { BojPolicyValidationError, parseBojPolicyDocumentV1 } from "../../providers/boj/facts";
 import { buildBojPolicyEvidenceV1, readBojPolicyFactV1 } from "../../providers/boj/canonical";
+import { buildBojPolicyDecisionActionEvidenceV1 } from "../../providers/boj/policyDecisionActionEvidence";
 import { buildBojPolicyVintageKeyV1 } from "../../persistence/bojPolicyVintageRedis";
 import { captureTime as F, date, document, storage } from "../boj/fixtures";
 
@@ -249,7 +251,7 @@ test("consistent earlier canonical evidence and coordinated legacy storage backd
     assert.throws(() => readBojPolicyDecisionCaptureAsKnownAtV1({ receipt: imitation as BojPolicyDecisionCaptureReceiptV1, evaluatedAt: at(earlier) }), /Unrecognized/);
   }
   assert.deepEqual(owner.readAsKnownAt({ receipt, evaluatedAt: at(earlier) }), { status: "not-known-as-of" });
-  assert.equal(read(owner, receipt).capture.knownAt, F); assert.deepEqual(Object.keys(owner).sort(), ["acquire", "readAsKnownAt"]);
+  assert.equal(read(owner, receipt).capture.knownAt, F); assert.deepEqual(Object.keys(owner).sort(), ["acquire", "readActionAsKnownAt", "readAsKnownAt"]);
 });
 
 test("assessment boundaries, subseconds, timezone offsets and payload-free future redaction", async () => {
@@ -335,18 +337,26 @@ test("production infrastructure owns acquisition and assessment uses no current 
     globalThis.fetch = () => { throw new Error("reader fetched"); }; Date.now = () => { throw new Error("reader sampled clock"); };
     assert.deepEqual(readBojPolicyDecisionCaptureAsKnownAtV1({ receipt, evaluatedAt: at(F - 1) }), { status: "not-known-as-of" });
     const known = readBojPolicyDecisionCaptureAsKnownAtV1({ receipt, evaluatedAt: at() }); assert.ok(known.status === "available"); assert.equal(known.capture.knownAt, F);
+    assert.deepEqual(readBojPolicyDecisionActionCaptureAsKnownAtV1({ receipt, evaluatedAt: at(F - 1) }), { status: "not-known-as-of" });
+    const action = readBojPolicyDecisionActionCaptureAsKnownAtV1({ receipt, evaluatedAt: at() });
+    assert.ok(action.status === "available"); assert.equal(action.evidence.action, "set-guideline");
+    assert.deepEqual(action.evidence.capture, known.capture);
+    assert.throws(() => localOwner.readActionAsKnownAt({ receipt, evaluatedAt: at() }), /Unrecognized/);
     assert.equal(fetches, 1); assert.equal(clocks, 1);
   } finally { globalThis.fetch = originalFetch; Date.now = originalNow; }
 });
 
 test("reader performs no acquisition, clock sampling, randomness or scheduling", async () => {
   const owner = authority(); const receipt = await acquire(owner); const expected = read(owner, receipt);
+  const expectedAction = owner.readActionAsKnownAt({ receipt, evaluatedAt: at() });
   const originalFetch = globalThis.fetch; const originalNow = Date.now; const originalRandom = Math.random;
   const timers = ["setTimeout", "setInterval", "setImmediate"] as const; const originals = timers.map((key) => globalThis[key]);
   const forbidden = () => { throw new Error("reader side effect"); };
   try {
     globalThis.fetch = forbidden; Date.now = forbidden; Math.random = forbidden; timers.forEach((key) => Reflect.set(globalThis, key, forbidden));
     assert.deepEqual(read(owner, receipt), expected); assert.deepEqual(owner.readAsKnownAt({ receipt, evaluatedAt: at(F - 1) }), { status: "not-known-as-of" });
+    assert.deepEqual(owner.readActionAsKnownAt({ receipt, evaluatedAt: at() }), expectedAction);
+    assert.deepEqual(owner.readActionAsKnownAt({ receipt, evaluatedAt: at(F - 1) }), { status: "not-known-as-of" });
   } finally {
     globalThis.fetch = originalFetch; Date.now = originalNow; Math.random = originalRandom;
     timers.forEach((key, index) => Reflect.set(globalThis, key, originals[index]));
@@ -382,7 +392,8 @@ test("fresh import performs no source reads, clock, timers, environment or stora
     let exports;
     try{exports=require(${JSON.stringify(modulePath)});}finally{process.env=originalEnv;}
     assert.deepEqual(Object.keys(exports).sort(),[
-      'acquireBojPolicyDecisionCaptureV1','createBojPolicyDecisionCaptureAuthorityV1','readBojPolicyDecisionCaptureAsKnownAtV1'
+      'acquireBojPolicyDecisionCaptureV1','createBojPolicyDecisionCaptureAuthorityV1','readBojPolicyDecisionCaptureAsKnownAtV1',
+      'readBojPolicyDecisionActionCaptureAsKnownAtV1'
     ].sort());
   `;
   const result = spawnSync(process.execPath, ["-e", script], { cwd: process.cwd(), encoding: "utf8", timeout: 20_000 });
@@ -398,7 +409,7 @@ test("minimal semantic surface has no action, analytic, invented event or raw-so
   const modulePath = resolve("src/lib/markets/services/bojPolicyDecisionCaptureAuthority.ts");
   const source = readFileSync(modulePath, "utf8"); const ast = ts.createSourceFile(modulePath, source, ts.ScriptTarget.Latest, true);
   const imports = ast.statements.filter(ts.isImportDeclaration).map((node) => (node.moduleSpecifier as ts.StringLiteral).text);
-  assert.deepEqual(imports, ["server-only", "node:crypto", "../events/eventClock", "../providers/boj/transport", "../providers/boj/facts", "../providers/boj/canonical"]);
+  assert.deepEqual(imports, ["server-only", "node:crypto", "../events/eventClock", "../providers/boj/transport", "../providers/boj/facts", "../providers/boj/canonical", "../providers/boj/policyDecisionActionEvidence"]);
   const forbiddenCalls = new Set(["setTimeout", "setInterval", "setImmediate", "Math.random"]);
   function visit(node: ts.Node): void {
     if (ts.isCallExpression(node)) assert.ok(!forbiddenCalls.has(node.expression.getText(ast)));
@@ -406,4 +417,90 @@ test("minimal semantic surface has no action, analytic, invented event or raw-so
     ts.forEachChild(node, visit);
   }
   visit(ast);
+});
+
+test("trusted action uses the same capture and clock, while the legacy read stays unchanged", async () => {
+  let clocks = 0; let fetches = 0;
+  const owner = createBojPolicyDecisionCaptureAuthorityV1({
+    fetchImpl: async () => { fetches++; return response(); }, nowUnixSeconds: () => { clocks++; return F; },
+  });
+  const receipt = await acquire(owner); const legacy = read(owner, receipt);
+  const result = owner.readActionAsKnownAt({ receipt, evaluatedAt: at() }); assert.ok(result.status === "available");
+  assert.deepEqual(result.evidence, buildBojPolicyDecisionActionEvidenceV1({ document: document(), capture: legacy.capture }));
+  assert.deepEqual(Object.keys(legacy).sort(), ["capture", "status"]);
+  assert.deepEqual(Object.keys(legacy.capture).sort(), ["decodedSourceDigest", "evidence", "knownAt"]);
+  assert.equal(result.evidence.knownAt, F); assert.equal(result.evidence.capture.evidence.metadata.fetchedAt, F);
+  assert.equal(clocks, 1); assert.equal(fetches, 1);
+  eachObject(result, (object) => { assert.ok(Object.isFrozen(object)); assert.equal(Object.hasOwn(object, "html"), false); });
+  assert.equal(Reflect.set(result.evidence, "knownAt", F - 60), false);
+  const again = owner.readActionAsKnownAt({ receipt, evaluatedAt: at() });
+  assert.deepEqual(again, result); assert.notEqual(again, result);
+  assert.equal(clocks, 1); assert.equal(fetches, 1);
+});
+
+test("required action preparation failure propagates before clock and issues no receipt", async () => {
+  const original = XMLParser.prototype.parse; let parses = 0; let clocks = 0;
+  const defect = new ReferenceError("action preparation sentinel");
+  try {
+    XMLParser.prototype.parse = function (this: XMLParser, ...args: Parameters<typeof original>) {
+      parses++; return original.apply(this, args);
+    } as typeof original;
+    parseBojPolicyDocumentV1(document(), date); const legacyParses = parses; parses = 0;
+    XMLParser.prototype.parse = function (this: XMLParser, ...args: Parameters<typeof original>) {
+      if (++parses > legacyParses) throw defect;
+      return original.apply(this, args);
+    } as typeof original;
+    const owner = createBojPolicyDecisionCaptureAuthorityV1({ fetchImpl: async () => response(), nowUnixSeconds: () => { clocks++; return F; } });
+    let issued: Awaited<ReturnType<typeof owner.acquire>> | undefined;
+    await assert.rejects(async () => { issued = await owner.acquire(request()); }, (error) => error === defect);
+    assert.equal(clocks, 0); assert.equal(issued, undefined);
+    assert.throws(() => owner.readActionAsKnownAt({ receipt: {} as BojPolicyDecisionCaptureReceiptV1, evaluatedAt: at() }), /Unrecognized/);
+  } finally { XMLParser.prototype.parse = original; }
+});
+
+test("action reads reject copied, serialized, proxied, foreign and structurally backdated evidence", async () => {
+  const owner = authority(); const foreign = authority(); const receipt = await acquire(owner); const other = await acquire(foreign);
+  const original = read(owner, receipt).capture; const earlier = F - 60;
+  const backdated = buildBojPolicyDecisionActionEvidenceV1({ document: document(),
+    capture: { ...original, knownAt: earlier, evidence: buildBojPolicyEvidenceV1(original.evidence.fact, earlier) } });
+  const store = storage(); await store.adapter.append(date, original.evidence);
+  const key = buildBojPolicyVintageKeyV1(date); const stored = JSON.parse(store.entries.get(key)![0]!.member);
+  stored.knownAt = earlier; stored.series.metadata.fetchedAt = earlier;
+  store.entries.set(key, [{ score: earlier, member: JSON.stringify(stored) }]);
+  const selected = await store.adapter.readAsKnownAt(date, earlier); assert.ok(selected.status === "available");
+  for (const imitation of [{}, { ...receipt }, structuredClone(receipt), JSON.parse(JSON.stringify(receipt)),
+    Object.freeze(Object.create(null)), new Proxy(receipt, { get() { throw new Error("inspected receipt"); } }), other,
+    backdated, backdated.capture, selected.snapshot, stored]) {
+    assert.throws(() => owner.readActionAsKnownAt({ receipt: imitation as BojPolicyDecisionCaptureReceiptV1, evaluatedAt: at(earlier) }), /Unrecognized/);
+    assert.throws(() => readBojPolicyDecisionActionCaptureAsKnownAtV1({ receipt: imitation as BojPolicyDecisionCaptureReceiptV1, evaluatedAt: at(earlier) }), /Unrecognized/);
+  }
+  assert.throws(() => readBojPolicyDecisionActionCaptureAsKnownAtV1({ receipt, evaluatedAt: at() }), /Unrecognized/);
+  const future = owner.readActionAsKnownAt({ receipt, evaluatedAt: at(earlier) });
+  assert.deepEqual(future, { status: "not-known-as-of" });
+});
+
+test("action as-of assessment preserves floor, offsets, redaction and pure reads", async () => {
+  const owner = authority(); const receipt = await acquire(owner); const expected = owner.readActionAsKnownAt({ receipt, evaluatedAt: at() });
+  for (const evaluatedAt of [at(F - 1), new Date(F * 1_000 - 1).toISOString()]) {
+    const future = owner.readActionAsKnownAt({ receipt, evaluatedAt });
+    assert.deepEqual(future, { status: "not-known-as-of" }); assert.deepEqual(Reflect.ownKeys(future), ["status"]); assert.ok(Object.isFrozen(future));
+  }
+  const originalFetch = globalThis.fetch; const originalNow = Date.now;
+  try {
+    globalThis.fetch = async () => { throw new Error("unexpected fetch"); }; Date.now = () => { throw new Error("unexpected clock"); };
+    for (const evaluatedAt of [at(), at(F + 1), at().replace(".000", ".001"), at().replace(".000", ".999"),
+      new Date((F + 2 * 60 * 60) * 1_000).toISOString().replace("Z", "+02:00")]) {
+      assert.deepEqual(owner.readActionAsKnownAt({ receipt, evaluatedAt }), expected);
+    }
+  } finally { globalThis.fetch = originalFetch; Date.now = originalNow; }
+  for (const evaluatedAt of ["invalid", "2026-10-04", "2026-02-30T00:00:00Z", "1969-12-31T23:59:59Z"]) {
+    assert.throws(() => owner.readActionAsKnownAt({ receipt, evaluatedAt }));
+  }
+  for (const mode of ["enumerable", "hidden", "symbol"] as const) {
+    const input = { receipt, evaluatedAt: at() };
+    Object.defineProperty(input, mode === "symbol" ? Symbol("extra") : "extra", { value: true, enumerable: mode === "enumerable" });
+    assert.throws(() => owner.readActionAsKnownAt(input), /closed/);
+  }
+  assert.throws(() => owner.readActionAsKnownAt({ receipt: {} as BojPolicyDecisionCaptureReceiptV1,
+    get evaluatedAt(): string { throw new Error("assessment getter reached"); } }), /Unrecognized/);
 });
