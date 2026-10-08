@@ -155,6 +155,60 @@ test("canonical reconstruction is detached and recursively frozen without freezi
   assert.equal(Reflect.defineProperty(child, "action", { value: "raise" }), false);
 });
 
+for (const mode of ["enumerable", "hidden", "symbol"] as const) {
+  test("preparation rejects document getter substitution with " + mode + " extras", () => {
+    const clean = document(); const polluted = { ...clean }; let reads = 0;
+    Object.defineProperty(polluted, mode === "symbol" ? Symbol("extra") : "extra",
+      { value: true, enumerable: mode === "enumerable" });
+    const input = { get document() { return ++reads <= 3 ? clean : polluted; }, decisionDate: date };
+    let finish: ReturnType<typeof prepare> | undefined;
+    assert.throws(() => { finish = prepare(input); }, /source data properties/);
+    assert.equal(finish, undefined); assert.equal(reads, 0);
+    assert.throws(() => prepare({ document: polluted, decisionDate: date }), /closed/);
+  });
+  for (const field of ["url", "html"] as const) {
+    test("preparation rejects nested " + field + " accessor before " + mode + " mutation", () => {
+      const clean = document(); const supplied = { ...clean }; let reads = 0;
+      Object.defineProperty(supplied, field, { enumerable: true, get() {
+        reads++;
+        Object.defineProperty(supplied, mode === "symbol" ? Symbol("extra") : "extra",
+          { value: true, enumerable: mode === "enumerable" });
+        return clean[field];
+      } });
+      assert.throws(() => prepare({ document: supplied, decisionDate: date }), /source data properties/);
+      assert.equal(reads, 0);
+    });
+  }
+}
+
+test("preparation rejects decisionDate accessor substitution without invoking it", () => {
+  let reads = 0;
+  const input = { document: document(), get decisionDate() { return ++reads === 1 ? date : "2025-01-25"; } };
+  assert.throws(() => prepare(input), /source data properties/); assert.equal(reads, 0);
+});
+
+for (const field of ["document", "decisionDate", "url", "html"] as const) {
+  test("preparation rejects source setter " + field + " without invoking it", () => {
+    const input = { document: document(), decisionDate: date }; let writes = 0;
+    const target = field === "document" || field === "decisionDate" ? input : input.document;
+    Object.defineProperty(target, field, { enumerable: true, set() { writes++; } });
+    assert.throws(() => prepare(input), /source data properties/); assert.equal(writes, 0);
+  });
+}
+
+for (const location of ["input", "document"] as const) {
+  test("preparation rejects " + location + " proxy before descriptor traps", () => {
+    const input = { document: document(), decisionDate: date }; let traps = 0;
+    const proxy = new Proxy(location === "input" ? input : input.document, {
+      ownKeys() { traps++; throw new Error("source proxy inspected"); },
+      getOwnPropertyDescriptor() { traps++; throw new Error("source proxy inspected"); },
+    });
+    if (location === "document") Reflect.set(input, "document", proxy);
+    assert.throws(() => prepare((location === "input" ? proxy : input) as Parameters<typeof prepare>[0]), /source data properties/);
+    assert.equal(traps, 0);
+  });
+}
+
 test("preparation retains its own validated source; it confers only structural consistency", () => {
   const input = context(); const finish = prepare({ document: input.document, decisionDate: date });
   input.document.html = "fake";
@@ -163,3 +217,146 @@ test("preparation retains its own validated source; it confers only structural c
   assert.equal(child.knownAt, F - 60);
   assert.deepEqual(reconstruct({ ...earlier, evidence: child }), child);
 });
+
+
+function captureObject(capture: ReturnType<typeof context>["capture"], path: string): object {
+  let nested: object = capture;
+  if (path) for (const key of path.split(".")) nested = Reflect.get(nested, key);
+  return nested;
+}
+function rejectsCompletion(input: ReturnType<typeof context>, rejected: RegExp): void {
+  const finish = prepare({ document: input.document, decisionDate: date });
+  let child: BojPolicyDecisionActionEvidenceV1 | undefined;
+  assert.throws(() => { child = finish(input.capture); }, rejected);
+  assert.equal(child, undefined);
+}
+
+for (const mode of ["enumerable", "hidden", "symbol"] as const) {
+  test("completion rejects evidence getter substitution with " + mode + " extras", () => {
+    const input = context(); const clean = input.capture.evidence; const polluted = structuredClone(clean); let reads = 0;
+    Object.defineProperty(polluted, mode === "symbol" ? Symbol("extra") : "extra",
+      { value: true, enumerable: mode === "enumerable" });
+    Object.defineProperty(input.capture, "evidence", { enumerable: true,
+      get() { return ++reads <= 2 ? clean : polluted; } });
+    rejectsCompletion(input, /source data properties/); assert.equal(reads, 0);
+    // Test the polluted object directly as well, before cloning could erase its extras.
+    rejectsCompletion({ ...input, capture: { ...context().capture, evidence: polluted } }, /closed|source data properties/);
+  });
+  for (const path of ["evidence.metadata", "evidence.fact", "evidence.fact.target", "evidence.metadata.substitution"]) {
+    test("completion rejects nested " + path + " getter before " + mode + " mutation", () => {
+      const input = context(); const parts = path.split("."); const parent = captureObject(input.capture, parts.slice(0, -1).join("."));
+      const key = parts.at(-1)!; const clean = Reflect.get(parent, key); const polluted = structuredClone(clean); let reads = 0;
+      Object.defineProperty(polluted, mode === "symbol" ? Symbol("extra") : "extra",
+        { value: true, enumerable: mode === "enumerable" });
+      Object.defineProperty(parent, key, { enumerable: true, get() {
+        reads++;
+        Object.defineProperty(input.capture, mode === "symbol" ? Symbol("extra") : "extra",
+          { value: true, enumerable: mode === "enumerable" });
+        return reads === 1 ? clean : polluted;
+      } });
+      rejectsCompletion(input, /source data properties/); assert.equal(reads, 0);
+    });
+  }
+}
+
+for (const path of ["knownAt", "decodedSourceDigest", "evidence.fact.decisionDate", "evidence.fact.target.value",
+  "evidence.metadata.fetchedAt", "evidence.metadata.substitution.status"]) {
+  test("completion rejects scalar accessor " + path + " without invoking it", () => {
+    const input = context(); const parts = path.split("."); const parent = captureObject(input.capture, parts.slice(0, -1).join("."));
+    const key = parts.at(-1)!; const clean = Reflect.get(parent, key); let reads = 0;
+    Object.defineProperty(parent, key, { enumerable: true, get() { reads++; return clean; } });
+    rejectsCompletion(input, /source data properties/); assert.equal(reads, 0);
+  });
+}
+
+for (const path of ["evidence", "evidence.metadata", "evidence.fact.target"]) {
+  test("completion rejects setter " + path + " without invoking it", () => {
+    const input = context(); const parts = path.split("."); const parent = captureObject(input.capture, parts.slice(0, -1).join("."));
+    let writes = 0;
+    Object.defineProperty(parent, parts.at(-1)!, { enumerable: true, set() { writes++; } });
+    rejectsCompletion(input, /source data properties/); assert.equal(writes, 0);
+  });
+}
+
+for (const path of ["", "evidence", "evidence.fact", "evidence.fact.target", "evidence.metadata",
+  "evidence.metadata.substitution", "knownAt"]) {
+  test("completion rejects " + (path || "capture") + " proxy before any traps", () => {
+    const input = context(); const parts = path.split("."); const parent = captureObject(input.capture, parts.slice(0, -1).join("."));
+    const key = parts.at(-1)!; let traps = 0;
+    const proxy = new Proxy(path === "knownAt" ? {} : path ? Reflect.get(parent, key) : input.capture, {
+      get() { traps++; throw new Error("capture proxy read"); },
+      ownKeys() { traps++; throw new Error("capture proxy inspected"); },
+      getOwnPropertyDescriptor() { traps++; throw new Error("capture proxy inspected"); },
+      getPrototypeOf() { traps++; throw new Error("capture proxy inspected"); },
+    });
+    if (path) Reflect.set(parent, key, proxy); else input.capture = proxy;
+    rejectsCompletion(input, /source data properties/); assert.equal(traps, 0);
+  });
+}
+
+for (const path of ["evidence.fact.decisionDate", "evidence.fact.target.qualification", "evidence.metadata.fetchedAt"]) {
+  test("completion rejects inherited accessor " + path + " before validation reads", () => {
+    const input = context(); const parts = path.split("."); const parent = captureObject(input.capture, parts.slice(0, -1).join("."));
+    const key = parts.at(-1)!; const clean = Reflect.get(parent, key); let reads = 0;
+    Reflect.deleteProperty(parent, key);
+    Object.setPrototypeOf(parent, { get [key]() { reads++; return clean; } });
+    rejectsCompletion(input, /source data properties/); assert.equal(reads, 0);
+  });
+}
+
+for (const entry of ["build", "reconstruct"] as const) {
+  for (const field of entry === "build" ? ["document", "capture"] : ["document", "capture", "evidence"]) {
+    test(entry + " rejects original " + field + " accessor before reading caller fields", () => {
+      const input = entry === "build" ? context() : { ...context(), evidence: build(context()) };
+      const clean = Reflect.get(input, field); let reads = 0;
+      Object.defineProperty(input, field, { enumerable: true, get() { reads++; return clean; } });
+      let child: BojPolicyDecisionActionEvidenceV1 | undefined;
+      assert.throws(() => { child = entry === "build" ? build(input) : reconstruct(input as Parameters<typeof reconstruct>[0]); }, /source data properties/);
+      assert.equal(child, undefined); assert.equal(reads, 0);
+    });
+  }
+}
+
+for (const field of ["action", "capture"] as const) {
+  test("reconstruct rejects supplied child " + field + " accessor without invoking it", () => {
+    const input = context(); const supplied = structuredClone(build(input)); const clean = supplied[field]; let reads = 0;
+    Object.defineProperty(supplied, field, { enumerable: true, get() { reads++; return clean; } });
+    let child: BojPolicyDecisionActionEvidenceV1 | undefined;
+    assert.throws(() => { child = reconstruct({ ...input, evidence: supplied }); }, /source data properties/);
+    assert.equal(child, undefined); assert.equal(reads, 0);
+  });
+}
+
+test("completion rejects a proxy prototype before inherited descriptor traps", () => {
+  const input = context(); let traps = 0;
+  const prototype = new Proxy({}, {
+    get() { traps++; throw new Error("prototype proxy read"); },
+    ownKeys() { traps++; throw new Error("prototype proxy inspected"); },
+    getOwnPropertyDescriptor() { traps++; throw new Error("prototype proxy inspected"); },
+    getPrototypeOf() { traps++; throw new Error("prototype proxy inspected"); },
+  });
+  Object.setPrototypeOf(input.capture.evidence.fact.target, prototype);
+  rejectsCompletion(input, /source data properties/); assert.equal(traps, 0);
+});
+
+test("completion validates all original capture extras before detachment", () => {
+  for (const path of ["", "evidence", "evidence.fact", "evidence.fact.target", "evidence.metadata", "evidence.metadata.substitution"]) {
+    for (const mode of ["enumerable", "hidden", "symbol"] as const) {
+      const input = context();
+      Object.defineProperty(captureObject(input.capture, path), mode === "symbol" ? Symbol("extra") : "extra",
+        { value: true, enumerable: mode === "enumerable" });
+      rejectsCompletion(input, /closed|source data properties|validation failed|canonical source reconstruction/);
+    }
+  }
+});
+
+for (const mode of ["frozen", "null-prototype-envelope", "custom-prototype-envelope"] as const) {
+  test("completion accepts legitimate " + mode + " data with identical evidence", () => {
+    const input = context(); const expected = build(input);
+    if (mode === "frozen") objects(input.capture, (nested) => Object.freeze(nested));
+    else Object.setPrototypeOf(input.capture, mode === "null-prototype-envelope" ? null : { label: "caller capture" });
+    const child = prepare({ document: input.document, decisionDate: date })(input.capture);
+    assert.deepEqual(child, expected); assert.equal(JSON.stringify(child), JSON.stringify(expected));
+    assert.deepEqual(reconstruct({ ...input, evidence: child }), expected);
+  });
+}

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { isDeepStrictEqual } from "node:util";
+import { isDeepStrictEqual, types } from "node:util";
 import { assertBojPolicyServerV1, type BojPolicyDocumentV1 } from "./transport";
 import { BOJ_POLICY_INSTRUMENT_V1, parseBojPolicyDocumentV1, type BojPolicyDocumentKindV1 } from "./facts";
 import { buildBojPolicyEvidenceV1, buildBojPolicySourceVersionIdV1, getBojPolicySpecV1,
@@ -47,10 +47,12 @@ export function buildBojPolicyDecisionActionEvidenceV1(
   input: BuildBojPolicyDecisionActionEvidenceInputV1,
 ): BojPolicyDecisionActionEvidenceV1 {
   assertBojPolicyServerV1();
-  assertKeys(input, ["document", "capture"]);
-  validateCapture(input.capture);
-  return prepareBojPolicyDecisionActionEvidenceV1({ document: input.document,
-    decisionDate: input.capture.evidence.fact.decisionDate })(input.capture);
+  assertSourceData(input, ["document", "capture"]);
+  const { document, capture } = input;
+  assertCaptureData(capture);
+  validateCapture(capture);
+  return prepareBojPolicyDecisionActionEvidenceV1({ document,
+    decisionDate: capture.evidence.fact.decisionDate })(capture);
 }
 
 /** Validate complete source semantics before an authority samples its clock.
@@ -59,13 +61,15 @@ export function prepareBojPolicyDecisionActionEvidenceV1(input: {
   readonly document: BojPolicyDocumentV1; readonly decisionDate: string;
 }): (capture: BojPolicyDecisionActionSourceCaptureV1) => BojPolicyDecisionActionEvidenceV1 {
   assertBojPolicyServerV1();
-  assertKeys(input, ["document", "decisionDate"]);
-  assertKeys(input.document, ["url", "html"]);
-  if (typeof input.document.url !== "string" || typeof input.document.html !== "string") {
+  assertSourceData(input, ["document", "decisionDate"]);
+  const { document, decisionDate } = input;
+  assertSourceData(document, ["url", "html"]);
+  const { url, html } = document;
+  if (typeof url !== "string" || typeof html !== "string") {
     throw new TypeError("Expected decoded BoJ decision document.");
   }
-  // Validate the original objects before cloning can erase hidden/symbol fields.
-  const source = structuredClone(input);
+  // No caller accessor runs between closed-key validation and source detachment.
+  const source = { document: { url, html }, decisionDate };
   // Every supported parser branch requires the explicit set decision context and its
   // selected guideline paragraph. Neither the title nor 'remain at around' alone suffices.
   const fact = parseBojPolicyDocumentV1(source.document, source.decisionDate);
@@ -85,7 +89,10 @@ export function prepareBojPolicyDecisionActionEvidenceV1(input: {
   ]), "utf8").digest("hex")}`;
   return Object.freeze((capture: BojPolicyDecisionActionSourceCaptureV1): BojPolicyDecisionActionEvidenceV1 => {
     assertBojPolicyServerV1();
+    assertCaptureData(capture);
     validateCapture(capture);
+    // The original tree has only data properties: these synchronous reads and
+    // cloning cannot invoke caller code or substitute any validated value.
     const captured = structuredClone(capture);
     validateCapture(captured);
     const evidence = buildBojPolicyEvidenceV1(fact, captured.knownAt);
@@ -103,14 +110,42 @@ export function reconstructBojPolicyDecisionActionEvidenceV1(input: BuildBojPoli
   readonly evidence: BojPolicyDecisionActionEvidenceV1;
 }): BojPolicyDecisionActionEvidenceV1 {
   assertBojPolicyServerV1();
-  assertKeys(input, ["document", "capture", "evidence"]);
-  const supplied = input.evidence;
-  assertKeys(supplied, ["schemaVersion", "parserVersion", "semantic", "provider", "productId", "institution", "scope",
+  assertSourceData(input, ["document", "capture", "evidence"]);
+  const { document, capture, evidence: supplied } = input;
+  assertSourceData(supplied, ["schemaVersion", "parserVersion", "semantic", "provider", "productId", "institution", "scope",
     "decisionDate", "documentKind", "sourceUrl", "action", "knownAt", "sourceVersionId", "capture"]);
+  assertDataTree(supplied);
   validateCapture(supplied.capture);
-  const rebuilt = buildBojPolicyDecisionActionEvidenceV1({ document: input.document, capture: input.capture });
+  const rebuilt = buildBojPolicyDecisionActionEvidenceV1({ document, capture });
   assertCanonical(supplied, rebuilt);
   return rebuilt;
+}
+
+function assertCaptureData(capture: BojPolicyDecisionActionSourceCaptureV1): void {
+  assertSourceData(capture, ["knownAt", "evidence", "decodedSourceDigest"]);
+  assertDataTree(capture);
+}
+
+function assertDataTree(value: unknown, seen = new WeakSet<object>()): void {
+  if (typeof value === "function") throw new TypeError("Expected BoJ source data properties.");
+  if (typeof value !== "object" || value === null) return;
+  if (types.isProxy(value)) throw new TypeError("Expected BoJ source data properties.");
+  // Exclude inherited accessors too, including on fields absent from malformed input.
+  for (let prototype = Object.getPrototypeOf(value); prototype !== null && prototype !== Object.prototype;
+    prototype = Object.getPrototypeOf(prototype)) {
+    if (types.isProxy(prototype)) throw new TypeError("Expected BoJ source data properties.");
+    for (const key of Reflect.ownKeys(prototype)) {
+      if (!Object.hasOwn(Object.getOwnPropertyDescriptor(prototype, key)!, "value")) {
+        throw new TypeError("Expected BoJ source data properties.");
+      }
+    }
+  }
+  if (seen.has(value)) return;
+  seen.add(value);
+  const keys = Reflect.ownKeys(value);
+  if (keys.some((key) => typeof key !== "string")) throw new TypeError("Expected closed BoJ action evidence object.");
+  assertSourceData(value, keys as string[]);
+  for (const key of keys) assertDataTree(Object.getOwnPropertyDescriptor(value, key)!.value, seen);
 }
 
 function validateCapture(capture: BojPolicyDecisionActionSourceCaptureV1): void {
@@ -124,6 +159,18 @@ function validateCapture(capture: BojPolicyDecisionActionSourceCaptureV1): void 
   // The existing strict reader validates all original fact/target/provenance keys.
   const fact = readBojPolicyFactV1(evidence.fact.decisionDate, evidence);
   assertCanonical(evidence, buildBojPolicyEvidenceV1(fact, capture.knownAt));
+}
+
+function assertSourceData(value: unknown, keys: readonly string[]): void {
+  // Proxies cannot supply trustworthy own-property descriptors; cloning rejected them too.
+  if (types.isProxy(value)) throw new TypeError("Expected BoJ source data properties.");
+  assertKeys(value, keys);
+  for (const key of keys) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor === undefined || !descriptor.enumerable || !Object.hasOwn(descriptor, "value")) {
+      throw new TypeError("Expected BoJ source data properties.");
+    }
+  }
 }
 
 function assertKeys(value: unknown, keys: readonly string[]): void {
