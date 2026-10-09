@@ -1,3 +1,7 @@
+import MarketCurrentUse, {
+  analysisLabel,
+  isCurrentUseEligible,
+} from "@/components/markets/MarketCurrentUse";
 import Link from "next/link";
 
 import type {
@@ -168,6 +172,7 @@ function MarketIdentityHeader({ room }: { room: VipFxMarketRoomV1 }) {
             {deep === null ? "Unavailable" : formatCurrentValue(deep)}
           </div>
         </div>
+        <MarketCurrentUse projection={room.deep} />
         <p className="mt-3 text-xs leading-5 text-[#91889A]">
           {deep === null
             ? "Canonical current reference value unavailable; the historical chart endpoint is not used as a substitute."
@@ -177,19 +182,19 @@ function MarketIdentityHeader({ room }: { room: VipFxMarketRoomV1 }) {
 
       <dl className="grid grid-cols-2 gap-x-7 gap-y-4 border-l border-[#6F4C91]/35 pl-5 sm:min-w-72">
         <HeroDatum
-          label="State"
+          label={deep === null ? "State" : analysisLabel(deep, "State")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.marketState)}
         />
         <HeroDatum
-          label="Signal"
+          label={deep === null ? "Signal" : analysisLabel(deep, "Signal")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.signal.direction)}
         />
         <HeroDatum
-          label="Strength"
+          label={deep === null ? "Strength" : analysisLabel(deep, "Strength")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.signal.strength)}
         />
         <HeroDatum
-          label="Risk"
+          label={deep === null ? "Risk" : analysisLabel(deep, "Risk")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.risk.level)}
         />
       </dl>
@@ -220,6 +225,7 @@ function DecisionRail({
   if (deep === null) {
     return (
       <aside className="border-t border-[#6F4C91]/40 bg-[linear-gradient(160deg,#18151D,#100E14_72%)] px-5 py-7 sm:px-7 xl:border-l xl:border-t-0">
+        <MarketCurrentUse projection={null} />
         <div className={EYEBROW}>Decision intelligence</div>
         <h2 className="mt-1 text-xl font-bold text-[#F3EBDD]">
           Deep intelligence unavailable
@@ -251,20 +257,21 @@ function DecisionRail({
     : null;
   const sections = [
     {
-      label: "Executive posture",
+      label: analysisLabel(deep, "Executive posture"),
       values: recommendation === null
         ? decision === null
           ? [
-            `Signal / ${formatLabel(details.signal.direction)}`,
+            `${analysisLabel(deep, "Signal")} / ${formatLabel(details.signal.direction)} / Recommendation ${formatLabel(engine.recommendation.availability)}`,
             details.signal.reasons[0] ?? "No supporting signal reason supplied.",
           ]
           : [
-            `Decision / ${formatLabel(decision.stance)}`,
+            `${analysisLabel(deep, "Decision")} / ${formatLabel(decision.stance)} / ${formatLabel(engine.decision.availability)} evidence`,
             `Decision score ${formatSigned(decision.score)}`,
           ]
         : [
-          `${formatLabel(recommendation.posture)} posture`,
+          `${analysisLabel(deep, `${formatLabel(recommendation.posture)} posture`)} / ${formatLabel(engine.recommendation.availability)} evidence`,
           `${formatLabel(recommendation.stance)} / ${formatLabel(recommendation.strength.band)} conviction`,
+          ...recommendation.restraintReasons.map((reason) => formatLabel(reason.code)),
         ],
     },
     {
@@ -279,10 +286,10 @@ function DecisionRail({
         `Risk ${formatLabel(details.risk.level)} / ${formatPercent(details.risk.score)}`,
         ...(conviction === null
           ? []
-          : [`Market conviction ${formatPercent(conviction)}`]),
+          : [`Market conviction ${formatPercent(conviction)} / ${"data" in engine.confidence ? formatLabel(engine.confidence.data.conviction.availability) : "Unavailable"} evidence`]),
         ...(dataConfidence === null
           ? []
-          : [`Data confidence ${formatPercent(dataConfidence)}`]),
+          : [`Data confidence ${formatPercent(dataConfidence)} / ${"data" in engine.confidence ? formatLabel(engine.confidence.data.data.availability) : "Unavailable"} evidence`]),
       ],
     },
     ...("data" in engine.contradiction
@@ -299,9 +306,9 @@ function DecisionRail({
     <aside className="border-t border-[#6F4C91]/40 bg-[linear-gradient(160deg,#18151D,#100E14_72%)] px-5 py-7 sm:px-7 xl:border-l xl:border-t-0">
       <div className={EYEBROW}>Decision intelligence</div>
       <h2 className="mt-1 text-xl font-bold tracking-tight text-[#F3EBDD]">
-        Executive readout
+        {analysisLabel(deep, "Executive readout")}
       </h2>
-      <div className="mt-5">
+      <div data-analysis-use={isCurrentUseEligible(deep) ? "current" : "prior"} className="mt-5">
         {sections.map((section, index) => (
           <section
             key={section.label}
@@ -409,7 +416,8 @@ function DeepIntelligenceLayers({ deep }: { deep: FxVipDeepProjectionV1 }) {
     : null;
 
   return (
-    <div className="mt-10">
+    <div data-analysis-use={isCurrentUseEligible(deep) ? "current" : "prior"} className="mt-10">
+      {!isCurrentUseEligible(deep) ? <MarketCurrentUse projection={deep} /> : null}
       <TechnicalEvidence deep={deep} />
       {scenario === null ? null : (
         <ScenarioArchitecture

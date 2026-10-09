@@ -7,8 +7,10 @@ import {
   selectVipMarketV1,
   VIP_MARKET_IDS_V1,
 } from "../../../lib/markets/projections/vipMarketSelection";
-import type {
-  FiveProductVipDeepProjectionMapV1,
+import {
+  assembleFiveProductVipDeepProjectionMapV1,
+  type FiveProductVipDeepMapDependenciesV1,
+  type FiveProductVipDeepProjectionMapV1,
 } from "../../../lib/markets/services/canonicalProductResults";
 import VipOverviewSurface from "../VipOverviewSurface";
 
@@ -98,7 +100,7 @@ function verifyProtectedPageComposition(): void {
     "VIP Overview follows the current async searchParams contract");
 }
 
-function verifySharedCanonicalOwnership(): void {
+async function verifySharedCanonicalOwnership(): Promise<void> {
   const service = source("src/lib/markets/services/canonicalProductResults.ts");
   const functionStart = service.indexOf(
     "export async function getFiveProductVipDeepProjectionMapV1",
@@ -110,16 +112,41 @@ function verifySharedCanonicalOwnership(): void {
   const assembly = service.slice(functionStart, functionEnd);
 
   assertEqual(functionStart >= 0, true, "five-market Deep map exists");
-  assertEqual(count(assembly, "getCachedCanonicalFxResultBundleV1()"), 1,
-    "Deep map reads the atomic FX canonical owner once");
-  assertEqual(count(assembly, "getCanonicalEstrResultV1()"), 1,
-    "Deep map reads the €STR canonical owner once");
+  assertEqual(count(assembly, "loadFxBundle: getCachedCanonicalFxResultBundleV1"), 1,
+    "Deep map injects the atomic FX canonical owner once");
+  assertEqual(count(assembly, "loadEstr: getCanonicalEstrResultV1"), 1,
+    "Deep map injects the €STR canonical owner once");
   assertEqual(count(assembly, "projectFiveProductVipDeepV1"), 5,
     "Deep map projects exactly five canonical products");
   assertEqual(assembly.includes("unstable_cache"), false,
     "Deep assembly creates no separate VIP cache");
   assertEqual(assembly.includes("getFiveProductFreeLite"), false,
     "Deep assembly does not project Free Lite data");
+
+  let fxCalls = 0;
+  let estrCalls = 0;
+  const dependencies: FiveProductVipDeepMapDependenciesV1 = {
+    now: () => "2026-10-05T00:00:00Z",
+    loadFxBundle: async () => {
+      fxCalls++;
+      throw new Error("Fixture FX cache unavailable");
+    },
+    loadEstr: async () => {
+      estrCalls++;
+      throw new Error("Fixture rate cache unavailable");
+    },
+    loadEventRuntime: async () => ({
+      status: "source-unavailable",
+      sourceUrl: "https://www.ecb.europa.eu/",
+      reason: "request-failed",
+    }),
+  };
+  const projections = await assembleFiveProductVipDeepProjectionMapV1(dependencies);
+  assertEqual(fxCalls, 1, "Deep assembly invokes the injected FX loader exactly once");
+  assertEqual(estrCalls, 1, "Deep assembly invokes the injected rate loader exactly once");
+  for (const productId of VIP_MARKET_IDS_V1) {
+    assertEqual(projections[productId], null, `${productId} preserves failed-owner isolation`);
+  }
 }
 
 function verifyVipProductSurface(): void {
@@ -326,6 +353,7 @@ function verifyUnavailableRendering(): void {
       version: "market-product-projection-v1",
       tier: "vip-deep",
       availability: "unavailable",
+      currentUse: { status: "unavailable", reason: "canonical-result-unavailable", assessedAt: null },
       productId: "eurusd",
       displayName: "EUR/USD",
       productKind: "fx",
@@ -365,10 +393,37 @@ function verifyApprovedChrome(): void {
     "VIP reuses the approved global Footer");
 }
 
-function main(): void {
+
+function verifyCurrentUseRendering(): void {
+  const projections = projectionMap();
+  for (const selectedMarket of VIP_MARKET_IDS_V1) {
+    const projection = projections[selectedMarket];
+    if (projection?.availability !== "available") throw new Error("Expected fixture");
+    const eligible = renderToStaticMarkup(VipOverviewSurface({ projections, selectedMarket }));
+    assertEqual(eligible.includes("WAIT / Current"), false, "eligible overview preserves current interpretation");
+    assertEqual(eligible.includes("Current rate context eligible") || eligible.includes("Current analytical posture eligible"), true, "eligible overview validity disclosed");
+    for (const status of ["stale", "unknown"] as const) {
+      const currentUse = status === "stale"
+        ? { status, reason: "evidence-stale" as const, assessedAt: "2026-10-05T15:00:00Z" }
+        : { status, reason: "freshness-unknown" as const, assessedAt: null };
+      const html = renderToStaticMarkup(VipOverviewSurface({
+        selectedMarket, projections: { ...projections, [selectedMarket]: { ...projection, currentUse } },
+      }));
+      assertEqual(html.includes("WAIT / Current"), true, "overview current use unavailable");
+      assertEqual(html.includes('data-analysis-use="prior"'), true, "overview prior interpretation grouping");
+      assertEqual(html.includes("Prior analysis /"), true, "overview prior time disclosed");
+      assertEqual(/>Analytical posture \/ Selective/.test(html), false, "overview has no unqualified current selective posture");
+      if (selectedMarket !== "estr") assertEqual(html.includes("Prior analytical posture / Selective"), true, "cached recommendation explicitly prior");
+    }
+  }
+}
+
+async function main(): Promise<void> {
+  verifyCurrentUseRendering();
+  console.log("PASS: five-product VIP overview current-use rendering");
   verifySelectionContract();
   verifyProtectedPageComposition();
-  verifySharedCanonicalOwnership();
+  await verifySharedCanonicalOwnership();
   verifyVipProductSurface();
   verifyMarketRoomDirectory();
   verifyRenderedDecisionTerminal();
@@ -378,7 +433,7 @@ function main(): void {
   console.log("PASS: C3 VIP Overview contract and delivery composition");
 }
 
-main();
+void main();
 
 function projectionMap(
   includeFxScenario = true,
@@ -387,6 +442,7 @@ function projectionMap(
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
+    currentUse: { status: "eligible", reason: "within-cadence", assessedAt: "2026-09-11T12:00:00Z" },
     productId,
     displayName: displayName(productId),
     productKind: "fx",
@@ -487,6 +543,7 @@ function projectionMap(
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
+    currentUse: { status: "eligible", reason: "within-cadence", assessedAt: "2026-09-11T12:00:00Z" },
     productId: "estr",
     displayName: "€STR",
     productKind: "rate",

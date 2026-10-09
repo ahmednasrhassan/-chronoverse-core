@@ -178,6 +178,7 @@ export async function getFiveProductFreeLiteProjectionV1(
   await connection();
   return projectFiveProductFreeLiteV1(
     await getCanonicalProjectionInputV1(productId),
+    new Date().toISOString(),
   );
 }
 
@@ -198,34 +199,35 @@ export async function getFiveProductFreeLiteProjectionMapV1(): Promise<
   const fx = fxResult.status === "fulfilled" ? fxResult.value : null;
   const estr = estrResult.status === "fulfilled" ? estrResult.value : null;
 
+  const assessedAt = new Date().toISOString();
   return Object.freeze({
     eurusd: fx === null
       ? null
       : projectFiveProductFreeLiteV1({
         productId: "eurusd",
         canonical: fx.eurusd,
-      }),
+      }, assessedAt),
     eurjpy: fx === null
       ? null
       : projectFiveProductFreeLiteV1({
         productId: "eurjpy",
         canonical: fx.eurjpy,
-      }),
+      }, assessedAt),
     eurgbp: fx === null
       ? null
       : projectFiveProductFreeLiteV1({
         productId: "eurgbp",
         canonical: fx.eurgbp,
-      }),
+      }, assessedAt),
     eurchf: fx === null
       ? null
       : projectFiveProductFreeLiteV1({
         productId: "eurchf",
         canonical: fx.eurchf,
-      }),
+      }, assessedAt),
     estr: estr === null
       ? null
-      : projectFiveProductFreeLiteV1({ productId: "estr", canonical: estr }),
+      : projectFiveProductFreeLiteV1({ productId: "estr", canonical: estr }, assessedAt),
   });
 }
 

@@ -98,6 +98,7 @@ function availableDeep() {
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
+    currentUse: { status: "eligible", reason: "within-cadence", assessedAt: "2026-09-11T12:00:00Z" },
     productId: "estr",
     displayName: "€STR",
     productKind: "rate",
@@ -213,6 +214,7 @@ function roomFixture(options: {
           version: "market-product-projection-v1",
           tier: "vip-deep",
           availability: "unavailable",
+          currentUse: { status: "unavailable", reason: "canonical-result-unavailable", assessedAt: null },
           productId: "estr",
           displayName: "€STR",
           productKind: "rate",
@@ -476,7 +478,28 @@ function buttonOpening(html: string, label: string): string {
   return match[0];
 }
 
+
+function verifyCurrentUseRendering(): void {
+  for (const status of ["stale", "unknown", "eligible"] as const) {
+    const room = roomFixture();
+    if (room.deep?.availability !== "available") throw new Error("Expected rate fixture");
+    const currentUse = status === "eligible"
+      ? { status, reason: "within-cadence" as const, assessedAt: "2026-10-05T05:59:00Z" }
+      : status === "stale"
+        ? { status, reason: "evidence-stale" as const, assessedAt: "2026-10-05T07:00:00Z" }
+        : { status, reason: "freshness-unknown" as const, assessedAt: null };
+    const html = renderToStaticMarkup(VipEstrMarketRoom({ room: { ...room, deep: { ...room.deep, currentUse } } }));
+    assertEqual(html.includes("WAIT / Current rate context unavailable"), status !== "eligible", "rate WAIT semantics");
+    assertEqual(html.includes("Prior executive rate readout"), status !== "eligible", "rate readout qualified as prior");
+    assertEqual(html.includes("Prior analysis / Reference"), status !== "eligible", "prior rate reference shown");
+    assertEqual(html.includes('data-analysis-use="prior"'), status !== "eligible", "rate prior grouping");
+    assertEqual(html.includes("-0.500%"), true, "observed negative rate remains visible");
+    assertEqual(/selective posture|bullish|bearish|BUY|SELL/.test(html), false, "no FX recommendation introduced");
+  }
+}
+
 function main(): void {
+  verifyCurrentUseRendering();
   verifyRateRoomRendering();
   verifyRangeSemantics();
   verifyNegativeRatesAndBasisPoints();

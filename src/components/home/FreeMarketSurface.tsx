@@ -1,3 +1,7 @@
+import MarketCurrentUse, {
+  analysisLabel,
+  isCurrentUseEligible,
+} from "@/components/markets/MarketCurrentUse";
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
 import type { MarketProductFreeLiteProjectionV1 } from
   "@/lib/markets/projections/types";
@@ -54,18 +58,19 @@ export function MarketIntelligenceBoard({
                 {market.label}
               </span>
               {isAvailable(projection) ? (
-                <span className="min-w-0 text-right">
+                <div className="min-w-0 text-right">
                   <span className="block font-mono text-base font-semibold tabular-nums text-[#F3EBDD]">
                     {formatCurrentValue(projection)}
                   </span>
                   <span className="mt-0.5 block truncate text-[10px] uppercase tracking-[0.1em] text-[#91889A]">
-                    {formatBoardState(projection)}
+                    {analysisLabel(projection, formatBoardState(projection))}
                   </span>
-                </span>
+                  <MarketCurrentUse projection={projection} productKind={market.productId === "estr" ? "rate" : "fx"} />
+                </div>
               ) : (
-                <span className="text-right text-[10px] uppercase tracking-[0.12em] text-[#91889A]">
-                  Unavailable
-                </span>
+                <div className="text-right text-[10px] text-[#91889A]">
+                  <MarketCurrentUse projection={projection} productKind={market.productId === "estr" ? "rate" : "fx"} />
+                </div>
               )}
             </li>
           );
@@ -145,19 +150,20 @@ export default function FreeMarketSurface({
                       <p className="mt-1 truncate text-[11px] uppercase tracking-[0.1em] text-[#91889A]">
                         {projection.currentValue.unit}
                       </p>
-                      <dl className="mt-6 space-y-2.5 text-xs">
+                      <MarketCurrentUse projection={projection} productKind={market.productId === "estr" ? "rate" : "fx"} />
+                      <dl data-analysis-use={isCurrentUseEligible(projection) ? "current" : "prior"} className="mt-6 space-y-2.5 text-xs">
                         <CompactMetric
-                          label="Direction"
+                          label={analysisLabel(projection, "Direction")}
                           value={formatToken(projection.details.direction)}
                         />
                         <CompactMetric
-                          label={projection.details.kind === "rate" ? "Regime" : "State"}
+                          label={analysisLabel(projection, projection.details.kind === "rate" ? "Regime" : "State")}
                           value={projection.details.kind === "rate"
                             ? formatToken(projection.details.levelRegime)
                             : formatToken(projection.details.marketState)}
                         />
                         <CompactMetric
-                          label="Volatility"
+                          label={analysisLabel(projection, "Volatility")}
                           value={projection.details.kind === "rate"
                             ? formatToken(projection.details.volatilityRegime)
                             : formatPercentage(projection.details.annualizedVolatility)}
@@ -168,7 +174,10 @@ export default function FreeMarketSurface({
                       </p>
                     </>
                   ) : (
-                    <UnavailableMarket />
+                    <>
+                      <MarketCurrentUse projection={projection} productKind={market.productId === "estr" ? "rate" : "fx"} />
+                      <UnavailableMarket />
+                    </>
                   )}
                 </li>
               );
@@ -226,24 +235,26 @@ export default function FreeMarketSurface({
                   </p>
                 </div>
 
+                <MarketCurrentUse projection={eurUsd} />
                 <div
+                  data-analysis-use={isCurrentUseEligible(eurUsd) ? "current" : "prior"}
                   aria-label="EUR/USD state and signal band"
                   className="mt-12 border-y border-[#6F4C91]/40"
                 >
                   <dl className="grid sm:grid-cols-2 xl:grid-cols-3">
                     <SignalCell
                       index="01"
-                      label="Market state"
+                      label={analysisLabel(eurUsd, "Market state")}
                       value={formatToken(eurUsd.details.marketState)}
                     />
                     <SignalCell
                       index="02"
-                      label="Basic trend"
+                      label={analysisLabel(eurUsd, "Basic trend")}
                       value={formatToken(eurUsd.details.direction)}
                     />
                     <SignalCell
                       index="03"
-                      label="Annualized volatility"
+                      label={analysisLabel(eurUsd, "Annualized volatility")}
                       value={formatPercentage(eurUsd.details.annualizedVolatility)}
                     />
                     <SignalCell
@@ -271,6 +282,7 @@ export default function FreeMarketSurface({
               </div>
             ) : (
               <div className="py-16">
+                <MarketCurrentUse projection={eurUsd} />
                 <p className="text-xl text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]">
                   EUR/USD projection unavailable
                 </p>

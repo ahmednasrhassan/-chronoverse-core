@@ -1,3 +1,7 @@
+import MarketCurrentUse, {
+  analysisLabel,
+  isCurrentUseEligible,
+} from "@/components/markets/MarketCurrentUse";
 import Link from "next/link";
 
 import type { EstrVipDeepProjectionV1 } from
@@ -134,6 +138,7 @@ function RateIdentityHeader({
               : formatRatePercent(deep.currentValue.value)}
           </div>
         </div>
+        <MarketCurrentUse projection={deep} productKind="rate" />
         <p className="mt-3 text-xs leading-5 text-[#91889A]">
           {deep === null
             ? "Canonical current official rate unavailable; history is not used as a substitute."
@@ -143,19 +148,19 @@ function RateIdentityHeader({
 
       <dl className="grid grid-cols-2 gap-x-7 gap-y-4 border-l border-[#6F4C91]/35 pl-5 sm:min-w-80">
         <HeroDatum
-          label="Rate direction"
+          label={deep === null ? "Rate direction" : analysisLabel(deep, "Rate direction")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.direction)}
         />
         <HeroDatum
-          label="Level regime"
+          label={deep === null ? "Level regime" : analysisLabel(deep, "Level regime")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.levelRegime)}
         />
         <HeroDatum
-          label="Volatility regime"
+          label={deep === null ? "Volatility regime" : analysisLabel(deep, "Volatility regime")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.volatilityRegime)}
         />
         <HeroDatum
-          label="Risk state"
+          label={deep === null ? "Risk state" : analysisLabel(deep, "Risk state")}
           value={deep === null ? "Unavailable" : formatLabel(deep.details.riskLevel)}
         />
       </dl>
@@ -186,6 +191,7 @@ function RateExecutiveRail({
   if (deep === null) {
     return (
       <aside className="border-t border-[#6F4C91]/40 bg-[linear-gradient(160deg,#18151D,#100E14_72%)] px-5 py-7 sm:px-7 xl:border-l xl:border-t-0">
+        <MarketCurrentUse projection={null} productKind="rate" />
         <div className={EYEBROW}>Rate intelligence</div>
         <h2 className="mt-1 text-xl font-bold text-[#F3EBDD]">
           Analytical readout unavailable
@@ -216,12 +222,12 @@ function RateExecutiveRail({
     <aside className="border-t border-[#6F4C91]/40 bg-[linear-gradient(160deg,#18151D,#100E14_72%)] px-5 py-7 sm:px-7 xl:border-l xl:border-t-0">
       <div className={EYEBROW}>Rate intelligence</div>
       <h2 className="mt-1 text-xl font-bold tracking-tight text-[#F3EBDD]">
-        Executive rate readout
+        {analysisLabel(deep, "Executive rate readout")}
       </h2>
-      <dl className="mt-5 divide-y divide-[#6F4C91]/30 border-y border-[#6F4C91]/30">
+      <dl data-analysis-use={isCurrentUseEligible(deep) ? "current" : "prior"} className="mt-5 divide-y divide-[#6F4C91]/30 border-y border-[#6F4C91]/30">
         {rows.map(([label, value]) => (
           <div key={label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 py-3 text-xs">
-            <dt className="text-[#91889A]">{label}</dt>
+            <dt className="text-[#91889A]">{analysisLabel(deep, label)}</dt>
             <dd className="text-right font-semibold text-[#F3EBDD]">{value}</dd>
           </div>
         ))}
@@ -252,7 +258,8 @@ function RateIntelligenceUnavailableBand({ reason }: { reason: string }) {
 
 function RateIntelligence({ deep }: { deep: EstrVipDeepProjectionV1 }) {
   return (
-    <div className="mt-10 space-y-12">
+    <div data-analysis-use={isCurrentUseEligible(deep) ? "current" : "prior"} className="mt-10 space-y-12">
+      {!isCurrentUseEligible(deep) ? <MarketCurrentUse projection={deep} /> : null}
       <RateMechanics deep={deep} />
       <EvidenceArchitecture deep={deep} />
     </div>

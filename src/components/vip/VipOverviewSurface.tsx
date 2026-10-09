@@ -1,3 +1,7 @@
+import MarketCurrentUse, {
+  analysisLabel,
+  isCurrentUseEligible,
+} from "@/components/markets/MarketCurrentUse";
 import Link from "next/link";
 
 import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
@@ -168,10 +172,11 @@ function MarketSelector({ projections, selectedMarket }: {
                     ? formatCurrentValue(projection)
                     : "Unavailable"}
                 </span>
-                <span className="mt-0.5 block max-w-24 truncate text-[10px] text-[#91889A]">
+                <span className="mt-0.5 block max-w-24 text-[10px] text-[#91889A]">
                   {projection?.availability === "available"
-                    ? primaryState(projection)
+                    ? analysisLabel(projection, primaryState(projection))
                     : "No verified result"}
+                  {!isCurrentUseEligible(projection) ? " / WAIT" : ""}
                 </span>
               </span>
               {isSelected ? (
@@ -268,8 +273,9 @@ function MarketHero({ projection }: { projection: AvailableDeepProjection }) {
             {formatCurrentValue(projection)}
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#CFC5B8]">
-          <span className="font-semibold text-[#F3EBDD]">{formatLabel(direction)}</span>
+        <MarketCurrentUse projection={projection} />
+        <div data-analysis-use={isCurrentUseEligible(projection) ? "current" : "prior"} className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#CFC5B8]">
+          <span className="font-semibold text-[#F3EBDD]">{analysisLabel(projection, formatLabel(direction))}</span>
           <span aria-hidden="true" className="text-[#6F4C91]">/</span>
           <span>{formatLabel(strength)}</span>
           <span aria-hidden="true" className="text-[#6F4C91]">/</span>
@@ -284,8 +290,8 @@ function MarketHero({ projection }: { projection: AvailableDeepProjection }) {
       </div>
 
       <dl className="grid min-w-48 grid-cols-2 gap-x-6 gap-y-4 border-l border-[#6F4C91]/35 pl-5">
-        <HeroDatum label="State" value={primaryState(projection)} />
-        <HeroDatum label="Risk" value={formatLabel(projection.details.riskLevel)} />
+        <HeroDatum label={analysisLabel(projection, "State")} value={primaryState(projection)} />
+        <HeroDatum label={analysisLabel(projection, "Risk")} value={formatLabel(projection.details.riskLevel)} />
         <HeroDatum label="Reference" value={projection.referenceDate} />
         <HeroDatum label="Cadence" value={formatLabel(projection.status)} />
       </dl>
@@ -402,9 +408,9 @@ function DecisionRail({ projection }: { projection: AvailableDeepProjection }) {
     <aside className="border-t border-[#6F4C91]/40 bg-[linear-gradient(160deg,#18151D,#100E14_72%)] px-5 py-6 sm:px-7 xl:border-l xl:border-t-0">
       <div className={EYEBROW}>Decision intelligence</div>
       <h2 className="mt-1 text-xl font-bold tracking-tight text-[#F3EBDD]">
-        Executive readout
+        {analysisLabel(projection, "Executive readout")}
       </h2>
-      <div className="mt-5">
+      <div data-analysis-use={isCurrentUseEligible(projection) ? "current" : "prior"} className="mt-5">
         {sections.map((section, index) => (
           <section
             key={section.label}
@@ -447,7 +453,8 @@ function FxDeepLayers({ projection }: { projection: AvailableFxProjection }) {
   const crossAsset = "data" in engine.crossAsset ? engine.crossAsset.data : null;
 
   return (
-    <div className="mt-10">
+    <div data-analysis-use={isCurrentUseEligible(projection) ? "current" : "prior"} className="mt-10">
+      {!isCurrentUseEligible(projection) ? <MarketCurrentUse projection={projection} /> : null}
       <FxTechnicalBand projection={projection} />
 
       {scenario ? (
@@ -827,7 +834,8 @@ function RateDeepLayers({ projection }: { projection: AvailableRateProjection })
   ];
 
   return (
-    <div className="mt-10">
+    <div data-analysis-use={isCurrentUseEligible(projection) ? "current" : "prior"} className="mt-10">
+      {!isCurrentUseEligible(projection) ? <MarketCurrentUse projection={projection} /> : null}
       <section className="border-y border-[#6F4C91]/30 bg-[linear-gradient(105deg,#15131A,#0D0D11_62%)]">
         <div className="grid lg:grid-cols-[minmax(14rem,0.75fr)_minmax(0,2.25fr)]">
           <header className="px-5 py-6 sm:px-7 lg:border-r lg:border-[#6F4C91]/30">
@@ -1007,6 +1015,7 @@ function UnavailableMarketSurface({ displayName, reason }: {
 }) {
   return (
     <section className="border-y border-[#6F4C91]/35 bg-[#0D0D11] px-5 py-10 sm:px-8">
+      <MarketCurrentUse projection={null} productKind={displayName === "\u20acSTR" ? "rate" : "fx"} />
       <div className={EYEBROW}>Canonical result unavailable</div>
       <h2 className="mt-3 text-3xl font-black text-[#F3EBDD]">{displayName}</h2>
       <div className="mt-4 max-w-2xl text-sm leading-7 text-[#CFC5B8]">{reason}</div>
@@ -1029,7 +1038,7 @@ function fxDecisionSections(projection: AvailableFxProjection): DecisionSection[
 
   if (recommendation) {
     matters.push(
-      `Analytical posture / ${formatLabel(recommendation.posture)}${
+      `${analysisLabel(projection, "Analytical posture")} / ${formatLabel(recommendation.posture)}${
         engine.recommendation.availability === "partial"
           ? " · partial evidence"
           : ""
@@ -1044,7 +1053,7 @@ function fxDecisionSections(projection: AvailableFxProjection): DecisionSection[
     }
   } else if (decision) {
     matters.push(
-      `Decision stance / ${formatLabel(decision.stance)}`,
+      `${analysisLabel(projection, "Decision stance")} / ${formatLabel(decision.stance)}`,
       `Decision score ${formatSigned(decision.score)}`,
     );
   } else {
@@ -1057,7 +1066,7 @@ function fxDecisionSections(projection: AvailableFxProjection): DecisionSection[
     matters.push(`Evidence tension ${formatPercent(engine.contradiction.data.score)}`);
   }
 
-  sections.push({ label: "What matters now?", values: matters, emphasis: true });
+  sections.push({ label: isCurrentUseEligible(projection) ? "What matters now?" : "Prior analysis", values: matters, emphasis: true });
 
   if ("data" in engine.invalidation) {
     sections.push({
@@ -1113,7 +1122,7 @@ function rateDecisionSections(
   const { details } = projection;
   const sections: DecisionSection[] = [
     {
-      label: "What matters now?",
+      label: isCurrentUseEligible(projection) ? "What matters now?" : "Prior rate context",
       values: [
         `Rate direction / ${formatLabel(details.marketState.direction)}`,
         `Level regime / ${formatLabel(details.marketState.levelRegime)}`,

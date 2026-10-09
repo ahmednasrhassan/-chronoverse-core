@@ -200,6 +200,7 @@ async function verifyEventFailureIsolation(): Promise<void> {
       version: "market-product-projection-v1",
       tier: "vip-deep",
       availability: "unavailable",
+      currentUse: { status: "unavailable", reason: "canonical-result-unavailable", assessedAt: null } as const,
       productId: "eurusd",
       displayName: "EUR/USD",
       productKind: "fx",
@@ -289,6 +290,7 @@ function availableProjection(
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
+    currentUse: { status: "eligible", reason: "within-cadence", assessedAt: "2026-09-11T12:00:00Z" },
     productId: "eurusd",
     details: Object.freeze({
       ecbPolicyEvent: eventStatus === "available"

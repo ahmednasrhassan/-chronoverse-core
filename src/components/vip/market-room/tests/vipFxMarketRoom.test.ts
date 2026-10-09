@@ -96,6 +96,7 @@ function roomFixture(options: {
           version: "market-product-projection-v1",
           tier: "vip-deep",
           availability: "unavailable",
+          currentUse: { status: "unavailable", reason: "canonical-result-unavailable", assessedAt: null },
           productId: "eurusd",
           displayName: "EUR/USD",
           productKind: "fx",
@@ -130,6 +131,7 @@ function availableDeepFixture(
     version: "market-product-projection-v1",
     tier: "vip-deep",
     availability: "available",
+    currentUse: { status: "eligible", reason: "within-cadence", assessedAt: "2026-09-11T12:00:00Z" },
     productId: "eurusd",
     displayName: "EUR/USD",
     productKind: "fx",
@@ -742,7 +744,44 @@ function buttonOpening(html: string, label: string): string {
   return match[0];
 }
 
+
+function verifyCurrentUseRendering(): void {
+  for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
+    for (const status of ["stale", "unknown", "eligible"] as const) {
+      const room = roomFixture();
+      const original = room.deep;
+      if (original?.availability !== "available") throw new Error("Expected fixture");
+      const before = JSON.stringify(original.details.engine);
+      const currentUse = status === "eligible"
+        ? { status, reason: "within-cadence" as const, assessedAt: "2026-10-05T12:00:00Z" }
+        : status === "stale"
+          ? { status, reason: "evidence-stale" as const, assessedAt: "2026-10-05T15:00:00Z" }
+          : { status, reason: "freshness-unknown" as const, assessedAt: null };
+      const deep = { ...original, productId, currentUse };
+      const html = renderToStaticMarkup(VipFxMarketRoom({ room: { ...room, productId, deep } }));
+      assertEqual(html.includes('data-analysis-use="prior"'), status !== "eligible", "rail use qualification");
+      assertEqual(html.includes("WAIT / Current analytical posture unavailable"), status !== "eligible", "explicit current-use WAIT");
+      assertEqual(html.includes("Prior selective posture"), status !== "eligible", "retained selective posture is prior");
+      assertEqual(/>Selective posture(?: \/|<)/.test(html), status === "eligible", "no conflicting unqualified selective posture");
+      if (status !== "eligible") {
+        assertEqual(html.includes(`Evaluated ${original.details.engine.evaluatedAt}`), true, "prior original evaluation shown");
+      }
+      assertEqual(JSON.stringify(deep.details.engine), before, "render preserves cached Engine bytes");
+    }
+  }
+}
+
 function main(): void {
+  verifyCurrentUseRendering();
+  const partialRoom = roomFixture();
+  if (partialRoom.deep?.availability !== "available" || !("data" in partialRoom.deep.details.engine.recommendation)) throw new Error("Expected fixture");
+  const partial = renderToStaticMarkup(VipFxMarketRoom({ room: { ...partialRoom, deep: {
+    ...partialRoom.deep, details: { ...partialRoom.deep.details, engine: { ...partialRoom.deep.details.engine,
+      recommendation: { ...partialRoom.deep.details.engine.recommendation, availability: "partial", missing: ["conviction"] },
+    } },
+  } } }));
+  assertEqual(partial.includes("Selective posture / Partial evidence"), true, "eligible partial posture remains qualified");
+  assertEqual(partial.includes("WAIT / Current analytical posture unavailable"), false, "partial alone never triggers delivery WAIT");
   verifyDecisionLifecycleRendering();
   verifyRoomRendering();
   verifySharedRoomNavigation();

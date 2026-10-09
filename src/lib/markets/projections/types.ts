@@ -33,6 +33,29 @@ export type MarketProjectionDisplayNameV1 =
   | "EUR/CHF"
   | "\u20acSTR";
 
+/** Delivery eligibility only; never changes the canonical analytical result. */
+export type MarketProjectionCurrentUseV1 =
+  | {
+      readonly status: "eligible";
+      readonly reason: "within-cadence";
+      readonly assessedAt: string;
+    }
+  | {
+      readonly status: "stale";
+      readonly reason: "evidence-stale";
+      readonly assessedAt: string;
+    }
+  | {
+      readonly status: "unknown";
+      readonly reason: "assessment-time-unavailable" | "provenance-incomplete" | "freshness-unknown";
+      readonly assessedAt: string | null;
+    }
+  | {
+      readonly status: "unavailable";
+      readonly reason: "canonical-result-unavailable" | "source-unavailable";
+      readonly assessedAt: string | null;
+    };
+
 export type MarketProductVipEcbPolicyEventRelevanceV1 =
   | "euro-policy-context"
   | "direct-euro-rate-policy-context";
@@ -177,6 +200,7 @@ interface AvailableProjectionBaseV1<
   readonly interval: CanonicalObservationSeriesMetadataV1["interval"];
   readonly status: CanonicalObservationSeriesMetadataV1["status"];
   readonly provenance: MarketProjectionProvenanceV1;
+  readonly currentUse: MarketProjectionCurrentUseV1;
   readonly details: TDetails;
 }
 
@@ -288,6 +312,7 @@ export interface MarketProductUnavailableProjectionV1 {
   readonly displayName: MarketProjectionDisplayNameV1;
   readonly productKind: "fx" | "rate";
   readonly reason: string;
+  readonly currentUse: Extract<MarketProjectionCurrentUseV1, { readonly status: "unavailable" }>;
   readonly missing?: readonly string[];
 }
 

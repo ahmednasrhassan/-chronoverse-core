@@ -27,6 +27,7 @@ import {
   type MarketProductUnavailableProjectionV1,
   type MarketProductVipDeepProjectionV1,
   type MarketProjectionProvenanceV1,
+  type MarketProjectionCurrentUseV1,
 } from "./types";
 
 const PRODUCT_IDENTITIES = Object.freeze({
@@ -39,25 +40,25 @@ const PRODUCT_IDENTITIES = Object.freeze({
 
 export function projectFiveProductFreeLiteV1(
   input: FiveProductCanonicalProjectionInputV1,
-  assessedAt: string = new Date().toISOString(),
+  assessedAt?: string,
 ): MarketProductFreeLiteProjectionV1 {
   return input.productId === "estr"
-    ? projectEstrFreeLite(input.canonical, assessedAt)
-    : projectFxFreeLite(input.productId, input.canonical, assessedAt);
+    ? projectEstrFreeLite(input.canonical, assessedAt ?? "")
+    : projectFxFreeLite(input.productId, input.canonical, assessedAt ?? "");
 }
 
 export function projectFiveProductVipDeepV1(
   input: FiveProductCanonicalProjectionInputV1,
   ecbPolicyEvent: MarketProductVipEcbPolicyEventStateV1,
-  assessedAt: string,
+  assessedAt?: string,
 ): MarketProductVipDeepProjectionV1 {
   return input.productId === "estr"
-    ? projectEstrVipDeep(input.canonical, ecbPolicyEvent, assessedAt)
+    ? projectEstrVipDeep(input.canonical, ecbPolicyEvent, assessedAt ?? "")
     : projectFxVipDeep(
         input.productId,
         input.canonical,
         ecbPolicyEvent,
-        assessedAt,
+        assessedAt ?? "",
       );
 }
 
@@ -72,6 +73,7 @@ function projectFxFreeLite(
       "free-lite",
       canonical.reason,
       canonical.missing,
+      assessedAt,
     );
   }
 
@@ -79,6 +81,7 @@ function projectFxFreeLite(
     productId,
     canonical,
     "free-lite",
+    assessedAt,
   );
 
   if (unavailable !== null) {
@@ -105,6 +108,7 @@ function projectFxVipDeep(
       "vip-deep",
       canonical.reason,
       canonical.missing,
+      assessedAt,
     );
   }
 
@@ -112,6 +116,7 @@ function projectFxVipDeep(
     productId,
     canonical,
     "vip-deep",
+    assessedAt,
   );
 
   if (unavailable !== null) {
@@ -164,10 +169,11 @@ function projectEstrFreeLite(
       "free-lite",
       canonical.reason,
       canonical.missing,
+      assessedAt,
     );
   }
 
-  const unavailable = validateAvailableEstrCanonical(canonical, "free-lite");
+  const unavailable = validateAvailableEstrCanonical(canonical, "free-lite", assessedAt);
 
   if (unavailable !== null) {
     return unavailable;
@@ -190,10 +196,11 @@ function projectEstrVipDeep(
       "vip-deep",
       canonical.reason,
       canonical.missing,
+      assessedAt,
     );
   }
 
-  const unavailable = validateAvailableEstrCanonical(canonical, "vip-deep");
+  const unavailable = validateAvailableEstrCanonical(canonical, "vip-deep", assessedAt);
 
   if (unavailable !== null) {
     return unavailable;
@@ -259,6 +266,7 @@ function availableBase<TTier extends MarketProductProjectionTierV1>(
     interval: provenance.interval,
     status: provenance.status,
     provenance,
+    currentUse: projectionCurrentUse(provenance),
   };
 }
 
@@ -297,6 +305,7 @@ function availableEstrBase<TTier extends MarketProductProjectionTierV1>(
     interval: provenance.interval,
     status: provenance.status,
     provenance,
+    currentUse: projectionCurrentUse(provenance),
   };
 }
 
@@ -307,6 +316,7 @@ function projectionProvenance(
   assessedAt: string,
   publicationType?: "standard" | "republication",
 ): MarketProjectionProvenanceV1 {
+  const safeAssessedAt = safeAssessmentTime(assessedAt);
   const observationTimestamp =
     canonical.observationTimestamp ?? canonical.sourceTimestamp!;
   return Object.freeze({
@@ -337,12 +347,10 @@ function projectionProvenance(
       provider: canonical.provider,
       status: canonical.status,
       latestTimestampSeconds: observationTimestamp,
-      evaluatedAt: assessedAt,
+      evaluatedAt: safeAssessedAt ?? "",
       hasUsableData: true,
     }),
-    freshnessAssessedAt: Number.isFinite(Date.parse(assessedAt))
-      ? assessedAt
-      : null,
+    freshnessAssessedAt: safeAssessedAt,
   });
 }
 
@@ -382,13 +390,15 @@ function validateAvailableFxCanonical(
   productId: FxProjectionProductIdV1,
   canonical: EcbFxProductionIntelligenceV1,
   tier: MarketProductProjectionTierV1,
+  assessedAt: string,
 ): MarketProductUnavailableProjectionV1 | null {
   if (
+    !canonical.provenance ||
     canonical.engineResult.asset !== productId ||
     canonical.provenance.requestedProductId !== productId ||
     canonical.provenance.canonicalProductId !== productId ||
     !Number.isFinite(canonical.intelligence.price) ||
-    !Number.isFinite(canonical.provenance.fetchedAt) ||
+    !isValidSourceTimestamp(canonical.provenance.fetchedAt) ||
     !isValidSourceTimestamp(canonical.provenance.sourceTimestamp)
   ) {
     return unavailableProjection(
@@ -396,6 +406,7 @@ function validateAvailableFxCanonical(
       tier,
       "Canonical FX production intelligence is incomplete or mismatched.",
       Object.freeze(["canonicalIdentityOrValue"]),
+      assessedAt,
     );
   }
 
@@ -408,15 +419,17 @@ function validateAvailableEstrCanonical(
     { readonly availability: "available" }
   >,
   tier: MarketProductProjectionTierV1,
+  assessedAt: string,
 ): MarketProductUnavailableProjectionV1 | null {
   const data = canonical.data;
 
   if (
+    !data.source?.provenance ||
     data.productId !== "estr" ||
     data.source.provenance.requestedProductId !== "estr" ||
     data.source.provenance.canonicalProductId !== "estr" ||
     !Number.isFinite(data.currentRatePercent) ||
-    !Number.isFinite(data.fetchedAt) ||
+    !isValidSourceTimestamp(data.fetchedAt) ||
     !isValidSourceTimestamp(data.sourceTimestamp) ||
     data.latestReferenceDate !== toReferenceDate(data.sourceTimestamp)
   ) {
@@ -425,6 +438,7 @@ function validateAvailableEstrCanonical(
       tier,
       "Canonical \u20acSTR production intelligence is incomplete or mismatched.",
       Object.freeze(["canonicalIdentityOrValue"]),
+      assessedAt,
     );
   }
 
@@ -436,6 +450,7 @@ function unavailableProjection(
   tier: MarketProductProjectionTierV1,
   reason: string,
   missing: readonly string[] | undefined,
+  assessedAt: string,
 ): MarketProductUnavailableProjectionV1 {
   const identity = PRODUCT_IDENTITIES[productId];
 
@@ -447,6 +462,11 @@ function unavailableProjection(
     displayName: identity.displayName,
     productKind: identity.productKind,
     reason,
+    currentUse: Object.freeze({
+      status: "unavailable",
+      reason: "canonical-result-unavailable",
+      assessedAt: safeAssessmentTime(assessedAt),
+    }),
     ...(missing === undefined ? {} : { missing }),
   });
 }
@@ -461,4 +481,46 @@ function isValidSourceTimestamp(
   return sourceTimestamp !== undefined &&
     Number.isFinite(sourceTimestamp) &&
     !Number.isNaN(new Date(sourceTimestamp * 1_000).getTime());
+}
+
+/** Requires an explicit instant with a timezone; never guesses a local clock. */
+function safeAssessmentTime(value: string): string | null {
+  const match = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (match === null || !Number.isFinite(Date.parse(value))) return null;
+  // Date.parse can normalize impossible dates or 24:00; reject those inputs.
+  return new Date(`${match[1]}Z`).toISOString().slice(0, 19) === match[1]
+    ? value
+    : null;
+}
+
+/** Maps the existing classifier result, without new calendars or Engine work. */
+function projectionCurrentUse(provenance: MarketProjectionProvenanceV1): MarketProjectionCurrentUseV1 {
+  const assessedAt = provenance.freshnessAssessedAt;
+  if (provenance.freshness === "unavailable") {
+    return Object.freeze({ status: "unavailable", reason: "source-unavailable", assessedAt });
+  }
+  if (assessedAt === null) {
+    return Object.freeze({ status: "unknown", reason: "assessment-time-unavailable", assessedAt });
+  }
+  if (
+    provenance.provider !== "ecb" ||
+    !provenance.source ||
+    !provenance.seriesId ||
+    provenance.interval !== "1d" ||
+    (provenance.status !== "end_of_day" && provenance.status !== "stale") ||
+    !isValidSourceTimestamp(provenance.observationTimestamp) ||
+    !isValidSourceTimestamp(provenance.sourceTimestamp) ||
+    provenance.observationTimestamp !== provenance.sourceTimestamp ||
+    !isValidSourceTimestamp(provenance.fetchedAt)
+  ) {
+    return Object.freeze({ status: "unknown", reason: "provenance-incomplete", assessedAt });
+  }
+  switch (provenance.freshness) {
+    case "within-cadence":
+      return Object.freeze({ status: "eligible", reason: "within-cadence", assessedAt });
+    case "stale":
+      return Object.freeze({ status: "stale", reason: "evidence-stale", assessedAt });
+    default:
+      return Object.freeze({ status: "unknown", reason: "freshness-unknown", assessedAt });
+  }
 }

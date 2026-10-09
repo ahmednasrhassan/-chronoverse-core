@@ -225,21 +225,31 @@ function officialEstrSource(): EcbEstrSeriesV1 {
   });
 }
 
+const fixtureCalls = { acquisition: 0, evaluation: 0, persistence: 0 };
+
 async function canonicalInputs(): Promise<
   readonly FiveProductCanonicalProjectionInputV1[]
 > {
-  const fxInputs = await Promise.all(FX_CONFIGURATIONS.map(async (configuration) => ({
-    productId: configuration.productId,
-    canonical: await configuration.run({
-      loadCanonicalSeries: async () => officialFxSeries(
-        configuration.productId,
-        configuration.baseValue,
-      ),
-      now: () => new Date("2026-09-10T12:00:00.000Z"),
-    }),
-  } satisfies FiveProductCanonicalProjectionInputV1)));
+  const fxInputs = await Promise.all(FX_CONFIGURATIONS.map(async (configuration) => {
+    fixtureCalls.evaluation++;
+    return {
+      productId: configuration.productId,
+      canonical: await configuration.run({
+        loadCanonicalSeries: async () => {
+          fixtureCalls.acquisition++;
+          return officialFxSeries(configuration.productId, configuration.baseValue);
+        },
+        now: () => new Date("2026-09-10T12:00:00.000Z"),
+        advanceDecisionSnapshot: async () => {
+          fixtureCalls.persistence++;
+          return { status: "initialized", previous: null };
+        },
+      }),
+    } satisfies FiveProductCanonicalProjectionInputV1;
+  }));
+  fixtureCalls.evaluation++;
   const estrCanonical = await getEstrProductionRuntimeV1({
-    loadSource: async () => officialEstrSource(),
+    loadSource: async () => { fixtureCalls.acquisition++; return officialEstrSource(); },
   });
 
   assertEqual(estrCanonical.availability, "available", "\u20acSTR fixture available");
@@ -270,6 +280,7 @@ function commonTruth(projection: Extract<
     interval: projection.interval,
     status: projection.status,
     provenance: projection.provenance,
+    currentUse: projection.currentUse,
   };
 }
 
@@ -368,9 +379,169 @@ function auditProjectionSources(): void {
     "projection has no hard-coded non-stale claim");
 }
 
+
+/** Deterministic delivery checks reuse one cached result; no runtime calls here. */
+function verifyCurrentUse(inputs: readonly FiveProductCanonicalProjectionInputV1[]): void {
+  const callsBefore = JSON.stringify(fixtureCalls);
+  function withReference(input: FiveProductCanonicalProjectionInputV1, reference: string): FiveProductCanonicalProjectionInputV1 {
+    const timestamp = Date.parse(`${reference}T00:00:00Z`) / 1_000;
+    if (input.canonical.availability !== "available") throw new Error("Expected cached fixture");
+    if (input.productId !== "estr") {
+      return { ...input, canonical: { ...input.canonical, provenance: {
+        ...input.canonical.provenance, observationTimestamp: timestamp, sourceTimestamp: timestamp,
+      } } };
+    }
+    return { ...input, canonical: { ...input.canonical, data: {
+      ...input.canonical.data, latestReferenceDate: reference, sourceTimestamp: timestamp,
+      source: { ...input.canonical.data.source, provenance: {
+        ...input.canonical.data.source.provenance, observationTimestamp: timestamp, sourceTimestamp: timestamp,
+      } },
+    } } };
+  }
+  function check(input: FiveProductCanonicalProjectionInputV1, at: string | undefined, expected: string): void {
+    const before = JSON.stringify(input.canonical);
+    const free = projectFiveProductFreeLiteV1(input, at);
+    const vip = projectFiveProductVipDeepV1(input, AVAILABLE_ECB_POLICY_EVENT, at);
+    assertEqual(free.currentUse.status, expected, `${input.productId} ${at} current use`);
+    assertDeepEqual(free.currentUse, vip.currentUse, `${input.productId} Free/VIP validity`);
+    assertEqual(JSON.stringify(input.canonical), before, "cached result is structurally unchanged");
+    if (input.productId !== "estr" && input.canonical.availability === "available" &&
+        vip.availability === "available" && vip.productKind === "fx") {
+      for (const field of ["recommendation", "decision", "confidence", "evaluatedAt", "decisionLifecycle"] as const) {
+        assertEqual(vip.details.engine[field], input.canonical.engineResult[field], `cached ${field} same reference/value`);
+        assertEqual(JSON.stringify(vip.details.engine[field]), JSON.stringify(input.canonical.engineResult[field]), `cached ${field} byte equivalent`);
+      }
+      if (expected === "eligible") {
+        assertEqual(vip.details.engine.decision.availability, input.canonical.engineResult.decision.availability,
+          "eligible partial analysis keeps its analytical availability");
+        assertEqual(vip.details.engine.decision.availability, "partial", "real launch fixture has partial decision");
+      }
+    }
+  }
+  for (const original of inputs) {
+    const isRate = original.productId === "estr";
+    const cached = withReference(original, isRate ? "2026-10-01" : "2026-10-02");
+    // Acquisition instants are Unix seconds; Date's inclusive limit is 8.64e15 ms.
+    const maxDateSeconds = 8_640_000_000_000;
+    function withFetchedAt(fetchedAt: number | undefined, target: "both" | "provenance" | "data" = "both") {
+      const input = JSON.parse(JSON.stringify(cached)) as FiveProductCanonicalProjectionInputV1;
+      if (input.canonical.availability !== "available") throw new Error("Expected cached fixture");
+      if (input.productId === "estr") {
+        if (target !== "data") Object.assign(input.canonical.data.source.provenance, { fetchedAt });
+        if (target !== "provenance") Object.assign(input.canonical.data, { fetchedAt });
+      } else {
+        Object.assign(input.canonical.provenance, { fetchedAt });
+      }
+      return input;
+    }
+    const acquisitionAssessedAt = "2026-10-05T00:00:00Z";
+    for (const fetchedAt of [
+      undefined, NaN, Infinity, -Infinity, 1e99, -1e99,
+      maxDateSeconds + 1, -maxDateSeconds - 1,
+    ]) {
+      const invalid = withFetchedAt(fetchedAt);
+      check(invalid, acquisitionAssessedAt, "unavailable");
+      assertEqual(projectFiveProductFreeLiteV1(invalid, acquisitionAssessedAt).currentUse.reason,
+        "canonical-result-unavailable", `${original.productId} invalid acquisition fails closed`);
+      if (isRate) {
+        // Both retained rate data and delivered provenance must independently qualify.
+        const provenanceOnly = withFetchedAt(fetchedAt, "provenance");
+        check(provenanceOnly, acquisitionAssessedAt, "unknown");
+        assertEqual(projectFiveProductFreeLiteV1(provenanceOnly, acquisitionAssessedAt).currentUse.reason,
+          "provenance-incomplete", "invalid rate acquisition provenance fails closed");
+        check(withFetchedAt(fetchedAt, "data"), acquisitionAssessedAt, "unavailable");
+      }
+    }
+    for (const fetchedAt of [
+      -maxDateSeconds, -maxDateSeconds + 1, 0,
+      Date.parse(acquisitionAssessedAt) / 1_000 + 0.125,
+      maxDateSeconds - 1, maxDateSeconds,
+    ]) {
+      const valid = withFetchedAt(fetchedAt);
+      check(valid, acquisitionAssessedAt, "eligible");
+      for (const projection of [
+        projectFiveProductFreeLiteV1(valid, acquisitionAssessedAt),
+        projectFiveProductVipDeepV1(valid, AVAILABLE_ECB_POLICY_EVENT, acquisitionAssessedAt),
+      ]) {
+        assertAvailable(projection, "representable acquisition boundary");
+        assertEqual(projection.fetchedAt, fetchedAt, `${original.productId} retains Unix seconds`);
+      }
+    }
+    if (cached.productId !== "estr" && cached.canonical.availability === "available") {
+      const engine = cached.canonical.engineResult;
+      if (!("data" in engine.recommendation) || engine.marketData.availability === "unavailable") throw new Error("Expected usable recommendation fixture");
+      // A previously fresh cached selective result reproduces the audited seam.
+      const selective = { ...cached, canonical: { ...cached.canonical, engineResult: {
+        ...engine, evaluatedAt: "2026-10-05T10:00:00Z",
+        marketData: { ...engine.marketData, availability: "available" as const, freshness: "within-cadence" as const },
+        recommendation: { ...engine.recommendation, data: { ...engine.recommendation.data, posture: "selective" as const } },
+      } } };
+      check(selective, "2026-10-05T13:59:00Z", "eligible");
+      check(selective, "2026-10-05T15:00:00Z", "stale");
+      const delivered = projectFiveProductVipDeepV1(selective, AVAILABLE_ECB_POLICY_EVENT, "2026-10-05T15:00:00Z");
+      assertAvailable(delivered, "retained cached analysis");
+      if (delivered.productKind !== "fx" || !("data" in delivered.details.engine.recommendation)) throw new Error("Expected FX recommendation");
+      assertEqual(delivered.details.engine.recommendation.data.posture, "selective", "canonical selective posture not rewritten into WAIT");
+      assertEqual(delivered.currentUse.status, "stale", "current presentation independently waits");
+    }
+    // Monday: existing Frankfurt windows are FX 16-17 and rate 08-09.
+    check(cached, isRate ? "2026-10-05T05:59:00Z" : "2026-10-05T13:59:00Z", "eligible");
+    check(cached, isRate ? "2026-10-05T06:00:00Z" : "2026-10-05T14:00:00Z", "unknown");
+    check(cached, isRate ? "2026-10-05T07:00:00Z" : "2026-10-05T15:00:00Z", "stale");
+    check(cached, "2026-10-04T18:00:00Z", "eligible"); // Weekend: no new TARGET publication.
+    // Easter Monday: previous FX reference Thursday; rate reference Wednesday.
+    check(withReference(original, isRate ? "2026-04-01" : "2026-04-02"), "2026-04-06T18:00:00Z", "eligible");
+    // Match the existing calendar across the winter/summer clock boundary.
+    for (const [reference, before, after] of isRate ? [
+      ["2026-03-25", "2026-03-27T06:59:00Z", "2026-03-27T08:00:00Z"],
+      ["2026-03-26", "2026-03-30T05:59:00Z", "2026-03-30T07:00:00Z"],
+    ] : [
+      ["2026-03-26", "2026-03-27T14:59:00Z", "2026-03-27T16:00:00Z"],
+      ["2026-03-27", "2026-03-30T13:59:00Z", "2026-03-30T15:00:00Z"],
+    ]) {
+      const dst = withReference(original, reference!);
+      check(dst, before, "eligible"); check(dst, after, "stale");
+    }
+    for (const invalid of [undefined, "", "invalid", "2026-10-05T12:00:00", "2026-02-30T12:00:00Z", "2026-10-05T24:00:00Z"]) {
+      check(cached, invalid, "unknown");
+      const result = projectFiveProductFreeLiteV1(cached, invalid);
+      assertEqual(result.currentUse.assessedAt, null, "unsafe clock not serialized");
+      assertEqual(result.currentUse.reason, "assessment-time-unavailable", "explicit clock reason");
+    }
+    const unavailable: FiveProductCanonicalProjectionInputV1 = original.productId === "estr"
+      ? { productId: "estr", canonical: { availability: "unavailable", reason: "source unavailable", missing: ["source"] } }
+      : { productId: original.productId, canonical: { availability: "unavailable", reason: "source unavailable" } };
+    check(unavailable, "2026-10-05T12:00:00Z", "unavailable");
+    check(unavailable, undefined, "unavailable");
+    // Simulated malformed cache metadata must not become eligible via generic cadence fallback.
+    const malformed = JSON.parse(JSON.stringify(cached)) as FiveProductCanonicalProjectionInputV1;
+    if (malformed.canonical.availability !== "available") throw new Error("Expected fixture");
+    const provenance = malformed.productId === "estr" ? malformed.canonical.data.source.provenance : malformed.canonical.provenance;
+    Object.assign(provenance, { provider: "" });
+    check(malformed, "2026-10-05T00:00:00Z", "unknown");
+    assertEqual(projectFiveProductFreeLiteV1(malformed, "2026-10-05T00:00:00Z").currentUse.reason,
+      "provenance-incomplete", "missing provenance reason");
+    Object.assign(provenance, { provider: "ecb", observationTimestamp: NaN });
+    check(malformed, "2026-10-05T00:00:00Z", "unknown");
+    Object.assign(provenance, { observationTimestamp: provenance.sourceTimestamp, status: "unavailable" });
+    check(malformed, "2026-10-05T12:00:00Z", "unavailable");
+    check(malformed, undefined, "unavailable");
+    Object.assign(provenance, { status: "end_of_day", fetchedAt: undefined });
+    check(malformed, "2026-10-05T00:00:00Z", isRate ? "unknown" : "unavailable");
+    const absent = JSON.parse(JSON.stringify(cached)) as FiveProductCanonicalProjectionInputV1;
+    if (absent.canonical.availability !== "available") throw new Error("Expected fixture");
+    if (absent.productId === "estr") Object.assign(absent.canonical.data.source, { provenance: undefined });
+    else Object.assign(absent.canonical, { provenance: undefined });
+    check(absent, "2026-10-05T12:00:00Z", "unavailable");
+    check(withReference(original, "2026-10-06"), "2026-10-05T12:00:00Z", "unknown");
+  }
+  assertEqual(JSON.stringify(fixtureCalls), callsBefore, "delivery checks cause no acquisition, calculation or persistence");
+}
+
 async function main(): Promise<void> {
   const inputs = await canonicalInputs();
   assertEqual(inputs.length, 5, "exactly five launch products");
+  verifyCurrentUse(inputs);
 
   for (const input of inputs) {
     const before = JSON.stringify(input.canonical);
