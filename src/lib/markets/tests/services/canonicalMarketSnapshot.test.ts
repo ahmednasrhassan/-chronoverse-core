@@ -10,6 +10,7 @@ import {
 import { calculateCrossAssetReferenceMoveV1 } from "../../engine/crossAssetFeatures";
 import type { MarketAssetId } from "../../core/assets";
 import { normalizeCanonicalObservationSeriesV1 } from "../../services/canonicalObservationSeries";
+import { ECB_FX_REFERENCE_PRODUCTS_V1 } from "../../providers/ecb/fxReferenceSeries";
 
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -297,6 +298,66 @@ assertEqual(
   "Observation series identity is inconsistent with the canonical request.",
   "provider-neutral identity rejection reason",
 );
+
+// FX aliases describe the latest canonical observation, even for unordered input.
+for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
+  const latestTimestamp = Date.parse("2026-10-06T00:00:00Z") / 1_000;
+  const olderTimestamp = Date.parse("2026-10-02T00:00:00Z") / 1_000;
+  const observations = [
+    { timestamp: latestTimestamp, value: 1.2 },
+    { timestamp: olderTimestamp, value: 1.1 },
+    { timestamp: olderTimestamp, value: 1.1 },
+  ];
+  const metadata = {
+    ...officialSeries.metadata,
+    provider: "ecb",
+    source: "European Central Bank",
+    seriesId: ECB_FX_REFERENCE_PRODUCTS_V1[productId].seriesId,
+    unit: ECB_FX_REFERENCE_PRODUCTS_V1[productId].unit,
+    canonicalProductId: productId,
+    requestedProductId: productId,
+    seriesKind: "reference-rate",
+    sourceTimestamp: latestTimestamp,
+    observationTimestamp: latestTimestamp,
+  } as const;
+  const snapshotFor = (aliases: {
+    sourceTimestamp?: number;
+    observationTimestamp?: number;
+  }) => createCanonicalMarketSnapshotV1(
+    {
+      assetIds: [productId],
+      interval: "1d",
+      history: { kind: "required-observations", requiredObservationCount: 2 },
+    },
+    {
+      loadHistoricalMarketData: async () => ({
+        ...officialSeries,
+        observations,
+        metadata: { ...metadata, ...aliases },
+      }),
+      now: () => new Date("2026-10-05T12:00:00.000Z"),
+    },
+  );
+  const original = JSON.stringify(observations);
+  const consistent = await snapshotFor({});
+  assertEqual(consistent.assets[0]?.availability, "available", `${productId} unordered consistent history accepted`);
+  assertEqual(consistent.assets[0]?.observationCount, 2, `${productId} exact duplicates deduped`);
+  assertEqual(consistent.assets[0]?.latestTimestamp, latestTimestamp, `${productId} future observation retained`);
+  assertEqual(consistent.assets[0]?.provenance?.sourceTimestamp, latestTimestamp, `${productId} latest alias preserved`);
+  for (const aliases of [
+    { sourceTimestamp: olderTimestamp, observationTimestamp: olderTimestamp },
+    { sourceTimestamp: olderTimestamp, observationTimestamp: undefined },
+    { sourceTimestamp: undefined, observationTimestamp: olderTimestamp },
+  ]) {
+    const rejected = await snapshotFor(aliases);
+    assertEqual(rejected.assets[0]?.availability, "unavailable", `${productId} contradictory alias rejected`);
+    assertEqual(rejected.assets[0]?.reason,
+      "FX observation timestamp provenance is inconsistent with the latest canonical observation.",
+      `${productId} explicit provenance rejection`);
+    assertEqual(rejected.assets[0]?.observationCount, 0, `${productId} conflicting history is not silently filtered`);
+  }
+  assertEqual(JSON.stringify(observations), original, `${productId} input observations unchanged`);
+}
 
 let emptyCalls = 0;
 const empty = await createCanonicalMarketSnapshotV1(

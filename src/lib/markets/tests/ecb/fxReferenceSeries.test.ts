@@ -100,6 +100,19 @@ async function main(): Promise<void> {
     now,
   });
 
+  const orderedRows = [...rawObservations()].sort((left, right) =>
+    left.period.localeCompare(right.period));
+  const ordered = await loadEcbFxReferenceSeriesBundleV1({
+    loadData: async () => rawResult(orderedRows),
+    now,
+  });
+  const unordered = await loadEcbFxReferenceSeriesBundleV1({
+    loadData: async () => rawResult([...orderedRows].reverse()),
+    now,
+  });
+  assertDeepEqual(ordered, bundle, "ordered histories preserve canonical values and provenance");
+  assertDeepEqual(unordered, ordered, "raw row order cannot change latest observation provenance");
+
   assertEqual(loadCount, 1, "one acquisition supplies all four products");
   assertDeepEqual(repeat, bundle, "controlled input normalization is deterministic");
 
@@ -132,6 +145,11 @@ async function main(): Promise<void> {
       `${productId} observation is reference time`);
     assertEqual("releaseTimestamp" in series.metadata, false,
       `${productId} release time is not fabricated`);
+    assertDeepEqual(Object.keys(series.metadata).sort(), [
+      "provenanceVersion", "provider", "source", "originalPublisher", "substitution",
+      "seriesId", "requestedProductId", "canonicalProductId", "interval", "fetchedAt",
+      "observationTimestamp", "sourceTimestamp", "status", "unit", "seriesKind",
+    ].sort(), `${productId} existing provenance contract adds no publication or possession claims`);
     for (const field of ["open", "high", "low", "close", "volume"] as const) {
       assertEqual(field in series.observations[0]!, false, `${productId} no synthesized ${field}`);
     }

@@ -309,6 +309,27 @@ async function loadAsset(
       );
     }
 
+    if (
+      assetId === "eurusd" || assetId === "eurjpy" ||
+      assetId === "eurgbp" || assetId === "eurchf"
+    ) {
+      const latestTimestamp = series.observations.at(-1)?.timestamp;
+
+      if (
+        (series.metadata.sourceTimestamp !== undefined &&
+          series.metadata.sourceTimestamp !== latestTimestamp) ||
+        (series.metadata.observationTimestamp !== undefined &&
+          series.metadata.observationTimestamp !== latestTimestamp)
+      ) {
+        return unavailableAsset(
+          common,
+          "FX observation timestamp provenance is inconsistent with the latest canonical observation.",
+          provenance,
+          series.metadata.status,
+        );
+      }
+    }
+
     if (series.metadata.status === "unavailable") {
       return unavailableAsset(
         common,

@@ -107,7 +107,6 @@ export async function loadEcbFxReferenceSeriesBundleV1(
       );
     }
 
-    const sourceTimestamp = observations.at(-1)!.timestamp;
     const series = normalizeCanonicalObservationSeriesV1({
       observations,
       metadata: {
@@ -121,15 +120,22 @@ export async function loadEcbFxReferenceSeriesBundleV1(
         canonicalProductId: product.canonicalProductId,
         interval: "1d",
         fetchedAt,
-        observationTimestamp: sourceTimestamp,
-        sourceTimestamp,
         status: "end_of_day",
         unit: product.unit,
         seriesKind: "reference-rate",
       },
     });
 
-    return [productId, series] as const;
+    const sourceTimestamp = series.observations.at(-1)!.timestamp;
+
+    return [productId, Object.freeze({
+      ...series,
+      metadata: Object.freeze({
+        ...series.metadata,
+        observationTimestamp: sourceTimestamp,
+        sourceTimestamp,
+      }),
+    })] as const;
   });
 
   return Object.freeze(Object.fromEntries(entries)) as EcbFxReferenceSeriesBundleV1;

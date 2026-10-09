@@ -30,8 +30,10 @@ import {
   ECB_ESTR_SERIES_ID_V1,
   ECB_ESTR_SERIES_KEY_V1,
 } from "../../providers/ecb/estrContract";
-import { ECB_FX_REFERENCE_PRODUCTS_V1 } from
-  "../../providers/ecb/fxReferenceSeries";
+import {
+  ECB_FX_REFERENCE_PRODUCTS_V1,
+  loadEcbFxReferenceSeriesBundleV1,
+} from "../../providers/ecb/fxReferenceSeries";
 import type {
   EcbEstrObservationMetadataV1,
   EcbEstrSeriesV1,
@@ -538,7 +540,106 @@ function verifyCurrentUse(inputs: readonly FiveProductCanonicalProjectionInputV1
   assertEqual(JSON.stringify(fixtureCalls), callsBefore, "delivery checks cause no acquisition, calculation or persistence");
 }
 
+async function verifyFxCanonicalChronology(): Promise<void> {
+  const assessedAt = "2026-10-05T12:00:00.000Z";
+  const latestTimestamp = Date.parse("2026-10-02T00:00:00Z") / 1_000;
+  const futureTimestamp = Date.parse("2026-10-06T00:00:00Z") / 1_000;
+  const orderedRows = FX_CONFIGURATIONS.flatMap((configuration) =>
+    Array.from({ length: 600 }, (_, index) => ({
+      seriesId: ECB_FX_REFERENCE_PRODUCTS_V1[configuration.productId].seriesId,
+      period: new Date((latestTimestamp - (599 - index) * 86_400) * 1_000)
+        .toISOString().slice(0, 10),
+      value: String(configuration.baseValue *
+        (1 + index * 0.00001 + Math.sin(index / 9) * 0.002)),
+    })));
+  const futureRows = FX_CONFIGURATIONS.flatMap((configuration) => {
+    const seriesId = ECB_FX_REFERENCE_PRODUCTS_V1[configuration.productId].seriesId;
+    const rows = orderedRows.filter((row) => row.seriesId === seriesId);
+    return [
+      ...rows.slice(0, 300),
+      { seriesId, period: "2026-10-06", value: String(configuration.baseValue * 1.05) },
+      ...rows.slice(300),
+    ];
+  });
+  let acquisitions = 0;
+  const bundles = await Promise.all([
+    orderedRows, [...orderedRows].reverse(), futureRows,
+  ].map((observations) => loadEcbFxReferenceSeriesBundleV1({
+    loadData: async () => {
+      acquisitions++;
+      return {
+        provider: "ecb" as const,
+        requestedSeriesIds: FX_CONFIGURATIONS.map((configuration) =>
+          ECB_FX_REFERENCE_PRODUCTS_V1[configuration.productId].seriesId),
+        observations,
+      };
+    },
+    now: () => new Date(assessedAt),
+  })));
+  assertEqual(acquisitions, 3, "one acquisition per atomic chronology fixture");
+  const [ordered, unordered, future] = bundles;
+  assertDeepEqual(unordered, ordered, "unordered FX histories preserve all canonical values and metadata");
+
+  for (const configuration of FX_CONFIGURATIONS) {
+    const productId = configuration.productId;
+    const futureSeries = future![productId];
+    assertEqual(futureSeries.observations.length, 601, `${productId} future row is not filtered`);
+    assertEqual(futureSeries.observations.at(-1)?.timestamp, futureTimestamp,
+      `${productId} future row is canonical latest`);
+    assertEqual(futureSeries.metadata.sourceTimestamp, futureTimestamp,
+      `${productId} older last raw row cannot hide future source timestamp`);
+    assertEqual(futureSeries.metadata.observationTimestamp, futureTimestamp,
+      `${productId} observation timestamp follows canonical chronology`);
+    assertEqual(futureSeries.metadata.releaseTimestamp, undefined,
+      `${productId} no publication timestamp invented`);
+    assertDeepEqual(Object.keys(futureSeries.metadata).sort(),
+      Object.keys(ordered![productId].metadata).sort(),
+      `${productId} no new publication or possession metadata`);
+
+    let runtimeLoads = 0;
+    let lifecycleCalls = 0;
+    const inputs = await Promise.all(bundles.map(async (bundle) => ({
+      productId,
+      canonical: await configuration.run({
+        loadCanonicalSeries: async () => { runtimeLoads++; return bundle[productId]; },
+        now: () => new Date(assessedAt),
+        advanceDecisionSnapshot: async () => {
+          lifecycleCalls++;
+          return { status: "initialized", previous: null };
+        },
+      }),
+    } satisfies FiveProductCanonicalProjectionInputV1)));
+    assertDeepEqual(inputs[1]!.canonical, inputs[0]!.canonical,
+      `${productId} ordered and unordered histories yield identical calculations and lifecycle`);
+    const callsBefore = JSON.stringify({ acquisitions, runtimeLoads, lifecycleCalls });
+    for (const [index, input] of inputs.entries()) {
+      assertEqual(input.canonical.availability, "available", `${productId} chronology runtime available`);
+      const before = JSON.stringify(input.canonical);
+      for (const projection of [
+        projectFiveProductFreeLiteV1(input, assessedAt),
+        projectFiveProductVipDeepV1(input, AVAILABLE_ECB_POLICY_EVENT, assessedAt),
+      ]) {
+        assertAvailable(projection, `${productId} chronology projection available`);
+        assertEqual(projection.currentUse.status, index === 2 ? "unknown" : "eligible",
+          `${productId} ${projection.tier} chronology current-use status`);
+        assertEqual(projection.sourceTimestamp, index === 2 ? futureTimestamp : latestTimestamp,
+          `${productId} ${projection.tier} canonical latest timestamp delivered`);
+        assertEqual(projection.provenance.releaseTimestamp, null,
+          `${productId} ${projection.tier} publication remains unknown`);
+      }
+      assertEqual(JSON.stringify(input.canonical), before,
+        `${productId} delivery leaves cached calculations and lifecycle unchanged`);
+    }
+    assertEqual(JSON.stringify({ acquisitions, runtimeLoads, lifecycleCalls }), callsBefore,
+      `${productId} projection causes no acquisition, recomputation or persistence`);
+    assertEqual(runtimeLoads, 3, `${productId} one runtime load per fixture`);
+    assertEqual(lifecycleCalls, 3, `${productId} existing lifecycle calls preserved`);
+  }
+  console.log("PASS: all four FX canonical chronology and Free/VIP future-evidence regressions");
+}
+
 async function main(): Promise<void> {
+  await verifyFxCanonicalChronology();
   const inputs = await canonicalInputs();
   assertEqual(inputs.length, 5, "exactly five launch products");
   verifyCurrentUse(inputs);
