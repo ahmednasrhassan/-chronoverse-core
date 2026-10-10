@@ -176,7 +176,7 @@ function officialSeries(
 ): CanonicalObservationSeriesV1 {
   return normalizeCanonicalObservationSeriesV1({
     observations: Array.from({ length: 600 }, (_, index) => ({
-      timestamp: 1_700_000_000 + index * 86_400,
+      timestamp: (Date.UTC(2023, 10, 14) / 1_000) + index * 86_400,
       value: 1.08 + index * 0.00001 + Math.sin(index / 9) * 0.002,
     })),
     metadata: {
@@ -187,7 +187,7 @@ function officialSeries(
       canonicalProductId: "eurusd",
       interval: "1d",
       fetchedAt: 1_751_000_000,
-      sourceTimestamp: 1_700_000_000 + 599 * 86_400,
+      sourceTimestamp: (Date.UTC(2023, 10, 14) / 1_000) + 599 * 86_400,
       status: "end_of_day",
       unit: "USD per EUR",
       seriesKind: "reference-rate",
@@ -261,7 +261,7 @@ async function main(): Promise<void> {
   const initialized = usableLifecycle(first, "initialized EUR/USD lifecycle");
   assertEqual(initialized.comparison, "initialized",
     "EUR/USD lifecycle initialized");
-  assertEqual(first.provenance, series.metadata, "full source provenance retained");
+  assertDeepEqual(first.provenance, series.metadata, "full source provenance retained");
   assertEqual(first.provenance.sourceTimestamp, series.metadata.sourceTimestamp,
     "sourceTimestamp retained");
   assertEqual(first.provenance.seriesKind, "reference-rate", "series kind retained");
@@ -376,7 +376,7 @@ async function main(): Promise<void> {
     assertDeepEqual(engineWithoutDecisionLifecycle(result),
       engineWithoutDecisionLifecycle(first),
       `${label} non-lifecycle Engine sections unchanged`);
-    assertEqual(result.provenance, series.metadata,
+    assertDeepEqual(result.provenance, series.metadata,
       `${label} source provenance unchanged`);
   }
 

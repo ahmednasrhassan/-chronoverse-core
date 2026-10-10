@@ -255,7 +255,7 @@ function officialSeries(
 
   return normalizeCanonicalObservationSeriesV1({
     observations: Array.from({ length: count }, (_, index) => ({
-      timestamp: 1_700_000_000 + index * 86_400,
+      timestamp: (Date.UTC(2023, 10, 14) / 1_000) + index * 86_400,
       value: baseValue * (1 + index * 0.00001 + Math.sin(index / 9) * 0.002),
     })),
     metadata: {
@@ -266,7 +266,7 @@ function officialSeries(
       canonicalProductId: productId,
       interval: "1d",
       fetchedAt: 1_751_000_000,
-      sourceTimestamp: 1_700_000_000 + (count - 1) * 86_400,
+      sourceTimestamp: (Date.UTC(2023, 10, 14) / 1_000) + (count - 1) * 86_400,
       status: "end_of_day",
       unit: product.unit,
       seriesKind: "reference-rate",
@@ -446,7 +446,7 @@ async function verifyProduct(configuration: LaunchConfiguration): Promise<void> 
   const initialized = usableLifecycle(first, `${productId} initialized lifecycle`);
   assertEqual(initialized.comparison, "initialized",
     `${productId} lifecycle initialized`);
-  assertEqual(first.provenance, series.metadata, `${productId} provenance retained`);
+  assertDeepEqual(first.provenance, series.metadata, `${productId} provenance retained`);
   assertEqual(first.provenance.seriesKind, "reference-rate",
     `${productId} reference-rate provenance retained`);
   assertEqual(first.provenance.status, "end_of_day",
@@ -548,7 +548,7 @@ async function verifyProduct(configuration: LaunchConfiguration): Promise<void> 
     assertDeepEqual(engineWithoutDecisionLifecycle(result),
       engineWithoutDecisionLifecycle(first),
       `${productId} ${label} non-lifecycle Engine sections unchanged`);
-    assertEqual(result.provenance, series.metadata,
+    assertDeepEqual(result.provenance, series.metadata,
       `${productId} ${label} provenance unchanged`);
   }
 

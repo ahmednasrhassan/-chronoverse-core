@@ -24,7 +24,12 @@ import {
 } from "../../persistence/decisionSnapshotRedis";
 import {
   createCanonicalMarketSnapshotV1,
+  CanonicalFxTemporalAdmissionErrorV1,
+  qualifyCanonicalFxSourceForEvaluationV1,
+  resolveCanonicalFxEvaluationInstantV1,
+  unavailableCanonicalFxTemporalSourceV1,
 } from "../../services/canonicalMarketSnapshot";
+import type { CanonicalTemporalQualificationEnvelopeV1 } from "../../services/canonicalTemporalQualification";
 import type {
   CanonicalObservationSeriesMetadataV1,
   CanonicalObservationSeriesV1,
@@ -45,11 +50,14 @@ type AvailableGenericEurUsdRuntimeV1 = Extract<
 export type EurUsdProductionIntelligenceV1 =
   AvailableGenericEurUsdRuntimeV1 & {
     readonly provenance: CanonicalObservationSeriesMetadataV1;
+    /** Fresh computations include this; legacy cache retrieval is a later guard. */
+    readonly temporalQualification?: CanonicalTemporalQualificationEnvelopeV1;
   };
 
 export interface EurUsdProductionRuntimeDependenciesV1 {
   readonly loadCanonicalSeries?: () => Promise<CanonicalObservationSeriesV1>;
   readonly now?: () => Date;
+  readonly evaluatedAt?: string;
   readonly integrateDecisionLifecycle?:
     typeof integrateCanonicalDecisionLifecycleV3;
   readonly advanceDecisionSnapshot?:
@@ -63,9 +71,29 @@ export interface EurUsdProductionRuntimeDependenciesV1 {
 export async function getCanonicalLiveEurUsdIntelligence(
   dependencies: EurUsdProductionRuntimeDependenciesV1 = {},
 ): Promise<EurUsdProductionIntelligenceV1> {
+  // Own explicit cutoff presence/value before acquisition; only absent cutoffs
+  // sample the captured clock after the complete source has been acquired.
+  const suppliedCutoff = "evaluatedAt" in dependencies
+    ? resolveCanonicalFxEvaluationInstantV1(dependencies)
+    : undefined;
+  const evaluationClock = suppliedCutoff === undefined ? dependencies.now : undefined;
   const loadCanonicalSeries = dependencies.loadCanonicalSeries ??
     (() => getCanonicalEcbFxReferenceSeriesV1("eurusd"));
-  const series = await loadCanonicalSeries();
+  let source: CanonicalObservationSeriesV1;
+  try {
+    source = await loadCanonicalSeries();
+  } catch {
+    throw new CanonicalFxTemporalAdmissionErrorV1(
+      unavailableCanonicalFxTemporalSourceV1("eurusd", "source-unavailable"),
+    );
+  }
+  const evaluatedAt = suppliedCutoff ??
+    resolveCanonicalFxEvaluationInstantV1({}, evaluationClock);
+  const admitted = qualifyCanonicalFxSourceForEvaluationV1("eurusd", source, evaluatedAt);
+  if (admitted.availability === "unavailable") {
+    throw new CanonicalFxTemporalAdmissionErrorV1(admitted);
+  }
+  const { series, qualification } = admitted;
 
   assertOfficialEurUsdSeries(series);
 
@@ -75,6 +103,7 @@ export async function getCanonicalLiveEurUsdIntelligence(
     {
       targetAssetIds: ["eurusd"],
       interval: eurusdProfile.defaultInterval,
+      evaluatedAt,
       history: {
         kind: "required-observations",
         requiredObservationCount: minimumRequiredHistory,
@@ -82,7 +111,6 @@ export async function getCanonicalLiveEurUsdIntelligence(
       },
     },
     series,
-    dependencies.now,
   );
   const prepared = prepareAssetEvaluationV1(
     evaluation,
@@ -118,13 +146,13 @@ export async function getCanonicalLiveEurUsdIntelligence(
     ...runtime,
     engineResult,
     provenance: series.metadata,
+    temporalQualification: qualification,
   });
 }
 
 async function coordinateOfficialEurUsdMarketEvaluationV1(
   request: CanonicalMarketEvaluationRequestV1,
   series: CanonicalObservationSeriesV1,
-  now: (() => Date) | undefined,
 ) {
   return coordinateCanonicalMarketEvaluationV1(request, {
     createSnapshot: async (snapshotRequest) => {
@@ -139,7 +167,6 @@ async function coordinateOfficialEurUsdMarketEvaluationV1(
 
       return createCanonicalMarketSnapshotV1(snapshotRequest, {
         loadHistoricalMarketData: async () => series,
-        ...(now === undefined ? {} : { now }),
       });
     },
   });

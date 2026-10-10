@@ -27,7 +27,12 @@ import {
 } from "../persistence/decisionSnapshotRedis";
 import {
   createCanonicalMarketSnapshotV1,
+  CanonicalFxTemporalAdmissionErrorV1,
+  qualifyCanonicalFxSourceForEvaluationV1,
+  resolveCanonicalFxEvaluationInstantV1,
+  unavailableCanonicalFxTemporalSourceV1,
 } from "../services/canonicalMarketSnapshot";
+import type { CanonicalTemporalQualificationEnvelopeV1 } from "../services/canonicalTemporalQualification";
 import type {
   CanonicalObservationSeriesMetadataV1,
   CanonicalObservationSeriesV1,
@@ -47,11 +52,14 @@ type AvailableGenericEcbFxRuntimeV1 = Extract<
 export type EcbFxProductionIntelligenceV1 =
   AvailableGenericEcbFxRuntimeV1 & {
     readonly provenance: CanonicalObservationSeriesMetadataV1;
+    /** Fresh computations include this; legacy cache retrieval is a later guard. */
+    readonly temporalQualification?: CanonicalTemporalQualificationEnvelopeV1;
   };
 
 export interface EcbFxProductionRuntimeDependenciesV1 {
   readonly loadCanonicalSeries?: () => Promise<CanonicalObservationSeriesV1>;
   readonly now?: () => Date;
+  readonly evaluatedAt?: string;
   readonly integrateDecisionLifecycle?:
     typeof integrateCanonicalDecisionLifecycleV3;
   readonly advanceDecisionSnapshot?:
@@ -64,13 +72,33 @@ export async function runCanonicalLiveEcbFxIntelligenceV1(
   displayName: string,
   dependencies: EcbFxProductionRuntimeDependenciesV1 = {},
 ): Promise<EcbFxProductionIntelligenceV1> {
+  // Own explicit cutoff presence/value before acquisition; only absent cutoffs
+  // sample the captured clock after the complete source has been acquired.
+  const suppliedCutoff = "evaluatedAt" in dependencies
+    ? resolveCanonicalFxEvaluationInstantV1(dependencies)
+    : undefined;
+  const evaluationClock = suppliedCutoff === undefined ? dependencies.now : undefined;
   if (profile.id !== productId) {
     throw new TypeError("ECB FX production profile identity is invalid.");
   }
 
   const loadCanonicalSeries = dependencies.loadCanonicalSeries ??
     (() => getCanonicalEcbFxReferenceSeriesV1(productId));
-  const series = await loadCanonicalSeries();
+  let source: CanonicalObservationSeriesV1;
+  try {
+    source = await loadCanonicalSeries();
+  } catch {
+    throw new CanonicalFxTemporalAdmissionErrorV1(
+      unavailableCanonicalFxTemporalSourceV1(productId, "source-unavailable"),
+    );
+  }
+  const evaluatedAt = suppliedCutoff ??
+    resolveCanonicalFxEvaluationInstantV1({}, evaluationClock);
+  const admitted = qualifyCanonicalFxSourceForEvaluationV1(productId, source, evaluatedAt);
+  if (admitted.availability === "unavailable") {
+    throw new CanonicalFxTemporalAdmissionErrorV1(admitted);
+  }
+  const { series, qualification } = admitted;
 
   assertOfficialEcbFxSeries(productId, displayName, series);
 
@@ -80,6 +108,7 @@ export async function runCanonicalLiveEcbFxIntelligenceV1(
     {
       targetAssetIds: [productId],
       interval: profile.defaultInterval,
+      evaluatedAt,
       history: {
         kind: "required-observations",
         requiredObservationCount: minimumRequiredHistory,
@@ -89,7 +118,6 @@ export async function runCanonicalLiveEcbFxIntelligenceV1(
     productId,
     displayName,
     series,
-    dependencies.now,
   );
   const prepared = prepareAssetEvaluationV1(
     evaluation,
@@ -127,6 +155,7 @@ export async function runCanonicalLiveEcbFxIntelligenceV1(
     ...runtime,
     engineResult,
     provenance: series.metadata,
+    temporalQualification: qualification,
   });
 }
 
@@ -135,7 +164,6 @@ async function coordinateOfficialEcbFxMarketEvaluationV1(
   productId: ProductionEcbFxProductId,
   displayName: string,
   series: CanonicalObservationSeriesV1,
-  now: (() => Date) | undefined,
 ) {
   return coordinateCanonicalMarketEvaluationV1(request, {
     createSnapshot: async (snapshotRequest) => {
@@ -150,7 +178,6 @@ async function coordinateOfficialEcbFxMarketEvaluationV1(
 
       return createCanonicalMarketSnapshotV1(snapshotRequest, {
         loadHistoricalMarketData: async () => series,
-        ...(now === undefined ? {} : { now }),
       });
     },
   });

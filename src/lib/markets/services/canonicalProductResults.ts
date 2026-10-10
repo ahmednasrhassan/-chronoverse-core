@@ -30,9 +30,16 @@ import {
 import {
   getCanonicalEcbFxReferenceSeriesBundleV1,
 } from "../providers/ecb/fxReferenceSeriesCache";
+import type { EcbFxReferenceSeriesBundleV1 } from "../providers/ecb/fxReferenceSeries";
 import {
-  selectEcbFxReferenceSeriesV1,
-} from "../providers/ecb/fxReferenceSeries";
+  CANONICAL_FX_PREFLIGHT_ORDER_V1,
+  CanonicalFxTemporalAdmissionErrorV1,
+  qualifyCanonicalFxSourceForEvaluationV1,
+  resolveCanonicalFxEvaluationInstantV1,
+  unavailableCanonicalFxTemporalSourceV1,
+  type CanonicalFxTemporalUnavailableV1,
+  type QualifiedCanonicalFxSourceV1,
+} from "./canonicalMarketSnapshot";
 import type {
   FiveProductCanonicalProjectionInputV1,
   MarketProductFreeLiteProjectionV1,
@@ -100,28 +107,97 @@ export interface FiveProductVipDeepMapDependenciesV1 {
   }) => Promise<EcbMonetaryPolicyEventRuntimeResultV1>;
 }
 
-/** One persisted FX result bundle preserves the source bundle's atomicity. */
+export interface CanonicalFxBundleComputationDependenciesV1 {
+  readonly loadSourceBundle?: () => Promise<EcbFxReferenceSeriesBundleV1>;
+  readonly evaluatedAt?: string;
+  readonly now?: () => Date;
+  readonly runtimes?: Readonly<{
+    eurusd: typeof getCanonicalLiveEurUsdIntelligence;
+    eurjpy: typeof getCanonicalLiveEurJpyIntelligence;
+    eurgbp: typeof getCanonicalLiveEurGbpIntelligence;
+    eurchf: typeof getCanonicalLiveEurChfIntelligence;
+  }>;
+}
+
+export type CanonicalFxBundleComputationResultV1 =
+  | { readonly availability: "available"; readonly evaluatedAt: string;
+      readonly bundle: CanonicalFxResultBundleV1 }
+  | CanonicalFxTemporalUnavailableV1;
+
+/**
+ * Fresh computation boundary, not a cache retrieval guard. Acquire the full
+ * bundle, sample E once, and preflight USD/JPY/GBP/CHF before invoking any runtime.
+ * No rejection retries an older source or calculation. Existing cache hits/SWR,
+ * legacy qualification guards and Free/VIP propagation remain activation blockers.
+ */
+export async function computeCanonicalFxResultBundleV1(
+  dependencies: CanonicalFxBundleComputationDependenciesV1 = {},
+): Promise<CanonicalFxBundleComputationResultV1> {
+  // Own explicit cutoff presence/value before acquisition; only absent cutoffs
+  // sample the captured clock after the complete source has been acquired.
+  const suppliedCutoff = "evaluatedAt" in dependencies
+    ? resolveCanonicalFxEvaluationInstantV1(dependencies)
+    : undefined;
+  const evaluationClock = suppliedCutoff === undefined ? dependencies.now : undefined;
+  let sourceBundle: EcbFxReferenceSeriesBundleV1;
+  try {
+    sourceBundle = await (dependencies.loadSourceBundle ??
+      getCanonicalEcbFxReferenceSeriesBundleV1)();
+  } catch {
+    return unavailableCanonicalFxTemporalSourceV1("eurusd", "source-unavailable");
+  }
+  const evaluatedAt = suppliedCutoff ??
+    resolveCanonicalFxEvaluationInstantV1({}, evaluationClock);
+  const sources = new Map<keyof CanonicalFxResultBundleV1, QualifiedCanonicalFxSourceV1>();
+  try {
+    if (sourceBundle === null || typeof sourceBundle !== "object") {
+      return unavailableCanonicalFxTemporalSourceV1("eurusd", "invalid-input");
+    }
+    const prototype = Object.getPrototypeOf(sourceBundle);
+    const keys = Reflect.ownKeys(sourceBundle);
+    if ((prototype !== Object.prototype && prototype !== null) ||
+      keys.some((key) => typeof key !== "string" ||
+        !CANONICAL_FX_PREFLIGHT_ORDER_V1.some((productId) => productId === key))) {
+      return unavailableCanonicalFxTemporalSourceV1("eurusd", "invalid-input");
+    }
+    for (const productId of CANONICAL_FX_PREFLIGHT_ORDER_V1) {
+      const descriptor = Object.getOwnPropertyDescriptor(sourceBundle, productId);
+      if (descriptor === undefined || !("value" in descriptor) || !descriptor.enumerable) {
+        return unavailableCanonicalFxTemporalSourceV1(productId, "invalid-input");
+      }
+      const outcome = qualifyCanonicalFxSourceForEvaluationV1(productId, descriptor.value, evaluatedAt);
+      if (outcome.availability === "unavailable") return outcome;
+      sources.set(productId, outcome);
+    }
+  } catch {
+    return unavailableCanonicalFxTemporalSourceV1("eurusd", "invalid-input");
+  }
+  const runtimes = dependencies.runtimes ?? {
+    eurusd: getCanonicalLiveEurUsdIntelligence,
+    eurjpy: getCanonicalLiveEurJpyIntelligence,
+    eurgbp: getCanonicalLiveEurGbpIntelligence,
+    eurchf: getCanonicalLiveEurChfIntelligence,
+  };
+  const loadSeries = (productId: keyof CanonicalFxResultBundleV1) =>
+    async () => sources.get(productId)!.series;
+  const [eurusd, eurjpy, eurgbp, eurchf] = await Promise.all([
+    runtimes.eurusd({ loadCanonicalSeries: loadSeries("eurusd"), evaluatedAt }),
+    runtimes.eurjpy({ loadCanonicalSeries: loadSeries("eurjpy"), evaluatedAt }),
+    runtimes.eurgbp({ loadCanonicalSeries: loadSeries("eurgbp"), evaluatedAt }),
+    runtimes.eurchf({ loadCanonicalSeries: loadSeries("eurchf"), evaluatedAt }),
+  ]);
+  return Object.freeze({ availability: "available", evaluatedAt,
+    bundle: Object.freeze({ eurusd, eurjpy, eurgbp, eurchf }) });
+}
+
+/** Existing cache owner; source-bound retrieval/version migration is deferred. */
 const getCachedCanonicalFxResultBundleV1 = unstable_cache(
   async (): Promise<CanonicalFxResultBundleV1> => {
-    const sourceBundle = await getCanonicalEcbFxReferenceSeriesBundleV1();
-    const loadSeries = (productId: "eurusd" | "eurjpy" | "eurgbp" | "eurchf") =>
-      async () => selectEcbFxReferenceSeriesV1(sourceBundle, productId);
-    const [eurusd, eurjpy, eurgbp, eurchf] = await Promise.all([
-      getCanonicalLiveEurUsdIntelligence({
-        loadCanonicalSeries: loadSeries("eurusd"),
-      }),
-      getCanonicalLiveEurJpyIntelligence({
-        loadCanonicalSeries: loadSeries("eurjpy"),
-      }),
-      getCanonicalLiveEurGbpIntelligence({
-        loadCanonicalSeries: loadSeries("eurgbp"),
-      }),
-      getCanonicalLiveEurChfIntelligence({
-        loadCanonicalSeries: loadSeries("eurchf"),
-      }),
-    ]);
-
-    return Object.freeze({ eurusd, eurjpy, eurgbp, eurchf });
+    const result = await computeCanonicalFxResultBundleV1();
+    if (result.availability === "unavailable") {
+      throw new CanonicalFxTemporalAdmissionErrorV1(result);
+    }
+    return result.bundle;
   },
   ["chronoverse", "markets", "canonical-product-result-v1", "launch-fx"],
   {

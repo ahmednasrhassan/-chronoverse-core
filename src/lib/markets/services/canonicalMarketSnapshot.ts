@@ -18,6 +18,110 @@ import {
   type CanonicalSourceSubstitutionV1,
 } from "./canonicalObservationSeries";
 import type { HistoricalMarketResult } from "./historicalMarketData";
+import type { EcbFxReferenceProductIdV1 } from "../providers/ecb/types";
+import { CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1 } from "./canonicalTemporalAdmission";
+import {
+  qualifyCanonicalTemporalSourceV1,
+  validateCanonicalTemporalQualificationV1,
+  type CanonicalTemporalQualificationEnvelopeV1,
+  type CanonicalTemporalQualificationRejectionReasonV1,
+} from "./canonicalTemporalQualification";
+
+export const CANONICAL_FX_PREFLIGHT_ORDER_V1 = Object.freeze([
+  "eurusd", "eurjpy", "eurgbp", "eurchf",
+] as const);
+
+export interface CanonicalFxTemporalUnavailableV1 {
+  readonly availability: "unavailable";
+  readonly productId: EcbFxReferenceProductIdV1;
+  readonly reason: CanonicalTemporalQualificationRejectionReasonV1 | "source-unavailable";
+  readonly policyVersion: typeof CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1;
+}
+
+/** Existing successful-only runtime APIs reject with this typed unavailable result. */
+export class CanonicalFxTemporalAdmissionErrorV1 extends Error {
+  readonly result: CanonicalFxTemporalUnavailableV1;
+
+  constructor(result: CanonicalFxTemporalUnavailableV1) {
+    super(`Canonical FX temporal admission rejected ${result.productId}: ${result.reason}.`);
+    this.name = "CanonicalFxTemporalAdmissionErrorV1";
+    this.result = result;
+  }
+}
+
+export function unavailableCanonicalFxTemporalSourceV1(
+  productId: EcbFxReferenceProductIdV1,
+  reason: CanonicalFxTemporalUnavailableV1["reason"],
+): CanonicalFxTemporalUnavailableV1 {
+  return Object.freeze({ availability: "unavailable", productId, reason,
+    policyVersion: CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1 });
+}
+
+/** Preserve supplied cutoffs; sample a default clock only after acquisition. */
+export function resolveCanonicalFxEvaluationInstantV1(
+  context: { readonly evaluatedAt?: string },
+  now: () => Date = () => new Date(),
+): string {
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(context, "evaluatedAt");
+    if (descriptor !== undefined) {
+      return "value" in descriptor && typeof descriptor.value === "string"
+        ? descriptor.value : "";
+    }
+    if ("evaluatedAt" in context) return ""; // Inherited cutoffs are unsupported.
+    return now().toISOString();
+  } catch {
+    return ""; // The approved primitive classifies an invalid evaluation instant.
+  }
+}
+
+export type QualifiedCanonicalFxSourceV1 = {
+  readonly availability: "available";
+  readonly series: CanonicalObservationSeriesV1;
+  readonly qualification: CanonicalTemporalQualificationEnvelopeV1;
+};
+
+/**
+ * Admission precedes cloning or normalization. Own a frozen complete source for
+ * async consumers, and verify its binding against the approved receipt. Supported
+ * passive records/arrays follow the approved helper's boundary; arbitrary Proxies
+ * and modified built-ins remain unsupported. This is not a JavaScript sandbox.
+ */
+export function qualifyCanonicalFxSourceForEvaluationV1(
+  productId: EcbFxReferenceProductIdV1,
+  source: unknown,
+  evaluatedAt: string,
+): QualifiedCanonicalFxSourceV1 | CanonicalFxTemporalUnavailableV1 {
+  const input = { productId, source: source as CanonicalObservationSeriesV1, evaluatedAt };
+  const admitted = qualifyCanonicalTemporalSourceV1(input);
+  if (admitted.status === "rejected") {
+    return unavailableCanonicalFxTemporalSourceV1(productId, admitted.reason);
+  }
+  try {
+    const series = structuredClone(source) as CanonicalObservationSeriesV1;
+    const verified = validateCanonicalTemporalQualificationV1(admitted.qualification,
+      { productId, source: series, evaluatedAt });
+    if (verified.status === "rejected") {
+      return unavailableCanonicalFxTemporalSourceV1(productId, verified.reason);
+    }
+    freezeOwnedPassiveData(series);
+    return Object.freeze({ availability: "available", series,
+      qualification: verified.qualification });
+  } catch {
+    return unavailableCanonicalFxTemporalSourceV1(productId, "invalid-input");
+  }
+}
+
+function freezeOwnedPassiveData(value: unknown): void {
+  if (value === null || typeof value !== "object") return;
+  for (const child of Object.values(value)) freezeOwnedPassiveData(child);
+  Object.freeze(value);
+}
+
+function isCanonicalFxProductId(assetId: MarketAssetId): assetId is EcbFxReferenceProductIdV1 {
+  return assetId === "eurusd" || assetId === "eurjpy" ||
+    assetId === "eurgbp" || assetId === "eurchf";
+}
 
 export const CANONICAL_MARKET_SNAPSHOT_SCHEMA_VERSION_V1 =
   "canonical-market-snapshot-v1" as const;
@@ -49,6 +153,7 @@ export interface CanonicalMarketSnapshotRequestV1 {
   readonly assetIds: readonly MarketAssetId[];
   readonly interval: CandleInterval;
   readonly history: CanonicalMarketSnapshotHistoryV1;
+  readonly evaluatedAt?: string;
 }
 
 export interface NormalizedCanonicalMarketSnapshotRequestV1 {
@@ -90,6 +195,8 @@ export interface CanonicalMarketSnapshotAssetV1 {
   readonly availability: "available" | "unavailable";
   readonly status: MarketDataStatus;
   readonly reason?: string;
+  readonly temporalQualification?: CanonicalTemporalQualificationEnvelopeV1;
+  readonly temporalFailure?: CanonicalFxTemporalUnavailableV1;
 }
 
 export interface CanonicalMarketSnapshotV1 {
@@ -223,12 +330,18 @@ export async function createCanonicalMarketSnapshotV1(
   dependencies: CanonicalMarketSnapshotDependenciesV1 = {},
 ): Promise<CanonicalMarketSnapshotV1> {
   const normalizedRequest = normalizeCanonicalMarketSnapshotRequestV1(request);
-  const computedAt = (dependencies.now ?? (() => new Date()))().toISOString();
+  // Capture a supplied passive cutoff before awaits; sample the default after loading.
+  const hasCutoff = "evaluatedAt" in request;
+  const suppliedCutoff = hasCutoff ? resolveCanonicalFxEvaluationInstantV1(request) : undefined;
+  const includesFx = normalizedRequest.assetIds.some(isCanonicalFxProductId);
+  // Retain the existing acquisition-time behavior for unrelated candle consumers.
+  const nonFxComputedAt = includesFx ? undefined
+    : suppliedCutoff ?? (dependencies.now ?? (() => new Date()))().toISOString();
 
   if (normalizedRequest.assetIds.length === 0) {
     return Object.freeze({
       schemaVersion: CANONICAL_MARKET_SNAPSHOT_SCHEMA_VERSION_V1,
-      computedAt,
+      computedAt: nonFxComputedAt ?? suppliedCutoff ?? resolveCanonicalFxEvaluationInstantV1({}, dependencies.now),
       requestedAssetIds: normalizedRequest.assetIds,
       assets: Object.freeze([]),
       availability: "unavailable",
@@ -237,9 +350,58 @@ export async function createCanonicalMarketSnapshotV1(
   }
 
   const loader = dependencies.loadHistoricalMarketData ?? defaultHistoricalLoader;
-  const assets = await Promise.all(
-    normalizedRequest.assetIds.map((assetId) => loadAsset(assetId, normalizedRequest, loader)),
-  );
+  const acquired = await Promise.all(normalizedRequest.assetIds.map(async (assetId) => {
+    const profile = marketAssetProfiles[assetId];
+    try {
+      const source = await loader(profile.symbol, normalizedRequest.range,
+        normalizedRequest.interval, profile.assetClass);
+      return { status: "loaded", source } as const;
+    } catch {
+      return { status: "failed" } as const;
+    }
+  }));
+  const computedAt = nonFxComputedAt ?? suppliedCutoff ??
+    resolveCanonicalFxEvaluationInstantV1({}, dependencies.now);
+  const admitted = new Map<EcbFxReferenceProductIdV1, QualifiedCanonicalFxSourceV1>();
+  let familyFailure: CanonicalFxTemporalUnavailableV1 | undefined;
+  // Preflight every requested FX source before any snapshot normalization.
+  for (const productId of CANONICAL_FX_PREFLIGHT_ORDER_V1) {
+    const index = normalizedRequest.assetIds.indexOf(productId);
+    if (index < 0) continue;
+    const entry = acquired[index];
+    const outcome = entry.status === "failed"
+      ? unavailableCanonicalFxTemporalSourceV1(productId, "source-unavailable")
+      : qualifyCanonicalFxSourceForEvaluationV1(productId, entry.source, computedAt);
+    if (outcome.availability === "unavailable") {
+      familyFailure = outcome;
+      break;
+    }
+    if (normalizedRequest.interval !== "1d") {
+      familyFailure = unavailableCanonicalFxTemporalSourceV1(productId, "invalid-series");
+      break;
+    }
+    admitted.set(productId, outcome);
+  }
+  const assets = normalizedRequest.assetIds.map((assetId, index) => {
+    const profile = marketAssetProfiles[assetId];
+    const common = { assetId, symbol: profile.symbol, assetClass: profile.assetClass,
+      interval: normalizedRequest.interval };
+    if (isCanonicalFxProductId(assetId)) {
+      if (familyFailure !== undefined) {
+        return Object.freeze({ ...unavailableAsset(common, familyFailure.reason),
+          temporalFailure: familyFailure });
+      }
+      const qualified = admitted.get(assetId)!;
+      return Object.freeze({
+        ...createAssetFromSource(assetId, normalizedRequest, qualified.series),
+        temporalQualification: qualified.qualification,
+      });
+    }
+    const entry = acquired[index];
+    return entry.status === "failed"
+      ? unavailableAsset(common, "Historical market data request failed.")
+      : createAssetFromSource(assetId, normalizedRequest, entry.source);
+  });
   const availableCount = assets.filter(
     (asset) => asset.availability === "available",
   ).length;
@@ -257,11 +419,11 @@ export async function createCanonicalMarketSnapshotV1(
   });
 }
 
-async function loadAsset(
+function createAssetFromSource(
   assetId: MarketAssetId,
   request: NormalizedCanonicalMarketSnapshotRequestV1,
-  loader: CanonicalMarketDataLoaderV1,
-): Promise<CanonicalMarketSnapshotAssetV1> {
+  result: CanonicalMarketSourceResultV1,
+): CanonicalMarketSnapshotAssetV1 {
   const profile = marketAssetProfiles[assetId];
   const common = {
     assetId,
@@ -269,19 +431,6 @@ async function loadAsset(
     assetClass: profile.assetClass,
     interval: request.interval,
   } as const;
-
-  let result: CanonicalMarketSourceResultV1;
-
-  try {
-    result = await loader(
-      profile.symbol,
-      request.range,
-      request.interval,
-      profile.assetClass,
-    );
-  } catch {
-    return unavailableAsset(common, "Historical market data request failed.");
-  }
 
   if (isCanonicalObservationSeriesV1(result)) {
     let series: CanonicalObservationSeriesV1;
@@ -307,27 +456,6 @@ async function loadAsset(
         provenance,
         series.metadata.status,
       );
-    }
-
-    if (
-      assetId === "eurusd" || assetId === "eurjpy" ||
-      assetId === "eurgbp" || assetId === "eurchf"
-    ) {
-      const latestTimestamp = series.observations.at(-1)?.timestamp;
-
-      if (
-        (series.metadata.sourceTimestamp !== undefined &&
-          series.metadata.sourceTimestamp !== latestTimestamp) ||
-        (series.metadata.observationTimestamp !== undefined &&
-          series.metadata.observationTimestamp !== latestTimestamp)
-      ) {
-        return unavailableAsset(
-          common,
-          "FX observation timestamp provenance is inconsistent with the latest canonical observation.",
-          provenance,
-          series.metadata.status,
-        );
-      }
     }
 
     if (series.metadata.status === "unavailable") {

@@ -299,14 +299,13 @@ assertEqual(
   "provider-neutral identity rejection reason",
 );
 
-// FX aliases describe the latest canonical observation, even for unordered input.
+// FX history must pass admission before normalization; aliases describe its final row.
 for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
   const latestTimestamp = Date.parse("2026-10-06T00:00:00Z") / 1_000;
   const olderTimestamp = Date.parse("2026-10-02T00:00:00Z") / 1_000;
   const observations = [
+    { timestamp: olderTimestamp, value: 1.1 },
     { timestamp: latestTimestamp, value: 1.2 },
-    { timestamp: olderTimestamp, value: 1.1 },
-    { timestamp: olderTimestamp, value: 1.1 },
   ];
   const metadata = {
     ...officialSeries.metadata,
@@ -317,6 +316,7 @@ for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
     canonicalProductId: productId,
     requestedProductId: productId,
     seriesKind: "reference-rate",
+    fetchedAt: Date.parse("2026-10-06T10:00:00.000Z") / 1_000,
     sourceTimestamp: latestTimestamp,
     observationTimestamp: latestTimestamp,
   } as const;
@@ -335,14 +335,14 @@ for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
         observations,
         metadata: { ...metadata, ...aliases },
       }),
-      now: () => new Date("2026-10-05T12:00:00.000Z"),
+      now: () => new Date("2026-10-06T12:00:00.000Z"),
     },
   );
   const original = JSON.stringify(observations);
   const consistent = await snapshotFor({});
-  assertEqual(consistent.assets[0]?.availability, "available", `${productId} unordered consistent history accepted`);
-  assertEqual(consistent.assets[0]?.observationCount, 2, `${productId} exact duplicates deduped`);
-  assertEqual(consistent.assets[0]?.latestTimestamp, latestTimestamp, `${productId} future observation retained`);
+  assertEqual(consistent.assets[0]?.availability, "available", `${productId} ordered past history accepted`);
+  assertEqual(consistent.assets[0]?.observationCount, 2, `${productId} complete history retained`);
+  assertEqual(consistent.assets[0]?.latestTimestamp, latestTimestamp, `${productId} latest admitted observation retained`);
   assertEqual(consistent.assets[0]?.provenance?.sourceTimestamp, latestTimestamp, `${productId} latest alias preserved`);
   for (const aliases of [
     { sourceTimestamp: olderTimestamp, observationTimestamp: olderTimestamp },
@@ -351,9 +351,10 @@ for (const productId of ["eurusd", "eurjpy", "eurgbp", "eurchf"] as const) {
   ]) {
     const rejected = await snapshotFor(aliases);
     assertEqual(rejected.assets[0]?.availability, "unavailable", `${productId} contradictory alias rejected`);
-    assertEqual(rejected.assets[0]?.reason,
-      "FX observation timestamp provenance is inconsistent with the latest canonical observation.",
-      `${productId} explicit provenance rejection`);
+    assertEqual(rejected.assets[0]?.temporalFailure?.reason,
+      aliases.sourceTimestamp === undefined
+        ? "invalid-source-timestamp" : "inconsistent-source-timestamp",
+      `${productId} typed provenance rejection`);
     assertEqual(rejected.assets[0]?.observationCount, 0, `${productId} conflicting history is not silently filtered`);
   }
   assertEqual(JSON.stringify(observations), original, `${productId} input observations unchanged`);

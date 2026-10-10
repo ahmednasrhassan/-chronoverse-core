@@ -3,6 +3,8 @@ import { marketAssetProfiles } from "../core/assetProfiles";
 import type { CandleInterval } from "../core/types";
 import {
   createCanonicalMarketSnapshotV1,
+  CanonicalFxTemporalAdmissionErrorV1,
+  resolveCanonicalFxEvaluationInstantV1,
   normalizeCanonicalMarketSnapshotRequestV1,
   planCanonicalMarketSnapshotDependenciesV1,
   type CanonicalMarketSnapshotHistoryV1,
@@ -26,6 +28,7 @@ export interface CanonicalMarketEvaluationRequestV1 {
   readonly targetAssetIds: readonly MarketAssetId[];
   readonly interval: CandleInterval;
   readonly history: CanonicalMarketSnapshotHistoryV1;
+  readonly evaluatedAt?: string;
 }
 
 export interface CanonicalMarketEvaluationHistoryPolicyV1 {
@@ -84,6 +87,8 @@ export async function coordinateCanonicalMarketEvaluationV1(
   const snapshotRequest: CanonicalMarketSnapshotRequestV1 = Object.freeze({
     assetIds: requiredObservationAssetIds,
     interval: normalizedTargetRequest.interval,
+    ...("evaluatedAt" in request
+      ? { evaluatedAt: resolveCanonicalFxEvaluationInstantV1(request) } : {}),
     history: Object.freeze({
       kind: "range",
       range: normalizedTargetRequest.range,
@@ -96,6 +101,10 @@ export async function coordinateCanonicalMarketEvaluationV1(
 
   try {
     const snapshot = await createSnapshot(snapshotRequest);
+    const temporalFailure = snapshot.assets.find((asset) => asset.temporalFailure !== undefined)?.temporalFailure;
+    if (temporalFailure !== undefined) {
+      throw new CanonicalFxTemporalAdmissionErrorV1(temporalFailure);
+    }
     const crossAssetSections = calculateCrossAssetSections({
       targetAssetIds: requestedTargetAssetIds,
       snapshot,
@@ -111,8 +120,9 @@ export async function coordinateCanonicalMarketEvaluationV1(
       snapshot,
       crossAssetSections,
     });
-  } catch {
-    throw new Error("Canonical market evaluation coordination failed.");
+  } catch (error) {
+    if (error instanceof CanonicalFxTemporalAdmissionErrorV1) throw error;
+    throw new Error("Canonical market evaluation coordination failed.", { cause: error });
   }
 }
 
