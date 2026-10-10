@@ -31,6 +31,16 @@ import {
   getCanonicalEcbFxReferenceSeriesBundleV1,
 } from "../providers/ecb/fxReferenceSeriesCache";
 import type { EcbFxReferenceSeriesBundleV1 } from "../providers/ecb/fxReferenceSeries";
+import { getCanonicalEcbEstrSourceV1 } from "../providers/ecb/estrSeriesCache";
+import {
+  CANONICAL_PRODUCT_RESULT_CACHE_VERSION_V2,
+  decodeCanonicalProductResultCacheV2,
+  encodeCanonicalProductResultCacheV2,
+  ownCanonicalResultPassiveDataV2,
+  type CanonicalResultCacheTransportV2,
+} from "./canonicalProductResultQualification";
+import { CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1 } from "./canonicalTemporalAdmission";
+import type { EcbEstrSeriesV1 } from "../providers/ecb/estrTypes";
 import {
   CANONICAL_FX_PREFLIGHT_ORDER_V1,
   CanonicalFxTemporalAdmissionErrorV1,
@@ -127,12 +137,26 @@ export type CanonicalFxBundleComputationResultV1 =
 /**
  * Fresh computation boundary, not a cache retrieval guard. Acquire the full
  * bundle, sample E once, and preflight USD/JPY/GBP/CHF before invoking any runtime.
- * No rejection retries an older source or calculation. Existing cache hits/SWR,
- * legacy qualification guards and Free/VIP propagation remain activation blockers.
+ * No rejection retries an older source or calculation. Result retrieval has its
+ * own v2 guard; Free/VIP propagation remains a separate activation boundary.
  */
 export async function computeCanonicalFxResultBundleV1(
   dependencies: CanonicalFxBundleComputationDependenciesV1 = {},
 ): Promise<CanonicalFxBundleComputationResultV1> {
+  const result = await computeCanonicalFxResultWithContextV2(dependencies);
+  if (result.availability === "unavailable") return result;
+  return Object.freeze({ availability: "available", evaluatedAt: result.evaluatedAt,
+    bundle: result.bundle });
+}
+
+async function computeCanonicalFxResultWithContextV2(
+  dependencies: CanonicalFxBundleComputationDependenciesV1 = {},
+): Promise<CanonicalFxTemporalUnavailableV1 | {
+  readonly availability: "available";
+  readonly evaluatedAt: string;
+  readonly bundle: CanonicalFxResultBundleV1;
+  readonly sourceContext: EcbFxReferenceSeriesBundleV1;
+}> {
   // Own explicit cutoff presence/value before acquisition; only absent cutoffs
   // sample the captured clock after the complete source has been acquired.
   const suppliedCutoff = "evaluatedAt" in dependencies
@@ -187,46 +211,100 @@ export async function computeCanonicalFxResultBundleV1(
     runtimes.eurchf({ loadCanonicalSeries: loadSeries("eurchf"), evaluatedAt }),
   ]);
   return Object.freeze({ availability: "available", evaluatedAt,
-    bundle: Object.freeze({ eurusd, eurjpy, eurgbp, eurchf }) });
+    bundle: Object.freeze({ eurusd, eurjpy, eurgbp, eurchf }),
+    sourceContext: Object.freeze({ eurusd: sources.get("eurusd")!.series,
+      eurjpy: sources.get("eurjpy")!.series, eurgbp: sources.get("eurgbp")!.series,
+      eurchf: sources.get("eurchf")!.series }) });
 }
 
-/** Existing cache owner; source-bound retrieval/version migration is deferred. */
-const getCachedCanonicalFxResultBundleV1 = unstable_cache(
-  async (): Promise<CanonicalFxResultBundleV1> => {
-    const result = await computeCanonicalFxResultBundleV1();
+/** Cache only JSON-safe v2 transports. The raw getters are never delivery owners. */
+const getCachedCanonicalFxResultEntryV2 = unstable_cache(
+  async (): Promise<CanonicalResultCacheTransportV2> => {
+    const result = await computeCanonicalFxResultWithContextV2();
     if (result.availability === "unavailable") {
       throw new CanonicalFxTemporalAdmissionErrorV1(result);
     }
-    return result.bundle;
+    return encodeCanonicalProductResultCacheV2("launch-fx", {
+      schemaVersion: CANONICAL_PRODUCT_RESULT_CACHE_VERSION_V2,
+      policyVersion: CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1,
+      family: "launch-fx", evaluatedAt: result.evaluatedAt,
+      sourceContext: result.sourceContext, result: result.bundle,
+    });
   },
-  ["chronoverse", "markets", "canonical-product-result-v1", "launch-fx"],
+  ["chronoverse", "markets", "canonical-product-result-v2", "launch-fx"],
   {
     revalidate: CANONICAL_PRODUCT_RESULT_CACHE_SECONDS_V1,
-    tags: ["canonical-product-result-v1:launch-fx"],
+    tags: ["canonical-product-result-v2:launch-fx"],
   },
 );
 
 /** €STR has an independent result cache so rate-source failures cannot affect FX. */
-const getCachedCanonicalEstrResultV1 = unstable_cache(
+const getCachedCanonicalEstrResultEntryV2 = unstable_cache(
   async () => {
-    const result = await getEstrProductionRuntimeV1();
+    // Capture the complete wrapper and E through the runtime's existing loading
+    // and post-acquisition clock path. Source failures and temporal rejections
+    // retain their established runtime behavior, before any cache encoding.
+    let sourceContext: EcbEstrSeriesV1 | undefined;
+    let evaluatedAt: string | undefined;
+    const result = await getEstrProductionRuntimeV1({
+      loadSource: async () => {
+        const source = await getCanonicalEcbEstrSourceV1();
+        try {
+          sourceContext = ownCanonicalResultPassiveDataV2(source);
+          return sourceContext;
+        } catch {
+          // Let approved runtime qualification classify the original malformed
+          // source. An unowned context can never pass the cache payload guard.
+          return source;
+        }
+      },
+      now: () => {
+        const now = new Date();
+        evaluatedAt = Date.prototype.toISOString.call(now);
+        return now;
+      },
+    });
 
     if (result.availability === "unavailable") {
       throw new UncacheableCanonicalResultErrorV1(result);
     }
 
-    return result;
+    return encodeCanonicalProductResultCacheV2("estr", {
+      schemaVersion: CANONICAL_PRODUCT_RESULT_CACHE_VERSION_V2,
+      policyVersion: CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1,
+      family: "estr", evaluatedAt, sourceContext, result,
+    });
   },
-  ["chronoverse", "markets", "canonical-product-result-v1", "estr"],
+  ["chronoverse", "markets", "canonical-product-result-v2", "estr"],
   {
     revalidate: CANONICAL_PRODUCT_RESULT_CACHE_SECONDS_V1,
-    tags: ["canonical-product-result-v1:estr"],
+    tags: ["canonical-product-result-v2:estr"],
   },
 );
 
+/** Guard every framework response, including retained SWR data after a failed
+ * refresh. Revalidation is not a hard expiry; there is no old-namespace retry.
+ * The injected reader is also the deterministic cache-state testing boundary.
+ */
+export async function getGuardedCanonicalFxResultBundleV2(
+  loadEntry: () => Promise<unknown> = getCachedCanonicalFxResultEntryV2,
+): Promise<CanonicalFxResultBundleV1> {
+  return decodeCanonicalProductResultCacheV2("launch-fx", await loadEntry()).result;
+}
+
+export async function getGuardedCanonicalEstrResultV2(
+  loadEntry: () => Promise<unknown> = getCachedCanonicalEstrResultEntryV2,
+): Promise<EstrProductionRuntimeResultV1> {
+  return decodeCanonicalProductResultCacheV2("estr", await loadEntry()).result;
+}
+
+// Preserve the private delivery-owner name used by Free/VIP composition.
+// This alias always decodes the v2 entry; it cannot expose the raw cache getter.
+const getCachedCanonicalFxResultBundleV1 = getGuardedCanonicalFxResultBundleV2;
+
 async function getCanonicalEstrResultV1(): Promise<EstrProductionRuntimeResultV1> {
   try {
-    return await getCachedCanonicalEstrResultV1();
+    return await getGuardedCanonicalEstrResultV2();
   } catch (error) {
     if (error instanceof UncacheableCanonicalResultErrorV1) {
       return error.result as EstrProductionRuntimeResultV1;
@@ -239,10 +317,10 @@ async function getCanonicalEstrResultV1(): Promise<EstrProductionRuntimeResultV1
 const canonicalProductResultOwnerV1 = createCanonicalProductResultOwnerV1<
   CanonicalProductResultMapV1
 >({
-  eurusd: async () => (await getCachedCanonicalFxResultBundleV1()).eurusd,
-  eurjpy: async () => (await getCachedCanonicalFxResultBundleV1()).eurjpy,
-  eurgbp: async () => (await getCachedCanonicalFxResultBundleV1()).eurgbp,
-  eurchf: async () => (await getCachedCanonicalFxResultBundleV1()).eurchf,
+  eurusd: async () => (await getGuardedCanonicalFxResultBundleV2()).eurusd,
+  eurjpy: async () => (await getGuardedCanonicalFxResultBundleV2()).eurjpy,
+  eurgbp: async () => (await getGuardedCanonicalFxResultBundleV2()).eurgbp,
+  eurchf: async () => (await getGuardedCanonicalFxResultBundleV2()).eurchf,
   estr: getCanonicalEstrResultV1,
 });
 

@@ -606,9 +606,9 @@ function auditProductionOwnership(): void {
   );
   assertEqual(freeDeliverySource.includes("getEcbMonetaryPolicyEventRuntimeV1"),
     false, "Free single and map invoke ECB event runtime zero times");
-  assertEqual(serviceSource.includes("canonical-product-result-v1:launch-fx"),
+  assertEqual(serviceSource.includes("canonical-product-result-v2:launch-fx"),
     true, "atomic FX result bundle has a dedicated cache key and tag");
-  assertEqual(serviceSource.includes("canonical-product-result-v1:estr"),
+  assertEqual(serviceSource.includes("canonical-product-result-v2:estr"),
     true, "\u20acSTR result has a dedicated cache key and tag");
   assertEqual(serviceSource.includes("stale: false"), false,
     "canonical result owner has no hard-coded freshness claim");
