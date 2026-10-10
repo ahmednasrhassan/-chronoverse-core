@@ -114,6 +114,7 @@ async function main(): Promise<void> {
   const source = officialSource();
   let loadCount = 0;
   const result = await getEstrProductionRuntimeV1({
+    evaluatedAt: "2026-10-10T12:00:00.123Z",
     loadSource: async () => {
       loadCount += 1;
       return source;
@@ -184,8 +185,12 @@ async function main(): Promise<void> {
   assertEqual(available.engineAdapter.data.engineEvidence.risk.score,
     available.risk.data.score, "safe Engine Risk evidence propagated");
 
-  assertEqual(available.source.provenance, source.canonicalSeries.metadata,
+  assertDeepEqual(available.source.provenance, source.canonicalSeries.metadata,
     "canonical source provenance preserved");
+  assertEqual(available.source.provenance === source.canonicalSeries.metadata,
+    false, "canonical source provenance independently owned");
+  assertEqual(Object.isFrozen(available.source.provenance), true,
+    "owned canonical source provenance frozen");
   assertEqual(available.source.dataflow, ECB_ESTR_DATAFLOW_V1,
     "official dataflow preserved");
   assertEqual(available.source.seriesKey, ECB_ESTR_SERIES_KEY_V1,
@@ -201,8 +206,10 @@ async function main(): Promise<void> {
   "latest reference date preserved");
   assertEqual(available.fetchedAt, source.canonicalSeries.metadata.fetchedAt,
     "source fetch time preserved");
-  assertEqual(available.source.latestObservationMetadata,
+  assertDeepEqual(available.source.latestObservationMetadata,
     source.observationMetadata.at(-1), "latest sidecar metadata preserved");
+  assertEqual(available.source.latestObservationMetadata ===
+    source.observationMetadata.at(-1), false, "latest sidecar independently owned");
 
   const negative = requireAvailable(await getEstrProductionRuntimeV1({
     loadSource: async () => officialSource(valuesWithLatest(-0.593)),
@@ -245,8 +252,10 @@ async function main(): Promise<void> {
   assertEqual(malformedResult.availability, "unavailable",
     "non-finite observation fails closed");
   if (malformedResult.availability === "unavailable") {
-    assertEqual(malformedResult.missing[0], "sourceIdentity",
+    assertEqual(malformedResult.missing[0], "temporal",
       "malformed observation reason is deterministic");
+    assertEqual(malformedResult.reason, "invalid-observation-value",
+      "malformed observation has stable temporal reason");
   }
 
   let failureLoads = 0;
@@ -264,7 +273,8 @@ async function main(): Promise<void> {
       "source failure reason is deterministic");
   }
 
-  const repeatDependencies = { loadSource: async () => source };
+  const repeatDependencies = { loadSource: async () => source,
+    evaluatedAt: "2026-10-10T12:00:00.123Z" };
   const firstRepeat = await getEstrProductionRuntimeV1(repeatDependencies);
   const secondRepeat = await getEstrProductionRuntimeV1(repeatDependencies);
   assertDeepEqual(secondRepeat, firstRepeat,

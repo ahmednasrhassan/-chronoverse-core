@@ -2,7 +2,6 @@ import type { CanonicalObservationSeriesMetadataV1 } from
   "../../services/canonicalObservationSeries";
 import {
   ECB_ESTR_DATAFLOW_V1,
-  ECB_ESTR_SERIES_ID_V1,
   ECB_ESTR_SERIES_KEY_V1,
 } from "../../providers/ecb/estrContract";
 import { getCanonicalEcbEstrSourceV1 } from
@@ -15,6 +14,14 @@ import {
   calculateRateFeaturesV1,
   type RateFeatureSnapshotV1,
 } from "../../indicators/rateFeatures";
+import { CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1 } from
+  "../../services/canonicalTemporalAdmission";
+import {
+  qualifyCanonicalTemporalSourceV1,
+  validateCanonicalTemporalQualificationV1,
+  type CanonicalTemporalQualificationEnvelopeV1,
+  type CanonicalTemporalQualificationRejectionReasonV1,
+} from "../../services/canonicalTemporalQualification";
 
 import {
   adaptEstrRateMarketStateToEngineV3,
@@ -38,6 +45,7 @@ export const ESTR_RUNTIME_MINIMUM_HISTORY_V1 = 200;
 export type EstrProductionRuntimeMissingFieldV1 =
   | "source"
   | "sourceIdentity"
+  | "temporal"
   | "history"
   | "features"
   | "signal"
@@ -70,6 +78,8 @@ export interface EstrProductionRuntimeSourceV1 {
 }
 
 export interface EstrProductionRuntimeDataV1 {
+  /** Present on fresh qualified computations; legacy results remain representable. */
+  readonly temporalQualification?: CanonicalTemporalQualificationEnvelopeV1;
   readonly productId: "estr";
   readonly product: "€STR";
   /** Latest official reference-rate level in percentage points. */
@@ -95,10 +105,21 @@ export type EstrProductionRuntimeResultV1 =
       readonly availability: "unavailable";
       readonly reason: string;
       readonly missing: readonly EstrProductionRuntimeMissingFieldV1[];
-    };
+    }
+  | EstrProductionRuntimeTemporalUnavailableV1;
+
+export interface EstrProductionRuntimeTemporalUnavailableV1 {
+  readonly availability: "unavailable";
+  readonly productId: "estr";
+  readonly reason: CanonicalTemporalQualificationRejectionReasonV1;
+  readonly policyVersion: typeof CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1;
+  readonly missing: readonly ["temporal"];
+}
 
 export interface EstrProductionRuntimeDependenciesV1 {
   readonly loadSource?: () => Promise<EcbEstrSeriesV1>;
+  readonly evaluatedAt?: string;
+  readonly now?: () => Date;
 }
 
 /**
@@ -108,10 +129,19 @@ export interface EstrProductionRuntimeDependenciesV1 {
 export async function getEstrProductionRuntimeV1(
   dependencies: EstrProductionRuntimeDependenciesV1 = {},
 ): Promise<EstrProductionRuntimeResultV1> {
+  // Capture caller-owned dependencies synchronously. An explicitly undefined or
+  // malformed cutoff is never replaced by an acquisition-completion clock.
+  let captured: CapturedEstrDependencies;
+  try {
+    captured = captureDependencies(dependencies);
+  } catch {
+    return temporalUnavailable("invalid-input");
+  }
   let source: EcbEstrSeriesV1;
 
   try {
-    source = await (dependencies.loadSource ?? getCanonicalEcbEstrSourceV1)();
+    const loadSource = captured.loadSource;
+    source = await loadSource();
   } catch {
     return unavailable(
       "Official ECB €STR source is unavailable.",
@@ -119,11 +149,34 @@ export async function getEstrProductionRuntimeV1(
     );
   }
 
-  if (!isCanonicalEstrSource(source)) {
-    return unavailable(
-      "Official ECB €STR source identity or observations are invalid.",
-      "sourceIdentity",
-    );
+  let evaluatedAt = captured.evaluatedAt;
+  if (!captured.hasCutoff) {
+    try {
+      // Sample the original clock exactly once, after complete acquisition.
+      const now = captured.now!;
+      evaluatedAt = Date.prototype.toISOString.call(now());
+    } catch {
+      return temporalUnavailable("invalid-evaluation-instant");
+    }
+  }
+
+  // The approved helper sees the original COMPLETE wrapper before any structural
+  // reads or analytical work. No normalization, selection, or truncation occurs.
+  const admitted = qualifyCanonicalTemporalSourceV1({ productId: "estr", source,
+    evaluatedAt: evaluatedAt as string });
+  if (admitted.status === "rejected") return temporalUnavailable(admitted.reason);
+
+  let temporalQualification: CanonicalTemporalQualificationEnvelopeV1;
+  try {
+    const ownedSource = structuredClone(source);
+    const verified = validateCanonicalTemporalQualificationV1(admitted.qualification,
+      { productId: "estr", source: ownedSource, evaluatedAt: evaluatedAt as string });
+    if (verified.status === "rejected") return temporalUnavailable(verified.reason);
+    freezeOwnedSource(ownedSource);
+    source = ownedSource;
+    temporalQualification = verified.qualification;
+  } catch {
+    return temporalUnavailable("invalid-input");
   }
 
   const observations = source.canonicalSeries.observations;
@@ -175,6 +228,7 @@ export async function getEstrProductionRuntimeV1(
   return Object.freeze({
     availability: "available",
     data: Object.freeze({
+      temporalQualification,
       productId: "estr",
       product: "€STR",
       currentRatePercent: features.currentRate,
@@ -196,54 +250,53 @@ export async function getEstrProductionRuntimeV1(
   });
 }
 
-function isCanonicalEstrSource(source: EcbEstrSeriesV1): boolean {
-  const series = source.canonicalSeries;
-  const metadata = series?.metadata;
-  const observations = series?.observations;
-  const observationMetadata = source.observationMetadata;
+interface CapturedEstrDependencies {
+  readonly hasCutoff: boolean;
+  readonly evaluatedAt: unknown;
+  readonly loadSource: () => Promise<EcbEstrSeriesV1>;
+  readonly now?: () => Date;
+}
 
-  if (
-    source.schemaVersion !== "ecb-estr-series-v1" ||
-    source.dataflow !== ECB_ESTR_DATAFLOW_V1 ||
-    source.seriesKey !== ECB_ESTR_SERIES_KEY_V1 ||
-    series.schemaVersion !== "canonical-observation-series-v1" ||
-    metadata.provider !== "ecb" ||
-    metadata.source !== "European Central Bank" ||
-    metadata.seriesId !== ECB_ESTR_SERIES_ID_V1 ||
-    metadata.requestedProductId !== "estr" ||
-    metadata.canonicalProductId !== "estr" ||
-    metadata.interval !== "1d" ||
-    metadata.status !== "end_of_day" ||
-    metadata.unit !== "percent" ||
-    metadata.seriesKind !== "reference-rate" ||
-    !Number.isFinite(metadata.fetchedAt) ||
-    !Number.isFinite(metadata.sourceTimestamp) ||
-    observations.length === 0 ||
-    observations.length !== observationMetadata.length
-  ) {
-    return false;
+function captureDependencies(dependencies: EstrProductionRuntimeDependenciesV1): CapturedEstrDependencies {
+  if (dependencies === null || typeof dependencies !== "object") throw new TypeError("Invalid dependencies");
+  const prototype = Object.getPrototypeOf(dependencies);
+  if (prototype !== Object.prototype && prototype !== null) throw new TypeError("Invalid dependency prototype");
+  const values: Record<string, unknown> = Object.create(null);
+  for (const key of Reflect.ownKeys(dependencies)) {
+    if (key !== "loadSource" && key !== "evaluatedAt" && key !== "now") throw new TypeError("Invalid dependency key");
+    const descriptor = Object.getOwnPropertyDescriptor(dependencies, key);
+    if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) throw new TypeError("Invalid dependency property");
+    values[key] = descriptor.value;
   }
-
-  for (let index = 0; index < observations.length; index += 1) {
-    const observation = observations[index]!;
-    const sidecar = observationMetadata[index]!;
-
-    if (
-      !Number.isFinite(observation.timestamp) ||
-      !Number.isFinite(observation.value) ||
-      sidecar.timestamp !== observation.timestamp ||
-      (index > 0 && observation.timestamp <= observations[index - 1]!.timestamp)
-    ) {
-      return false;
-    }
+  for (const key of ["loadSource", "evaluatedAt", "now"] as const) {
+    if (key in dependencies && !Object.hasOwn(values, key)) throw new TypeError("Inherited dependency");
   }
+  const hasCutoff = Object.hasOwn(values, "evaluatedAt");
+  if (values.evaluatedAt !== null && values.evaluatedAt !== undefined &&
+    !["string", "number", "boolean"].includes(typeof values.evaluatedAt)) throw new TypeError("Executable cutoff");
+  if ((values.loadSource !== undefined && typeof values.loadSource !== "function") ||
+    (values.now !== undefined && typeof values.now !== "function")) throw new TypeError("Invalid dependency callback");
+  return Object.freeze({
+    hasCutoff,
+    evaluatedAt: values.evaluatedAt,
+    loadSource: (values.loadSource as CapturedEstrDependencies["loadSource"] | undefined) ?? getCanonicalEcbEstrSourceV1,
+    now: hasCutoff ? undefined : (values.now as (() => Date) | undefined) ?? (() => new Date()),
+  });
+}
 
-  const latestObservation = observations.at(-1)!;
-  const latestMetadata = observationMetadata.at(-1)!;
+/** Only independently cloned and revalidated passive data reaches this walk. */
+function freezeOwnedSource(value: unknown): void {
+  if (value === null || typeof value !== "object") return;
+  for (const child of Object.values(value)) freezeOwnedSource(child);
+  Object.freeze(value);
+}
 
-  return metadata.sourceTimestamp === latestObservation.timestamp &&
-    Date.parse(`${latestMetadata.referenceDate}T00:00:00.000Z`) / 1000 ===
-      latestObservation.timestamp;
+function temporalUnavailable(
+  reason: CanonicalTemporalQualificationRejectionReasonV1,
+): EstrProductionRuntimeTemporalUnavailableV1 {
+  return Object.freeze({ availability: "unavailable", productId: "estr", reason,
+    policyVersion: CANONICAL_TEMPORAL_ADMISSION_POLICY_VERSION_V1,
+    missing: Object.freeze(["temporal"] as const) });
 }
 
 function unavailable(
