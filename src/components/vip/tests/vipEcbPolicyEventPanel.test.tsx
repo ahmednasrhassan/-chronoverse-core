@@ -204,6 +204,15 @@ function verifyDegradedStates(): void {
   const degraded = [
     {
       event: {
+        status: "historical-ownership-unavailable",
+        reason: "ownership-not-recorded",
+        evaluatedAt: "2026-10-29T13:00:00.000Z",
+        relevance: "euro-policy-context",
+      },
+      title: "Historical ECB event ownership unavailable",
+    },
+    {
+      event: {
         status: "source-unavailable",
         relevance: "euro-policy-context",
         sourceUrl: SOURCE_URL,
@@ -276,7 +285,7 @@ function verifyDegradedStates(): void {
     readonly title: string;
   }[];
 
-  assert.equal(degraded.length, 8, "all degraded union states are covered");
+  assert.equal(degraded.length, 9, "all degraded union states are covered");
 
   for (const fixture of degraded) {
     const html = renderToStaticMarkup(
@@ -305,6 +314,25 @@ function verifyDegradedStates(): void {
       );
     }
   }
+}
+
+function verifyUnavailableEvaluationTime(): void {
+  for (const relevance of ["euro-policy-context", "direct-euro-rate-policy-context"] as const) {
+    const html = renderToStaticMarkup(VipEcbPolicyEventPanel({ event: {
+      status: "runtime-unavailable",
+      reason: "canonical-evaluation-time-unavailable",
+      relevance,
+    } }));
+    assert.match(html, /Canonical ECB evaluation time unavailable/);
+    assert.match(html, /canonical result has no valid evaluation time/);
+    assert.match(html, /Market intelligence remains available independently/);
+    assert.doesNotMatch(html, /temporarily|runtime unavailable|Evaluation point|Scheduled decision|Deposit facility/);
+  }
+  const outage = renderToStaticMarkup(VipEcbPolicyEventPanel({ event: {
+    status: "runtime-unavailable", reason: "unexpected-runtime-error", relevance: "euro-policy-context",
+  } }));
+  assert.match(outage, /ECB event runtime unavailable/);
+  assert.match(outage, /temporarily unavailable/);
 }
 
 function verifyIntegrationAndBoundaries(): void {
@@ -374,6 +402,7 @@ function main(): void {
   verifyUnverifiedFx();
   verifyAvailableEstr();
   verifyDegradedStates();
+  verifyUnavailableEvaluationTime();
   verifyIntegrationAndBoundaries();
 
   console.log("PASS: VIP ECB policy event presentation");

@@ -135,11 +135,9 @@ async function verifySharedCanonicalOwnership(): Promise<void> {
       estrCalls++;
       throw new Error("Fixture rate cache unavailable");
     },
-    loadEventRuntime: async () => ({
-      status: "source-unavailable",
-      sourceUrl: "https://www.ecb.europa.eu/",
-      reason: "request-failed",
-    }),
+    resolveHistoricalEvent: async () => {
+      throw new Error("Historical resolution must not run without canonical results");
+    },
   };
   const projections = await assembleFiveProductVipDeepProjectionMapV1(dependencies);
   assertEqual(fxCalls, 1, "Deep assembly invokes the injected FX loader exactly once");

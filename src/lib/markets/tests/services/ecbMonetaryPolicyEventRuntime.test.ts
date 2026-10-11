@@ -392,6 +392,29 @@ async function main(): Promise<void> {
   assert.equal(historicalResult.intelligence.releaseTiming.status, "unverified");
   assert.equal(historicalResult.intelligence.rateFacts.availability, "unavailable");
 
+  const revisedDate = "2027-02-11";
+  const laterScheduleCapture = unix("2027-02-05T00:00:00.000Z");
+  const revisedSchedule = normalizeEcbMonetaryPolicyEventV1({
+    canonicalMeetingDate: meeting,
+    schedule: { meetingDate: revisedDate, fetchedAt: laterScheduleCapture },
+  });
+  const revisedMemory = memoryOf(scheduleOnly, revisedSchedule);
+  const revisedHistorical = createHarness(availableSource([revisedDate], laterScheduleCapture), {
+    active: pointer(revisedDate, meeting),
+    memories: new Map([[oldId, revisedMemory]]),
+  });
+  const earlierScheduleResult = await revisedHistorical.evaluate("2027-02-04T13:15:30.000Z");
+  assertAvailable(earlierScheduleResult);
+  assert.equal(earlierScheduleResult.currentMeetingDate, meeting,
+    "later meeting-date revision cannot rewrite as-known event context");
+  assert.equal(earlierScheduleResult.selectionState, "current-window",
+    "historical selection state derives from the selected schedule");
+  assert.equal(earlierScheduleResult.source.fetchedAt, fetchedBefore,
+    "historical provenance uses the selected capture, not the latest poll");
+  assert.deepEqual(earlierScheduleResult.intelligence, historicalResult.intelligence,
+    "later schedule knowledge cannot reinterpret historical intelligence");
+
+
   const noAsKnown = createHarness(availableSource(
     [meeting],
     unix("2027-02-02T01:00:00.000Z"),

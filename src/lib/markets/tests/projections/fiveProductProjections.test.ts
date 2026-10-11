@@ -407,6 +407,17 @@ function verifyCurrentUse(inputs: readonly FiveProductCanonicalProjectionInputV1
     assertEqual(free.currentUse.status, expected, `${input.productId} ${at} current use`);
     assertDeepEqual(free.currentUse, vip.currentUse, `${input.productId} Free/VIP validity`);
     assertEqual(JSON.stringify(input.canonical), before, "cached result is structurally unchanged");
+    if (free.availability === "available") {
+      assertEqual("ecbPolicyEvent" in free.details, false, "Free never inherits VIP event context");
+    }
+    if (vip.availability === "available") {
+      const event = vip.details.ecbPolicyEvent;
+      if (event.status !== "available") throw new Error("Expected retained event fixture.");
+      assertEqual(event.intelligence, AVAILABLE_ECB_POLICY_EVENT.intelligence,
+        "delivery freshness does not rebuild or reclassify historical event intelligence");
+      assertEqual(event.selectedSnapshotKnownAt, AVAILABLE_ECB_POLICY_EVENT.selectedSnapshotKnownAt,
+        "delivery assessment preserves the event knowledge boundary");
+    }
     if (input.productId !== "estr" && input.canonical.availability === "available" &&
         vip.availability === "available" && vip.productKind === "fx") {
       for (const field of ["recommendation", "decision", "confidence", "evaluatedAt", "decisionLifecycle"] as const) {

@@ -288,6 +288,12 @@ function degradedCopy(event: DegradedEventContext): {
   readonly description: string;
 } {
   switch (event.status) {
+    case "historical-ownership-unavailable":
+      return {
+        title: "Historical ECB event ownership unavailable",
+        description:
+          "Event ownership was not recorded for this evaluation point. Current event context is not substituted. Market intelligence remains available independently.",
+      };
     case "source-unavailable":
       return {
         title: "ECB event source unavailable",
@@ -331,6 +337,13 @@ function degradedCopy(event: DegradedEventContext): {
           "Sufficient as-known event state is not available for this evaluation point. Later evidence is not substituted.",
       };
     case "runtime-unavailable":
+      if (event.reason === "canonical-evaluation-time-unavailable") {
+        return {
+          title: "Canonical ECB evaluation time unavailable",
+          description:
+            "The canonical result has no valid evaluation time. ECB event context cannot be resolved for this result. Market intelligence remains available independently.",
+        };
+      }
       return {
         title: "ECB event runtime unavailable",
         description:

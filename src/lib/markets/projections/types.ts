@@ -12,6 +12,8 @@ import type { EngineMarketDataFreshnessV3 } from
   "../engine/marketDataFreshness";
 import type { EcbMonetaryPolicyEventIntelligenceV1 } from
   "../events/ecbMonetaryPolicyIntelligence";
+import type { HistoricalEcbMonetaryPolicyOwnershipUnavailableV1 } from
+  "../services/ecbMonetaryPolicyHistoricalResolution";
 
 export const MARKET_PRODUCT_PROJECTION_VERSION_V1 =
   "market-product-projection-v1" as const;
@@ -62,6 +64,7 @@ export type MarketProductVipEcbPolicyEventRelevanceV1 =
 
 /** Stable Deep projection state; deliberately independent of the runtime type. */
 export type MarketProductVipEcbPolicyEventStateV1 =
+  | HistoricalEcbMonetaryPolicyOwnershipUnavailableV1
   | {
       readonly status: "available";
       readonly canonicalEventId: string;
@@ -112,7 +115,7 @@ export type MarketProductVipEcbPolicyEventStateV1 =
     }
   | {
       readonly status: "runtime-unavailable";
-      readonly reason: "unexpected-runtime-error";
+      readonly reason: "unexpected-runtime-error" | "canonical-evaluation-time-unavailable";
     };
 
 export type MarketProductVipEcbPolicyEventContextV1<

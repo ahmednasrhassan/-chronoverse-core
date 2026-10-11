@@ -119,6 +119,7 @@ interface NormalizedCandidate {
 
 const HOUR_MS = 60 * 60 * 1_000;
 
+/** Live progression only. Historical canonical delivery uses the read-only resolver. */
 export function createEcbMonetaryPolicyEventRuntimeV1(
   dependencies: EcbMonetaryPolicyEventRuntimeDependenciesV1,
 ): EcbMonetaryPolicyEventRuntimeV1 {
@@ -128,6 +129,7 @@ export function createEcbMonetaryPolicyEventRuntimeV1(
   });
 }
 
+/** Acquire and progress live event ownership; never replay a cached result through this API. */
 export async function getEcbMonetaryPolicyEventRuntimeV1(
   input: { readonly evaluatedAt?: string } = {},
 ): Promise<EcbMonetaryPolicyEventRuntimeResultV1> {
@@ -348,14 +350,14 @@ async function evaluateRuntime(
     status: "available",
     canonicalEventId: active.canonicalEventId,
     canonicalMeetingDate: active.canonicalMeetingDate,
-    currentMeetingDate: active.currentMeetingDate,
+    currentMeetingDate: snapshot.event.schedule.meetingDate,
     selectedSnapshotKnownAt: snapshot.knownAt,
     intelligence,
     source: Object.freeze({
-      sourceUrl: source.sourceUrl,
-      fetchedAt: source.fetchedAt,
+      sourceUrl: snapshot.event.schedule.sourceUrl,
+      fetchedAt: snapshot.event.schedule.fetchedAt,
     }),
-    selectionState: evaluatedAtMs < selected.scheduledAtMs
+    selectionState: evaluatedAtMs < Date.parse(snapshot.event.schedule.scheduledAt)
       ? "next-scheduled"
       : "current-window",
   });

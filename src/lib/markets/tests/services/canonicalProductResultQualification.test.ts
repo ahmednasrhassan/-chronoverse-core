@@ -7,6 +7,7 @@ import ts from "typescript";
 import * as cacheQualification from "../../services/canonicalProductResultQualification";
 import * as canonicalSnapshot from "../../services/canonicalMarketSnapshot";
 import * as ownership from "../../services/canonicalProductResultOwnership";
+import * as historicalResolution from "../../services/ecbMonetaryPolicyHistoricalResolution";
 import * as projections from "../../projections/fiveProductProjections";
 import * as productResults from "../../services/canonicalProductResults";
 import { getCanonicalLiveEurUsdIntelligence } from "../../assets/eurusd/productionRuntime";
@@ -334,8 +335,7 @@ function observedService() {
     "../projections/fiveProductProjections": projections,
     "./canonicalMarketSnapshot": { ...canonicalSnapshot, resolveCanonicalFxEvaluationInstantV1:
       (context: { evaluatedAt?: string }, now?: () => Date) => canonicalSnapshot.resolveCanonicalFxEvaluationInstantV1(context, now ?? (() => new Date(E))) },
-    "./ecbMonetaryPolicyEventRuntime": { getEcbMonetaryPolicyEventRuntimeV1: async () => ({
-      status: "source-unavailable", sourceUrl: "https://www.ecb.europa.eu/", reason: "mock-only" }) },
+    "./ecbMonetaryPolicyHistoricalResolution": historicalResolution,
     "../assets/estr/runtime": { getEstrProductionRuntimeV1: (deps: Parameters<typeof getEstrProductionRuntimeV1>[0]) => {
       estrRuns++; return getEstrProductionRuntimeV1(deps);
     } },

@@ -213,6 +213,37 @@ const ratesSnapshot = snapshot({
   },
 });
 const withRates = intelligence(ratesSnapshot, RELEASED_AT);
+
+// Release, first observation and possession remain separate during replay.
+const delayedRates = snapshot({
+  decision: {
+    fetchedAt: unix("2026-09-10T12:30:00.000Z"),
+    firstObservedAt: unix("2026-09-10T12:25:00.000Z"),
+    actualReleasedAt: RELEASED_AT,
+    rates,
+  },
+});
+const scheduleMemory = advanceEcbMonetaryPolicyEventMemoryV1(null, scheduleSnapshot.event).memory;
+const delayedMemory = advanceEcbMonetaryPolicyEventMemoryV1(scheduleMemory, delayedRates.event).memory;
+for (const [evaluatedAt, observed] of [
+  [RELEASED_AT, false],
+  ["2026-09-10T12:25:00.000Z", false],
+  ["2026-09-10T12:29:59.999Z", false],
+  ["2026-09-10T12:30:00.000Z", true],
+  ["2026-09-10T12:30:00.001Z", true],
+] as const) {
+  const selected = selectEcbMonetaryPolicyEventAsKnownAtV1(delayedMemory, unix(evaluatedAt));
+  assert.notEqual(selected, null);
+  const state = intelligence(selected!, evaluatedAt);
+  assert.equal(state.decisionEvidence.status, observed ? "observed" : "not-observed");
+  assert.equal(state.releaseTiming.status, observed ? "verified" : "unverified");
+  assert.equal(state.rateFacts.availability, observed ? "available" : "unavailable");
+  if (!observed) {
+    assert.deepEqual(state, intelligence(scheduleSnapshot, evaluatedAt),
+      "later capture does not reinterpret earlier schedule-only intelligence");
+    assert.throws(() => intelligence(delayedRates, evaluatedAt), /knowledge boundary/);
+  }
+}
 assert.equal(withRates.rateFacts.availability, "available");
 assert.equal(withRates.readiness.rateFacts, "available");
 if (withRates.rateFacts.availability === "available") {

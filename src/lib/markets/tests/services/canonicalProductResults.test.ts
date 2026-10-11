@@ -32,8 +32,8 @@ import {
 import {
   normalizeCanonicalObservationSeriesV1,
 } from "../../services/canonicalObservationSeries";
-import type { EcbMonetaryPolicyEventRuntimeResultV1 } from
-  "../../services/ecbMonetaryPolicyEventRuntime";
+import { resolveHistoricalEcbMonetaryPolicyEventV1 } from
+  "../../services/ecbMonetaryPolicyHistoricalResolution";
 
 const FX_PRODUCT_IDS = Object.freeze([
   "eurusd",
@@ -47,6 +47,7 @@ const PRODUCT_IDS = Object.freeze([
   "estr",
 ] as const satisfies readonly CanonicalProductIdV1[]);
 const ASSESSED_AT = "2026-09-23T10:00:00.000Z";
+const DELIVERED_AT = "2026-09-24T10:00:00.000Z";
 const RUNTIME_UNAVAILABLE_EVENT = Object.freeze({
   status: "runtime-unavailable",
   reason: "unexpected-runtime-error",
@@ -191,29 +192,6 @@ function availableFxCanonical<
       releaseTimestamp: null,
     }),
   }) as unknown as CanonicalProductResultMapV1[TProductId];
-}
-
-function availableEventRuntime(
-  evaluatedAt = ASSESSED_AT,
-): EcbMonetaryPolicyEventRuntimeResultV1 {
-  return Object.freeze({
-    status: "available",
-    canonicalEventId: "ECB:ecb-monetary-policy-decision:2026-10-29",
-    canonicalMeetingDate: "2026-10-29",
-    currentMeetingDate: "2026-10-29",
-    selectedSnapshotKnownAt: 1_758_000_000,
-    selectionState: "next-scheduled",
-    intelligence: Object.freeze({
-      schemaVersion: "ecb-monetary-policy-event-intelligence-v1",
-      evaluatedAt,
-      phase: "pre-event",
-    }),
-    source: Object.freeze({
-      sourceUrl:
-        "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html",
-      fetchedAt: 1_758_000_000,
-    }),
-  }) as unknown as EcbMonetaryPolicyEventRuntimeResultV1;
 }
 
 async function verifyRuntimeSelectionAndCacheOwnership(): Promise<void> {
@@ -365,6 +343,7 @@ async function verifyUnavailableRemainsUnavailable(): Promise<void> {
 async function verifyVipDeepEventOwnership(): Promise<void> {
   const estr = await getEstrProductionRuntimeV1({
     loadSource: async () => officialEstrSource(),
+    evaluatedAt: ASSESSED_AT,
   });
   if (estr.availability !== "available") {
     throw new Error("Expected available \u20acSTR service fixture.");
@@ -382,16 +361,16 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
   const single = await assembleFiveProductVipDeepProjectionV1("eurusd", {
     now: () => {
       singleNowCalls += 1;
-      return ASSESSED_AT;
+      return DELIVERED_AT;
     },
     loadCanonical: async () => ({
       productId: "eurusd",
       canonical: fx.eurusd,
     } as const),
-    loadEventRuntime: async ({ evaluatedAt }) => {
+    resolveHistoricalEvent: async ({ evaluatedAt }) => {
       singleEventCalls += 1;
       receivedEvaluatedAt = evaluatedAt;
-      return availableEventRuntime(evaluatedAt);
+      return resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt });
     },
   });
   assertEqual(single.availability, "available", "single Deep remains available");
@@ -399,11 +378,14 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
     throw new Error("Expected available single Deep fixture.");
   }
   assertEqual(singleNowCalls, 1, "single Deep resolves one assessment instant");
-  assertEqual(singleEventCalls, 1, "single Deep evaluates ECB runtime once");
+  assertEqual(singleEventCalls, 1, "single Deep resolves historical ownership once");
   assertEqual(receivedEvaluatedAt, ASSESSED_AT,
-    "single Deep passes its projection assessment instant to ECB runtime");
-  assertEqual(single.provenance.freshnessAssessedAt, ASSESSED_AT,
-    "single Deep projection uses the same assessment instant");
+    "single Deep passes its historical canonical cutoff to the read-only resolver");
+  assertEqual(single.provenance.freshnessAssessedAt, DELIVERED_AT,
+    "single Deep assesses delivery freshness independently");
+  if (single.productKind !== "fx") throw new Error("Expected FX projection.");
+  assertEqual(single.details.engine.evaluatedAt, ASSESSED_AT,
+    "later delivery preserves historical engine evaluation");
   assertEqual(single.details.ecbPolicyEvent.relevance, "euro-policy-context",
     "single FX Deep has euro-policy relevance");
 
@@ -411,7 +393,7 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
   let mapFxCalls = 0;
   let mapEstrCalls = 0;
   const map = await assembleFiveProductVipDeepProjectionMapV1({
-    now: () => ASSESSED_AT,
+    now: () => DELIVERED_AT,
     loadFxBundle: async () => {
       mapFxCalls += 1;
       return fx;
@@ -420,65 +402,79 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
       mapEstrCalls += 1;
       return estr;
     },
-    loadEventRuntime: async ({ evaluatedAt }) => {
+    resolveHistoricalEvent: async ({ evaluatedAt }) => {
       mapEventCalls += 1;
       assertEqual(evaluatedAt, ASSESSED_AT,
-        "map runtime receives shared assessment instant");
-      return availableEventRuntime(evaluatedAt);
+        "map runtime receives shared canonical cutoff, never delivery time");
+      return resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt });
     },
   });
-  assertEqual(mapEventCalls, 1, "five-product map evaluates ECB runtime once total");
+  assertEqual(mapEventCalls, 1, "five-product map shares one historical resolution per identical cutoff");
   assertEqual(mapFxCalls, 1, "five-product map loads one shared FX bundle");
   assertEqual(mapEstrCalls, 1, "five-product map loads independent \u20acSTR once");
-  const expectedAvailableEvent = availableEventRuntime();
-  if (expectedAvailableEvent.status !== "available") {
-    throw new Error("Expected available event runtime fixture.");
-  }
   for (const productId of PRODUCT_IDS) {
     const projection = map[productId];
-    assertEqual(projection?.availability, "available", `${productId} map available`);
-    if (projection?.availability !== "available") {
-      throw new Error(`Expected available ${productId} map projection.`);
-    }
-    assertEqual(projection.details.ecbPolicyEvent.status, "available",
-      `${productId} receives shared available event`);
-    if (projection.details.ecbPolicyEvent.status !== "available") {
-      throw new Error("Expected mapped available event state.");
-    }
-    assertEqual(projection.details.ecbPolicyEvent.canonicalEventId,
-      expectedAvailableEvent.canonicalEventId,
-    `${productId} shares canonical event identity`);
-    assertEqual(projection.details.ecbPolicyEvent.selectedSnapshotKnownAt,
-      expectedAvailableEvent.selectedSnapshotKnownAt,
-    `${productId} shares selected snapshot knownAt`);
-    assertEqual(projection.details.ecbPolicyEvent.relevance,
-      productId === "estr"
-        ? "direct-euro-rate-policy-context"
-        : "euro-policy-context",
-    `${productId} has correct factual relevance`);
+    assertEqual(projection?.availability, "available", productId + " map available");
+    if (projection?.availability !== "available") throw new Error("Expected market projection.");
+    assertDeepEqual(projection.details.ecbPolicyEvent, {
+      status: "historical-ownership-unavailable", reason: "ownership-not-recorded",
+      evaluatedAt: ASSESSED_AT,
+      relevance: productId === "estr" ? "direct-euro-rate-policy-context" : "euro-policy-context",
+    }, productId + " fails closed without historical ownership");
+    assertEqual(projection.currentUse.assessedAt, DELIVERED_AT,
+      productId + " preserves independent delivery assessment");
   }
 
-  const degraded = await assembleFiveProductVipDeepProjectionV1("eurusd", {
-    now: () => ASSESSED_AT,
-    loadCanonical: async () => ({ productId: "eurusd", canonical: fx.eurusd }),
-    loadEventRuntime: async () => Object.freeze({
-      status: "source-unavailable",
-      sourceUrl:
-        "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html",
-      reason: "request-failed",
-    }),
+  const rateCutoff = "2026-09-23T09:00:00.000Z";
+  const earlierEstr = await getEstrProductionRuntimeV1({
+    loadSource: async () => officialEstrSource(), evaluatedAt: rateCutoff,
   });
-  assertEqual(degraded.availability, "available",
-    "event source failure does not destroy valid market Deep");
-  if (degraded.availability === "available") {
-    assertEqual(degraded.details.ecbPolicyEvent.status, "source-unavailable",
-      "event source failure remains explicit in Deep details");
+  if (earlierEstr.availability !== "available") throw new Error("Expected earlier rate fixture.");
+  const eventCutoffs: string[] = [];
+  const independent = await assembleFiveProductVipDeepProjectionMapV1({
+    now: () => DELIVERED_AT, loadFxBundle: async () => fx,
+    loadEstr: async () => earlierEstr,
+    resolveHistoricalEvent: async ({ evaluatedAt }) => {
+      eventCutoffs.push(evaluatedAt);
+      return resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt });
+    },
+  });
+  assertDeepEqual(eventCutoffs, [ASSESSED_AT, rateCutoff],
+    "independent FX and rate cutoffs select separate event states");
+  for (const productId of PRODUCT_IDS) {
+    const projection = independent[productId];
+    if (projection?.availability !== "available" ||
+        projection.details.ecbPolicyEvent.status !== "historical-ownership-unavailable") throw new Error("Expected unavailable historical context.");
+    assertEqual(projection.details.ecbPolicyEvent.evaluatedAt,
+      productId === "estr" ? rateCutoff : ASSESSED_AT,
+      productId + " uses its own historical evaluation");
+    assertEqual(projection.currentUse.assessedAt, DELIVERED_AT,
+      productId + " shares delivery assessment only");
   }
+
+  let unknownClockEventCalls = 0;
+  const { temporalQualification: omittedQualification, ...legacyData } = estr.data;
+  void omittedQualification;
+  const legacy = await assembleFiveProductVipDeepProjectionV1("estr", {
+    now: () => DELIVERED_AT,
+    loadCanonical: async () => ({ productId: "estr",
+      canonical: { availability: "available", data: legacyData } }),
+    resolveHistoricalEvent: async () => {
+      unknownClockEventCalls += 1;
+      return resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt: ASSESSED_AT });
+    },
+  });
+  assertEqual(unknownClockEventCalls, 0, "unknown evaluation time never evaluates events at a guessed clock");
+  if (legacy.availability !== "available") throw new Error("Expected legacy market projection.");
+  assertDeepEqual(legacy.details.ecbPolicyEvent, {
+    status: "runtime-unavailable", reason: "canonical-evaluation-time-unavailable",
+    relevance: "direct-euro-rate-policy-context",
+  }, "legacy event absence is explicit and keeps market data available");
 
   const unexpected = await assembleFiveProductVipDeepProjectionV1("eurusd", {
     now: () => ASSESSED_AT,
     loadCanonical: async () => ({ productId: "eurusd", canonical: fx.eurusd }),
-    loadEventRuntime: async () => { throw new Error("secret transport failure"); },
+    resolveHistoricalEvent: async () => { throw new Error("secret transport failure"); },
   });
   assertEqual(unexpected.availability, "available",
     "unexpected event runtime throw is independently degraded");
@@ -494,7 +490,7 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
     now: () => ASSESSED_AT,
     loadFxBundle: async () => fx,
     loadEstr: async () => estr,
-    loadEventRuntime: async () => { throw new Error("event runtime unavailable"); },
+    resolveHistoricalEvent: async () => { throw new Error("event runtime unavailable"); },
   });
   for (const productId of PRODUCT_IDS) {
     const projection = eventFailureMap[productId];
@@ -511,7 +507,7 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
     {
       now: () => ASSESSED_AT,
       loadCanonical: async () => { throw new Error("canonical FX failure"); },
-      loadEventRuntime: async () => availableEventRuntime(),
+      resolveHistoricalEvent: async () => resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt: ASSESSED_AT }),
     },
   ), "single canonical FX failure retains existing rejection behavior");
 
@@ -519,7 +515,7 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
     now: () => ASSESSED_AT,
     loadFxBundle: async () => { throw new Error("FX unavailable"); },
     loadEstr: async () => estr,
-    loadEventRuntime: async () => availableEventRuntime(),
+    resolveHistoricalEvent: async () => resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt: ASSESSED_AT }),
   });
   assertEqual(fxFailureMap.eurusd, null, "FX failure nulls EUR/USD");
   assertEqual(fxFailureMap.eurchf, null, "FX failure nulls EUR/CHF");
@@ -530,7 +526,7 @@ async function verifyVipDeepEventOwnership(): Promise<void> {
     now: () => ASSESSED_AT,
     loadFxBundle: async () => fx,
     loadEstr: async () => { throw new Error("\u20acSTR unavailable"); },
-    loadEventRuntime: async () => availableEventRuntime(),
+    resolveHistoricalEvent: async () => resolveHistoricalEcbMonetaryPolicyEventV1({ evaluatedAt: ASSESSED_AT }),
   });
   assertEqual(estrFailureMap.estr, null, "\u20acSTR canonical failure stays isolated");
   assertEqual(estrFailureMap.eurusd?.availability, "available",
@@ -604,8 +600,10 @@ function auditProductionOwnership(): void {
     serviceSource.indexOf("export async function getFiveProductFreeLiteProjectionV1"),
     serviceSource.indexOf("export async function getFiveProductVipDeepProjectionV1"),
   );
-  assertEqual(freeDeliverySource.includes("getEcbMonetaryPolicyEventRuntimeV1"),
-    false, "Free single and map invoke ECB event runtime zero times");
+  assertEqual(serviceSource.includes("getEcbMonetaryPolicyEventRuntimeV1"), false,
+    "canonical delivery never imports live event progression");
+  assertEqual(freeDeliverySource.includes("resolveHistoricalEcbMonetaryPolicyEventV1"),
+    false, "Free single and map invoke historical event resolution zero times");
   assertEqual(serviceSource.includes("canonical-product-result-v2:launch-fx"),
     true, "atomic FX result bundle has a dedicated cache key and tag");
   assertEqual(serviceSource.includes("canonical-product-result-v2:estr"),
