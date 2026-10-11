@@ -148,7 +148,7 @@ function officialFxSeries(
 ): CanonicalObservationSeriesV1 {
   const product = ECB_FX_REFERENCE_PRODUCTS_V1[productId];
   const observations = Array.from({ length: 600 }, (_, index) => ({
-    timestamp: 1_700_000_000 + index * 86_400,
+    timestamp: Date.UTC(2023, 10, 14) / 1_000 + index * 86_400,
     value: baseValue * (1 + index * 0.00001 + Math.sin(index / 9) * 0.002),
   }));
 
@@ -598,7 +598,7 @@ async function verifyFxCanonicalChronology(): Promise<void> {
 
     let runtimeLoads = 0;
     let lifecycleCalls = 0;
-    const inputs = await Promise.all(bundles.map(async (bundle) => ({
+    const inputs = await Promise.all([ordered!, unordered!].map(async (bundle) => ({
       productId,
       canonical: await configuration.run({
         loadCanonicalSeries: async () => { runtimeLoads++; return bundle[productId]; },
@@ -609,31 +609,71 @@ async function verifyFxCanonicalChronology(): Promise<void> {
         },
       }),
     } satisfies FiveProductCanonicalProjectionInputV1)));
+
     assertDeepEqual(inputs[1]!.canonical, inputs[0]!.canonical,
       `${productId} ordered and unordered histories yield identical calculations and lifecycle`);
+
     const callsBefore = JSON.stringify({ acquisitions, runtimeLoads, lifecycleCalls });
-    for (const [index, input] of inputs.entries()) {
-      assertEqual(input.canonical.availability, "available", `${productId} chronology runtime available`);
+
+    for (const input of inputs) {
+      assertEqual(input.canonical.availability, "available",
+        `${productId} chronology runtime available`);
       const before = JSON.stringify(input.canonical);
+
       for (const projection of [
         projectFiveProductFreeLiteV1(input, assessedAt),
         projectFiveProductVipDeepV1(input, AVAILABLE_ECB_POLICY_EVENT, assessedAt),
       ]) {
         assertAvailable(projection, `${productId} chronology projection available`);
-        assertEqual(projection.currentUse.status, index === 2 ? "unknown" : "eligible",
+        assertEqual(projection.currentUse.status, "eligible",
           `${productId} ${projection.tier} chronology current-use status`);
-        assertEqual(projection.sourceTimestamp, index === 2 ? futureTimestamp : latestTimestamp,
+        assertEqual(projection.sourceTimestamp, latestTimestamp,
           `${productId} ${projection.tier} canonical latest timestamp delivered`);
         assertEqual(projection.provenance.releaseTimestamp, null,
           `${productId} ${projection.tier} publication remains unknown`);
       }
+
       assertEqual(JSON.stringify(input.canonical), before,
         `${productId} delivery leaves cached calculations and lifecycle unchanged`);
     }
+
     assertEqual(JSON.stringify({ acquisitions, runtimeLoads, lifecycleCalls }), callsBefore,
       `${productId} projection causes no acquisition, recomputation or persistence`);
+
+    const lifecycleBeforeRejection = lifecycleCalls;
+    let rejected = false;
+
+    try {
+      await configuration.run({
+        loadCanonicalSeries: async () => {
+          runtimeLoads++;
+          return future![productId];
+        },
+        now: () => new Date(assessedAt),
+        advanceDecisionSnapshot: async () => {
+          lifecycleCalls++;
+          throw new Error("Rejected future source must not advance lifecycle");
+        },
+      });
+    } catch (error) {
+      if (!(error instanceof Error) ||
+          error.name !== "CanonicalFxTemporalAdmissionErrorV1" ||
+          !("result" in error) ||
+          typeof error.result !== "object" ||
+          error.result === null ||
+          !("reason" in error.result) ||
+          error.result.reason !== "observation-after-evaluation") {
+        throw error;
+      }
+      rejected = true;
+    }
+
+    assertEqual(rejected, true,
+      `${productId} future source rejected before canonical computation`);
+    assertEqual(lifecycleCalls, lifecycleBeforeRejection,
+      `${productId} rejected source does not advance lifecycle`);
     assertEqual(runtimeLoads, 3, `${productId} one runtime load per fixture`);
-    assertEqual(lifecycleCalls, 3, `${productId} existing lifecycle calls preserved`);
+    assertEqual(lifecycleCalls, 2, `${productId} only admitted sources advance lifecycle`);
   }
   console.log("PASS: all four FX canonical chronology and Free/VIP future-evidence regressions");
 }
