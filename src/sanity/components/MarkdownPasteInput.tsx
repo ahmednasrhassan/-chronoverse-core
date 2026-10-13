@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { ArrayOfObjectsInputProps, set } from 'sanity'
+import type { PortableTextMarkDefinition } from '@portabletext/types'
 import { Stack, Button, Dialog, TextArea, Card, Text, Box, Flex } from '@sanity/ui'
 
 interface SpanChild {
@@ -15,7 +16,7 @@ interface BlockNode {
   style: 'normal' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote'
   listItem?: 'bullet' | 'number'
   level?: number
-  markDefs: any[]
+  markDefs: PortableTextMarkDefinition[]
   children: SpanChild[]
 }
 

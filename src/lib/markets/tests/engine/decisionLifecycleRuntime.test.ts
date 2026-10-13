@@ -42,7 +42,7 @@ async function integrate(
   result: AdvanceDecisionSnapshotResult | Error,
 ) {
   let persistenceCalls = 0;
-  let providerCalls = 0;
+  const providerCalls = 0;
   const advanceSnapshot: AdvanceCanonicalDecisionSnapshot = async () => {
     persistenceCalls += 1;
     if (result instanceof Error) {

@@ -320,11 +320,11 @@ export default function FreeMarketSurface({
               <BoundaryList
                 title="VIP intelligence"
                 items={[
-                  "Macro drivers",
-                  "Cross-market confirmation",
-                  "Regime intelligence",
-                  "Scenarios and conviction",
-                  "Invalidation",
+                  "Technical evidence",
+                  "Signal and risk",
+                  "€STR rate regimes",
+                  "FX scenarios and confidence",
+                  "FX invalidation",
                   "Historical context",
                 ]}
               />

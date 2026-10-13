@@ -4,40 +4,43 @@ import { useState } from "react";
 
 interface AIExecutiveSummaryProps {
   /** Up to three source-derived takeaway strings. */
-  points?: any[];
+  points?: readonly unknown[];
 }
 
 /**
  * Strips Sanity Portable Text block artifacts, keys, and JSON syntax,
  * returning pure human-readable text.
  */
-function cleanTakeawayText(item: any): string {
+function cleanTakeawayText(item: unknown): string {
   if (!item) return "";
 
   if (typeof item === "object") {
     if (Array.isArray(item)) {
       return item.map(cleanTakeawayText).filter(Boolean).join(" ");
     }
-    if (Array.isArray(item.children)) {
+    if ("children" in item && Array.isArray(item.children)) {
       return item.children
-        .map((child: any) => (child && typeof child.text === "string" ? child.text : ""))
+        .map((child: unknown) => (
+          child && typeof child === "object" && "text" in child && typeof child.text === "string"
+            ? child.text : ""
+        ))
         .filter(Boolean)
         .join(" ");
     }
-    if (typeof item.text === "string") {
+    if ("text" in item && typeof item.text === "string") {
       return item.text.trim();
     }
   }
 
   if (typeof item === "string") {
-    let text = item.trim();
+    const text = item.trim();
 
     if (
       (text.startsWith("{") && text.endsWith("}")) ||
       (text.startsWith("[") && text.endsWith("]"))
     ) {
       try {
-        const parsed = JSON.parse(text);
+        const parsed: unknown = JSON.parse(text);
         return cleanTakeawayText(parsed);
       } catch {
         // Fallback to regex cleaning below

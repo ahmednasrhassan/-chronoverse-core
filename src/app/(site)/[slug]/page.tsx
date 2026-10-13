@@ -218,8 +218,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Extract pure human-readable text safely from Sanity blocks or legacy HTML
   const rawText = Array.isArray(currentPost?.body) && currentPost.body.length > 0
     ? currentPost.body
-        .filter((block: any) => block._type === "block" && Array.isArray(block.children))
-        .map((block: any) => block.children.map((c: any) => c.text || "").join(" "))
+        .filter((block) => block._type === "block" && Array.isArray(block.children))
+        .map((block) => block.children.map((c) => c.text || "").join(" "))
         .join("\n\n")
     : stripHtml(currentPost?.legacyBody || currentPost?.content || "");
 

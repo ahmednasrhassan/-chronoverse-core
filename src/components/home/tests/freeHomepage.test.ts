@@ -253,4 +253,19 @@ assert.doesNotMatch(combinedHomepageSource, /NEXT_PUBLIC_.*(SECRET|KEY|LEMON)/);
 assert.doesNotMatch(combinedHomepageSource, /ecb\.europa\.eu|api\.yahoo|query\d*\.finance/);
 assert.doesNotMatch(combinedHomepageSource, /no-store|setInterval|setTimeout/);
 
+// Verify the two acquisition surfaces independently, rather than banning terms
+// across editorial content or treating every product as an FX engine.
+const depthMap = homepageSource.match(/const vipCapabilities = \[([\s\S]*?)\] as const/)?.[1];
+const comparison = marketSurfaceSource.match(/title="VIP intelligence"[\s\S]*?items=\{\[([\s\S]*?)\]\}/)?.[1];
+assert.ok(depthMap, "homepage depth map exists");
+assert.ok(comparison, "Free/VIP comparison exists");
+for (const claims of [depthMap, comparison]) {
+  for (const capability of ["Technical evidence", "€STR rate regimes", "FX", "confidence", "invalidation", "Historical context"]) {
+    assert.ok(claims.toLowerCase().includes(capability.toLowerCase()), `supported product-specific claim: ${capability}`);
+  }
+  assert.doesNotMatch(claims, /Macro|Cross-market|Regime intelligence|bilateral|calendar opportunity/);
+}
+assert.match(homepageSource, /FX\s+rooms add confidence, conditional scenarios, and invalidation;/);
+assert.match(homepageSource, /€STR adds rate features and current rate regimes/);
+
 console.log("PASS: Free homepage contract and five-market Lite boundary");

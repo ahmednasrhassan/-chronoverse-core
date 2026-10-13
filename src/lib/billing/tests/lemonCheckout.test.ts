@@ -26,6 +26,10 @@ interface Harness {
   readonly calls: RequestInit[];
 }
 
+function assertRecord(value: unknown): asserts value is Record<string, unknown> {
+  assert.ok(value !== null && typeof value === "object" && !Array.isArray(value));
+}
+
 function harness(
   overrides: Partial<LemonCheckoutDependenciesV1> = {},
   responseBody: unknown = providerResponse("2112907"),
@@ -82,8 +86,17 @@ async function verifyPlanMapping(plan: LemonCheckoutPlanV1, variantId: string) {
 
   const request = current.calls[0];
   const headers = request.headers as Record<string, string>;
-  const body = JSON.parse(String(request.body)) as Record<string, any>;
+  const body: unknown = JSON.parse(String(request.body));
+  assertRecord(body);
   const data = body.data;
+  assertRecord(data);
+  assertRecord(data.relationships);
+  assertRecord(data.relationships.store);
+  assertRecord(data.relationships.variant);
+  assertRecord(data.attributes);
+  assertRecord(data.attributes.product_options);
+  assertRecord(data.attributes.checkout_data);
+  assertRecord(data.attributes.checkout_data.custom);
 
   assert.equal(request.method, "POST");
   assert.equal(headers.Accept, "application/vnd.api+json");
