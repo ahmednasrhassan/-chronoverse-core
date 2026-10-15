@@ -124,12 +124,12 @@ function Hero({
 
 function VipConversion() {
   const vipCapabilities = [
-    "Regime",
-    "Macro",
-    "Cross-market",
-    "Scenarios",
-    "Conviction",
-    "Invalidation",
+    "€STR rate regimes",
+    "Technical evidence",
+    "Source provenance",
+    "FX conditional scenarios",
+    "FX confidence",
+    "FX invalidation",
     "Historical context",
     "Proprietary intelligence",
   ] as const;
@@ -149,8 +149,9 @@ function VipConversion() {
             Same five markets. A deeper intelligence layer.
           </h2>
           <p className="mt-6 max-w-xl text-base leading-7 text-[#CFC5B8]">
-            Free tells you what is happening. VIP helps explain why, how
-            strongly, what could happen next, and what breaks the thesis.
+            VIP adds technical and risk evidence and historical context. FX
+            rooms add confidence, conditional scenarios, and invalidation;
+            €STR adds rate features and current rate regimes.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link href="/pricing" className={PRIMARY_CTA_CLASS}>

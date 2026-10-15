@@ -771,7 +771,51 @@ function verifyCurrentUseRendering(): void {
   }
 }
 
+function verifyPhaseZeroClaims(): void {
+  for (const market of LAUNCH_MARKETS_V1) {
+    if (market.productId === "estr") continue;
+    for (const productionCalibrated of [true, false]) {
+      const original = roomFixture();
+      if (original.deep?.availability !== "available") throw new Error("Expected FX fixture");
+      const room: VipFxMarketRoomV1 = {
+        ...original,
+        productId: market.productId,
+        deep: {
+          ...original.deep,
+          productId: market.productId,
+          displayName: market.label,
+          details: {
+            ...original.deep.details,
+            ecbPolicyEvent: {
+              status: "historical-ownership-unavailable", reason: "ownership-not-recorded",
+              evaluatedAt: "2026-09-11T12:00:00Z", relevance: "euro-policy-context",
+            },
+            calibration: {
+              ...original.deep.details.calibration, productionCalibrated,
+              missingExplicitCalibration: productionCalibrated ? [] : ["signal"],
+            },
+          },
+        },
+      };
+      const before = JSON.stringify(room);
+      const html = renderToStaticMarkup(VipFxMarketRoom({ room }));
+      for (const preserved of [market.label, "Technical evidence", "Scenario architecture", "What changes the thesis",
+        "State confidence 64.0%", "Signal confidence 72.0%", "Market conviction 58.0%", "Data confidence 82.0%",
+        "Risk score 31.0%", "Historical ECB event ownership unavailable", "Current event context is not substituted."]) {
+        assertEqual(html.includes(preserved), true, `${market.productId} preserves ${preserved}`);
+      }
+      assertEqual(html.includes(productionCalibrated ? "Explicit profile" : "Generic defaults"), true,
+        `${market.productId} calibration describes configuration`);
+      assertEqual(html.includes(">Production<"), false, "no production maturity label");
+      assertEqual(html.includes("empirically validated probabilities of profitable trades"), true,
+        "score limitation is disclosed");
+      assertEqual(JSON.stringify(room), before, "presentation leaves numerical evidence unchanged");
+    }
+  }
+}
+
 function main(): void {
+  verifyPhaseZeroClaims();
   verifyCurrentUseRendering();
   const partialRoom = roomFixture();
   if (partialRoom.deep?.availability !== "available" || !("data" in partialRoom.deep.details.engine.recommendation)) throw new Error("Expected fixture");
