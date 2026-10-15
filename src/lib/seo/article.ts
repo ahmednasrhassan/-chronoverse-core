@@ -237,7 +237,7 @@ export function buildArticleJsonLd(
       name: siteConfig.name,
       logo: {
         "@type": "ImageObject",
-        url: buildCanonicalUrl("/logo.svg"),
+        url: buildCanonicalUrl("/chronoverse-capital-official-logo.png"),
       },
     },
   };

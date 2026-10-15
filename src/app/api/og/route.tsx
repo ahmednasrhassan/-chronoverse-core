@@ -70,22 +70,15 @@ export async function GET(request: NextRequest) {
 
           {/* Header: Brand */}
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                border: `2px solid ${ACCENT}`,
-                color: ACCENT,
-                fontSize: "26px",
-                fontWeight: 700,
-              }}
-            >
-              CC
-            </div>
+            {/* ImageResponse renders a native image rather than next/image. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={new URL("/chronoverse-capital-official-logo.png", request.url).toString()}
+              alt=""
+              width={56}
+              height={56}
+              style={{ objectFit: "contain", flexShrink: 0 }}
+            />
             <div
               style={{
                 display: "flex",

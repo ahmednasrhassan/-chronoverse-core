@@ -25,12 +25,12 @@ export default function Header() {
             className="relative flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C8A7E8] xl:border-r xl:border-[#6F4C91]/35 xl:bg-[#0D0D11] xl:px-6"
           >
             <Image
-              src="/logo.svg"
+              src="/chronoverse-capital-official-logo.png"
               alt=""
               width={54}
               height={54}
               loading="eager"
-              className="h-11 w-11 shrink-0 rounded-full xl:h-[3.375rem] xl:w-[3.375rem]"
+              className="h-11 w-11 shrink-0 object-contain xl:h-[3.375rem] xl:w-[3.375rem]"
             />
             <span className="min-w-0">
               <span className="block truncate text-[13px] font-extrabold tracking-[0.08em] text-[#F3EBDD] sm:text-base xl:text-[17px]">
