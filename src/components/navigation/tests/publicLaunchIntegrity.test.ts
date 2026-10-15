@@ -104,7 +104,7 @@ assert.match(articleSource, /publishedAt: article\.publishedAt/);
 assert.match(articleSource, /modifiedAt: article\.updatedAt/);
 assert.match(articleSeoSource, /datePublished: article\.publishedAt/);
 assert.match(articleSeoSource, /dateModified: article\.modifiedAt/);
-assert.match(articleSeoSource, /buildCanonicalUrl\("\/logo\.svg"\)/);
+assert.match(articleSeoSource, /buildCanonicalUrl\("\/chronoverse-capital-official-logo\.png"\)/);
 assert.match(summaryComponentSource, /aria-label="Executive Summary"/);
 assert.doesNotMatch(
   summaryComponentSource,
@@ -112,7 +112,7 @@ assert.doesNotMatch(
 );
 assert.doesNotMatch(authorCardSource, /Ahmed Nasr Hassan|Lead Macro Strategist|https?:\/\//);
 assert.match(authorCardSource, /if \(!normalizedName\) return null/);
-assert.equal(existsSync(path.join(repositoryRoot, "public/logo.svg")), true);
+assert.equal(existsSync(path.join(repositoryRoot, "public/chronoverse-capital-official-logo.png")), true);
 
 assert.deepEqual(
   generateExecutiveSummary("Empty", "Research", "", []),
