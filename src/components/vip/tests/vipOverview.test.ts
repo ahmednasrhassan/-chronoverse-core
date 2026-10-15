@@ -368,7 +368,7 @@ function verifyUnavailableRendering(): void {
     "unavailable selected market preserves the canonical reason");
   assertEqual(html.includes("No analytical values have been inferred"), true,
     "unavailable selected market explicitly rejects substitution");
-  assertEqual(html.includes("Calibrated readout"), false,
+  assertEqual(html.includes("Analytical scores"), false,
     "unavailable selected market fabricates no geometry");
   assertEqual(html.includes("Scenario architecture"), false,
     "unavailable selected market fabricates no scenario");
@@ -416,7 +416,48 @@ function verifyCurrentUseRendering(): void {
   }
 }
 
+function verifyPhaseZeroClaims(): void {
+  for (const selectedMarket of VIP_MARKET_IDS_V1) {
+    const projections = projectionMap();
+    const projection = projections[selectedMarket];
+    if (projection?.availability !== "available") throw new Error("Expected fixture");
+    const before = JSON.stringify(projections);
+    const html = renderToStaticMarkup(VipOverviewSurface({ projections, selectedMarket }));
+    assertEqual(html.includes("Analytical scores"), true, "neutral score heading");
+    assertEqual(html.includes("probabilities of profitable trades"), true, "score semantics disclosed");
+    assertEqual(JSON.stringify(projections), before, "overview preserves numerical evidence");
+    if (projection.productKind === "rate") {
+      for (const preserved of ["Rate regime", "Evidence coverage", "Rate instability", "Signal and instability composition"]) {
+        assertEqual(html.includes(preserved), true, `rate overview preserves ${preserved}`);
+      }
+      assertEqual(html.includes("Scenario architecture"), false, "no FX scenarios invented for rate");
+      continue;
+    }
+    for (const absent of ["Macro drivers", "Cross-market confirmation", "Historical regime context", ">Production<"]) {
+      assertEqual(html.includes(absent), false, `unavailable overview excludes ${absent}`);
+    }
+    assertEqual(html.includes("Explicit profile"), true, "explicit calibration label");
+    const generic = {
+      ...projection,
+      details: {
+        ...projection.details,
+        calibration: { ...projection.details.calibration, productionCalibrated: false, missingExplicitCalibration: ["signal" as const] },
+      },
+    };
+    const genericHtml = renderToStaticMarkup(VipOverviewSurface({
+      projections: { ...projections, [selectedMarket]: generic }, selectedMarket,
+    }));
+    assertEqual(genericHtml.includes("Generic defaults"), true, "generic calibration label");
+    for (const preserved of ["Scenario architecture", "What breaks the interpretation?", "72.0%", "31.0%", "partial evidence"]) {
+      assertEqual(html.toLowerCase().includes(preserved.toLowerCase()), true, `FX overview preserves ${preserved}`);
+    }
+    const unavailable = renderToStaticMarkup(VipOverviewSurface({ projections: projectionMap(false), selectedMarket }));
+    assertEqual(unavailable.includes("Scenario architecture"), false, "uncomputed scenarios stay hidden");
+  }
+}
+
 async function main(): Promise<void> {
+  verifyPhaseZeroClaims();
   verifyCurrentUseRendering();
   console.log("PASS: five-product VIP overview current-use rendering");
   verifySelectionContract();

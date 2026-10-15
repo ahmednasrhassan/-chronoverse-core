@@ -333,7 +333,7 @@ function AnalyticalGeometry({ projection }: {
         <div>
           <div className={EYEBROW}>State geometry</div>
           <h3 className="mt-1 text-base font-bold text-[#F3EBDD]">
-            Calibrated readout
+            Analytical scores
           </h3>
         </div>
         <div className="hidden grid-cols-5 font-mono text-[9px] tabular-nums text-[#91889A] sm:grid">
@@ -350,6 +350,11 @@ function AnalyticalGeometry({ projection }: {
           <GeometryRail key={metric.label} metric={metric} />
         ))}
       </div>
+      <p className="mt-3 text-[11px] leading-5 text-[#91889A]">
+        Scores are normalized analytical measures, not empirically validated
+        probabilities of profitable trades. Evidence coverage reports model
+        input coverage.
+      </p>
     </section>
   );
 }
@@ -493,7 +498,7 @@ function FxTechnicalBand({ projection }: { projection: AvailableFxProjection }) 
       },
     {
       label: "Calibration",
-      value: details.calibration.productionCalibrated ? "Production" : "Generic",
+      value: details.calibration.productionCalibrated ? "Explicit profile" : "Generic defaults",
     },
   ].filter((metric): metric is { label: string; value: string } => metric !== null);
 

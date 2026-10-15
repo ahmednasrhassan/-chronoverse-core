@@ -283,7 +283,7 @@ function DecisionRail({
       values: [
         `State confidence ${formatPercent(details.confidence)}`,
         `Signal confidence ${formatPercent(details.signal.confidence)}`,
-        `Risk ${formatLabel(details.risk.level)} / ${formatPercent(details.risk.score)}`,
+        `Risk ${formatLabel(details.risk.level)} / Risk score ${formatPercent(details.risk.score)}`,
         ...(conviction === null
           ? []
           : [`Market conviction ${formatPercent(conviction)} / ${"data" in engine.confidence ? formatLabel(engine.confidence.data.conviction.availability) : "Unavailable"} evidence`]),
@@ -334,6 +334,10 @@ function DecisionRail({
           </section>
         ))}
       </div>
+      <p className="mt-3 text-[11px] leading-5 text-[#91889A]">
+        Confidence, conviction, and risk scores are normalized analytical
+        measures, not empirically validated probabilities of profitable trades.
+      </p>
     </aside>
   );
 }
@@ -449,7 +453,7 @@ function TechnicalEvidence({ deep }: { deep: FxVipDeepProjectionV1 }) {
       },
     {
       label: "Calibration",
-      value: details.calibration.productionCalibrated ? "Production" : "Generic",
+      value: details.calibration.productionCalibrated ? "Explicit profile" : "Generic defaults",
     },
   ].filter((value): value is { readonly label: string; readonly value: string } =>
     value !== null
