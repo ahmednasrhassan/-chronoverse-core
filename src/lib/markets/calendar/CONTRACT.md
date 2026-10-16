@@ -92,7 +92,8 @@ protected-file import is needed.
 Scope is deterministic normalization of already-extracted source rows into the
 existing V1 event contract. There is no HTML/PDF extraction, live fetching,
 provider fallback, refresh job, calendar store, route or UI activation. Acquisition
-and durable persistence are separate later work; Phase 2B2 is not implemented.
+and durable persistence are separate later work. The Phase 2B1 release did not
+implement extraction; the Phase 2B2 section below adds bounded HTML extraction.
 The ECB ledger and historical resolver remain untouched and inactive.
 
 normalizeEcbOfficialScheduleV1 accepts the existing
@@ -157,3 +158,90 @@ clock, live owner or storage client; strict scoped TypeScript and ESLint.
 ~~~powershell
 node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/markets/tests/calendar/contracts.test.ts src/lib/markets/tests/calendar/projections.test.ts src/lib/markets/tests/calendar/officialPolicySchedules.test.ts
 ~~~
+
+
+## Phase 2B2: bounded official schedule HTML extraction
+
+extractEcbOfficialScheduleHtmlV1 and extractBojOfficialScheduleHtmlV1 consume
+caller-supplied decoded document text. They perform no acquisition, event
+identity reconciliation, assessment, persistence or delivery. Phase 2A contracts
+and Phase 2B1 normalizers remain unchanged; extracted candidates feed those
+normalizers only when a caller separately supplies the required identity,
+revision and capture context. There is no production caller.
+
+The versioned document envelope requires publisher, exact authoritative URL,
+document ID, source version, media type and an explicitly qualified timezone.
+Only these inspected English structures are supported:
+
+- ECB: the canonical Governing Council calendar's single main element, expected
+  heading and balanced dt/dd definition-list entries. Only supported monetary
+  policy Day-2 labels produce candidates. Other recognized meeting classes stay
+  separate. Dates use the source's explicit DD/MM/YYYY format.
+  https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html
+- BoJ: the canonical MPM index's single main element, expected heading,
+  year-labelled headings/captions and four-column annual tables. Header spans,
+  date order, calendar dates and written weekdays must agree. Only the meeting
+  cell is extracted; adjacent report, opinions and minutes dates/clocks are
+  not decision timestamps.
+  https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm
+
+The BoJ V1 grammar supports the inspected two-day, same-month English date
+labels, including linked PDF-size suffixes. Single-day, cross-month, alternate
+language and alternative date-layout extraction require a separately verified
+format version. They are rejected here, even when a human might guess a date.
+An unknown minutes date is harmless to meeting extraction; an unknown meeting
+date fails the whole document.
+
+ECB output stays date-only in Europe/Berlin. BoJ announcement time stays unknown
+with the expected last meeting date and Asia/Tokyo. No official clock rule is
+silently added. Schedule dates, acquisition and actual publication remain
+separate; the extractor creates no capture or publication timestamps.
+
+Available output retains the publisher, URL, supplied document/version IDs,
+parser version, format ID, source date label, table year and one-based row
+reference. Future ingestion must retain this extraction envelope alongside the
+normalizer output: the event's existing parserVersion labels the Phase 2B1
+normalizer, while the envelope labels the HTML extraction version. The SHA-256
+digest identifies the supplied decoded text encoded as
+UTF-8; it is not a digest of original response bytes. Row references are scoped
+to a document version and are not stable event identities. Labels and digests
+do not authenticate publisher identity, acquisition or historical knowledge.
+Results explicitly state provided-document-only, sourceAuthentication:
+not-performed and historicalOwnership: not-certified.
+
+Bounds are 512 KiB of UTF-8 input, 131072 main-content characters, 20000 lexical
+tokens, 4096 parsed nodes, depth 32, and 128 extracted rows. BoJ additionally
+limits the document to four annual tables and 64 rows per table. The main
+content uses the existing fast-xml-parser with explicit balance validation;
+browser HTML repair, DTD/entity declarations, active/hidden attributes and
+unsupported main-content elements are not accepted. Comments and raw script
+bodies outside main cannot contribute schedule facts. Raw-text/foreign wrapper
+contexts cannot masquerade as a real main schedule. CSS is not executed,
+and this parser is not a source authentication or rendered-visibility service.
+A malformed/unsupported row invalidates the entire extraction, with no partial
+result, fallback to old data or repair. Input proxies, accessors, hidden/symbol
+fields and custom serializers are rejected without invoking caller code.
+
+PDF extraction is explicitly unsupported. No pdf-parse, pdfjs-dist, pdfreader
+or pdf2json runtime dependency is installed. A PDF link in an HTML cell does
+not constitute PDF coverage; application/pdf returns unsupported-format.
+No dependency installation or manifest change is part of this release.
+
+Versioned offline fixtures are in tests/calendar/documents:
+ecb-governing-council-v1.html and boj-mpm-index-v1.html. They are reduced
+structural examples based on the official formats inspected on 2026-10-16,
+with selected listed rows. The BoJ adjacent-clock note is synthetic.
+Document IDs, source versions, captures, acknowledgements and revision test
+mutations are synthetic and supply no historical ownership evidence.
+
+~~~powershell
+node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/markets/tests/calendar/contracts.test.ts src/lib/markets/tests/calendar/projections.test.ts src/lib/markets/tests/calendar/officialPolicySchedules.test.ts src/lib/markets/tests/calendar/officialScheduleExtraction.test.ts
+~~~
+
+Acceptance includes metadata/precision preservation, compatibility with both
+normalizers and existing projections, revision digests and historical cutoffs,
+unknown decision timing, exact source/zone restrictions, malformed/unsupported
+layouts, invalid/duplicate dates and weekdays, hidden/active markup, resource
+bounds, passive snapshots and deterministic execution without network or an
+ambient clock. Ledger/resolver activation, live scheduling, opportunities and
+probabilities remain outside this release. Phase 2B3 is not implemented.
