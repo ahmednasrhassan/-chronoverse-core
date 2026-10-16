@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
 declare global {
@@ -10,8 +10,12 @@ declare global {
   }
 }
 
+const getServerConsentSnapshot = () => false;
+
 export default function CookieConsent() {
-  const [showBanner, setShowBanner] = useState(false);
+  const consentSnapshot = useRef<boolean | null>(null);
+  const getConsentSnapshot = useCallback(() => consentSnapshot.current ?? false, []);
+  const [dismissed, setDismissed] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
 
   const [preferences, setPreferences] = useState({
@@ -19,21 +23,25 @@ export default function CookieConsent() {
     analytics: false,
   });
 
-  useEffect(() => {
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    // Preserve the mount-only storage check and the initially hidden server render.
+    if (consentSnapshot.current !== null) return () => {};
+    consentSnapshot.current = false;
     try {
       if (typeof window !== 'undefined') {
         const consent =
           localStorage.getItem('chrono_cookie_consent') ||
           localStorage.getItem('cookie_consent');
-        if (!consent) {
-          setShowBanner(true);
-        }
+        consentSnapshot.current = !consent;
       }
     } catch {
-      setShowBanner(true);
+      consentSnapshot.current = true;
       // تفادي التوقف في حال حظر التخزين في وضع التصفح الخفي
     }
+    onStoreChange();
+    return () => {};
   }, []);
+  const needsConsent = useSyncExternalStore(subscribe, getConsentSnapshot, getServerConsentSnapshot);
 
   const updateGtagConsent = (analytics: boolean) => {
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
@@ -69,7 +77,7 @@ export default function CookieConsent() {
     safeSetStorage('chrono_cookie_consent', JSON.stringify(fullConsent));
     safeSetStorage('cookie_consent', 'granted');
     updateGtagConsent(true);
-    setShowBanner(false);
+    setDismissed(true);
   };
 
   const handleRejectAll = () => {
@@ -77,7 +85,7 @@ export default function CookieConsent() {
     safeSetStorage('chrono_cookie_consent', JSON.stringify(minConsent));
     safeSetStorage('cookie_consent', 'denied');
     updateGtagConsent(false);
-    setShowBanner(false);
+    setDismissed(true);
   };
 
   const handleSavePreferences = () => {
@@ -85,11 +93,11 @@ export default function CookieConsent() {
     safeSetStorage('chrono_cookie_consent', JSON.stringify(savedPreferences));
     safeSetStorage('cookie_consent', preferences.analytics ? 'granted' : 'denied');
     updateGtagConsent(preferences.analytics);
-    setShowBanner(false);
+    setDismissed(true);
     setShowPreferences(false);
   };
 
-  if (!showBanner) return null;
+  if (!needsConsent || dismissed) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-[#050506]/95 backdrop-blur-md border-t border-border text-secondary shadow-2xl font-sans">

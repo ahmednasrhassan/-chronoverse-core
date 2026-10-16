@@ -9,7 +9,6 @@ const CookieConsent = dynamic(() => import("./cookiesconsent"), {
 
 export default function CookieConsentWrapper() {
   const [shouldRender, setShouldRender] = useState(false);
-  const [hasAnswered, setHasAnswered] = useState(true);
 
   useEffect(() => {
     try {
@@ -18,15 +17,12 @@ export default function CookieConsentWrapper() {
           localStorage.getItem("chrono_cookie_consent") ||
           localStorage.getItem("cookie_consent");
         if (consent) {
-          setHasAnswered(true);
           return;
         }
       }
     } catch {
       // تفادي التوقف في حال كان المتصفح يمنع التخزين (Incognito / Strict Storage Blocker)
     }
-
-    setHasAnswered(false);
 
     const handleInteraction = () => {
       setShouldRender(true);
@@ -48,7 +44,7 @@ export default function CookieConsentWrapper() {
     };
   }, []);
 
-  if (hasAnswered || !shouldRender) return null;
+  if (!shouldRender) return null;
 
   return <CookieConsent />;
 }

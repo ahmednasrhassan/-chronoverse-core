@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useRef, useSyncExternalStore } from "react";
 
 interface HeadingItem {
   id: string;
@@ -8,21 +8,25 @@ interface HeadingItem {
   level: number;
 }
 
+const getServerHeadings = () => null;
+
 /**
- * CLS fix: this component previously returned `null` until a post-mount
- * `useEffect` finished walking the rendered <article> DOM for headings,
- * then "popped in" a whole nav block a tick later. We render a reserved
- * skeleton immediately, so swapping in the real TOC list causes zero layout shift.
+ * CLS fix: reserve a skeleton until the post-mount subscription finishes
+ * walking the rendered <article> DOM for headings, preserving the initial
+ * space while the real TOC list is discovered.
  */
 export default function AutoTOC() {
-  const [headings, setHeadings] = useState<HeadingItem[]>([]);
-  const [isReady, setIsReady] = useState(false);
+  const snapshot = useRef<HeadingItem[] | null>(null);
+  const getSnapshot = useCallback(() => snapshot.current, []);
 
-  useEffect(() => {
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    // Cache the same one-time DOM scan, after hydration has committed.
+    if (snapshot.current !== null) return () => {};
     const article = document.querySelector("article");
     if (!article) {
-      setIsReady(true);
-      return;
+      snapshot.current = [];
+      onStoreChange();
+      return () => {};
     }
 
     const elements = Array.from(article.querySelectorAll("h2, h3"));
@@ -48,13 +52,15 @@ export default function AutoTOC() {
       };
     });
 
-    setHeadings(items);
-    setIsReady(true);
+    snapshot.current = items;
+    onStoreChange();
+    return () => {};
   }, []);
+  const headings = useSyncExternalStore(subscribe, getSnapshot, getServerHeadings);
 
   // Before the DOM scan completes, reserve a minimum-height skeleton
   // block instead of rendering nothing — key CLS fix.
-  if (!isReady) {
+  if (headings === null) {
     return (
       <div
         className="my-8 p-6 bg-card border border-border rounded-none shadow-md min-h-[140px] animate-pulse"
