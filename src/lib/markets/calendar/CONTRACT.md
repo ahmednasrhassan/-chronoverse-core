@@ -1,8 +1,9 @@
 ﻿# Canonical calendar foundation V1 — Phase 2A
 
-This is an inactive, deterministic contract, row normalization and offline model. It has no acquisition provider,
-route, UI caller, scheduler, persistence implementation, authentication dependency,
-environment read, R2 integration, opportunity model or probability model. Existing
+This is an inactive calendar foundation with deterministic models and opt-in
+bounded acquisition. It has no production route, UI caller, automatic polling,
+scheduler, persistence implementation, authentication dependency, environment
+read, R2 integration, opportunity model or probability model. Existing
 canonical FX bundle and independent €STR result owners are untouched.
 
 `readCalendarEventV1` accepts closed passive data, detaches it, validates its shape
@@ -92,7 +93,7 @@ protected-file import is needed.
 Scope is deterministic normalization of already-extracted source rows into the
 existing V1 event contract. There is no HTML/PDF extraction, live fetching,
 provider fallback, refresh job, calendar store, route or UI activation. Acquisition
-and durable persistence are separate later work. The Phase 2B1 release did not
+and durable persistence were deferred by Phase 2B1. That release did not
 implement extraction; the Phase 2B2 section below adds bounded HTML extraction.
 The ECB ledger and historical resolver remain untouched and inactive.
 
@@ -244,4 +245,94 @@ unknown decision timing, exact source/zone restrictions, malformed/unsupported
 layouts, invalid/duplicate dates and weekdays, hidden/active markup, resource
 bounds, passive snapshots and deterministic execution without network or an
 ambient clock. Ledger/resolver activation, live scheduling, opportunities and
-probabilities remain outside this release. Phase 2B3 is not implemented.
+probabilities remain outside this release. Phase 2B3 acquisition is described below.
+
+
+## Phase 2B3: bounded opt-in acquisition foundation
+
+createOfficialScheduleAcquirerV1 constructs a server-only client with no I/O at
+construction and no singleton or production caller. A versioned acquire request
+accepts only publisher ecb or boj; callers cannot supply URLs, headers, redirects
+or relaxed bounds. The frozen source registry contains exactly the two official
+HTTPS HTML index URLs already admitted by Phase 2B2. There is no fallback source,
+automatic retry, cache, background task or polling.
+
+One explicit call makes one GET with manual redirects, credentials omitted,
+no referrer, no-store caching, HTML Accept and identity content encoding.
+Every redirect is rejected, including same-origin HTTPS redirects. The response
+must report the exact requested URL, no followed redirect, status 200 and an
+HTML content type with UTF-8 or no charset parameter. PDF, alternative encodings,
+compressed representations, partial status 206, empty status 204 and conditional
+status 304 are unsupported. No cached body is substituted for those results.
+
+The deadline is 10000 elapsed milliseconds across headers, body, UTF-8 decoding,
+bounded extraction and final delivery checks. An owned abort signal, promise
+deadline race and monotonic checks reject late results, even when an injected
+transport ignores abort. Active bodies/readers are cancelled on failure;
+late-arriving responses are cancelled instead of extracted. The trusted fetch
+capability must implement standard native Response/stream and manual-redirect
+semantics. A trusted deadline capability must measure elapsed real time.
+
+At most 512 KiB and 4096 body chunks are consumed. Content-Length, when supplied,
+must be a single valid nonnegative integer within the limit and must match the
+complete identity body. Conflicting transfer/length metadata, stream errors,
+empty bodies and invalid UTF-8 fail closed. No unbounded response.text() or
+arrayBuffer() read is used. Extraction is delegated to the existing Phase 2B2
+functions and must succeed completely; malformed structures yield no partial
+rows. The existing extractor retains parser version, document provenance and
+source date precision. No decision publication timestamp is created.
+
+Document IDs identify the allowlisted publisher/index. Source version IDs use
+sha256 of delivered response-body bytes, explicitly a locally computed identity,
+not a publisher-issued version or a storage receipt. The existing extraction
+envelope separately retains its digest of decoded HTML text. Raw HTML, cookies,
+authentication headers and raw exceptions are not exposed in the result.
+
+Request start, complete body acquisition and evidence availability are separate
+local UTC millisecond observations. Completion must not precede start;
+availability must not precede completion; final delivery must not regress.
+Values stay within the canonical epoch-through-year-9999 domain. A future HTTP
+Date relative to completion fails closed. Default wall/monotonic clocks are
+Date.now and performance.now. These observations do not establish clock accuracy.
+
+Freshness is explicitly limited to unverified HTTP response-age observations.
+A valid IMF-fixdate Date header is required. The client uses the larger of
+apparent local age and the conservative whole-second Age bucket endpoint plus
+rounded-up elapsed request time. The limit is 60000 ms, shortened by any valid
+max-age/s-maxage directive. At exact expiry the response is stale; duplicate or
+malformed age directives fail, and Warning-bearing responses are rejected.
+Last-Modified is retained as HTTP metadata, never as publication or freshness.
+This is deliberately narrower than a general HTTP cache implementation.
+
+The remaining nominal lifetime becomes the existing calendar freshnessPolicy,
+with an explicit expiresAt. Downstream consumers must reassess expiry at use;
+a returned object is not permanently current. Documents with all meeting dates
+before the observed publisher-local date are rejected, including a date rollover
+at delivery. Unknown announcements on today's expected date stay unknown.
+These checks neither verify publisher update cadence nor certify source currency.
+
+Successful status acquired means HTTP 200 plus complete supported extraction,
+not verified authoritative evidence or canonical assessment. Every result states
+sourceAuthentication: not-performed, evidenceAdmission: not-certified,
+clockAccuracy: unknown, sourceCurrency: not-certified and historicalOwnership:
+not-certified. The Phase 2A timing shape records separate completion/availability
+and persistence: not-persisted. Phase 2A historical selection still refuses those
+unacknowledged events. Normalization remains a separate caller step with explicit
+stable identity/revision context; Phase 2B1 normalizers are unchanged.
+
+Dependencies are captured at factory construction for deterministic testing.
+There is no production environment/secret read, credential change, R2/Redis
+persistence, route, UI, cron, ledger/resolver activation, opportunity or probability
+model. Later runtime activation and evidence admission require separate work.
+
+Focused tests reuse the versioned Phase 2B2 HTML fixtures with synthetic HTTP
+headers, clocks, deadlines and streams. They cover both publishers, successful
+capture, exact allowlisting, redirects, status/media/encoding failures, bounds,
+truncation, stale/ambiguous HTTP metadata, local date rollover, clock regression,
+stalled headers/bodies, late replies, concurrent requests, and unacknowledged
+normalizer/selector compatibility. Any optional official-source smoke check
+is read-only and opt-in; it creates no scheduled or persistent acquisition.
+
+~~~powershell
+node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/markets/tests/calendar/contracts.test.ts src/lib/markets/tests/calendar/projections.test.ts src/lib/markets/tests/calendar/officialPolicySchedules.test.ts src/lib/markets/tests/calendar/officialScheduleExtraction.test.ts src/lib/markets/tests/calendar/officialScheduleAcquisition.test.ts
+~~~
