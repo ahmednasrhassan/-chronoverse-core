@@ -184,3 +184,33 @@ If a verification fails, stop without committing. Stage only the five approved
 Slice 3 files after all checks pass; commit, push and confirm the exact Git SHA's
 successful GitHub Production deployment before any next slice. Deployment does
 not enable the harness or authorize live tests. Historical admission stays inactive.
+
+## Slice 4: offline approval-ledger protocol
+
+`r2QualificationApproval.ts` models immutable approval contracts, injected
+authenticated issuance, bounded authoritative-clock intervals, atomic single-use
+consumption/run reservation, append-only audit and independent-checkpoint recovery.
+It accepts only the complete regenerated synthetic qualification manifest and binds
+all target, limit, validity and target-policy fields. Raw operator claims and tokens
+are not authentication inputs. Records retain only non-secret authorization digests.
+
+The ledger, witness and coordinator are explicitly volatile offline models. Every
+coordinator reports executionAllowed false. A valid checkpoint must come from a
+separately retained trusted model witness; a locally valid audit prefix cannot prove
+completeness. A lost claim acknowledgement returns no session, and reading a retained
+claim cannot create a restarted executor session. Consumed approvals never become
+unused through timeout, partial execution, revocation, expiry or reconciliation.
+No lease release, expiry-based replay or automatic takeover is introduced.
+
+See [R2_QUALIFICATION_APPROVAL.md](./R2_QUALIFICATION_APPROVAL.md) for the exact
+state machine, modeled atomicity, checkpoint limitations, failure semantics and
+free-tier-first infrastructure boundary. No provider is selected or configured.
+Redis is not a prerequisite, no paid infrastructure dependency is introduced, and
+no new recurring cost is authorized. Future D1/Durable Objects evaluation needs
+separate approval and verification; free-tier availability implies no guarantee.
+
+The existing qualification harness, R2 transport, configuration and evidence adapter
+are unchanged. The live-replay-unavailable gate remains unconditional. Slice 4
+creates no real ledger, storage request, canonical receipt, admission or distributed
+head. Offline protocol correctness does not establish real persistence, failover
+safety, authenticated production issuance or globally unique live execution.
