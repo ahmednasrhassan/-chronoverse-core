@@ -1,8 +1,9 @@
-# Inactive immutable calendar archive adapter — Phase 2C2, Slice 1
+# Inactive immutable calendar archive — Phase 2C2, Slices 1 and 2
 
-Status: isolated injected-capability implementation with offline tests. There is
-no R2 SDK adapter, credential/environment read, acquisition integration, runtime
-caller, scheduler, route, distributed head, canonical admission or durable receipt.
+Status: isolated injected-capability implementation and optional inactive R2 SDK
+transport with offline tests. There is no application environment/credential loader,
+acquisition integration, runtime caller, scheduler, route, distributed head,
+canonical admission or durable receipt.
 Deploying this module does not activate archive operations. The existing
 [Phase 2C1 contract](./CAPTURE_PERSISTENCE.md) remains unchanged.
 
@@ -103,3 +104,82 @@ node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/market
 ```
 
 There is no activation step in this slice.
+
+## Slice 2: inactive default-jurisdiction R2 transport
+
+`createR2CalendarCaptureArchiveTransportV1` returns the existing injected interface.
+It is never constructed by a production caller. Import and factory construction
+perform no SDK sends, storage operations or credential-provider lookup. Each
+explicit transport operation constructs its own SDK client lazily. Configuration
+must be supplied explicitly; there is no default bucket or environment loader.
+The installed S3 SDK and existing fast-xml-parser are reused without dependencies
+being added. The Slice 1 implementation and its result contract remain unchanged.
+
+`parseR2CalendarArchiveConfigV1` accepts only closed passive data with schema
+`calendar-r2-archive-config-v1`, a 32-hex-character account ID, nonempty printable
+ASCII credentials (access ID at most 256 characters, secret at most 512),
+jurisdiction `default`, and an explicit bucket object containing `name`,
+`purpose: dedicated-calendar-capture-archive`, and `environment: non-production`.
+Bucket names use 3–63 lowercase alphanumeric/hyphen characters, starting and ending
+alphanumeric. The existing backup bucket is rejected. Supplied endpoints/regions,
+missing fields, accessors, proxies and unsupported jurisdictions fail closed.
+The parser detaches and freezes configuration, derives the account's direct HTTPS
+R2 endpoint and selects region `auto`. Declarations do not verify that the bucket
+exists, is dedicated/non-production, or has suitable permissions and retention.
+No bucket name or credential is invented as a runtime default.
+
+PUT enforces the exact `calendar/captures/v1/<64-lowercase-hex>.json` key pattern,
+copies bounded nonempty bytes, and sends exact ContentLength, JSON content type
+and `IfNoneMatch: *`. GET uses a signed full-object command for the same configured
+bucket/key. Only observed PUT 200 or an SDK service exception with status 412 and
+code PreconditionFailed map to 200/412. Only status 404 plus SDK NoSuchKey maps to
+absence. Other service codes, permission failures, missing buckets, redirects,
+unexpected statuses, network errors and malformed responses are sanitized errors.
+Aborts/timeouts never assert that a write failed to commit. Slice 1 still requires
+complete GET verification after PUT and preserves uncertain negative reads.
+
+Clients use maxAttempts 1, standard retry/default modes, required-only request and
+response checksum settings, no region redirects, no Expect: 100-continue, and
+explicit credentials/endpoint/region. Node HTTP options set 2000 ms connection,
+5000 ms inactivity and 10000 ms request timeouts with throwOnRequestTimeout true.
+An operation abort deadline also bounds header/body stalls. Parent cancellation
+is propagated to SDK sends; Slice 1's earlier shared 10000 ms deadline remains
+authoritative across PUT and GET, rather than restarting at GET.
+
+SDK-collected XML/error/discarded response bodies are capped at 64 KiB and 4096
+collected chunks. Nonempty collected bodies must be valid UTF-8 XML; DTD/entity
+declarations are rejected before SDK parsing. PUT 200 requires an empty response
+body. A response middleware retains raw Node bodies for cleanup even if SDK
+deserialization fails or a response arrives after abort. No raw SDK exception,
+service message, headers, response URL or credential is attached to public errors.
+
+Successful GET bodies must be unencoded JSON, full-object status 200, with no
+Content-Range. They stay streamed. Node-to-Web conversion specifies a byte-size
+strategy and 64 KiB queue threshold; an outer demand-driven stream copies bytes
+and enforces the existing 2 MiB/4096-chunk limits. Advertised ContentLength is
+checked when present, including against actual EOF, but never replaces counting
+and canonical digest verification. Incomplete HTTP bodies reject. Backpressure
+thresholds allow an upstream chunk/buffer in addition to the Web queue; they are
+not a process-wide memory or concurrency limit. No body-to-string/array collector
+is used for successful GETs.
+
+Clients and bodies are owned per operation. GET ownership transfers to the Web
+stream until EOF, cancellation, failure or abort. Cleanup destroys bodies/client,
+cancels timers and removes the parent abort listener. A caller must consume or
+cancel the body; the operation deadline bounds abandonment. Concurrent operations
+cannot destroy a sibling's handler. Injected test handlers must be independently
+owned; reuse within a transport is rejected. Cleanup does not prove remote abort.
+
+New tests use synthetic credentials, real SDK signing/serialization and mocked
+HTTP handlers; a socket-connect guard rejects accidental network access. They
+cover configuration isolation, status/error mappings, retry count, bounded SDK
+collection, stream backpressure/truncation/stalls/abort, concurrent ownership,
+late writes, BOM fidelity, Slice 1 reconciliation and continued historical refusal.
+No real R2 request or remote qualification is part of these tests. Actual SDK/R2
+interoperability, remote atomicity, credentials, bucket isolation, retention,
+locks and lifecycle protection still require separately approved non-production
+integration tests. No production wiring, admission, receipt or head update exists.
+
+```powershell
+node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/markets/tests/calendar/r2CaptureArchiveConfig.test.ts src/lib/markets/tests/calendar/r2CaptureArchiveTransport.test.ts
+```
