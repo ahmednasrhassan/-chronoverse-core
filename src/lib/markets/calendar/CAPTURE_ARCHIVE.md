@@ -183,3 +183,36 @@ integration tests. No production wiring, admission, receipt or head update exist
 ```powershell
 node --import ./scripts/tests/calendar-offline-preload.mjs --test src/lib/markets/tests/calendar/r2CaptureArchiveConfig.test.ts src/lib/markets/tests/calendar/r2CaptureArchiveTransport.test.ts
 ```
+
+## Slice 3: inactive offline qualification harness
+
+`r2CaptureArchiveQualification.ts` adds pure deterministic synthetic preparation,
+a versioned execution manifest and an explicitly approved offline simulation runner.
+No SDK client, credentials, environment loader, default transport or application
+caller is introduced. The existing adapter, transport and configuration stay unchanged.
+
+Live approvals always fail closed before transport construction because durable,
+cross-process approval/replay coordination is unavailable. Offline approvals bind
+account, dedicated non-production bucket, run ID and the complete manifest digest;
+expiry and bounded process-local single use are enforced without claiming durable
+replay protection. Failed or cancelled runs consume their offline approval.
+
+All adapter PUTs and GETs pass through a manifest-bound budget wrapper, including
+verification GETs and cancelled attempts. Limits are at most 8 writable keys,
+32 PUT attempts, 64 GET attempts, concurrency 2 and 120 seconds elapsed execution.
+The fixed suite writes six keys, observes one additional GET-only key, and accepts
+no externally supplied capture records. Original synthetic bytes include a BOM case.
+Slice 1's shared 10-second deadline, 2 MiB and 4,096-chunk limits remain authoritative.
+
+The nine cases cover creation, retry, divergence, identical/divergent competing
+writers, BOM fidelity, missing object, simulated lost acknowledgement and controlled
+abort. Reports contain only sanitized offline observations; generic errors cannot
+qualify a conditional conflict. Controlled abort remains unknown. No automatic
+object deletion, retention configuration, durable receipt, admission or head update
+is added. No real R2 request is part of implementation or offline verification.
+
+See [R2_ARCHIVE_QUALIFICATION.md](./R2_ARCHIVE_QUALIFICATION.md) for the exact manifest,
+approval limitations, accounting boundary, live prerequisites and separately approved
+retention/reconciliation/cleanup procedure. Actual R2 interoperability, permissions,
+retention and remote behavior remain unqualified. Calendar archive admission and
+historical admission remain inactive.
