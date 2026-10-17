@@ -13,6 +13,7 @@ const allowed = new Set([
   "src/lib/markets/calendar/officialScheduleExtraction.ts",
   "src/lib/markets/calendar/officialScheduleAcquisition.ts",
   "src/lib/markets/calendar/capturePersistence.ts",
+  "src/lib/markets/calendar/captureArchive.ts",
   "src/lib/markets/events/ecbMonetaryPolicy.ts",
   "src/lib/markets/events/eventClock.ts",
   "src/lib/markets/tests/calendar/fixtures.ts",
@@ -22,6 +23,7 @@ const allowed = new Set([
   "src/lib/markets/tests/calendar/officialScheduleAcquisition.test.ts",
   "src/lib/markets/tests/calendar/capturePersistenceFixtures.ts",
   "src/lib/markets/tests/calendar/capturePersistence.test.ts",
+  "src/lib/markets/tests/calendar/captureArchive.test.ts",
   "src/lib/markets/tests/calendar/contracts.test.ts",
   "src/lib/markets/tests/calendar/projections.test.ts",
 ].map(path => new URL(path, root).href));

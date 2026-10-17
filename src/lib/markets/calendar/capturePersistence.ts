@@ -176,7 +176,8 @@ export function prepareCalendarCaptureV1(input: unknown): CalendarCaptureResultV
   try { return Object.freeze({ status: "prepared", record: prepare(input) }); }
   catch { return Object.freeze({ status: "unavailable", reason: "invalid-capture" }); }
 }
-function readRecord(value: unknown): CalendarCaptureRecordV1 {
+/** Rebuild the complete detached record from its original evidence; throws on any mismatch. */
+export function readCalendarCaptureRecordV1(value: unknown): CalendarCaptureRecordV1 {
   const data = calendarRecordV1(detached(value), [
     "schemaVersion", "input", "acquisitionCutoff", "evidenceAvailability", "durablePersistence", "eventVersions", "recordSha256",
   ]);
@@ -235,7 +236,7 @@ export function createOfflineCalendarJournalV1(
           !Array.isArray(data.entries) || data.entries.length > CALENDAR_OFFLINE_CAPACITY_V1) invalid();
       const recovered = data.entries.map(value => {
         const entry = calendarRecordV1(value, ["record", "receipt"]);
-        return { record: readRecord(entry.record), receipt: entry.receipt as CalendarOfflineReceiptV1 };
+        return { record: readCalendarCaptureRecordV1(entry.record), receipt: entry.receipt as CalendarOfflineReceiptV1 };
       });
       history(recovered);
       entries = Object.freeze(recovered);
@@ -253,7 +254,7 @@ export function createOfflineCalendarJournalV1(
       busy = true;
       try {
         let record: CalendarCaptureRecordV1;
-        try { record = readRecord(input); } catch { return unavailable("invalid-capture"); }
+        try { record = readCalendarCaptureRecordV1(input); } catch { return unavailable("invalid-capture"); }
         const existing = entries.find(entry => entry.record.input.captureId === record.input.captureId);
         if (existing) return existing.record.recordSha256 === record.recordSha256
           ? Object.freeze({ status: "idempotent", receipt: existing.receipt }) : unavailable("conflict");
