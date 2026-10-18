@@ -190,3 +190,98 @@ If deployment verification is unavailable, report it without claiming success.
 Deployment does not activate a provider, R2, live qualification, historical
 admission, durable capture receipts or distributed calendar heads. Stop after
 Slice 5; no Slice 6 work is authorized.
+
+## Slice 6: pure store-side CAS validation
+
+`r2QualificationApprovalAuthorityStoreValidation.ts` adds two server-only pure
+functions: `validateR2ApprovalAuthorityJournalCASV1` and
+`validateR2ApprovalAuthorityWitnessCASV1`. Both receive an explicit pinned trusted
+identity, supplied retained state, and a proposed CAS request as unknown passive
+data. They perform no I/O, initialization, clock sampling, authentication or
+storage mutation. Neither function retains ledger state or supplies a default
+store. No provider is selected, dependency installed or infrastructure activated;
+this slice incurs zero incremental infrastructure charges.
+
+Journal validation reuses the existing semantic replay and checkpoint parsers for
+both retained and proposed journals. Every expected-checkpoint field must match
+retained state: schema version, authorityId, generation, sequence and headSha256.
+The candidate must preserve the complete replayed prefix, append exactly one valid
+event, and replay to the exact proposed next checkpoint. Missing/corrupt retained
+state, stale writers, forks, prefix rewrites, truncation, skipped/multiple events,
+no-op replacement, duplicate approval/run identities, reopened consumption and
+semantically impossible rehashed histories refuse. Existing record/event/byte,
+validity, clock and reservation constraints apply through the same replay; there
+is no alternate state machine or independently mutable consumption index.
+
+Witness validation checks its supplied retained checkpoint, the entire expected
+checkpoint and exactly one sequence advance under the same identity/generation
+and existing bounds. It receives no event or journal: a valid digest shape cannot
+prove that an unseen event exists or was authenticated. It does not establish
+checkpoint provenance, freshness or independent retention. Supplying journal and
+witness from a shared restore unit remains unsafe.
+
+Results are deeply immutable detached descriptions with status `validated` and
+store-specific expected/candidate data, or closed `refused` results containing
+only a fixed reason and scope. Every result states executionAllowed: false and
+scope offline-approval-authority-store-validation-only. There is no persistence
+acknowledgement, authorization/session capability, raw provider error or cause.
+Recorded decision hashes are still not independently verified signatures. Only
+trusted authenticated ingress may propose transitions to a future real store;
+these validators do not turn untrusted stored decision JSON into authentication.
+
+### Atomic integration is still mandatory
+
+A successful validation describes only the supplied values. Two competing
+candidates can both validate against the same old journal. Neither result locks
+state, proves a commit or grants permission for an unconditional storage write.
+A future separately approved adapter MUST either:
+
+- Execute validation against current retained state AND mutation within a suitable
+  atomic transaction; or
+- Validate the candidate and encode ALL expected-checkpoint fields in the actual
+  atomic conditional write, relying on a qualified invariant that this complete
+  checkpoint identifies the exact retained journal validated. Any out-of-band
+  writer/restoration that violates this invariant invalidates that assumption.
+
+A zero-row conditional update is a refusal, never an applied acknowledgement.
+Reusing an earlier validated description after another commit cannot bypass the
+conditional predicate. Provider transaction retries must not manufacture a second
+fresh success. This slice implements no adapter, transaction, persistence or retry.
+
+### Temporal, recovery and deployment boundaries
+
+Semantic replay checks recorded event-time intervals, not the present time or a
+provider commit timestamp. Existing trusted clock sampling, freshness checks,
+asynchronous expiry revalidation and the whole 1000 ms authority deadline remain
+in the unchanged Slice 5 driver. A validator result is never a replacement for
+those checks. Bounds remain eight approval records, 128 audit events, 262144
+canonical snapshot bytes, 120000 ms validity and 1000 ms clock uncertainty, with
+all earlier operation/concurrency/key/archive budgets unchanged. There is no
+creation, generation rotation, takeover, refund, deletion, eviction or repair.
+
+Lost/ambiguous acknowledgements retain the Slice 5 quarantine behavior. Witness-
+ahead and journal-ahead gaps fail closed; restart returns inspection only.
+Joint rollback of both supplied stores can still present a valid old prefix with
+apparently unused approvals. Detecting that requires an independently protected
+external anchor, not another hash comparison. No automatic recovery is provided.
+
+Offline tests exercise direct hostile CAS requests and injected volatile stores
+composed with the unchanged driver. Socket/fetch guards demonstrate zero network
+activity, not real provider atomicity, durability, distributed linearizability,
+global replay prevention, clock accuracy or safe production restoration. All
+those infrastructure guarantees remain unqualified.
+
+Only the validator module, its new test file, the offline preload allowlist and
+this document belong to Slice 6. No runtime caller, route, scheduler, provider
+configuration, cloud resource or paid service is added. Live qualification,
+historical admission, receipts and distributed heads remain inactive. Reverting
+this unused code requires no state restore; a future live code rollback must
+never roll back journal/witness data or recreate unused approvals.
+
+Verify the new focused tests, all calendar tests including the existing 417,
+scoped strict TypeScript, focused ESLint with zero warnings, the exact four-file
+scope, whitespace and secrets. Do not run a full build. If any verification fails,
+stop without staging, committing or pushing. After all pass, stage only the four
+explicit paths, create one Slice 6 commit, push origin/master and independently
+verify successful GitHub Production deployment for that exact SHA. Stop after
+Slice 6; deployment activates no storage and authorizes no Slice 7 work.

@@ -1,4 +1,4 @@
-﻿// Node 24 native TypeScript stripping avoids tsx's Windows user/temp-directory
+// Node 24 native TypeScript stripping avoids tsx's Windows user/temp-directory
 // initialization. No transpilation output, provider, environment or app startup.
 import "./server-only-preload.mjs";
 import { registerHooks } from "node:module";
@@ -19,6 +19,7 @@ const allowed = new Set([
   "src/lib/markets/calendar/r2CaptureArchiveQualification.ts",
   "src/lib/markets/calendar/r2QualificationApproval.ts",
   "src/lib/markets/calendar/r2QualificationApprovalAuthority.ts",
+  "src/lib/markets/calendar/r2QualificationApprovalAuthorityStoreValidation.ts",
   "src/lib/markets/events/ecbMonetaryPolicy.ts",
   "src/lib/markets/events/eventClock.ts",
   "src/lib/markets/tests/calendar/fixtures.ts",
@@ -34,6 +35,7 @@ const allowed = new Set([
   "src/lib/markets/tests/calendar/r2CaptureArchiveQualification.test.ts",
   "src/lib/markets/tests/calendar/r2QualificationApproval.test.ts",
   "src/lib/markets/tests/calendar/r2QualificationApprovalAuthority.test.ts",
+  "src/lib/markets/tests/calendar/r2QualificationApprovalAuthorityStoreValidation.test.ts",
   "src/lib/markets/tests/calendar/contracts.test.ts",
   "src/lib/markets/tests/calendar/projections.test.ts",
 ].map(path => new URL(path, root).href));
