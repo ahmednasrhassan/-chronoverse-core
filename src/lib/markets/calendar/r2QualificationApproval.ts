@@ -309,6 +309,45 @@ export function validateR2ApprovalRecoveryV1(value: unknown, authorityId: string
   const recovered = replay(value, id(authorityId), id(generation));
   readCheckpoint(witness, checkpoint(authorityId, generation, recovered.snapshot.events)); return recovered.views;
 }
+
+/** Pure storage-boundary helpers. These verify descriptions, never persistence or permission. */
+export function inspectR2ApprovalAuthorityJournalV1(value: unknown, authorityId: string, generation: string) {
+  const recovered = replay(value, id(authorityId), id(generation));
+  return Object.freeze({ ...recovered, checkpoint: checkpoint(authorityId, generation, recovered.snapshot.events) });
+}
+export function readR2ApprovalAuthorityCheckpointV1(value: unknown, authorityId: string, generation: string): R2ApprovalCheckpointV1 {
+  const data = object(value, ["schemaVersion", "authorityId", "generation", "sequence", "headSha256"]);
+  const sequence = integer(data.sequence);
+  if (data.schemaVersion !== checkpointVersion || data.authorityId !== id(authorityId) || data.generation !== id(generation) ||
+      sequence > R2_APPROVAL_BOUNDS_V1.events) fail("checkpoint");
+  return frozen({ schemaVersion: checkpointVersion, authorityId, generation, sequence, headSha256: digest(data.headSha256) });
+}
+export function readR2ApprovalAuthorityClockV1(value: unknown, generation: string, previous?: ClockSample): ClockSample {
+  const at = clock(value, id(generation));
+  if (previous && (previous.generation !== generation || at.earliestMs < previous.earliestMs || at.latestMs < previous.latestMs)) fail("clock");
+  return at;
+}
+/** Reuses the exact Slice 4 parser, authorization, transition and semantic replay. */
+export function prepareR2ApprovalAuthorityTransitionV1(value: unknown, input: unknown, sample: unknown,
+  authorityId: string, generation: string, authorize: (request: R2ApprovalAuthorizationRequestV1) => unknown) {
+  const current = inspectR2ApprovalAuthorityJournalV1(value, authorityId, generation);
+  if (current.snapshot.events.length >= R2_APPROVAL_BOUNDS_V1.events) fail("capacity");
+  const cmd = command(input);
+  const at = readR2ApprovalAuthorityClockV1(sample, generation, current.snapshot.events.at(-1)?.clock);
+  const commandSha256 = hash("command", cmd);
+  const purpose = cmd.action === "issue" || cmd.action === "revoke" || cmd.action === "reconcile" ? cmd.action : null;
+  const auth = purpose ? authorization(authorize(frozen({ purpose, requestSha256: commandSha256 })), purpose, commandSha256) : null;
+  apply(current.views, cmd, at, auth);
+  const body = { schemaVersion: eventVersion, sequence: current.checkpoint.sequence + 1,
+    previousSha256: current.checkpoint.headSha256, clock: at, command: cmd, authorization: auth };
+  const event = frozen({ ...body, eventSha256: hash("audit-event", body) });
+  const next = inspectR2ApprovalAuthorityJournalV1({ ...current.snapshot, events: [...current.snapshot.events, event] }, authorityId, generation);
+  return Object.freeze({ expected: current.checkpoint, checkpoint: next.checkpoint, snapshot: next.snapshot, commandSha256,
+    // Recheck after asynchronous boundaries without rewriting audit time as commit time.
+    assertCurrentTime: (sample: unknown): void => {
+      apply(current.views, cmd, readR2ApprovalAuthorityClockV1(sample, generation, at), auth);
+    } });
+}
 export interface R2ApprovalModelTransportV1 {
   readonly read: () => Promise<unknown>;
   readonly transact: (command: unknown, signal: AbortSignal) => Promise<unknown>;

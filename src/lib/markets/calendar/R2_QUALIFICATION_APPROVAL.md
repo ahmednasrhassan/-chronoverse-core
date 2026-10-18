@@ -190,3 +190,28 @@ focused ESLint. Stop on any failure without committing or pushing. After all che
 pass, stage only the five approved Slice 4 files, commit, push and verify successful
 GitHub Production deployment for the exact SHA. That delivery does not activate
 live execution. No live infrastructure qualification or next slice is authorized.
+
+## Slice 5: inactive asynchronous authority storage contract
+
+[r2QualificationApprovalAuthority.ts](./r2QualificationApprovalAuthority.ts)
+defines asynchronous injected journal CAS and separately retained checkpoint
+capabilities. Its inactive coordination driver reuses this module's narrowly
+exposed pure replay, checkpoint, clock and transition-preparation helpers.
+The original Slice 4 ledger/coordinator behavior, audit format and limits remain
+unchanged. No provider, real persistence or new execution permission is added.
+
+Witness-first publication and full-journal CAS are separately acknowledged and
+read back. Every asynchronous mutation boundary rechecks modeled time; one
+1000 ms elapsed deadline spans the operation. Missing/corrupt stores never
+initialize an authority, and uncertain publication quarantines the driver.
+Reads and successful mutations return inspection observations only, never sessions.
+A late/expired response cannot resume execution or refund consumption.
+
+See [R2_APPROVAL_AUTHORITY.md](./R2_APPROVAL_AUTHORITY.md) for the exact storage
+contract, trust assumptions, failure/recovery matrix, independent witness and
+restore quarantine, offline-test limitations, and future qualification gates.
+This contract/model does not establish real durability, distributed
+linearizability, globally safe replay prevention or production infrastructure
+qualification. Live R2, historical admission, durable capture receipts and
+distributed calendar-head integration remain inactive. Provider selection and
+account configuration require separate explicit owner approval.
