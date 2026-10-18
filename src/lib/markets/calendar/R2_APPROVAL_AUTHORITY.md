@@ -285,3 +285,116 @@ stop without staging, committing or pushing. After all pass, stage only the four
 explicit paths, create one Slice 6 commit, push origin/master and independently
 verify successful GitHub Production deployment for that exact SHA. Stop after
 Slice 6; deployment activates no storage and authorizes no Slice 7 work.
+
+## Slice 7: inactive D1-compatible journal CAS adapter
+
+`r2QualificationApprovalAuthorityD1Journal.ts` implements only the existing journal
+read/CAS capability. `createInactiveR2ApprovalAuthorityD1JournalV1` captures one
+explicit authorityId/generation and a structural D1-shaped database capability.
+Construction performs no I/O. There is no Cloudflare import, provider client,
+connection, environment loader, application caller, route, scheduler or default
+store. The adapter advertises executionAllowed: false and scope
+inactive-d1-compatible-approval-journal-only. This is not a production authority.
+
+The companion `.sql` file is an inactive schema artifact, applied only to local
+SQLite by tests. One fixed slot admits one retained authority row. The adapter
+never applies DDL, inserts a row, seeds genesis, upserts, switches generation,
+repairs, restores or deletes data. Missing state reads as null and CAS refuses;
+corrupt or unsupported state never initializes or falls back to a volatile ledger.
+Schema constraints support bounds but do not replace semantic validation.
+
+### Actual conditional mutation boundary
+
+A read obtains the complete serialized snapshot and every checkpoint column.
+The adapter bounds the stored UTF-8 representation, fully replays the snapshot
+through the existing parser and verifies that all checkpoint columns match the
+replayed checkpoint and pinned identity. It detaches proposed input before any
+await, then reuses the unchanged Slice 6 journal CAS validator.
+
+Validation is followed by exactly one parameter-bound SQL UPDATE. Its predicate
+compares the fixed slot, authorityId, generation, checkpoint schema version,
+expected sequence, expected head hash AND the exact previously read snapshot JSON
+using binary comparison. The update replaces the entire snapshot and all five
+checkpoint columns atomically. No approval projection or consumption index is
+independently writable through this adapter. Comparing the exact JSON also refuses
+a concurrent representation change or snapshot alteration that left checkpoint
+columns untouched. Earlier validation never permits an unconditional write.
+
+An applied acknowledgement requires success: true, meta.changes exactly 1 and
+meta.changed_db: true. A confirmed zero-row result with changed_db: false is a
+closed conflict acknowledgement. Contradictory/missing metadata is uncertain.
+If supplied, total_attempts must be 1 and served_by_primary must be true; metadata
+is not provider authentication. No adapter retry occurs. Provider-side retry and
+read-consistency behavior still require live qualification.
+
+Provider exceptions during mutation, malformed responses and cancellation after
+dispatch return acknowledgement-unknown, without raw provider details or causes.
+An exception does not prove non-commitment, even when a local test can inspect
+unchanged state. Failures reading retained state are storage-unavailable;
+malformed retained data is corrupt-history. Invalid proposals are refused before
+UPDATE; stale valid predecessors produce conflict. The unchanged driver's wait
+boundary may conservatively map a thrown adapter refusal to acknowledgement-
+unknown, and every failed attempted publication still quarantines that driver.
+No driver semantics or error contract is changed.
+
+### Local SQL evidence and its limits
+
+The new `.test.mjs` uses Node 24's built-in node:sqlite, with no new dependency.
+A minimal D1-shaped harness executes the adapter's actual SELECT and UPDATE,
+including bound values and SQLite's affected-row count. It does not implement CAS
+by JavaScript assignment. Tests cover competing instances and a paused stale
+writer, all expected-checkpoint fields, exact snapshot representation, hostile
+histories, stored-column/replay mismatches, absent/corrupt state, zero-row refusal,
+malformed acknowledgements, actual file locking/capacity errors, injected quota
+errors and failures before/after mutation. File-backed close/reopen checks retain
+consumption. Temporary test databases are confined to uniquely owned directories
+and removed after their connections close.
+
+Composition with the unchanged driver and a deliberately volatile modeled witness
+covers lost replies, driver quarantine, restored journal mismatch, joint rollback,
+clock/expiry/deadline refusal and late commits. These SQL tests are stronger than
+volatile fixtures for checking the actual conditional statement, schema and local
+restart persistence. They do NOT qualify Cloudflare D1 durability, replication,
+crash/power-loss behavior, authentication, effective permissions, production
+routing, billing, quotas, distributed linearizability or global replay prevention.
+The local SQLite version and D1 response harness are not the Cloudflare service.
+Socket/fetch guards prevent test network activity; only synthetic approvals exist.
+
+### Witness, recovery and activation remain blocked
+
+This slice implements no live witness or authenticated ingress. Recorded decision
+hashes remain non-secret descriptions, not verified signatures. A trusted caller
+must authorize proposals; the adapter must never expose raw journal CAS publicly.
+A future witness needs pinned provenance, authority/resource routing, restricted
+advancement permissions and separately controlled deployment/recovery access.
+Two resources in one Cloudflare account are not independent of its privileged
+administrators or coordinated restoration. Joint journal/witness rollback still
+passes inspection as an old valid prefix; tests explicitly preserve that finding.
+
+An operator restore requires quarantine, writer fencing and independently retained
+recovery evidence. A driver-local quarantine flag is not a durable global fence.
+Missing evidence requires continued refusal, never implicit witness replacement,
+rollback, generation rotation, capacity eviction or approval refund. Code rollback
+must not roll back retained approval data. No recovery API is added here.
+
+The existing eight-record, 128-event, 262144-byte, 120000 ms validity and 1000 ms
+clock-uncertainty limits remain authoritative. The driver still owns fresh temporal
+checks and its whole-operation 1000 ms deadline. The adapter samples no clock;
+recorded event time is not a provider commit timestamp. Real clock accuracy,
+end-to-end latency, authenticated ingress, stable global routing, witness
+protection and operator recovery remain prerequisites for future qualification.
+Existing Node/server-only modules are not yet a qualified Workers deployment bundle.
+
+No resource, token, plan, subscription or paid service is created. All checks are
+local, with zero incremental infrastructure charges. R2 Public Access is unchanged
+and must remain Disabled. Live qualification, historical admission, receipts and
+distributed heads remain inactive. This adapter must not be activated until separate
+owner approval and provider/witness qualification; no Slice 8 work is authorized.
+
+Verify the new focused SQL tests, all existing 466 calendar tests, strict scoped
+TypeScript, focused ESLint with zero warnings, exact five-file scope, whitespace,
+secrets and absence of activation/dependency changes. Stop on any failure without
+staging, committing, pushing or deploying. Only after all pass, stage the five
+explicitly approved files, create one Slice 7 commit, push origin/master and verify
+successful GitHub Production deployment of the exact SHA. Deployment of this
+unused code creates no authority, cloud resource or permission to execute.

@@ -20,6 +20,7 @@ const allowed = new Set([
   "src/lib/markets/calendar/r2QualificationApproval.ts",
   "src/lib/markets/calendar/r2QualificationApprovalAuthority.ts",
   "src/lib/markets/calendar/r2QualificationApprovalAuthorityStoreValidation.ts",
+  "src/lib/markets/calendar/r2QualificationApprovalAuthorityD1Journal.ts",
   "src/lib/markets/events/ecbMonetaryPolicy.ts",
   "src/lib/markets/events/eventClock.ts",
   "src/lib/markets/tests/calendar/fixtures.ts",
@@ -36,6 +37,7 @@ const allowed = new Set([
   "src/lib/markets/tests/calendar/r2QualificationApproval.test.ts",
   "src/lib/markets/tests/calendar/r2QualificationApprovalAuthority.test.ts",
   "src/lib/markets/tests/calendar/r2QualificationApprovalAuthorityStoreValidation.test.ts",
+  "src/lib/markets/tests/calendar/r2QualificationApprovalAuthorityD1Journal.test.mjs",
   "src/lib/markets/tests/calendar/contracts.test.ts",
   "src/lib/markets/tests/calendar/projections.test.ts",
 ].map(path => new URL(path, root).href));
