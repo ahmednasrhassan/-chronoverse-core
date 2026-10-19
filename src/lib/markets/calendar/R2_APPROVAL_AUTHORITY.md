@@ -398,3 +398,95 @@ staging, committing, pushing or deploying. Only after all pass, stage the five
 explicitly approved files, create one Slice 7 commit, push origin/master and verify
 successful GitHub Production deployment of the exact SHA. Deployment of this
 unused code creates no authority, cloud resource or permission to execute.
+
+## Slice 8: inactive SQLite-backed Durable Object-compatible witness CAS adapter
+
+`r2QualificationApprovalAuthorityDurableObjectWitness.ts` implements the existing
+`R2ApprovalAuthorityWitnessStoreV1` read/CAS contract. Its factory,
+`createInactiveR2ApprovalAuthorityDurableObjectWitnessV1`, takes explicit pinned
+authorityId, generation and witnessId plus an injected `sql.exec(...).toArray()` /
+`transactionSync(callback)` capability. This matches the synchronous interface
+described in the [Cloudflare SQLite storage API documentation](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/),
+without importing Cloudflare code or constructing a Durable Object. Construction
+does no I/O. The adapter states executionAllowed: false and scope
+inactive-durable-object-compatible-approval-witness-only. It has no application
+caller, default storage, Worker endpoint, binding, environment loader or scheduler.
+
+The companion `.sql` is an inactive artifact applied and seeded only by offline
+tests. One fixed slot holds the current checkpoint; history contains every
+checkpoint from explicitly provisioned sequence zero through the current sequence.
+The adapter never applies schema, initializes missing state, repairs persisted
+data, changes generation, replaces a witness, deletes records or retries writes.
+Both empty tables read as null and CAS returns missing-state. Orphaned current or
+history records, malformed checkpoints, unsupported schemas, identity mismatches,
+gaps, extra history or a different historical latest head fail closed. Inspection
+validates bounded history in the same transaction as its current-state read.
+
+### CAS, transactions and history
+
+Proposals are detached passive data. Inside one synchronous transaction, the
+adapter loads persisted state and reuses the unchanged Slice 6 witness CAS
+validator. Every expected checkpoint field must match: schemaVersion, authorityId,
+generation, sequence and headSha256. Advancement is exactly one sequence step,
+within the existing 128-event bound. Authority, generation and witness identity
+remain pinned. The witnessId is storage metadata, not a new checkpoint or ACK field;
+the existing driver and wire formats remain unchanged.
+
+A parameter-bound UPDATE also compares all expected checkpoint fields and the
+pinned witnessId using binary text comparison. It changes only sequence and hash.
+An INSERT appends the exact candidate to history. Both statements use RETURNING;
+each must return exactly the requested checkpoint. The adapter revalidates current
+state and history before the callback returns. Cursors are consumed synchronously;
+there are no awaits or external calls inside the transaction. A normal applied
+ACK is returned only after transactionSync returns the exact callback result.
+Stale valid predecessors return the existing witness conflict ACK without writes.
+
+History uses a sequence primary key and triggers rejecting UPDATE, DELETE and
+duplicate INSERT, including INSERT OR REPLACE. Previously accepted rows are never
+rewritten by the adapter. These constraints protect normal SQL operations, not a
+privileged administrator able to drop tables/triggers or restore the database.
+History and current checkpoint share one local transaction and restore unit; they
+do not constitute two independently retained witnesses.
+
+The injected transaction capability must invoke its callback once, synchronously,
+and roll back every callback exception. Failed UPDATE/INSERT, invalid returned
+rows, failed consistency checks and cancellation observed inside the callback
+throw, rolling back both tables. Unexpected zero-row mutation is uncertainty,
+not an applied ACK. Read/storage failures are sanitized; no provider detail or
+cause escapes. After mutation dispatch, any exception, unsupported transaction
+result or cancellation yields acknowledgement-unknown. A failure after commit may
+leave both records advanced. The adapter never assumes non-commitment or retries;
+the existing driver's quarantine and witness-first gap behavior remain unchanged.
+
+### Offline evidence and future activation prerequisites
+
+The `.test.mjs` harness follows Slice 7: Node 24 built-in node:sqlite executes the
+actual adapter SQL and explicit local transactions. Tests exercise advancement,
+complete expected-state comparison, competing instances, identities, sequence
+gaps/replay/capacity, missing/corrupt state, immutable history, rollback after
+checkpoint/history writes, malformed cursor/transaction outcomes, locks, injected
+quota failures, cancellation, lost replies and file close/reopen retention.
+Composition with the unchanged authority driver checks inspection-only results,
+quarantine and witness-ahead refusal. Socket/fetch guards prohibit test network use.
+No package or lockfile changes are needed.
+
+This proves local SQLite behavior only. It does not qualify Cloudflare durability,
+output gates, crash/power-loss recovery, replication, permissions, authentication,
+production routing, quotas, billing, clock accuracy or a Workers deployment bundle.
+A digest-shaped head is not evidence of an authenticated journal event. The witness
+still cannot detect coordinated restoration of itself and the journal to an old
+valid prefix, and witnessId pinning is not independent provenance authentication.
+
+Before any future activation, obtain separate explicit owner approval and qualify
+the actual provider transaction/acknowledgement semantics, stable authority and
+witness routing, authenticated advancement access, independent retention/restore
+controls, writer fencing/quarantine, recovery evidence, clocks/deadlines, deployment
+compatibility, monitoring, quotas and costs. Bootstrap and generation changes need
+separate reviewed procedures and cannot restore unused consumed approvals.
+
+Slice 8 provisions and activates nothing: no live Durable Object, D1, R2, Worker,
+endpoint, paid resource, credential change or production runtime wiring. Live
+qualification, historical admission, receipts and distributed heads stay inactive.
+Earlier slice-specific delivery instructions above are historical. For Slice 8,
+stop after local implementation and verification; do not stage, commit, push or
+deploy. Await explicit owner approval for any later commit or deployment.
