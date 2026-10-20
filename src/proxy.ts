@@ -166,13 +166,15 @@ export const config = {
   matcher: [
     // Include asset requests on this exact alias, too.
     { source: '/:path*', has: [{ type: 'host', value: 'www\\.chronoversecapital\\.com' }] },
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - common static image assets
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Apex session routes include every descendant, even paths with asset extensions.
+    { source: '/account/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
+    { source: '/auth/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
+    { source: '/billing/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
+    { source: '/vip/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
+    // Other hosts retain the existing broad matcher for preview noindex and newsletter routing.
+    {
+      source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+      missing: [{ type: 'host', value: 'chronoversecapital\\.com' }],
+    },
   ],
 };
