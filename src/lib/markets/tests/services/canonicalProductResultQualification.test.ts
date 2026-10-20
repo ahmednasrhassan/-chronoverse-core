@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { test } from "node:test";
 import ts from "typescript";
@@ -744,3 +745,151 @@ test("guard preserves valid deferred/partial sections and compared lifecycle var
   assert.deepEqual(decode("launch-fx", roundTrip(encode("launch-fx", payload))), payload);
 });
 
+
+test("default compression preserves full validation and retries level 9 only at the existing size bound", async () => {
+  const payload = await fxPayload();
+  const codecUrl = new URL("../../services/canonicalProductResultQualification.ts", import.meta.url);
+  const compiled = ts.transpileModule(readFileSync(codecUrl, "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const requireCodec = createRequire(codecUrl);
+  const levels: number[] = [];
+  let mode: "normal" | "fallback" | "oversized" = "normal";
+  const box = { exports: {} };
+  const requireStub = (name: string) => name === "node:zlib" ? {
+    inflateRawSync,
+    deflateRawSync: (bytes: Uint8Array, options: { level: number }) => {
+      levels.push(options.level);
+      if (mode === "oversized" || (mode === "fallback" && options.level === 6)) {
+        return Buffer.alloc(1_425_001); // base64 exceeds the unchanged 1,900,000-character bound
+      }
+      return deflateRawSync(bytes, options);
+    },
+  } : requireCodec(name);
+  new Function("require", "module", "exports", compiled)(requireStub, box, box.exports);
+  const observed = box.exports as typeof cacheQualification;
+
+  const normal = observed.encodeCanonicalProductResultCacheV2("launch-fx", payload);
+  assert.deepEqual(levels, [6], "ordinary payloads compress once at the default level");
+  assert.deepEqual(decode("launch-fx", normal), payload);
+  const tagged = inflateRawSync(Buffer.from(normal.body, "base64"));
+  assert.equal(normal.body, deflateRawSync(tagged, { level: 6 }).toString("base64"));
+
+  mode = "fallback";
+  levels.length = 0;
+  const fallback = observed.encodeCanonicalProductResultCacheV2("launch-fx", payload);
+  assert.deepEqual(levels, [6, 9]);
+  assert.equal(fallback.body, deflateRawSync(tagged, { level: 9 }).toString("base64"));
+  assert.deepEqual(decode("launch-fx", fallback), payload,
+    "fallback preserves complete histories, cutoff, receipts, provenance and calculations");
+
+  mode = "oversized";
+  levels.length = 0;
+  assert.throws(() => observed.encodeCanonicalProductResultCacheV2("launch-fx", payload), (error: unknown) => {
+    assert.ok(error instanceof observed.CanonicalProductResultQualificationErrorV2);
+    assert.equal(error.result.reason, "invalid-cache-payload");
+    return true;
+  });
+  assert.deepEqual(levels, [6, 9], "both oversized representations still fail closed");
+});
+
+test("level-6 and legacy level-9 entries preserve canonical bytes, receipts and delivery freshness", async () => {
+  const entries = [
+    { family: "launch-fx" as const, payload: await fxPayload() },
+    { family: "estr" as const, payload: await estrPayload(-0, true, true) },
+  ];
+  for (const { family, payload } of entries) {
+    const current = encode(family, payload);
+    const taggedBytes = inflateRawSync(Buffer.from(current.body, "base64"));
+    const body = deflateRawSync(taggedBytes, { level: 9 }).toString("base64");
+    const legacy = { ...current, body,
+      digest: createHash("sha256").update(`${current.schemaVersion}\n`).update(body).digest("hex") };
+    assert.deepEqual(inflateRawSync(Buffer.from(legacy.body, "base64")), taggedBytes);
+    assert.equal(current.digest, createHash("sha256").update(`${current.schemaVersion}\n`).update(current.body).digest("hex"));
+    assert.ok(current.body.length <= 1_900_000);
+    assert.ok(legacy.body.length <= 1_900_000);
+    const event = { status: "runtime-unavailable", reason: "unexpected-runtime-error" } as const;
+    if (family === "launch-fx") {
+      const currentDecoded = decode("launch-fx", roundTrip(current));
+      const legacyDecoded = decode("launch-fx", roundTrip(legacy));
+      assert.deepEqual(currentDecoded, payload);
+      assert.deepEqual(legacyDecoded, currentDecoded);
+      for (const productId of ids) {
+        for (const assessedAt of [E, "2026-10-11T12:00:00.000Z", "2026-11-10T12:00:00.000Z"]) {
+          const nextInput = { productId, canonical: currentDecoded.result[productId] };
+          const oldInput = { productId, canonical: legacyDecoded.result[productId] };
+          assert.deepEqual(projections.projectFiveProductFreeLiteV1(nextInput, assessedAt), projections.projectFiveProductFreeLiteV1(oldInput, assessedAt));
+          assert.deepEqual(projections.projectFiveProductVipDeepV1(nextInput, event, assessedAt), projections.projectFiveProductVipDeepV1(oldInput, event, assessedAt));
+        }
+      }
+    } else {
+      const currentDecoded = decode("estr", roundTrip(current));
+      const legacyDecoded = decode("estr", roundTrip(legacy));
+      assert.deepEqual(currentDecoded, payload);
+      assert.deepEqual(legacyDecoded, currentDecoded);
+      for (const assessedAt of [E, "2026-10-11T12:00:00.000Z", "2026-11-10T12:00:00.000Z"]) {
+        const nextInput = { productId: "estr" as const, canonical: currentDecoded.result };
+        const oldInput = { productId: "estr" as const, canonical: legacyDecoded.result };
+        assert.deepEqual(projections.projectFiveProductFreeLiteV1(nextInput, assessedAt), projections.projectFiveProductFreeLiteV1(oldInput, assessedAt));
+        assert.deepEqual(projections.projectFiveProductVipDeepV1(nextInput, event, assessedAt), projections.projectFiveProductVipDeepV1(oldInput, event, assessedAt));
+      }
+    }
+    const envelope = { kind: "FETCH", data: { headers: {}, body: JSON.stringify(current), status: 200, url: "" }, revalidate: 86400 };
+    assert.ok(Buffer.byteLength(JSON.stringify(envelope), "utf8") < 2 * 1024 * 1024);
+  }
+});
+
+test("real near-limit compression falls back losslessly and oversized producers never reach cache handoff", async () => {
+  const base = await fxPayload();
+  let state = 0x6d2b79f5;
+  const alphabet = Buffer.from("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+  const noiseBytes = Buffer.alloc(2_500_000);
+  for (let index = 0; index < noiseBytes.length; index++) {
+    state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
+    noiseBytes[index] = alphabet[state & 63];
+  }
+  const noise = noiseBytes.toString("ascii");
+  const padded = (length: number) => ({ ...base, result: { ...base.result,
+    eurusd: { ...base.result.eurusd, compressionGatePadding: noise.slice(0, length) } } });
+  const original = encode("launch-fx", base);
+  const tree = JSON.parse(inflateRawSync(Buffer.from(original.body, "base64")).toString("utf8")) as unknown[];
+  const fields = field(tree, ["result", "eurusd"])[2] as [string, unknown[]][];
+  fields.push(["compressionGatePadding", ["string", "COMPRESSION_GATE_PADDING"]]);
+  fields.sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+  const template = JSON.stringify(tree);
+  const tagged = (length: number) => Buffer.from(template.replace("COMPRESSION_GATE_PADDING", noise.slice(0, length)), "utf8");
+  const base64Length = (bytes: Buffer) => 4 * Math.ceil(bytes.length / 3);
+  let low = 0;
+  let high = noise.length;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (base64Length(deflateRawSync(tagged(middle), { level: 9 })) <= 1_900_000) low = middle;
+    else high = middle - 1;
+  }
+  const bytes = tagged(low);
+  const level6 = deflateRawSync(bytes, { level: 6 }).toString("base64");
+  const level9 = deflateRawSync(bytes, { level: 9 }).toString("base64");
+  assert.ok(level6.length > 1_900_000, "real level-6 output must exceed the unchanged bound");
+  assert.ok(level9.length <= 1_900_000 && level9.length >= 1_899_980);
+  const payload = padded(low);
+  const transport = encode("launch-fx", payload);
+  assert.equal(transport.body, level9, "the actual level-9 fallback owns the accepted bytes");
+  assert.deepEqual(inflateRawSync(Buffer.from(transport.body, "base64")), bytes);
+  assert.deepEqual(decode("launch-fx", roundTrip(transport)), payload);
+  const envelope = { kind: "FETCH", data: { headers: {}, body: JSON.stringify(transport), status: 200, url: "" }, revalidate: 86400 };
+  assert.ok(Buffer.byteLength(JSON.stringify(envelope), "utf8") < 2 * 1024 * 1024);
+
+  assert.ok(low + 25_000 < noise.length);
+  assert.ok(deflateRawSync(tagged(low + 25_000), { level: 9 }).toString("base64").length > 1_900_000);
+  let cacheWrites = 0;
+  await assert.rejects(async () => {
+    const encoded = encode("launch-fx", padded(low + 25_000));
+    cacheWrites++;
+    return encoded;
+  }, (error: unknown) => {
+    assert.ok(error instanceof QualificationError);
+    assert.equal(error.result.reason, "invalid-cache-payload");
+    return true;
+  });
+  assert.equal(cacheWrites, 0, "the producer rejects before a cache can receive an oversized entry");
+});

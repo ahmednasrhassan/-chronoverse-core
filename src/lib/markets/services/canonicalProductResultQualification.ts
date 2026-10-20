@@ -92,7 +92,13 @@ export function encodeCanonicalProductResultCacheV2(
     validatePayload(family, owned);
     const tagged = JSON.stringify(tag(owned));
     if (Buffer.byteLength(tagged, "utf8") > MAX_BYTES) throw new TypeError("Cache transport too large");
-    const body = deflateRawSync(Buffer.from(tagged, "utf8"), { level: 9 }).toString("base64");
+    const bytes = Buffer.from(tagged, "utf8");
+    // Default compression reduces producer CPU. Preserve the old level-9 size
+    // envelope for large entries rather than rejecting previously cacheable data.
+    let body = deflateRawSync(bytes, { level: 6 }).toString("base64");
+    if (body.length > MAX_TRANSPORT_BYTES) {
+      body = deflateRawSync(bytes, { level: 9 }).toString("base64");
+    }
     if (body.length > MAX_TRANSPORT_BYTES) throw new TypeError("Cache transport too large");
     return Object.freeze({ schemaVersion: TRANSPORT_VERSION, encoding: "deflate-raw-base64", body, digest: checksum(body) });
   } catch (error) {
