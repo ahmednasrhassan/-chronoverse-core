@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+  "packaging": "Original Git blob bytes; inert .source suffix; original paths retained below category directories.",
+  "entries": [
+    {
+      "original": "src/components/vip/VipOverviewSurface.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/components/vip/VipOverviewSurface.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "0a113a80b84bd7604e3e3ee9315bc44ecb30277c",
+      "gitBlob": "3a806cba0a14d5b9383162f5674594b931044dd9",
+      "sha256": "787e8a73d6b61fcf94db7bb509ecd6384a1022617e33b6f81800968c618f841c",
+      "dependencies": [
+        "@/components/markets/MarketCurrentUse",
+        "@/config/institutionalNavigation",
+        "@/lib/markets/engine/contracts",
+        "@/lib/markets/projections/types",
+        "@/lib/markets/services/canonicalProductResultOwnership",
+        "@/lib/markets/services/canonicalProductResults",
+        "next/link"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/HistoricalRangeSelector.tsx",
+      "archived": "archive/legacy-paid-intelligence/charts/src/components/vip/market-room/HistoricalRangeSelector.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "68ee0f1db49e805fe45567832154372f7d3fbf0d",
+      "gitBlob": "de82ee58c99548b1ed208f5bf91ef46bddd892dc",
+      "sha256": "14d3059e16e30db923c027fe0421f666bd6fddddc7d64f8c06604c72af88b8a6",
+      "dependencies": [
+        "@/lib/markets/services/historicalRange"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/HistoricalReferenceLineChart.tsx",
+      "archived": "archive/legacy-paid-intelligence/charts/src/components/vip/market-room/HistoricalReferenceLineChart.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "b5f3b1e5987e6e79b928ddb04adf0ce9a47af1df",
+      "gitBlob": "ac82b136ed39f8e74541f001285059364ed68d4d",
+      "sha256": "3ae95694171b5435abcfa5e1297a3d648e28730676399f0e304c20acd002acb3",
+      "dependencies": [
+        "@/components/charts/engines/echarts/EChartsEngine",
+        "@/lib/markets/services/historicalChartSeries",
+        "echarts/core",
+        "react"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipEcbPolicyEventPanel.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/components/vip/market-room/VipEcbPolicyEventPanel.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "80a6693585b5a8e0e4b994475f249eb54d76fb92",
+      "gitBlob": "5458ddf5ce6dbf1a2fb2ec72092f842ebe6710aa",
+      "sha256": "b2f6502d1e546ac780a0e2877aa563a703a6dc3680d477330c39d58daa909cd0",
+      "dependencies": [
+        "@/lib/markets/projections/types"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipEstrHistoricalPanel.tsx",
+      "archived": "archive/legacy-paid-intelligence/charts/src/components/vip/market-room/VipEstrHistoricalPanel.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "68ee0f1db49e805fe45567832154372f7d3fbf0d",
+      "gitBlob": "17a0891f451e5b6afd6982d431ee69d6702bc334",
+      "sha256": "f7633a4c46badb3a7008d9d52015af06c360da86be64b3cc24300d672991728d",
+      "dependencies": [
+        "./HistoricalRangeSelector",
+        "./HistoricalReferenceLineChart",
+        "@/lib/markets/services/historicalChartSeries",
+        "@/lib/markets/services/historicalRange",
+        "react"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipEstrMarketRoom.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/components/vip/market-room/VipEstrMarketRoom.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "6eb28c3c6184d2aa865362756e44c930f7ca9133",
+      "gitBlob": "b5c53e85679f3eb3827ed1bc73844b0460ca90ee",
+      "sha256": "aefa1b1a08e2b441176c20bcd6fda95d5adde150562dbb59785e39ac04b136f6",
+      "dependencies": [
+        "./VipEcbPolicyEventPanel",
+        "./VipEstrHistoricalPanel",
+        "./VipMarketRoomNavigation",
+        "@/components/markets/MarketCurrentUse",
+        "@/lib/markets/projections/types",
+        "@/lib/markets/services/vipMarketRoomDelivery",
+        "next/link"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipFxHistoricalPanel.tsx",
+      "archived": "archive/legacy-paid-intelligence/charts/src/components/vip/market-room/VipFxHistoricalPanel.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "68ee0f1db49e805fe45567832154372f7d3fbf0d",
+      "gitBlob": "0c76db60d6b4809487e4b93df464736920065418",
+      "sha256": "562286d1247973e3070a73ca39623d040e3f29ca478b97152e1347d4aab4a00f",
+      "dependencies": [
+        "./HistoricalRangeSelector",
+        "./HistoricalReferenceLineChart",
+        "@/lib/markets/services/historicalChartSeries",
+        "@/lib/markets/services/historicalRange",
+        "@/lib/markets/services/vipMarketRoomDelivery",
+        "react"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipFxMarketRoom.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/components/vip/market-room/VipFxMarketRoom.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "0a113a80b84bd7604e3e3ee9315bc44ecb30277c",
+      "gitBlob": "ea679041e4c7a1969e603a88090d075b5fe366ac",
+      "sha256": "465a0b67bd9fe696f858b980084ec5d6b469d2f1b150e378e19a9c4c6a1d4916",
+      "dependencies": [
+        "./VipEcbPolicyEventPanel",
+        "./VipFxHistoricalPanel",
+        "./VipMarketRoomNavigation",
+        "@/components/markets/MarketCurrentUse",
+        "@/lib/markets/projections/types",
+        "@/lib/markets/services/vipMarketRoomDelivery",
+        "next/link"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/VipMarketRoomNavigation.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/components/vip/market-room/VipMarketRoomNavigation.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "2b9db8ac7501058f6dbd4e7f1b51e9acb75c28ec",
+      "gitBlob": "679ddb596c77758a2c8b7de648eae8bb632744f5",
+      "sha256": "722393f5647133186c17518f88cd431dc9ffd83cd35449728bc4afdbb7b37389",
+      "dependencies": [
+        "@/config/institutionalNavigation",
+        "@/lib/markets/projections/types",
+        "next/link"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/tests/vipEstrMarketRoom.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/components/vip/market-room/tests/vipEstrMarketRoom.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "6eb28c3c6184d2aa865362756e44c930f7ca9133",
+      "gitBlob": "52af619b112cc078dedc8cc2bf8d6e323bb4ebfd",
+      "sha256": "c4f42192e91d1969fbb328ef4f7eaab702be4fcc34dc14f037d99bdb08283d8f",
+      "dependencies": [
+        "../../../../lib/markets/services/historicalChartSeries",
+        "../../../../lib/markets/services/vipMarketRoomDelivery",
+        "../VipEstrHistoricalPanel",
+        "../VipEstrMarketRoom",
+        "node:fs",
+        "node:url",
+        "react-dom/server"
+      ]
+    },
+    {
+      "original": "src/components/vip/market-room/tests/vipFxMarketRoom.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/components/vip/market-room/tests/vipFxMarketRoom.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "0a113a80b84bd7604e3e3ee9315bc44ecb30277c",
+      "gitBlob": "bdcf01bedede5d7d9b02023d117b792e8622dd8b",
+      "sha256": "66c91de3913567f30c3d94cd3ca0c989cf0be821073ed5f8526f7d021aea6eed",
+      "dependencies": [
+        "../../../../config/institutionalNavigation",
+        "../../../../lib/markets/projections/types",
+        "../../../../lib/markets/services/historicalChartSeries",
+        "../../../../lib/markets/services/vipMarketRoomDelivery",
+        "../VipFxHistoricalPanel",
+        "../VipFxMarketRoom",
+        "../VipMarketRoomNavigation",
+        "node:fs",
+        "node:url",
+        "react-dom/server"
+      ]
+    },
+    {
+      "original": "src/components/vip/tests/vipEcbPolicyEventPanel.test.tsx",
+      "archived": "archive/legacy-paid-intelligence/tests/src/components/vip/tests/vipEcbPolicyEventPanel.test.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "80a6693585b5a8e0e4b994475f249eb54d76fb92",
+      "gitBlob": "90f0002e9a02fee3932f221452e37bea372dd510",
+      "sha256": "97fde3547cd6a41ce5691f211cad19786c710613a682486e8b49e87ab8248249",
+      "dependencies": [
+        "../../../lib/markets/projections/types",
+        "../market-room/VipEcbPolicyEventPanel",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "react-dom/server"
+      ]
+    },
+    {
+      "original": "src/components/vip/tests/vipOverview.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/components/vip/tests/vipOverview.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "0a113a80b84bd7604e3e3ee9315bc44ecb30277c",
+      "gitBlob": "dd5fcc1ae1f69fd7566b7941da4d51450a55af3f",
+      "sha256": "36972a03667196d27f1e06aa70887f33b1e867f1e3d3fca5d4f258e139eb3272",
+      "dependencies": [
+        "../../../config/institutionalNavigation",
+        "../../../lib/markets/projections/vipMarketSelection",
+        "../../../lib/markets/services/canonicalProductResults",
+        "../VipOverviewSurface",
+        "node:fs",
+        "node:url",
+        "react-dom/server"
+      ]
+    },
+    {
+      "original": "src/components/charts/engines/echarts/EChartsEngine.tsx",
+      "archived": "archive/legacy-paid-intelligence/charts/src/components/charts/engines/echarts/EChartsEngine.tsx.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "19b832b0280cfa4a77166ebd405a5237137cbd40",
+      "gitBlob": "f0e1cee1fd31ffe0d7be11385f8783a07533e64d",
+      "sha256": "a76769d3fcb5e7a24e06c0b4917fcff2ec00062d678808870c6f0018c37899c5",
+      "dependencies": [
+        "echarts/charts",
+        "echarts/components",
+        "echarts/core",
+        "echarts/renderers",
+        "react"
+      ]
+    },
+    {
+      "original": "src/lib/markets/services/historicalChartSeries.ts",
+      "archived": "archive/legacy-paid-intelligence/charts/src/lib/markets/services/historicalChartSeries.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "040be9b3fc31b4acf446299866458f2186fadffd",
+      "gitBlob": "c64939178b214bad9b1b01e8448406522b962f89",
+      "sha256": "f297e6536cebd66ae7a4a2f2df5664b83d6c5a904a4a18e84d10566e206fbe6d",
+      "dependencies": [
+        "../providers/ecb/estrContract",
+        "../providers/ecb/estrSeriesCache",
+        "../providers/ecb/fxReferenceSeries",
+        "../providers/ecb/fxReferenceSeriesCache",
+        "./canonicalObservationSeries",
+        "./historicalRange",
+        "server-only"
+      ]
+    },
+    {
+      "original": "src/lib/markets/services/historicalRange.ts",
+      "archived": "archive/legacy-paid-intelligence/charts/src/lib/markets/services/historicalRange.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "040be9b3fc31b4acf446299866458f2186fadffd",
+      "gitBlob": "0774697c39d5ea7cbc4d0f4d8aca21a7d0b7485c",
+      "sha256": "90b8d817bfabbdc15c0af14155749363d91b43e9deb3bdb991cdb438bf82aabe",
+      "dependencies": []
+    },
+    {
+      "original": "src/lib/markets/services/vipMarketRoomDelivery.ts",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/lib/markets/services/vipMarketRoomDelivery.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "68ee0f1db49e805fe45567832154372f7d3fbf0d",
+      "gitBlob": "a73f6462381723be28cdb74d227dc1d21eda8307",
+      "sha256": "dcf996a7dcaf51f9ff0bd378304bbef97c199969484e70c52b7e22d2ad441007",
+      "dependencies": [
+        "../projections/types",
+        "./historicalChartSeries",
+        "./historicalRange",
+        "server-only"
+      ]
+    },
+    {
+      "original": "src/lib/markets/projections/vipMarketSelection.ts",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/lib/markets/projections/vipMarketSelection.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "0a3c040fe53e0f51d4236952d3e13e5db2d3bb5e",
+      "gitBlob": "86a1674e549bb248cc07ac3cf7f43570e88f9f02",
+      "sha256": "5b9c1b0a0d83bcbd413a8d31b064ca59bbfe8a84ff2003fcc75dacb6513a052b",
+      "dependencies": [
+        "../services/canonicalProductResultOwnership"
+      ]
+    },
+    {
+      "original": "src/lib/markets/tests/services/historicalChartSeries.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/lib/markets/tests/services/historicalChartSeries.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "040be9b3fc31b4acf446299866458f2186fadffd",
+      "gitBlob": "3a6cfa5b1c8b87c1830b28e7ec02c5589b599e70",
+      "sha256": "5ad4254b8aed890306ccecbb9008f14ccfe9a19c37628e49a0975e92b7468a52",
+      "dependencies": [
+        ");\n  assertEqual(complete.requested.to, ANCHOR, ",
+        ");\n  assertEqual(complete.resolved.observedTo, ANCHOR, ",
+        "../../providers/ecb/fxReferenceSeries",
+        "../../services/canonicalObservationSeries",
+        "../../services/historicalChartSeries",
+        "../../services/historicalRange",
+        "node:fs",
+        "node:url",
+        "server-only"
+      ]
+    },
+    {
+      "original": "src/lib/markets/tests/services/vipMarketRoomDelivery.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/lib/markets/tests/services/vipMarketRoomDelivery.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "33e06d3c25634d15e432a25de606cb03bdabdb57",
+      "gitBlob": "c8c9271b5e37d0ed0aee08026de6b6c0c1d4d55f",
+      "sha256": "cf041362fdf46f1cdb8c04a7d56400eed951bb1618c36e66392043bd4c4814dc",
+      "dependencies": [
+        "../../projections/types",
+        "../../services/historicalChartSeries",
+        "../../services/vipMarketRoomDelivery",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "original": "src/lib/markets/tests/services/vipEstrMarketRoomDelivery.test.ts",
+      "archived": "archive/legacy-paid-intelligence/tests/src/lib/markets/tests/services/vipEstrMarketRoomDelivery.test.ts.source",
+      "action": "move",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "33e06d3c25634d15e432a25de606cb03bdabdb57",
+      "gitBlob": "eb6e5df9148bb222e678df7921db86a681279b40",
+      "sha256": "2c37ccd96ca8145f3491e905151874f124ece0fd677da40cccaa4b79412889d4",
+      "dependencies": [
+        "../../projections/types",
+        "../../services/historicalChartSeries",
+        "../../services/vipMarketRoomDelivery",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "original": "src/app/(vip)/vip/page.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/app/(vip)/vip/page.tsx.source",
+      "action": "preserve-implementation-and-retain-404-shim",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "1dd1d8685002f24ef2655c91cf5ecb35585e3a5d",
+      "gitBlob": "eeb04f202a50f6a475d796d7e0a3c076f70617dd",
+      "sha256": "c1fcf05d66445cf3a2fb755c66ac1b1eb1b90e7055e37d6b62a2a818add47f83",
+      "dependencies": [
+        "@/components/analytics/AnalyticsProductView",
+        "@/components/vip/VipOverviewSurface",
+        "@/config/siteAvailability",
+        "@/lib/auth/guards",
+        "@/lib/auth/vipPageAccess",
+        "@/lib/markets/projections/vipMarketSelection",
+        "@/lib/markets/services/canonicalProductResults",
+        "next",
+        "next/navigation"
+      ]
+    },
+    {
+      "original": "src/app/(vip)/vip/markets/page.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/app/(vip)/vip/markets/page.tsx.source",
+      "action": "preserve-implementation-and-retain-404-shim",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "1dd1d8685002f24ef2655c91cf5ecb35585e3a5d",
+      "gitBlob": "24a876cdcb8ebc5ac825318a576b6d6da9a30120",
+      "sha256": "b60ad4445be9d9fdb05ad95de6188bf03e5bdc82a7ad437f91789c7869636639",
+      "dependencies": [
+        "@/config/institutionalNavigation",
+        "@/config/siteAvailability",
+        "@/lib/auth/guards",
+        "@/lib/auth/vipPageAccess",
+        "next",
+        "next/link",
+        "next/navigation"
+      ]
+    },
+    {
+      "original": "src/app/(vip)/vip/markets/[market]/page.tsx",
+      "archived": "archive/legacy-paid-intelligence/market-rooms/src/app/(vip)/vip/markets/[market]/page.tsx.source",
+      "action": "preserve-implementation-and-retain-404-shim",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "1dd1d8685002f24ef2655c91cf5ecb35585e3a5d",
+      "gitBlob": "621ec654cfb7c883498b42ddbe6e0a455abf1874",
+      "sha256": "5c972565b4d736c7591f5a38587f7bbe5a57b4128fef5c39381384e88e8ed5c6",
+      "dependencies": [
+        "@/components/analytics/AnalyticsProductView",
+        "@/components/vip/market-room/VipEstrMarketRoom",
+        "@/components/vip/market-room/VipFxMarketRoom",
+        "@/config/siteAvailability",
+        "@/lib/auth/guards",
+        "@/lib/auth/vipPageAccess",
+        "@/lib/markets/services/canonicalProductResults",
+        "@/lib/markets/services/historicalChartSeries",
+        "@/lib/markets/services/vipMarketRoomDelivery",
+        "next",
+        "next/navigation"
+      ]
+    },
+    {
+      "original": "src/lib/markets/services/vipDeepDelivery.ts",
+      "archived": "archive/legacy-paid-intelligence/deep-engines/src/lib/markets/services/vipDeepDelivery.ts.source",
+      "action": "preserve-implementation-and-retain-404-shim",
+      "sourceCommit": "4f9ce110233eea108a1d31b6765949dff5e179af",
+      "lastChangedCommit": "1dd1d8685002f24ef2655c91cf5ecb35585e3a5d",
+      "gitBlob": "4be4eeb86d182da9944026b16beca38e5c74e149",
+      "sha256": "d305eebdf11b377d80c461e5e23822ce5c76ea74f9bc965e9fe40a69ebbfaaec",
+      "dependencies": [
+        "../../../config/siteAvailability",
+        "../projections/types",
+        "./canonicalProductResultOwnership",
+        "./canonicalProductResults",
+        "@/lib/auth/guards",
+        "server-only"
+      ]
+    }
+  ]
+}

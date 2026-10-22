@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const output = join(root, ".next", "readiness");
 mkdirSync(output, { recursive: true });
 const groups = {
-  safety: ["scripts/tests/offline-guard.test.mjs"],
+  safety: ["scripts/tests/offline-guard.test.mjs", "scripts/tests/legacy-paid-archive.test.mjs"],
   "auth-billing": ["src/lib/auth/tests", "src/lib/billing/tests"],
   financial: ["src/lib/markets/tests"],
   "free-public": ["src/components/home/tests", "src/components/navigation/tests", "src/lib/markets/tests/services/vipDeepDelivery.test.ts"],

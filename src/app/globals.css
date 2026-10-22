@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Preserved paid source must not contribute production CSS utilities. */
+@source not "../../archive/legacy-paid-intelligence";
+
 @layer base {
   :root {
     --bg-page: #050506;

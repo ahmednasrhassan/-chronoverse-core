@@ -173,12 +173,8 @@ async function main(): Promise<void> {
   );
 
   for (const relativePath of [
-    "src/components/vip/market-room/VipEcbPolicyEventPanel.tsx",
-    "src/components/vip/market-room/VipFxMarketRoom.tsx",
-    "src/components/vip/market-room/VipEstrMarketRoom.tsx",
     "src/lib/markets/projections/fiveProductProjections.ts",
     "src/lib/markets/services/vipDeepDelivery.ts",
-    "src/lib/markets/services/vipMarketRoomDelivery.ts",
   ]) {
     const source = readFileSync(path.join(repositoryRoot, relativePath), "utf8");
     assert.equal(
