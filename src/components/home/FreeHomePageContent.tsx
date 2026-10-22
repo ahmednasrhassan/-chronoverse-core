@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import NewsletterForm from "@/components/NewsLetterForm";
-import FreeMarketSurface, { MarketIntelligenceBoard } from "./FreeMarketSurface";
+import HomeMarketTools from "./HomeMarketTools";
 import { siteConfig } from "@/config/siteConfig";
 import { calculateReadTime, getLatestSanityArticles, type ContentItem } from "@/lib/content";
-import type { FiveProductFreeLiteProjectionMapV1 } from "@/lib/markets/services/canonicalProductResults";
+import { getFiveProductFreeLiteProjectionMapV1 } from "@/lib/markets/services/canonicalProductResults";
 
 const PRIMARY_CTA_CLASS =
   "chronoverse-primary-cta inline-flex items-center justify-center border border-[#A77BD8] px-5 py-3 text-sm font-semibold transition-colors hover:border-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
@@ -21,19 +21,34 @@ export function ResearchPreview() {
   return <Suspense fallback={<ResearchFallback />}><LatestResearch /></Suspense>;
 }
 
+export function MarketToolsPreview() {
+  return (
+    <Suspense fallback={<p className="mx-auto max-w-[88rem] px-6 py-12 text-sm text-[#CFC5B8]">Loading free market references…</p>}>
+      <LatestMarketTools />
+    </Suspense>
+  );
+}
+
+async function LatestMarketTools() {
+  const projections = await getFiveProductFreeLiteProjectionMapV1();
+  return <HomeMarketTools projections={projections} />;
+}
+
 /** Pure presentation boundary for fixture-based verification of the public shell. */
-export function FreeHomePageContent({ projections, researchPreview }: {
-  projections: FiveProductFreeLiteProjectionMapV1;
+export function FreeHomePageContent({ researchPreview, marketTools }: {
   researchPreview: ReactNode;
+  marketTools: ReactNode;
 }) {
 
   return (
     <div className="bg-[#050506] text-[#F3EBDD]">
-      <FreeMarketExperience projections={projections} />
-
-      {!isFreeOnlyMode() ? <VipConversion /> : null}
+      <Hero />
 
       {researchPreview}
+
+      {marketTools}
+
+      {!isFreeOnlyMode() ? <VipConversion /> : null}
 
       {!isFreeOnlyMode() ? <MembershipAndResearch /> : null}
       <Newsletter />
@@ -42,24 +57,7 @@ export function FreeHomePageContent({ projections, researchPreview }: {
   );
 }
 
-function FreeMarketExperience({
-  projections,
-}: {
-  projections: FiveProductFreeLiteProjectionMapV1;
-}) {
-  return (
-    <>
-      <Hero projections={projections} />
-      <FreeMarketSurface projections={projections} />
-    </>
-  );
-}
-
-function Hero({
-  projections,
-}: {
-  projections: FiveProductFreeLiteProjectionMapV1;
-}) {
+function Hero() {
   return (
     <section className="relative isolate overflow-hidden border-b border-[#6F4C91]/35 bg-[#050506]">
       <div
@@ -71,39 +69,51 @@ function Hero({
         className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(111,76,145,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(111,76,145,0.1)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_right,transparent,black_70%)]"
       />
 
-      <div className="relative mx-auto grid max-w-[88rem] gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:px-8 xl:grid-cols-[minmax(0,1.48fr)_minmax(23rem,0.82fr)] xl:items-center xl:gap-0 xl:py-20">
-        <div className="max-w-3xl xl:pr-16">
+      <div className="relative mx-auto grid max-w-[88rem] gap-12 px-4 py-14 sm:px-6 sm:py-16 lg:px-8 xl:grid-cols-[minmax(0,1.7fr)_minmax(18rem,0.7fr)] xl:items-end xl:gap-20 xl:py-20">
+        <div className="max-w-4xl">
           <div className="flex items-center gap-3">
             <span aria-hidden="true" className="h-px w-8 bg-[#C8A7E8]" />
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.26em] text-[#C8A7E8]">
-              Free Market Intelligence
+              Chronoverse Capital · Independent publication
             </p>
           </div>
-          <h1 className={`mt-7 max-w-[12ch] text-[clamp(2.85rem,5.5vw,4.75rem)] leading-[0.95] tracking-[-0.04em] ${EDITORIAL_HEADING_CLASS}`}>
-            Five markets. One intelligence system.
+          <h1 className={`mt-7 max-w-[19ch] text-[clamp(2.85rem,5.5vw,4.75rem)] leading-[1.04] tracking-[-0.04em] ${EDITORIAL_HEADING_CLASS}`}>
+            Independent Market Research &amp; Intelligence
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-8 text-[#CFC5B8] sm:text-lg">
-            A precise public reading of Europe&apos;s core currency complex and
-            benchmark short-term rate. Free Lite presents the observed state,
-            with source dates, freshness and availability context.
+            An independent financial research publication exploring markets,
+            monetary systems and the forces shaping the global economy.
+            Read the research. Examine the sources. Build your perspective.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href="/markets" className={PRIMARY_CTA_CLASS}>
-              Explore Markets
+            <Link href="/reports" className={PRIMARY_CTA_CLASS}>
+              Explore Research
               <span aria-hidden="true" className="ml-3">→</span>
             </Link>
-            <Link href="/methodology" className={SECONDARY_CTA_CLASS}>
-              Read the methodology
+            <Link href="/markets" className={SECONDARY_CTA_CLASS}>
+              Explore Free Market Tools
             </Link>
           </div>
           <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-[10px] uppercase tracking-[0.13em] text-[#91889A]">
-            <span>Five canonical products</span>
-            <span>Server-assembled</span>
-            <span>Source-dated</span>
+            <span>Open-access research</span>
+            <span>Source-led analysis</span>
+            <span>Five free market tools</span>
           </div>
         </div>
 
-        <MarketIntelligenceBoard projections={projections} />
+        <aside aria-label="Inside the publication" className="border-t border-[#6F4C91]/50 pt-6 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#C8A7E8]">Inside the publication</p>
+          <p className={`mt-5 text-3xl leading-tight ${EDITORIAL_HEADING_CLASS}`}>
+            A longer view.<br />A clearer context.
+          </p>
+          <p className="mt-5 text-sm leading-7 text-[#CFC5B8]">
+            Financial history, macroeconomic research and transparent market
+            references, freely available to every reader.
+          </p>
+          <Link href="/methodology" className="mt-6 inline-flex border-b border-[#6F4C91] pb-1 text-sm text-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]">
+            Our methodology <span aria-hidden="true" className="ml-3">↗</span>
+          </Link>
+        </aside>
       </div>
     </section>
   );
@@ -187,6 +197,10 @@ function VipConversion() {
 
 async function LatestResearch() {
   const articles = await getLatestSanityArticles(3);
+  return <ResearchArticles articles={articles} />;
+}
+
+export function ResearchArticles({ articles }: { articles: readonly ContentItem[] }) {
   const [featuredArticle, ...secondaryArticles] = articles;
 
   return (
@@ -204,14 +218,14 @@ async function LatestResearch() {
               id="latest-research-title"
               className={`mt-3 text-4xl sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}
             >
-              Latest research
+              Latest Research
             </h2>
           </div>
           <Link
             href="/reports"
             className="w-fit border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
           >
-            View all research →
+            View All Research →
           </Link>
         </div>
 

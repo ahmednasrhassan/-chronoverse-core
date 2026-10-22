@@ -39,7 +39,7 @@ type StaticRouteExpectation = {
 const STATIC_ROUTES = [
   {
     pathname: "/",
-    title: "Free Market Intelligence",
+    title: "Independent Market Research & Intelligence",
     metadata: homeMetadata,
   },
   { pathname: "/markets", title: "Markets", metadata: marketsMetadata },

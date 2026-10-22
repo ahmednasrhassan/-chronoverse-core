@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import FreeMarketSurface, { MarketIntelligenceBoard } from "../FreeMarketSurface";
+import HomeMarketTools from "../HomeMarketTools";
 import type { FxFreeLiteProjectionV1, MarketProjectionProvenanceV1 } from "../../../lib/markets/projections/types";
 import type { FiveProductFreeLiteProjectionMapV1 } from "../../../lib/markets/services/canonicalProductResults";
 
@@ -40,6 +41,12 @@ for (const [state, label] of [
   const html = render(projection(state));
   assert.match(html, new RegExp(`Freshness</dt><dd[^>]*>${label}</dd>`));
   assert.doesNotMatch(html, /real-time|live price|engineEvidence|ecbPolicyEvent|invalidationState/);
+  const compact = renderToStaticMarkup(createElement(HomeMarketTools, {
+    projections: { eurusd: projection(state), eurjpy: null, eurgbp: null, eurchf: null, estr: null },
+  }));
+  assert.match(compact, /1\.12/);
+  assert.match(compact, /Reference <time dateTime="2026-10-02">2026-10-02/);
+  assert.equal(compact.includes("Current analytical posture eligible"), state === "within-cadence");
 }
 for (const unavailable of [null, {
   version: "market-product-projection-v1", tier: "free-lite", availability: "unavailable",
@@ -49,6 +56,11 @@ for (const unavailable of [null, {
   const html = render(unavailable);
   assert.match(html, /EUR\/USD projection unavailable/);
   assert.doesNotMatch(html, /Freshness<\/dt>/);
+  const compact = renderToStaticMarkup(createElement(HomeMarketTools, {
+    projections: { eurusd: unavailable, eurjpy: null, eurgbp: null, eurchf: null, estr: null },
+  }));
+  assert.match(compact, /Reference unavailable/);
+  assert.doesNotMatch(compact, /Current analytical posture eligible/);
 }
 console.log("PASS: Free freshness renders provenance states and unavailable semantics");
 
@@ -63,7 +75,8 @@ for (const status of ["stale", "unknown"] as const) {
   };
   const map = { ...projections, estr: rate } as FiveProductFreeLiteProjectionMapV1;
   for (const html of [renderToStaticMarkup(createElement(FreeMarketSurface, { projections: map })),
-    renderToStaticMarkup(createElement(MarketIntelligenceBoard, { projections: map }))]) {
+    renderToStaticMarkup(createElement(MarketIntelligenceBoard, { projections: map })),
+    renderToStaticMarkup(createElement(HomeMarketTools, { projections: map }))]) {
     assert.equal((html.match(/WAIT \/ Current analytical posture unavailable/g) ?? []).length >= 4, true);
     assert.match(html, /WAIT \/ Current rate context unavailable/);
     assert.match(html, /Prior analysis \/ Reference 2026-10-02/);

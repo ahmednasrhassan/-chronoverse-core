@@ -13,6 +13,8 @@ const homepageSource = readSource("src/app/(site)/page.tsx") + "\n" + readSource
 const marketSurfaceSource = readSource(
   "src/components/home/FreeMarketSurface.tsx",
 );
+const toolsSource = readSource("src/components/home/HomeMarketTools.tsx");
+const marketsPageSource = readSource("src/app/(site)/markets/page.tsx");
 const newsletterSource = readSource("src/components/NewsLetterForm.tsx");
 const headerSource = readSource("src/components/navigation/Header.tsx");
 const footerSource = readSource("src/components/navigation/Footer.tsx");
@@ -51,18 +53,19 @@ assert.match(
 assert.equal(
   homepageSource.match(/getFiveProductFreeLiteProjectionMapV1\(\)/g)?.length,
   1,
-  "hero and market surface must share exactly one projection-map read",
+  "the homepage tools must use exactly one projection-map read",
 );
 assert.match(
   homepageSource,
-  /export default async function HomePage\(\)[\s\S]{0,180}await getFiveProductFreeLiteProjectionMapV1\(\)/,
-  "the complete above-the-fold market experience must resolve before composition",
+  /async function LatestMarketTools\(\)[\s\S]{0,180}await getFiveProductFreeLiteProjectionMapV1\(\)/,
+  "market references must resolve at their own server boundary",
 );
-assert.doesNotMatch(
-  homepageSource.slice(homepageSource.indexOf("export function FreeHomePageContent"), homepageSource.indexOf("function FreeMarketExperience")),
-  /MarketExperienceFallback|<Suspense[^>]*>[\s\S]*?<FreeMarketExperience/,
-  "market data must remain outside the research streaming fallback",
-);
+assert.match(homepageSource, /<Hero \/>[\s\S]*?\{researchPreview\}[\s\S]*?\{marketTools\}/);
+assert.match(homepageSource, /export function MarketToolsPreview[\s\S]*?<Suspense/);
+assert.match(marketsPageSource, /getFiveProductFreeLiteProjectionMapV1\(\)/);
+assert.match(marketsPageSource, /<FreeMarketSurface projections=\{projections\}/);
+assert.match(toolsSource, /href=\{`\/markets#\$\{market\.productId\}`\}/);
+assert.match(marketSurfaceSource, /id=\{market\.productId\}/);
 assert.match(projectionServiceSource, /Promise\.allSettled/);
 assert.match(projectionServiceSource, /getCachedCanonicalFxResultBundleV1\(\)/);
 assert.match(projectionServiceSource, /getCanonicalEstrResultV1\(\)/);
@@ -181,7 +184,7 @@ assert.match(
 );
 assert.match(
   homepageSource,
-  /xl:grid-cols-\[minmax\(0,1\.48fr\)_minmax\(23rem,0\.82fr\)\]/,
+  /xl:grid-cols-\[minmax\(0,1\.7fr\)_minmax\(18rem,0\.7fr\)\]/,
   "hero must remain stacked through 1024 and become asymmetric at desktop width",
 );
 assert.match(marketSurfaceSource, /lg:grid-cols-6 xl:grid-cols-5/);

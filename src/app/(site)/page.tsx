@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import { FreeHomePageContent, ResearchPreview } from "@/components/home/FreeHomePageContent";
-import { getFiveProductFreeLiteProjectionMapV1 } from "@/lib/markets/services/canonicalProductResults";
+import { FreeHomePageContent, ResearchPreview, MarketToolsPreview } from "@/components/home/FreeHomePageContent";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
-  title: "Free Market Intelligence",
+  title: "Independent Market Research & Intelligence",
   description:
-    "Free Lite market intelligence for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
+    "Independent financial research on markets, monetary systems and the global economy. Read free published research and explore five ECB-sourced Free Lite market tools.",
   pathname: "/",
 });
 
-export default async function HomePage() {
-  const projections = await getFiveProductFreeLiteProjectionMapV1();
-  return <FreeHomePageContent projections={projections} researchPreview={<ResearchPreview />} />;
+export default function HomePage() {
+  return <FreeHomePageContent researchPreview={<ResearchPreview />} marketTools={<MarketToolsPreview />} />;
 }

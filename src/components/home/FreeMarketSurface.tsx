@@ -123,7 +123,8 @@ export default function FreeMarketSurface({
               return (
                 <li
                   key={market.productId}
-                  className={`relative min-w-0 py-6 lg:col-span-2 xl:col-span-1 xl:px-5 xl:[&:not(:first-child)]:border-l xl:border-[#6F4C91]/25 ${
+                  id={market.productId}
+                  className={`relative min-w-0 scroll-mt-28 py-6 lg:col-span-2 xl:col-span-1 xl:px-5 xl:[&:not(:first-child)]:border-l xl:border-[#6F4C91]/25 ${
                     index === 3 ? "lg:col-start-2 xl:col-start-auto" : ""
                   } ${isFeatured ? "xl:bg-[#15131A]/70" : ""}`}
                 >

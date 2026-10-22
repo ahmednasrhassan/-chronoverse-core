@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
+import FreeMarketSurface from "@/components/home/FreeMarketSurface";
+import { getFiveProductFreeLiteProjectionMapV1 } from "@/lib/markets/services/canonicalProductResults";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
@@ -11,10 +12,11 @@ export const metadata: Metadata = buildPublicPageMetadata({
   pathname: "/markets",
 });
 
-export default function MarketsPage() {
+export default async function MarketsPage() {
+  const projections = await getFiveProductFreeLiteProjectionMapV1();
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-      <header className="max-w-3xl border-b border-border pb-10">
+    <div className="w-full py-12 sm:py-16">
+      <header className="mx-auto max-w-[88rem] px-4 pb-6 sm:px-6 lg:px-8">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
           Launch coverage
         </p>
@@ -27,31 +29,14 @@ export default function MarketsPage() {
         </p>
       </header>
 
-      <section className="mt-10" aria-labelledby="market-coverage-title">
-        <h2 id="market-coverage-title" className="text-lg font-semibold text-primary">
-          Market coverage
-        </h2>
-        <ul className="mt-5 divide-y divide-border rounded-xl border border-border bg-card">
-          {LAUNCH_MARKETS_V1.map((market) => (
-            <li
-              key={market.productId}
-              className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6"
-            >
-              <span className="font-medium text-primary">{market.label}</span>
-              <span className="text-xs uppercase tracking-[0.16em] text-muted">
-                {market.kind === "rate" ? "Reference rate" : "FX reference"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <FreeMarketSurface projections={projections} />
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="mx-auto mt-8 flex max-w-[88rem] flex-col gap-3 px-4 sm:flex-row sm:px-6 lg:px-8">
         <Link
           href="/"
           className="rounded-md border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-primary hover:border-purple-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
         >
-          View Free
+          Explore research publication
         </Link>
         <Link
           href="/methodology"
