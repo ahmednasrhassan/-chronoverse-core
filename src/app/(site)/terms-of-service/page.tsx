@@ -33,19 +33,18 @@ export default function TermsOfServicePage() {
         </p>
         <p>
           The launch market-intelligence surface covers EUR/USD, EUR/JPY,
-          EUR/GBP, EUR/CHF, and €STR. Free provides the Lite projection; VIP
-          provides the Deep projection of the same five products through
-          protected Market Rooms. Editorial and standalone research are
-          separate surfaces and may discuss broader subjects.
+          EUR/GBP, EUR/CHF, and €STR. Free provides the Lite projection.
+          Published editorial research may discuss broader subjects. This
+          website does not offer paid memberships or checkout.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="2. Accounts and access">
         <p>
           Passwordless sign-in verifies identity. The server-side account
-          record determines whether access is anonymous Free, authenticated
-          Free, VIP Active, Administrator, or Owner. Signing in does not itself
-          purchase or elevate access.
+          record establishes identity and any administrative role. Free market
+          intelligence does not require payment. Signing in does not purchase
+          or elevate product access.
         </p>
         <p>
           Keep sign-in links and account access secure. Do not attempt to enter
@@ -78,29 +77,19 @@ export default function TermsOfServicePage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="5. VIP pricing, billing, and research products">
+      <InstitutionalSection title="5. Historical purchases and support">
         <p>
-          Approved VIP pricing is $15.99 monthly or $150.99 annually. Secure
-          hosted checkout starts from <Link href="/pricing">Pricing</Link>
-          {" "}after authentication. Eligible authenticated customers with a
-          trusted persisted customer mapping may access Lemon Squeezy-hosted
-          subscription-management controls through <Link href="/billing">Billing</Link>.
-          Portal availability is conditional. Opening or returning from the
-          portal does not grant VIP access; payment and entitlement remain
-          based on trusted persisted subscription facts. Access and billing questions use the
-          published <Link href="/contact">support path</Link>.
+          Previous sales through Lemon Squeezy and Gumroad were one-time books
+          or digital products, not recurring memberships. The terms shown at
+          the original purchase and applicable customer rights continue to
+          govern those transactions. The free-only website does not cancel
+          delivery, refund, dispute or other existing obligations.
         </p>
         <p>
-          Standalone research offered through the{" "}
-          <a
-            href={siteConfig.commerce.gumroadResearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Chronoverse research storefront
-          </a>{" "}
-          is separate from VIP membership and is also subject to the terms
-          shown in its purchase flow.
+          Historical transaction records and refund handling are retained.
+          For assistance, use <Link href="/billing">Purchase support</Link>,
+          the <Link href="/contact">support path</Link>, or the contact details
+          on the original receipt. Do not send payment-card details.
         </p>
       </InstitutionalSection>
 
@@ -120,7 +109,7 @@ export default function TermsOfServicePage() {
 
       <InstitutionalSection title="7. External links and commercial disclosures">
         <p>
-          External research-storefront, source, social, and other third-party
+          Historical purchase providers, source, social, and other third-party
           links operate under their own terms and privacy practices.
           Sponsorship or another disclosed commercial relationship does not
           control analytical output or editorial conclusions.

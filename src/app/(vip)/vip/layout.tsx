@@ -1,10 +1,11 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import Footer from "@/components/navigation/Footer";
 import Header from "@/components/navigation/Header";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : {
   title: "Chronoverse VIP | Deep Intelligence",
   description:
     "Private decision intelligence for the Chronoverse five-market universe.",

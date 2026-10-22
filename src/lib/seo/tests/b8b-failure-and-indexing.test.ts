@@ -267,7 +267,6 @@ async function verifySitemapPolicyAndAtomicity(): Promise<void> {
     "/newsletter",
     "/markets",
     "/methodology",
-    "/pricing",
     "/privacy-policy",
     "/reports",
     "/terms-of-service",
@@ -277,6 +276,7 @@ async function verifySitemapPolicyAndAtomicity(): Promise<void> {
 
   for (const pathname of [
     "/archive",
+    "/pricing",
     "/vip",
     "/account",
     "/billing",

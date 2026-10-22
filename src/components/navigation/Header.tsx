@@ -50,7 +50,7 @@ export default function Header() {
             aria-label="Primary navigation"
             className="hidden items-center bg-[#050506] px-4 xl:flex"
           >
-            <ol className="grid h-14 w-full grid-cols-5 border-y border-[#6F4C91]/30 bg-[#0D0D11]/65">
+            <ol className="grid h-14 w-full grid-cols-3 border-y border-[#6F4C91]/30 bg-[#0D0D11]/65">
               {PUBLIC_PRIMARY_NAV_V1.map((item, index) => (
                 <li
                   key={item.label}
@@ -89,7 +89,7 @@ export default function Header() {
                 className="flex min-h-11 min-w-[6.5rem] flex-1 flex-col justify-center px-3 hover:bg-[#15131A]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C8A7E8]"
               >
                 <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#91889A]">
-                  Member
+                  Free
                 </span>
                 <span className="mt-1 text-sm font-semibold text-[#F3EBDD]">
                   Account

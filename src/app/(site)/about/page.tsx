@@ -66,24 +66,11 @@ export default function AboutPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Free, VIP, and Research">
+      <InstitutionalSection title="Free intelligence and research">
         <p>
-          <Link href="/">Free</Link> is the Lite projection.{" "}
-          <Link href="/pricing">VIP</Link> is the Deep projection of the same
-          canonical five-product truth, delivered through protected VIP Market
-          Rooms for verified access.
-        </p>
-        <p>
-          <Link href="/reports">Editorial Research</Link> is a separate
-          publishing surface. Standalone research available from the{" "}
-          <a
-            href={siteConfig.commerce.gumroadResearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Chronoverse research storefront
-          </a>{" "}
-          is also separate from VIP membership.
+          <Link href="/">Free</Link> provides the Lite projection for all five
+          markets. <Link href="/reports">Editorial Research</Link> provides
+          published articles and independent analysis.
         </p>
       </InstitutionalSection>
 
@@ -91,8 +78,8 @@ export default function AboutPage() {
         <p>
           Chronoverse presents analytical evidence and classifications, not
           personalized advice, trade orders, or assured outcomes. Commercial
-          arrangements do not determine Free Lite intelligence, VIP Deep
-          intelligence, or editorial conclusions.
+          arrangements do not determine Free Lite intelligence or editorial
+          conclusions.
         </p>
       </InstitutionalSection>
 
@@ -156,7 +143,7 @@ export default function AboutPage() {
         </p>
         <p>
           Use <Link href="/contact">Contact</Link> for account, billing,
-          research, correction, or sponsorship inquiries. Our{" "}
+          research, correction, or historical purchase-support inquiries. Our{" "}
           <Link href="/manifesto">operating principles</Link> describe the
           restraint applied across the platform.
         </p>

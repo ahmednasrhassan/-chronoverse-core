@@ -88,14 +88,14 @@ function request(host: string, pathname: string, headers = {}): NextRequest {
   });
 }
 
-test("Next build analysis statically extracts and compiles all six matcher rules", async () => {
+test("Next build analysis statically extracts and compiles all retirement and session matcher rules", async () => {
   await loadBindings();
   const info = await getPageStaticInfo({
     pageFilePath: fileURLToPath(new URL("../../../proxy.ts", import.meta.url)),
     nextConfig, isDev: false, page: "/proxy", pageType: "pages" as PAGE_TYPES.PAGES,
   });
   assert.equal(info.hadUnsupportedValue, false);
-  assert.equal(info.middleware?.matchers?.length, 6);
+  assert.equal(info.middleware?.matchers?.length, 10);
   assert.deepEqual(info.middleware?.matchers?.map(({ originalSource, has, missing }) => ({
     source: originalSource, has, missing,
   })), config.matcher.map(({ source, has, missing }) => ({ source, has, missing })));
@@ -110,7 +110,7 @@ test("ordinary public apex requests skip invocation, including sessions, RSC and
   assert.equal(matches(APEX, "/reports", {}, sessionMatcher), false);
   assert.equal(matches(APEX, "/reports", {}, sessionMatcher, sessionCookies), true);
   for (const pathname of [
-    "/", "/about", "/markets", "/markets/eurusd", "/pricing", "/reports",
+    "/", "/about", "/markets", "/markets/eurusd", "/reports",
     "/newsletter", "/category/macro", "/research-article", "/research",
     "/intelligence", "/known-article.html", "/robots.txt", "/sitemap.xml",
     "/rss.xml", "/api/newsletter", "/api/billing/checkout", "/api/billing/portal",
@@ -151,6 +151,12 @@ test("every protected apex family and descendant matches without extension or he
       ]) {
         assert.equal(matches(APEX, `${pathname}?_rsc=test`, headers), true, pathname);
         const response = await handler(request(APEX, `${pathname}?_rsc=test`, headers));
+        if (family === "vip") {
+          assert.equal(response.status, 404);
+          assert.equal(response.headers.get("cache-control"), "no-store");
+          assert.equal(response.headers.get("set-cookie"), null);
+          continue;
+        }
         assert.equal(response.cookies.get("refresh-test")?.value, "preserved");
         assert.equal(response.cookies.get("refresh-test")?.httpOnly, true);
         assert.equal(response.cookies.get("refresh-test")?.secure, true);
@@ -160,7 +166,7 @@ test("every protected apex family and descendant matches without extension or he
     assert.equal(matches(APEX, `/_next/data/build-id/${family}/profile.json`), true,
       "Next-generated data route matches the protected family");
   }
-  assert.equal(refreshCalls, 112);
+  assert.equal(refreshCalls, 84);
 });
 
 test("other hosts retain baseline matching, including preview and newsletter exclusions", async () => {
@@ -175,7 +181,7 @@ test("other hosts retain baseline matching, including preview and newsletter exc
       "/", "/reports", "/vip", "/account/profile", "/api/newsletter", "/rss.xml",
       "/_next/static/app.js", "/_next/image", "/favicon.ico", "/logo.png", "/vip/file.png",
     ]) {
-      assert.equal(matches(host, pathname), matches(host, pathname, {}, baselineConfig), `${host}${pathname}`);
+      assert.equal(matches(host, pathname), (pathname.startsWith("/vip") ? true : matches(host, pathname, {}, baselineConfig)), `${host}${pathname}`);
       if (matches(host, pathname)) {
         const response = await handler(request(host, pathname));
         assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow", `${host}${pathname}`);
@@ -241,8 +247,13 @@ test("www canonicalizes all paths and assets before session refresh", async () =
     ]) {
       assert.equal(matches(host, pathname), true, `${host}${pathname}`);
       const response = await handler(request(host, pathname));
-      assert.equal(response.status, 308);
-      assert.equal(response.headers.get("location"), `https://${APEX}${pathname}`);
+      if (pathname.startsWith("/vip")) {
+        assert.equal(response.status, 404);
+        assert.equal(response.headers.get("location"), null);
+      } else {
+        assert.equal(response.status, 308);
+        assert.equal(response.headers.get("location"), `https://${APEX}${pathname}`);
+      }
       assert.equal(response.headers.get("x-middleware-rewrite"), null);
       assert.equal(response.headers.get("set-cookie"), null);
     }
@@ -265,6 +276,12 @@ test("newsletter aliases keep one-hop canonical roots, query-preserving rewrites
     for (const pathname of ["/archive", "/vip/profile"]) {
       assert.equal(matches(host, pathname), true);
       const response = await handler(request(host, `${pathname}?page=2`));
+      if (pathname.startsWith("/vip")) {
+        assert.equal(response.status, 404);
+        assert.equal(response.headers.get("x-middleware-rewrite"), null);
+        assert.equal(response.headers.get("set-cookie"), null);
+        continue;
+      }
       assert.equal(response.headers.get("x-middleware-rewrite"), `https://${host}/newsletter${pathname}?page=2`);
       assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow");
       if (pathname.startsWith("/vip")) {
@@ -326,8 +343,8 @@ test("direct VIP guards and billing APIs enforce authorization independently of 
   ] as const) {
     assert.equal(matches(APEX, pathname), false);
     const response = await handler(new Request(`https://${APEX}${pathname}`, { method: "POST", body }));
-    assert.equal(response.status, 401);
-    assert.deepEqual(await response.json(), { ok: false, error: "authentication-required" });
+    assert.equal(response.status, 410);
+    assert.deepEqual(await response.json(), { ok: false, error: pathname.endsWith("checkout") ? "checkout-disabled" : "portal-disabled" });
   }
   const failure = new Error("trusted access unavailable");
   await assert.rejects(enforceVipPageAccessV1(async () => { throw failure; }, () => {

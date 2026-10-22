@@ -1,3 +1,4 @@
+import { isFreeOnlyMode } from "../../config/siteAvailability";
 import "server-only";
 
 import { evaluateCommercialEntitlementV1 } from "../billing/entitlement";
@@ -60,6 +61,7 @@ export class AccessResolutionErrorV1 extends Error {
 }
 
 export interface AccessCompositionDependenciesV1 {
+  readonly commercialAccessEnabled?: boolean;
   readonly getVipCommercialConfig: () => VipCommercialConfigV1;
   readonly getCurrentTime: () => string;
 }
@@ -85,6 +87,7 @@ export function createAccessResolverV1(
       return trustedAccess;
     }
 
+    if (dependencies.commercialAccessEnabled === false) return trustedAccess;
     return composeCommercialAccessV1(trustedAccess, snapshot, dependencies);
   };
 }
@@ -128,6 +131,7 @@ export const resolveAccessV1: AccessResolverV1 = createAccessResolverV1(
     };
   },
   Object.freeze({
+    commercialAccessEnabled: !isFreeOnlyMode(),
     getVipCommercialConfig: getVipCommercialConfigV1,
     getCurrentTime: () => new Date().toISOString(),
   }),

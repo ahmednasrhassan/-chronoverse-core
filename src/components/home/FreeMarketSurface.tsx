@@ -110,7 +110,7 @@ export default function FreeMarketSurface({
               </h2>
             </div>
             <p className="text-sm leading-6 text-[#91889A] md:text-right">
-              A compact reading of the five markets shared by Free and VIP.
+              A compact reading of the five markets available free to every reader.
               No simulated movement. No secondary product set.
             </p>
           </div>
@@ -299,11 +299,11 @@ export default function FreeMarketSurface({
               Intelligence boundary
             </p>
             <h2 className="mt-4 text-3xl leading-tight text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]">
-              Useful now.<br />Deeper in VIP.
+              Read the evidence.<br />Know its limits.
             </h2>
             <p className="mt-5 text-sm leading-6 text-[#CFC5B8]">
-              Free establishes the observed state. VIP adds the analytical
-              layers required to challenge and contextualize it.
+              Free Lite presents the observed state alongside reference dates,
+              freshness and availability. Read those boundaries together.
             </p>
 
             <div className="relative mt-10 space-y-10 before:absolute before:bottom-2 before:left-[0.28rem] before:top-2 before:w-px before:bg-[#6F4C91]/55">
@@ -315,17 +315,6 @@ export default function FreeMarketSurface({
                   "Volatility",
                   "Reference and freshness",
                   "Availability context",
-                ]}
-              />
-              <BoundaryList
-                title="VIP intelligence"
-                items={[
-                  "Technical evidence",
-                  "Signal and risk",
-                  "€STR rate regimes",
-                  "FX scenarios and confidence",
-                  "FX invalidation",
-                  "Historical context",
                 ]}
               />
             </div>

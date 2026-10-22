@@ -19,11 +19,11 @@ export default function MarketsPage() {
           Launch coverage
         </p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-primary sm:text-4xl">
-          Five markets. Two analytical depths.
+          Five markets. Free analytical context.
         </h1>
         <p className="mt-5 text-base leading-7 text-secondary">
-          Free and VIP use the same focused market universe. Free presents the
-          Lite projection; verified VIP access presents the Deep projection.
+          Free Lite presents a focused market universe with official reference
+          observations, analytical context, freshness and availability limits.
         </p>
       </header>
 
@@ -52,12 +52,6 @@ export default function MarketsPage() {
           className="rounded-md border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-primary hover:border-purple-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
         >
           View Free
-        </Link>
-        <Link
-          href="/pricing"
-          className="rounded-md border border-purple-border bg-raised px-5 py-3 text-center text-sm font-semibold text-primary hover:border-mauve focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
-        >
-          Explore VIP
         </Link>
         <Link
           href="/methodology"

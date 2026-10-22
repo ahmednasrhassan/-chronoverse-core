@@ -10,7 +10,6 @@ const readSource = (relativePath: string) =>
 
 const retiredRoutes = new Map([
   ["src/app/(site)/intelligence/page.tsx", "/markets"],
-  ["src/app/(site)/premium/page.tsx", "/pricing"],
   ["src/app/(site)/markets/bitcoin/page.tsx", "/markets"],
   ["src/app/(site)/markets/gold/page.tsx", "/markets"],
   ["src/app/(site)/markets/oil/page.tsx", "/markets"],

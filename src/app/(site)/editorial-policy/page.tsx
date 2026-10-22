@@ -48,8 +48,7 @@ export default function EditorialPolicyPage() {
         <p>
           Sponsorship, affiliate, or other commercial relationships should be
           disclosed where relevant and remain separate from editorial
-          conclusions. They do not determine Free Lite intelligence, VIP Deep
-          intelligence, analytical outputs, or the five-product launch scope.
+          conclusions. They do not determine Free Lite intelligence, analytical outputs, or the five-product launch scope.
         </p>
       </InstitutionalSection>
 

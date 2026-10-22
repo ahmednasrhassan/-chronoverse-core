@@ -63,7 +63,7 @@ test("expired sessions refresh through the real Supabase SDK and reach request a
     {}, { rsc: "1", "next-router-state-tree": "[]" },
     { rsc: "1", "next-router-prefetch": "1", purpose: "prefetch" },
   ];
-  for (const pathname of ["/account", "/auth/confirm", "/billing/history", "/vip/markets/eurusd"]) {
+  for (const pathname of ["/account", "/auth/confirm", "/billing/history", "/account/profile"]) {
     for (const variant of variants) {
       const headers = { host: APEX, cookie: `${COOKIE}=${cookieValue}`, ...variant };
       const url = `https://${APEX}${pathname}?_rsc=test`;
@@ -84,7 +84,7 @@ test("expired sessions refresh through the real Supabase SDK and reach request a
       const session = JSON.parse(Buffer.from(combined.slice("base64-".length), "base64url").toString());
       assert.equal(session.access_token, refreshedToken);
       assert.equal(session.refresh_token, "rotated-refresh-token");
-      assert.equal(response.headers.get("x-robots-tag"), pathname.startsWith("/vip") ? "noindex, nofollow" : null);
+      assert.equal(response.headers.get("x-robots-tag"), null);
     }
   }
   assert.equal(refreshCalls, 12, "each expired protected request refreshes exactly once");

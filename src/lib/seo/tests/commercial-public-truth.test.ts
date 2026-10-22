@@ -1,27 +1,23 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import path from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import Terms from "../../../app/(site)/terms-of-service/page";
+import Privacy from "../../../app/(site)/privacy-policy/page";
+import Faq from "../../../app/(site)/faq/page";
+import Billing from "../../../app/(site)/billing/page";
 
-const read = (route: string) => readFileSync(path.join(process.cwd(), `src/app/(site)/${route}/page.tsx`), "utf8").replace(/\s+/g, " ");
-for (const route of ["pricing", "faq", "privacy-policy", "terms-of-service", "billing"]) {
-  const source = read(route);
-  assert.doesNotMatch(source, /(?:subscription-management|billing-portal)[^.]{0,100}(?:not (?:yet |currently )?available|unavailable)/i, `${route} must not claim universal unavailability`);
-  if (route === "billing") {
-    assert.match(source, /state\.portalAvailable \? <ManageSubscriptionButton/);
-    assert.match(source, /Opening or returning from the billing portal does not change access/);
-    assert.match(source, /trusted role and persisted subscription facts/);
-  } else if (route === "pricing") {
-    assert.match(source, /Checkout requires a verified Chronoverse account/);
-    assert.match(source, /eligible subscriptions through Billing/);
-    assert.match(source, /available when a trusted customer mapping exists/);
-    assert.match(source, /VIP access begins only after trusted payment confirmation/);
-  } else {
-    assert.match(source, /after (?:you authenticate|authentication)/);
-    assert.match(source, /Eligible authenticated customers with a trusted persisted customer mapping/i);
-    assert.match(source, /Portal availability is conditional/);
-    assert.match(source, /Opening or returning from the portal does not grant VIP access/);
-    assert.match(source, /trusted persisted subscription facts/);
-    assert.match(source, /href="\/billing"/);
+async function main(): Promise<void> {
+  for (const page of [Terms, Privacy, Faq]) {
+    const html = renderToStaticMarkup(createElement(page));
+    assert.match(html, /one-time books/);
+    assert.match(html, /Lemon Squeezy and Gumroad/);
+    assert.match(html, /refund/);
+    assert.doesNotMatch(html, /href="\/pricing"|shop\.chronoversecapital|VIP checkout is available|\$15\.99|\$150\.99/);
   }
+  const support = renderToStaticMarkup(await Billing());
+  assert.match(support, /historical records and refund handling/);
+  assert.match(support, /Original purchase terms and applicable customer/);
+  console.log("PASS: free-only legal and support disclosures preserve historical customer obligations");
 }
-console.log("PASS: conditional subscription management and commercial public truth");
+
+void main();

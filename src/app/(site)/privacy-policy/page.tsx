@@ -102,26 +102,20 @@ export default function PrivacyPolicyPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="5. Purchases and external websites">
+      <InstitutionalSection title="5. Historical purchases and external websites">
         <p>
-          The public application does not ask users to enter payment-card
-          details. Standalone research is offered through the external{" "}
-          <a
-            href={siteConfig.commerce.gumroadResearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Chronoverse research storefront
-          </a>
-          , whose privacy practices apply to that purchase flow. VIP checkout
-          is available after authentication and hosted by Lemon Squeezy, whose
-          privacy practices apply to payment processing. Eligible authenticated
-          customers with a trusted persisted customer mapping may access
-          Lemon Squeezy-hosted subscription-management controls through{" "}
-          <Link href="/billing">Billing</Link>. Portal availability is
-          conditional. Opening or returning from the portal does not grant
-          VIP access; payment and entitlement remain based on trusted
-          persisted subscription facts.
+          This website does not offer checkout or ask for payment-card details.
+          Previous Lemon Squeezy and Gumroad sales were one-time books or
+          digital products. Their privacy practices apply to the transactions
+          they processed. Historical order and customer records may be retained
+          for delivery, accounting, refunds, disputes and applicable obligations.
+        </p>
+        <p>
+          Authenticated payment notifications may update historical processing
+          and refund evidence. Moving to a free-only website does not erase
+          those records or remove customer rights. For assistance, use
+          <Link href="/billing"> Purchase support</Link> or
+          <Link href="/contact"> Contact</Link>.
         </p>
       </InstitutionalSection>
 

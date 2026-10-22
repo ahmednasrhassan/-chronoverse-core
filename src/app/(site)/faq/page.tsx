@@ -5,13 +5,12 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
-import { siteConfig } from "@/config/siteConfig";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Frequently Asked Questions",
   description:
-    "Find answers about Chronoverse market coverage, Free and VIP access, ECB data, standalone research, and support.",
+    "Find answers about Chronoverse market coverage, free access, ECB data, published research, and purchase support.",
   pathname: "/faq",
 });
 
@@ -31,12 +30,11 @@ export default function FaqPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="What is the difference between Free and VIP?">
+      <InstitutionalSection title="What is available free?">
         <p>
-          Both use the same canonical five-product truth. Free presents the
-          Lite projection; verified VIP access presents the Deep projection in
-          protected Market Rooms. See <Link href="/pricing">Pricing</Link> for
-          the current commercial boundary.
+          All five markets use the Free Lite projection, with reference values,
+          market context, freshness and availability limits. Published articles,
+          archives and the newsletter remain available free.
         </p>
       </InstitutionalSection>
 
@@ -49,39 +47,28 @@ export default function FaqPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Can I purchase or manage VIP on this site now?">
+      <InstitutionalSection title="Do I need a paid account?">
         <p>
-          VIP checkout is available from <Link href="/pricing">Pricing</Link>
-          {" "}at $15.99 monthly or $150.99 annually after you authenticate.
-          Eligible authenticated customers with a trusted persisted customer
-          mapping may access Lemon Squeezy-hosted subscription-management
-          controls through <Link href="/billing">Billing</Link>. Portal
-          availability is conditional. Opening or returning from the portal
-          does not grant VIP access; payment and entitlement remain based on
-          trusted persisted subscription facts. The <Link href="/account">Account page</Link> verifies
-          identity and displays the access state trusted by the server.
+          No. This website is free-only and does not offer paid memberships or
+          checkout. The <Link href="/account">Account page</Link> provides
+          free passwordless sign-in.
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Is standalone research included with VIP?">
+      <InstitutionalSection title="How do I get help with a past purchase?">
         <p>
-          No. VIP membership and standalone research are separate offerings.
-          Standalone research is available from the{" "}
-          <a
-            href={siteConfig.commerce.gumroadResearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Chronoverse research storefront
-          </a>
-          .
+          Previous Lemon Squeezy and Gumroad purchases were one-time books or
+          digital products. For order, delivery, refund or dispute questions,
+          use <Link href="/billing">Purchase support</Link> or the contact
+          details on your original receipt. Historical purchase obligations
+          remain applicable.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Where can I ask for help or report an error?">
         <p>
           Use <Link href="/contact">Contact</Link> for account, access, billing,
-          research-source, correction, sponsorship, or collaboration
+          research-source, correction, or historical purchase-support
           inquiries. Do not send passwords, one-time sign-in links, card
           numbers, or other secrets.
         </p>

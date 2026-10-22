@@ -1,3 +1,5 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
+import { notFound as retiredNotFound } from "next/navigation";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
@@ -16,7 +18,7 @@ import { getHistoricalChartSeriesV1 } from
 import { assembleAuthorizedVipMarketRoomV1 } from
   "@/lib/markets/services/vipMarketRoomDelivery";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : {
   title: "VIP Market Room | Chronoverse Capital",
   description:
     "Protected ECB reference-rate history and Deep intelligence for the Chronoverse market universe.",
@@ -37,6 +39,7 @@ interface VipMarketRoomPageProps {
 export default async function VipMarketRoomPage({
   params,
 }: VipMarketRoomPageProps) {
+  if (isFreeOnlyMode()) retiredNotFound();
   const { market } = await params;
   const access = await enforceVipPageAccessV1(requireVipV1, redirect);
   const room = await assembleAuthorizedVipMarketRoomV1(market, {

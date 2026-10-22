@@ -39,8 +39,6 @@ assert.deepEqual(
   [
     { label: "Markets", href: "/markets" },
     { label: "Free", href: "/" },
-    { label: "VIP", href: "/pricing" },
-    { label: "Pricing", href: "/pricing" },
     { label: "Research", href: "/reports" },
   ],
   "desktop and mobile primary navigation must share the approved IA",
@@ -71,8 +69,6 @@ assert.deepEqual(
       links: [
         { label: "Markets", href: "/markets" },
         { label: "Free", href: "/" },
-        { label: "VIP", href: "/pricing" },
-        { label: "Pricing", href: "/pricing" },
       ],
     },
     {
@@ -91,7 +87,7 @@ assert.deepEqual(
         { label: "About", href: "/about" },
         { label: "FAQ", href: "/faq" },
         { label: "Account", href: "/account" },
-        { label: "Billing", href: "/billing" },
+        { label: "Purchase support", href: "/billing" },
         { label: "Contact", href: "/contact" },
       ],
     },
@@ -146,11 +142,12 @@ for (const [label, href] of [
 
 assert.deepEqual(
   footerLinks.filter((link) => link.label === "VIP"),
-  [{ label: "VIP", href: "/pricing" }],
-  "the single footer VIP link must use public Pricing",
+  [],
+  "the footer must not advertise VIP",
 );
 
 for (const contextualOnlyRoute of [
+  "/pricing",
   "/manifesto",
   "/sponsors",
   "/intelligence",
@@ -243,7 +240,7 @@ for (const [name, imageUrl] of [
 
 for (const currentSection of [
   "Current platform",
-  "Free, VIP, and Research",
+  "Free intelligence and research",
   "Independent analytical position",
   "Founder and leadership",
   "Trust and contact",

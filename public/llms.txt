@@ -7,7 +7,6 @@ Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
 ## Public destinations
 
 - [Markets](https://chronoversecapital.com/markets)
-- [Pricing](https://chronoversecapital.com/pricing)
 - [Research](https://chronoversecapital.com/reports)
 - [Methodology](https://chronoversecapital.com/methodology)
 - [Data Sources](https://chronoversecapital.com/data-sources)

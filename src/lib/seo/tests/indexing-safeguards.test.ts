@@ -29,11 +29,6 @@ const ROUTE_POLICIES = [
     follow: true,
   },
   {
-    pathname: "/sponsors",
-    sourcePath: "../../../app/(site)/sponsors/page.tsx",
-    follow: true,
-  },
-  {
     pathname: "/studio",
     sourcePath: "../../../app/studio/layout.tsx",
     follow: false,
@@ -144,8 +139,9 @@ function verifyRoutePolicies(): void {
     "utf8",
   );
   for (const preservedBillingTruth of [
-    "$15.99 monthly",
-    "$150.99 annually",
+    "HistoricalPurchaseSupport",
+    "one-time books",
+    "historical records and refund handling",
     "Subscription facts are private",
     "No active paid subscription is recorded",
     "ManageSubscriptionButton",

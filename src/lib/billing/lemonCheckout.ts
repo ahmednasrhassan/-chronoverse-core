@@ -1,4 +1,5 @@
 import "server-only";
+import { isFreeOnlyMode } from "../../config/siteAvailability";
 
 import { siteConfig } from "../../config/siteConfig";
 import { buildCanonicalUrl } from "../seo/site-url";
@@ -24,6 +25,7 @@ export type LemonCheckoutPlanV1 =
   (typeof LEMON_CHECKOUT_PLANS_V1)[number];
 
 export type LemonCheckoutErrorCodeV1 =
+  | "checkout-disabled"
   | "configuration-unavailable"
   | "provider-unavailable"
   | "invalid-provider-response";
@@ -61,6 +63,9 @@ export async function createLemonCheckoutV1(
   plan: LemonCheckoutPlanV1,
   dependencies: LemonCheckoutDependenciesV1 = PRODUCTION_DEPENDENCIES_V1,
 ): Promise<string> {
+  if (isFreeOnlyMode()) {
+    throw new LemonCheckoutErrorV1("checkout-disabled");
+  }
   const customData = await dependencies.resolveCustomData();
   const config = getCoherentConfigV1(dependencies);
   const apiKey = getApiKeyV1(dependencies);

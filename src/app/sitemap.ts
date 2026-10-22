@@ -42,7 +42,6 @@ const STATIC_ROUTES: ReadonlyArray<{
   { path: "markets", changeFrequency: "weekly", priority: 0.7 },
   { path: "methodology", changeFrequency: "monthly", priority: 0.6 },
   { path: "newsletter", changeFrequency: "monthly", priority: 0.5 },
-  { path: "pricing", changeFrequency: "weekly", priority: 0.6 },
   { path: "privacy-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "reports", changeFrequency: "weekly", priority: 0.9 },
   { path: "terms-of-service", changeFrequency: "yearly", priority: 0.3 },

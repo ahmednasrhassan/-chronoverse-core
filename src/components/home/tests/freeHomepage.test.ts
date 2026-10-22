@@ -9,7 +9,7 @@ const repositoryRoot = process.cwd();
 const readSource = (relativePath: string) =>
   readFileSync(path.join(repositoryRoot, relativePath), "utf8");
 
-const homepageSource = readSource("src/app/(site)/page.tsx");
+const homepageSource = readSource("src/app/(site)/page.tsx") + "\n" + readSource("src/components/home/FreeHomePageContent.tsx");
 const marketSurfaceSource = readSource(
   "src/components/home/FreeMarketSurface.tsx",
 );
@@ -59,9 +59,9 @@ assert.match(
   "the complete above-the-fold market experience must resolve before composition",
 );
 assert.doesNotMatch(
-  homepageSource,
+  homepageSource.slice(homepageSource.indexOf("export function FreeHomePageContent"), homepageSource.indexOf("function FreeMarketExperience")),
   /MarketExperienceFallback|<Suspense[^>]*>[\s\S]*?<FreeMarketExperience/,
-  "a short streaming fallback must not displace the downstream VIP section",
+  "market data must remain outside the research streaming fallback",
 );
 assert.match(projectionServiceSource, /Promise\.allSettled/);
 assert.match(projectionServiceSource, /getCachedCanonicalFxResultBundleV1\(\)/);
@@ -105,16 +105,9 @@ for (const forbiddenLegacyValue of [
 }
 
 assert.match(homepageSource, /href="\/markets"/);
-assert.match(
-  homepageSource,
-  /<Link href="\/pricing" className=\{PRIMARY_CTA_CLASS\}>[\s\S]{0,120}Explore VIP/,
-  "homepage VIP exploration CTA must use the public Pricing surface",
-);
-assert.match(
-  homepageSource,
-  /title="Chronoverse VIP"[\s\S]{0,320}href="\/pricing"[\s\S]{0,120}cta="Explore VIP"/,
-  "homepage VIP membership card must use the public Pricing surface",
-);
+assert.match(homepageSource, /!isFreeOnlyMode\(\) \? <VipConversion/);
+assert.match(homepageSource, /!isFreeOnlyMode\(\) \? <MembershipAndResearch/);
+assert.match(homepageSource, /href="\/methodology"/);
 assert.doesNotMatch(
   homepageSource,
   /href="\/vip"/,
@@ -253,19 +246,6 @@ assert.doesNotMatch(combinedHomepageSource, /NEXT_PUBLIC_.*(SECRET|KEY|LEMON)/);
 assert.doesNotMatch(combinedHomepageSource, /ecb\.europa\.eu|api\.yahoo|query\d*\.finance/);
 assert.doesNotMatch(combinedHomepageSource, /no-store|setInterval|setTimeout/);
 
-// Verify the two acquisition surfaces independently, rather than banning terms
-// across editorial content or treating every product as an FX engine.
-const depthMap = homepageSource.match(/const vipCapabilities = \[([\s\S]*?)\] as const/)?.[1];
-const comparison = marketSurfaceSource.match(/title="VIP intelligence"[\s\S]*?items=\{\[([\s\S]*?)\]\}/)?.[1];
-assert.ok(depthMap, "homepage depth map exists");
-assert.ok(comparison, "Free/VIP comparison exists");
-for (const claims of [depthMap, comparison]) {
-  for (const capability of ["Technical evidence", "€STR rate regimes", "FX", "confidence", "invalidation", "Historical context"]) {
-    assert.ok(claims.toLowerCase().includes(capability.toLowerCase()), `supported product-specific claim: ${capability}`);
-  }
-  assert.doesNotMatch(claims, /Macro|Cross-market|Regime intelligence|bilateral|calendar opportunity/);
-}
-assert.match(homepageSource, /FX\s+rooms add confidence, conditional scenarios, and invalidation;/);
-assert.match(homepageSource, /€STR adds rate features and current rate regimes/);
+assert.doesNotMatch(marketSurfaceSource, /VIP|Deeper in/);
 
 console.log("PASS: Free homepage contract and five-market Lite boundary");

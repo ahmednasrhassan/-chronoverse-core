@@ -11,7 +11,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Contact",
   description:
-    "Contact Chronoverse Capital about account access, billing, research sources, corrections, or commercial inquiries.",
+    "Contact Chronoverse Capital about account access, billing, research sources, corrections, or historical purchase support.",
   pathname: "/contact",
 });
 
@@ -20,7 +20,7 @@ export default function ContactPage() {
     <InstitutionalPage
       eyebrow="Contact"
       title="Contact Chronoverse Capital"
-      summary="Use the published contact address for account, billing, research, correction, or commercial inquiries."
+      summary="Use the published contact address for account, billing, research, correction, or historical purchase support."
     >
       <InstitutionalSection title="Direct contact">
         <p>
@@ -46,10 +46,6 @@ export default function ContactPage() {
             For a source question or correction, include the page, market,
             reference date, and the specific statement or observation at issue.
           </li>
-          <li>
-            For a sponsorship or collaboration inquiry, describe the
-            organization and proposed scope.
-          </li>
         </ul>
       </InstitutionalSection>
 
@@ -61,11 +57,12 @@ export default function ContactPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Commercial inquiries">
+      <InstitutionalSection title="Historical purchase support">
         <p>
-          The <Link href="/sponsors">Sponsorships page</Link> explains the
-          separation between commercial support and analytical or editorial
-          output. Submission of an inquiry does not create an agreement.
+          Previous Lemon Squeezy and Gumroad orders were one-time books or
+          digital products. Include the order reference and describe any
+          delivery, refund or dispute issue. Original purchase terms and
+          applicable customer rights remain in effect.
         </p>
       </InstitutionalSection>
 

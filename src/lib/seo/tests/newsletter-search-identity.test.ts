@@ -32,7 +32,7 @@ function verifyNewsletterMetadata(): void {
   assert.equal(metadata.title, "Newsletter");
   assert.equal(
     metadata.description,
-    "Subscribe to receive published market research and analytical updates, separate from Free Lite and VIP Deep access.",
+    "Subscribe to receive published market research and analytical updates, available free to readers.",
   );
   assert.equal(
     metadata.alternates?.canonical,

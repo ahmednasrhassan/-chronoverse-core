@@ -119,14 +119,13 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-secondary">
           <h2 className="font-semibold text-primary">Access and billing help</h2>
           <p className="mt-2">
-            Signing in verifies identity; it does not purchase or change
-            access. Review your trusted commercial state and open secure
-            provider-hosted subscription management from{" "}
+            Signing in verifies your free account identity. For help with a
+            historical book or digital-product purchase, visit{" "}
             <Link
               href="/billing"
               className="rounded-sm text-mauve underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve"
             >
-              Billing
+              Purchase support
             </Link>{" "}
             or use{" "}
             <Link

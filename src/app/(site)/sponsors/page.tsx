@@ -1,3 +1,5 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
+import { notFound as retiredNotFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -7,7 +9,7 @@ import {
 } from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : {
   title: "Sponsorships",
   description:
     "Contact Chronoverse Capital about research sponsorship and collaboration inquiries.",
@@ -22,6 +24,7 @@ export const metadata: Metadata = {
 };
 
 export default function SponsorsPage() {
+  if (isFreeOnlyMode()) retiredNotFound();
   return (
     <InstitutionalPage
       eyebrow="Commercial inquiries"

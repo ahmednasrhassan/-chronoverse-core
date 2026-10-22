@@ -1,4 +1,5 @@
 import "server-only";
+import { isFreeOnlyMode } from "../../../config/siteAvailability";
 
 import {
   AccessGuardErrorV1,
@@ -23,6 +24,12 @@ export interface VipDeepApiDependenciesV1 {
 export async function handleVipDeepApiRequestV1(
   dependencies: VipDeepApiDependenciesV1,
 ): Promise<Response> {
+  if (isFreeOnlyMode()) {
+    return Response.json({ ok: false, error: "not-found" }, {
+      status: 404,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
   try {
     await dependencies.requireVip();
   } catch (error) {

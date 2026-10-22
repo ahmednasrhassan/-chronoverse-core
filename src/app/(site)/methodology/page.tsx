@@ -40,17 +40,16 @@ export default function MethodologyPage() {
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Lite and Deep projections">
+      <InstitutionalSection title="Free Lite projection">
         <p>
-          Free Lite and VIP Deep begin with the same canonical five-product
-          truth. Lite presents a bounded public projection. Deep supplies
-          additional evidence and context through protected VIP Market Rooms;
-          it does not substitute a different source observation.
+          Free Lite presents a bounded projection of the canonical five-product
+          analysis. Official source observations remain distinct from derived
+          analytical output, and neither is a streaming market price.
         </p>
         <p>
-          Historical charts use a sibling series of official daily or reference
-          observations. Requested calendar coverage and observed source
-          coverage are reported separately where they differ.
+          Historical charts and source-history coverage describe official daily
+          or reference observations. Available source history does not imply
+          that every analytical layer is part of the public Lite display.
         </p>
       </InstitutionalSection>
 

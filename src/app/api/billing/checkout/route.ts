@@ -1,4 +1,5 @@
 import { AccessGuardErrorV1 } from "@/lib/auth/guards";
+import { isFreeOnlyMode } from "@/config/siteAvailability";
 import {
   createLemonCheckoutV1,
   LemonCheckoutErrorV1,
@@ -26,6 +27,12 @@ export function createCheckoutRouteHandlerV1(
   dependencies: CheckoutRouteDependenciesV1 = PRODUCTION_DEPENDENCIES_V1,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
+    if (isFreeOnlyMode()) {
+      return Response.json({ ok: false, error: "checkout-disabled" }, {
+        status: 410,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
     let body: unknown;
 
     try {

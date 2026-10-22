@@ -13,6 +13,11 @@ async function main(): Promise<void> {
     const request = new NextRequest(`http://www.chronoversecapital.com:3000${path}`, { headers: { host: "www.chronoversecapital.com:3000" } });
     assert.equal(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url: request.url, headers: { host: "www.chronoversecapital.com" } }), true);
     const response = await handler(request);
+    if (path.startsWith("/vip")) {
+      assert.equal(response.status, 404);
+      assert.equal(response.headers.get("location"), null);
+      continue;
+    }
     assert.equal(response.status, 308);
     assert.equal(response.headers.get("location"), `https://chronoversecapital.com${path}`);
     assert.equal(response.headers.get("x-middleware-rewrite"), null);
@@ -28,7 +33,8 @@ async function main(): Promise<void> {
   }
   const vip = await handler(new NextRequest("https://chronoversecapital.com/vip", { headers: { host: "chronoversecapital.com" } }));
   assert.equal(vip.headers.get("x-robots-tag"), "noindex, nofollow");
-  assert.equal(refreshCalls, 1, "canonical private routing still refreshes authentication");
+  assert.equal(vip.status, 404);
+  assert.equal(refreshCalls, 0, "retired routes never refresh authentication");
   console.log("PASS: exact www canonical host, paths, queries, assets and private/preview boundaries");
 }
 void main();

@@ -1,4 +1,5 @@
 import "server-only";
+import { isFreeOnlyMode } from "../../config/siteAvailability";
 
 import {
   requireAuthenticatedV1,
@@ -23,6 +24,7 @@ import {
 export const LEMON_PORTAL_TIMEOUT_MS_V1 = LEMON_API_TIMEOUT_MS_V1;
 
 export type LemonPortalErrorCodeV1 =
+  | "portal-disabled"
   | "customer-not-found"
   | "customer-mapping-invalid"
   | "configuration-unavailable"
@@ -61,6 +63,9 @@ const PRODUCTION_DEPENDENCIES_V1: LemonPortalDependenciesV1 = Object.freeze({
 export async function createLemonCustomerPortalV1(
   dependencies: LemonPortalDependenciesV1 = PRODUCTION_DEPENDENCIES_V1,
 ): Promise<string> {
+  if (isFreeOnlyMode()) {
+    throw new LemonPortalErrorV1("portal-disabled");
+  }
   const access = await dependencies.requireAuthenticated();
   const config = commercialConfigV1(dependencies);
   const customer = await trustedCustomerV1(access, config, dependencies);

@@ -33,7 +33,6 @@ async function main(): Promise<void> {
   assert.match(llms, /https:\/\/chronoversecapital\.com/);
   for (const route of [
     "/markets",
-    "/pricing",
     "/reports",
     "/methodology",
     "/data-sources",

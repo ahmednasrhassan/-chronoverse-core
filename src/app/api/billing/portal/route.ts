@@ -1,4 +1,5 @@
 import { AccessGuardErrorV1 } from "@/lib/auth/guards";
+import { isFreeOnlyMode } from "@/config/siteAvailability";
 import {
   createLemonCustomerPortalV1,
   LemonPortalErrorV1,
@@ -18,6 +19,12 @@ export function createPortalRouteHandlerV1(
   dependencies: PortalRouteDependenciesV1 = PRODUCTION_DEPENDENCIES_V1,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
+    if (isFreeOnlyMode()) {
+      return Response.json({ ok: false, error: "portal-disabled" }, {
+        status: 410,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
     let body: string;
 
     try {

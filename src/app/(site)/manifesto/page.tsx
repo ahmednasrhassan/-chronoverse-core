@@ -33,9 +33,9 @@ export default function ManifestoPage() {
 
       <InstitutionalSection title="One canonical truth">
         <p>
-          Free and VIP begin with the same official observations and canonical
-          analysis. Free presents the Lite projection; VIP presents the Deep
-          projection for verified access.
+          Free Lite begins with official observations and canonical analysis.
+          Source identity and derived interpretation remain distinct in the
+          public projection.
         </p>
       </InstitutionalSection>
 
@@ -58,7 +58,7 @@ export default function ManifestoPage() {
       <InstitutionalSection title="Commercial restraint">
         <p>
           Sponsorship and other commercial arrangements remain separate from
-          Free Lite intelligence, VIP Deep intelligence, analytical outputs,
+          Free Lite intelligence, analytical outputs,
           and editorial conclusions.
         </p>
       </InstitutionalSection>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isRetiredCommercialPath } from '@/config/siteAvailability';
 
 import { refreshSupabaseSessionV1 } from '@/lib/auth/supabase/proxy';
 import { buildCanonicalUrl } from '@/lib/seo/site-url';
@@ -42,6 +43,18 @@ export function createChronoverseProxyV1(
   refreshSession: SessionRefresherV1 = refreshSupabaseSessionV1,
 ) {
   return async function handleProxy(request: NextRequest) {
+    // Respond before session refresh, rewrites, redirects or streamed rendering.
+    // Every host and descendant is covered by the explicit matchers below.
+    if (isRetiredCommercialPath(request.nextUrl.pathname)) {
+      return new NextResponse('Not found', {
+        status: 404,
+        headers: {
+          'Cache-Control': 'no-store',
+          'Content-Type': 'text/plain; charset=utf-8',
+          'X-Robots-Tag': PREVIEW_ROBOTS_HEADER_VALUE_V1,
+        },
+      });
+    }
     const canonicalHostUrl = getWwwCanonicalRedirectUrlV1(request);
     if (canonicalHostUrl !== null) {
       // Redirect before authentication: apex owns the session and private route.
@@ -164,6 +177,10 @@ export const proxy = createChronoverseProxyV1();
 
 export const config = {
   matcher: [
+    { source: '/pricing/:path*' },
+    { source: '/premium/:path*' },
+    { source: '/vip/:path*' },
+    { source: '/sponsors/:path*' },
     // Include asset requests on this exact alias, too.
     { source: '/:path*', has: [{ type: 'host', value: 'www\\.chronoversecapital\\.com' }] },
     // Apex session routes include every descendant, even paths with asset extensions.

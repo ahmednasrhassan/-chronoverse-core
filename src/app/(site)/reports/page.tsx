@@ -6,7 +6,7 @@ import { buildPublicPageMetadata } from '@/lib/seo/metadata';
 export const metadata: Metadata = buildPublicPageMetadata({
   title: 'Research Reports',
   description:
-    'Browse editorial research on markets, macro liquidity, and cyclical dynamics, separate from Chronoverse VIP membership.',
+    'Browse editorial research on markets, macro liquidity, and cyclical dynamics.',
   pathname: '/reports',
 });
 

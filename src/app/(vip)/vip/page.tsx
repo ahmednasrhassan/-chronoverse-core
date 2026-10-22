@@ -1,3 +1,5 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
+import { notFound as retiredNotFound } from "next/navigation";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -11,7 +13,7 @@ import { selectVipMarketV1 } from
 import { getFiveProductVipDeepProjectionMapV1 } from
   "@/lib/markets/services/canonicalProductResults";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : {
   title: "VIP Overview | Chronoverse Capital",
   description:
     "Deep decision intelligence for the Chronoverse five-market universe.",
@@ -34,6 +36,7 @@ interface VipOverviewPageProps {
 export default async function VipOverviewPage({
   searchParams,
 }: VipOverviewPageProps) {
+  if (isFreeOnlyMode()) retiredNotFound();
   const access = await enforceVipPageAccessV1(requireVipV1, redirect);
 
   const projections = await getFiveProductVipDeepProjectionMapV1();

@@ -1,3 +1,5 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
+import { notFound as retiredNotFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -6,7 +8,7 @@ import { LAUNCH_MARKETS_V1 } from "@/config/institutionalNavigation";
 import { requireVipV1 } from "@/lib/auth/guards";
 import { enforceVipPageAccessV1 } from "@/lib/auth/vipPageAccess";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : {
   title: "VIP Market Rooms | Chronoverse Capital",
   description:
     "The five-product Chronoverse VIP Market Room directory for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.",
@@ -21,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default async function VipMarketsPage() {
+  if (isFreeOnlyMode()) retiredNotFound();
   await enforceVipPageAccessV1(requireVipV1, redirect);
 
   return (

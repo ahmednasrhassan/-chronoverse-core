@@ -1,3 +1,5 @@
+import { isFreeOnlyMode, RETIRED_PAGE_METADATA } from "@/config/siteAvailability";
+import { notFound as retiredNotFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -10,7 +12,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 import CheckoutButtons from "./CheckoutButtons";
 
-export const metadata: Metadata = buildPublicPageMetadata({
+export const metadata: Metadata = isFreeOnlyMode() ? RETIRED_PAGE_METADATA : buildPublicPageMetadata({
   title: "Pricing",
   description:
     "Compare Free Lite with VIP Deep at $15.99 monthly or $150.99 annually.",
@@ -18,6 +20,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 });
 
 export default function PricingPage() {
+  if (isFreeOnlyMode()) retiredNotFound();
   return (
     <InstitutionalPage
       eyebrow="Access structure"

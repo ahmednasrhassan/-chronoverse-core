@@ -225,7 +225,7 @@ async function verifyLegacyImageConservatism(): Promise<void> {
 }
 
 function verifyRenderContracts(): void {
-  const homepageSource = readSource("src/app/(site)/page.tsx");
+  const homepageSource = readSource("src/app/(site)/page.tsx") + "\n" + readSource("src/components/home/FreeHomePageContent.tsx");
   const articleSource = readSource("src/app/(site)/[slug]/page.tsx");
   const headerSource = readSource("src/components/navigation/Header.tsx");
   const nextConfigSource = readSource("next.config.ts");

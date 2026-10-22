@@ -43,7 +43,6 @@ const STATIC_ROUTES = [
     metadata: homeMetadata,
   },
   { pathname: "/markets", title: "Markets", metadata: marketsMetadata },
-  { pathname: "/pricing", title: "Pricing", metadata: pricingMetadata },
   {
     pathname: "/reports",
     title: "Research Reports",
@@ -190,16 +189,9 @@ for (const market of EXPECTED_LAUNCH_MARKETS) {
 assert.doesNotMatch(marketsDescription, /Gold|Bitcoin|Oil|Nasdaq|S&P|DXY/i);
 assert.match(marketsDescription, /Free Lite/);
 
-const pricingDescription = requireString(
-  pricingMetadata.description,
-  "/pricing description",
-);
-assert.match(pricingDescription, /\$15\.99 monthly/);
-assert.match(pricingDescription, /\$150\.99 annually/);
-assert.doesNotMatch(pricingDescription, /checkout[^.]*not currently available/i);
-assert.doesNotMatch(
-  pricingDescription,
-  /buy now|subscribe now|instant access after payment/i,
-);
+assert.equal(pricingMetadata.title, "Page not found");
+assert.deepEqual(pricingMetadata.robots, { index: false, follow: false });
+assert.equal(pricingMetadata.alternates, undefined);
+assert.doesNotMatch(JSON.stringify(pricingMetadata), /VIP|pricing|15\.99|150\.99/i);
 
 console.log("PASS: SEO-B2 static route metadata");

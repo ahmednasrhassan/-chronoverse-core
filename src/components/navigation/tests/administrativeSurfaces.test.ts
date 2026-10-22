@@ -35,7 +35,7 @@ assert.equal(
   "the obsolete non-routable sponsor copy must not survive",
 );
 
-assert.match(sources.about, /protected VIP Market\s+Rooms/);
+assert.match(sources.about, /Free intelligence and research/);
 assert.match(sources.about, /Editorial Research/);
 assert.match(sources.about, /Ahmed N\. Hassan — LinkedIn/);
 assert.doesNotMatch(
@@ -47,9 +47,9 @@ assert.match(sources.account, /Sign in without a password/);
 assert.match(sources.account, /current Chronoverse access state/);
 assert.doesNotMatch(sources.account, /LEMON-70|access code|Early Access/i);
 
-assert.match(sources.billing, /\$15\.99 monthly/);
-assert.match(sources.billing, /\$150\.99 annually/);
-assert.match(sources.billing, /<Link href="\/pricing">Pricing<\/Link>/);
+assert.doesNotMatch(sources.billing, /\$15\.99 monthly/);
+assert.doesNotMatch(sources.billing, /\$150\.99 annually/);
+assert.doesNotMatch(sources.billing, /href="\/pricing"/);
 assert.match(
   sources.billing,
   /state\.portalAvailable \? <ManageSubscriptionButton \/> : null/,
@@ -62,18 +62,18 @@ for (const reason of [
   "billing",
   "source question",
   "correction",
-  "sponsorship",
+  "historical purchase",
 ]) {
   assert.match(sources.contact, new RegExp(reason, "i"));
 }
-assert.match(sources.contact, /href="\/sponsors"/);
+assert.doesNotMatch(sources.contact, /href="\/sponsors"/);
 assert.doesNotMatch(sources.contact, /within \d+|response within|guaranteed response/i);
 
 for (const methodBoundary of [
   "European Central Bank",
   "canonical normalization",
   "Free Lite",
-  "VIP Deep",
+
   "Historical charts",
   "technical evidence",
   "degraded",
@@ -124,8 +124,8 @@ for (const disclaimerBoundary of [
 
 assert.match(sources.terms, /Free provides the Lite projection/);
 assert.match(sources.terms, /Passwordless sign-in verifies identity/);
-assert.match(sources.terms, /\$15\.99 monthly or \$150\.99 annually/);
-assert.match(sources.terms, /Standalone research/);
+assert.match(sources.terms, /Historical purchases and support/);
+assert.match(sources.terms, /one-time books/);
 assert.doesNotMatch(
   sources.terms,
   /LEMON-70|access code|governed by the laws|licensed financial advisors/i,
@@ -176,7 +176,7 @@ assert.doesNotMatch(
 );
 
 assert.match(sources.faq, /exactly EUR\/USD, EUR\/JPY, EUR\/GBP, EUR\/CHF, and\s+€STR/);
-assert.match(sources.faq, /standalone research are separate offerings/);
+assert.match(sources.faq, /Historical purchase obligations/);
 assert.doesNotMatch(sources.faq, /LEMON-70|access code/i);
 
 assert.match(sources.manifesto, /Focused coverage/);
@@ -187,15 +187,7 @@ assert.doesNotMatch(
   /Document Clearance|Intelligence Network|Established 2026/i,
 );
 
-assert.match(
-  sources.sponsors,
-  /Sponsorship does not influence Free Lite intelligence, VIP Deep\s+intelligence, analytical outputs, or editorial conclusions/,
-);
-assert.match(sources.sponsors, /does not guarantee reach, visibility/);
-assert.doesNotMatch(
-  sources.sponsors,
-  /institutional-grade audience|maximum visibility|AfriKDP|XM Global/i,
-);
+assert.match(sources.sponsors, /if \(isFreeOnlyMode\(\)\) retiredNotFound\(\)/);
 
 const allCurrentSources = Object.values(sources).join("\n");
 assert.doesNotMatch(

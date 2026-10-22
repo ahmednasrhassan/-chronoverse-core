@@ -158,7 +158,7 @@ function verifySearchPolicy(): void {
   );
   const origin = "https://chronoversecapital.com";
   assert.equal(urls.has(`${origin}/markets`), true);
-  assert.equal(urls.has(`${origin}/pricing`), true);
+  assert.equal(urls.has(`${origin}/pricing`), false);
 
   for (const legacyOrPrivateUrl of [
     "/intelligence",
