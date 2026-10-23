@@ -100,3 +100,13 @@ unreviewed dependency migration is applied as part of this removal.
 while that security check remains unresolved. The production deployment is not
 triggered by this cleanup, and no new Vercel READY status is claimed. Full Lemon
 retirement remains separately blocked on verified production commercial obligations.
+
+## Security release follow-up (2026-10-23)
+
+The audit hold above records the cleanup baseline. The subsequent
+[security release assessment](security-release-2026-10-23.md) documents the patched
+dependencies and repeated regression checks: zero Critical/High findings remain,
+with four Moderate package entries from one Sanity CLI UUID advisory. The audit
+command still exits 1; this is not a clean-audit claim. The CLI chain is absent
+from the generated production dependency traces. Lemon retirement remains blocked
+on verified commercial obligations, and its retained functionality is unchanged.

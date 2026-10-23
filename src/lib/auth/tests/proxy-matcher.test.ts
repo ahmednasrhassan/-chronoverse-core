@@ -63,9 +63,10 @@ async function productionDispatchMatches(
       handleLocale: (path: string) => ({ pathname: path }),
     } as unknown as Parameters<typeof getResolveRoutes>[0],
     { ...defaultConfig, ...nextConfig } as unknown as Parameters<typeof getResolveRoutes>[1],
+    () => "",
     { dir: process.cwd(), port: 3000, dev: false, onDevServerCleanup: undefined },
-    { initialize: async () => { throw dispatched; } } as unknown as Parameters<typeof getResolveRoutes>[3],
-    {} as Parameters<typeof getResolveRoutes>[4],
+    { initialize: async () => { throw dispatched; } } as unknown as Parameters<typeof getResolveRoutes>[4],
+    {} as Parameters<typeof getResolveRoutes>[5],
   );
   const { req, res } = createRequestResponseMocks({ url: pathname, headers: { host } });
   try {
