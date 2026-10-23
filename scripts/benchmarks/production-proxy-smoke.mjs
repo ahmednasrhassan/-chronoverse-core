@@ -10,17 +10,20 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { XMLValidator } from "fast-xml-parser";
 
-const originOptions = ["base-url", "www-url", "newsletter-url", "newsletter-www-url", "deployment-url"];
+const originOptions = ["base-url", "www-url", "newsletter-url", "newsletter-www-url", "deployment-url", "apps-url"];
 const products = ["eurusd", "eurjpy", "eurgbp", "eurchf", "estr"];
-const basePaths = ["/", "/markets", "/robots.txt", "/sitemap.xml", "/rss.xml", "/feed.xml", "/account", "/billing", "/vip", "/vip/markets", "/%76ip", "/vip%2Fmarkets", "/api/market-data", "/api/billing/checkout", "/api/billing/portal", "/api/newsletter", "/api/og",
+const publicationPaths = ["/", "/reports", "/archive", "/contact", "/newsletter", "/robots.txt", "/sitemap.xml", "/rss.xml", "/feed.xml", "/account", "/api/newsletter", "/api/og"];
+// These are regression probes for tombstones and redirects, not product discovery.
+const retiredPaths = ["/markets", "/billing", "/vip", "/vip/markets", "/%76ip", "/vip%2Fmarkets", "/api/market-data", "/api/billing/checkout", "/api/billing/portal",
   ...products.map(id => `/api/markets/${id}/intelligence`),
   ...products.map(id => `/vip/markets/${id}`)];
+const basePaths = [...publicationPaths, ...retiredPaths];
 const maxBodyBytes = 2 * 1024 * 1024;
 const help = `Usage: node scripts/benchmarks/production-proxy-smoke.mjs --base-url ORIGIN [--execute] [--allow-remote]
 Without --execute, only a request plan is printed. No target defaults to production.
 Remote execution requires HTTPS and --allow-remote. HTTP is allowed only for loopback.
 Origins must not contain credentials, paths, queries, or fragments.
-Optional explicit origins: --www-url, --newsletter-url, --newsletter-www-url, --deployment-url.
+Optional explicit origins: --www-url, --newsletter-url, --newsletter-www-url, --deployment-url, --apps-url.
 Requests are sequential anonymous GETs, 350 ms apart, with a 10-second timeout and 2 MiB body cap.
 Output omits target hostnames, redirect queries, cookies, raw API bodies, and raw errors.
 Execution observes responses; it does not assert complete authentication or matcher correctness.`;
@@ -57,6 +60,7 @@ export function buildPlan(options) {
   if (origins["newsletter-url"]) plan.push({ target: "newsletter-url", path: "/" }, { target: "newsletter-url", path: "/archive" });
   if (origins["newsletter-www-url"]) plan.push({ target: "newsletter-www-url", path: "/" });
   if (origins["deployment-url"]) plan.push({ target: "deployment-url", path: "/account" });
+  if (origins["apps-url"]) plan.push({ target: "apps-url", path: "/" });
   return plan.map(item => ({ ...item, url: new URL(item.path, origins[item.target]).href }));
 }
 

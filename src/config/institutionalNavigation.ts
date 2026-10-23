@@ -36,7 +36,6 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
       { label: "About", href: "/about" },
       { label: "FAQ", href: "/faq" },
       { label: "Account", href: "/account" },
-      { label: "Purchase support", href: "/billing" },
       { label: "Contact", href: "/contact" },
     ],
   },

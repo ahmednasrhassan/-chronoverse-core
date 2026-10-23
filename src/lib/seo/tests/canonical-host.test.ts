@@ -13,6 +13,11 @@ async function main(): Promise<void> {
     const request = new NextRequest(`http://www.chronoversecapital.com:3000${path}`, { headers: { host: "www.chronoversecapital.com:3000" } });
     assert.equal(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url: request.url, headers: { host: "www.chronoversecapital.com" } }), true);
     const response = await handler(request);
+    if (path === "/billing") {
+      assert.equal(response.status, 308);
+      assert.equal(response.headers.get("location"), "https://chronoversecapital.com/contact");
+      continue;
+    }
     if (path.startsWith("/vip")) {
       assert.equal(response.status, 404);
       assert.equal(response.headers.get("location"), null);

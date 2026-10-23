@@ -19,11 +19,6 @@ const ROUTE_POLICIES = [
     follow: false,
   },
   {
-    pathname: "/billing",
-    sourcePath: "../../../app/(site)/billing/page.tsx",
-    follow: false,
-  },
-  {
     pathname: "/manifesto",
     sourcePath: "../../../app/(site)/manifesto/page.tsx",
     follow: true,
@@ -132,29 +127,10 @@ function verifyRoutePolicies(): void {
     );
   }
 
-  const billingSource = readFileSync(
-    fileURLToPath(
-      new URL("../../../app/(site)/billing/page.tsx", import.meta.url),
-    ),
-    "utf8",
-  );
-  for (const preservedBillingTruth of [
-    "HistoricalPurchaseSupport",
-    "one-time books",
-    "historical records and refund handling",
-  ]) {
-    assert.ok(
-      billingSource.includes(preservedBillingTruth),
-      `/billing preserves ${preservedBillingTruth}`,
-    );
-  }
-  assert.equal(
-    billingSource.includes(
-      "Billing-portal and subscription-management controls are not currently available",
-    ),
-    false,
-    "/billing no longer claims customer management is unavailable",
-  );
+  const supportSource = readFileSync(fileURLToPath(new URL("../../../app/(site)/contact/page.tsx", import.meta.url)), "utf8");
+  for (const truth of ["Historical purchase support", "refund or dispute", "Original purchase terms"])
+    assert.ok(supportSource.includes(truth), `contact preserves ${truth}`);
+
 }
 
 function request(hostname: string, pathname: string): NextRequest {

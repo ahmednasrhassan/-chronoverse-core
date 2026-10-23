@@ -40,7 +40,7 @@ export default function FaqPage() {
         <p>
           Previous Lemon Squeezy and Gumroad purchases were one-time books or
           digital products. For order, delivery, refund or dispute questions,
-          use <Link href="/billing">Purchase support</Link> or the contact
+          use <Link href="/contact">Purchase support</Link> or the contact
           details on your original receipt. Historical purchase obligations
           remain applicable.
         </p>

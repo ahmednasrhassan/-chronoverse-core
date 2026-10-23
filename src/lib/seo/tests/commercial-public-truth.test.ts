@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import Terms from "../../../app/(site)/terms-of-service/page";
 import Privacy from "../../../app/(site)/privacy-policy/page";
 import Faq from "../../../app/(site)/faq/page";
-import Billing from "../../../app/(site)/billing/page";
+import { default as Support } from "../../../app/(site)/contact/page";
 
 async function main(): Promise<void> {
   for (const page of [Terms, Privacy, Faq]) {
@@ -14,9 +14,9 @@ async function main(): Promise<void> {
     assert.match(html, /refund/);
     assert.doesNotMatch(html, /href="\/pricing"|shop\.chronoversecapital|VIP checkout is available|\$15\.99|\$150\.99/);
   }
-  const support = renderToStaticMarkup(await Billing());
-  assert.match(support, /historical records and refund handling/);
-  assert.match(support, /Original purchase terms and applicable customer/);
+  const support = renderToStaticMarkup(createElement(Support));
+  assert.match(support, /delivery, refund or dispute issue/);
+  assert.match(support, /Original purchase terms and/);
   console.log("PASS: free-only legal and support disclosures preserve historical customer obligations");
 }
 

@@ -29,8 +29,6 @@ export type SessionRefresherV1 = (
 const AUTH_SESSION_ROUTE_FAMILIES_V1 = [
   '/account',
   '/auth',
-  '/billing',
-  '/vip',
 ] as const;
 
 export function requiresAuthSessionRefreshV1(pathname: string): boolean {
@@ -43,6 +41,21 @@ export function createChronoverseProxyV1(
   refreshSession: SessionRefresherV1 = refreshSupabaseSessionV1,
 ) {
   return async function handleProxy(request: NextRequest) {
+    let pathname = request.nextUrl.pathname;
+    try { pathname = decodeURIComponent(pathname); } catch { /* Invalid paths fall through to Next. */ }
+    // Tombstones execute before authentication, body parsing and host rewrites.
+    // No product route or provider service is needed to retire these APIs.
+    if (['/api/markets', '/api/billing', '/api/market-data', '/api/cron/ecb-live-progression'].some(
+      route => pathname === route || pathname.startsWith(`${route}/`),
+    )) {
+      return NextResponse.json({ status: 'retired' }, {
+        status: 410,
+        headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': PREVIEW_ROBOTS_HEADER_VALUE_V1 },
+      });
+    }
+    if (pathname === '/billing' || pathname.startsWith('/billing/')) {
+      return NextResponse.redirect(buildCanonicalUrl('/contact'), 308);
+    }
     // Respond before session refresh, rewrites, redirects or streamed rendering.
     // Every host and descendant is covered by the explicit matchers below.
     if (isRetiredCommercialPath(request.nextUrl.pathname)) {
@@ -177,6 +190,11 @@ export const proxy = createChronoverseProxyV1();
 
 export const config = {
   matcher: [
+    { source: '/api/markets/:path*' },
+    { source: '/api/billing/:path*' },
+    { source: '/api/market-data/:path*' },
+    { source: '/api/cron/ecb-live-progression/:path*' },
+    { source: '/billing/:path*' },
     { source: '/pricing/:path*' },
     { source: '/premium/:path*' },
     { source: '/vip/:path*' },
@@ -186,8 +204,6 @@ export const config = {
     // Apex session routes include every descendant, even paths with asset extensions.
     { source: '/account/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
     { source: '/auth/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
-    { source: '/billing/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
-    { source: '/vip/:path*', has: [{ type: 'host', value: 'chronoversecapital\\.com' }] },
     // Other hosts retain the existing broad matcher for preview noindex and newsletter routing.
     {
       source: '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

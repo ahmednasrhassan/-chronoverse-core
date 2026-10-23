@@ -90,7 +90,7 @@ test("Next build analysis statically extracts and compiles all retirement and se
     nextConfig, isDev: false, page: "/proxy", pageType: "pages" as PAGE_TYPES.PAGES,
   });
   assert.equal(info.hadUnsupportedValue, false);
-  assert.equal(info.middleware?.matchers?.length, 10);
+  assert.equal(info.middleware?.matchers?.length, config.matcher.length);
   assert.deepEqual(info.middleware?.matchers?.map(({ originalSource, has, missing }) => ({
     source: originalSource, has, missing,
   })), config.matcher.map(({ source, has, missing }) => ({ source, has, missing })));
@@ -108,8 +108,7 @@ test("ordinary public apex requests skip invocation, including sessions, RSC and
     "/", "/about", "/markets", "/markets/eurusd", "/reports",
     "/newsletter", "/category/macro", "/research-article", "/research",
     "/intelligence", "/known-article.html", "/robots.txt", "/sitemap.xml",
-    "/rss.xml", "/api/newsletter", "/api/billing/checkout", "/api/billing/portal",
-    "/api/markets/eurusd/intelligence", "/accounting", "/authentication",
+    "/rss.xml", "/api/newsletter", "/accounting", "/authentication",
     "/billings", "/billing-example", "/vipers",
   ]) {
     for (const headers of [
@@ -146,6 +145,12 @@ test("every protected apex family and descendant matches without extension or he
       ]) {
         assert.equal(matches(APEX, `${pathname}?_rsc=test`, headers), true, pathname);
         const response = await handler(request(APEX, `${pathname}?_rsc=test`, headers));
+        if (family === "billing") {
+          assert.equal(response.status, 308);
+          assert.equal(response.headers.get("location"), "https://chronoversecapital.com/contact");
+          assert.equal(response.headers.get("set-cookie"), null);
+          continue;
+        }
         if (family === "vip") {
           assert.equal(response.status, 404);
           assert.equal(response.headers.get("cache-control"), "no-store");
@@ -161,7 +166,7 @@ test("every protected apex family and descendant matches without extension or he
     assert.equal(matches(APEX, `/_next/data/build-id/${family}/profile.json`), true,
       "Next-generated data route matches the protected family");
   }
-  assert.equal(refreshCalls, 84);
+  assert.equal(refreshCalls, 56);
 });
 
 test("other hosts retain baseline matching, including preview and newsletter exclusions", async () => {
@@ -218,6 +223,8 @@ test("Next production dispatch matches decoded protected paths that the raw help
     ["/%61ccount/profile", "/account/profile"],
     ["/auth%2Fconfirm", "/auth/confirm"],
     ["/%62illing/history", "/billing/history"],
+    ["/%61pi/markets/eurusd/intelligence", "/api/markets/eurusd/intelligence"],
+    ["/api%2Fbilling/portal", "/api/billing/portal"],
   ]) {
     assert.equal(matches(APEX, encoded), false, `raw helper: ${encoded}`);
     assert.equal(matches(APEX, decoded), true, `decoded helper: ${decoded}`);
@@ -242,6 +249,11 @@ test("www canonicalizes all paths and assets before session refresh", async () =
     ]) {
       assert.equal(matches(host, pathname), true, `${host}${pathname}`);
       const response = await handler(request(host, pathname));
+      if (pathname === "/billing") {
+        assert.equal(response.status, 308);
+        assert.equal(response.headers.get("location"), "https://chronoversecapital.com/contact");
+        continue;
+      }
       if (pathname.startsWith("/vip")) {
         assert.equal(response.status, 404);
         assert.equal(response.headers.get("location"), null);
@@ -268,9 +280,16 @@ test("newsletter aliases keep one-hop canonical roots, query-preserving rewrites
     assert.equal(root.headers.get("location"), `https://${APEX}/newsletter`);
     assert.equal(root.headers.get("x-robots-tag"), "noindex, nofollow");
     assert.equal(matches(APEX, "/newsletter"), false, "canonical destination bypasses proxy");
-    for (const pathname of ["/archive", "/vip/profile"]) {
+    for (const pathname of ["/archive", "/account", "/billing", "/vip/profile"]) {
       assert.equal(matches(host, pathname), true);
       const response = await handler(request(host, `${pathname}?page=2`));
+      if (pathname === "/billing") {
+        assert.equal(response.status, 308);
+        assert.equal(response.headers.get("location"), "https://chronoversecapital.com/contact");
+        assert.equal(response.headers.get("set-cookie"), null);
+        assert.equal(response.headers.get("x-middleware-rewrite"), null);
+        continue;
+      }
       if (pathname.startsWith("/vip")) {
         assert.equal(response.status, 404);
         assert.equal(response.headers.get("x-middleware-rewrite"), null);
@@ -279,10 +298,12 @@ test("newsletter aliases keep one-hop canonical roots, query-preserving rewrites
       }
       assert.equal(response.headers.get("x-middleware-rewrite"), `https://${host}/newsletter${pathname}?page=2`);
       assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow");
-      if (pathname.startsWith("/vip")) {
+      if (pathname === "/account") {
         assert.equal(response.cookies.get("newsletter-refresh")?.value, "rotated");
         assert.equal(response.cookies.get("newsletter-refresh")?.httpOnly, true);
         assert.equal(response.cookies.get("newsletter-refresh")?.secure, true);
+      } else {
+        assert.equal(response.headers.get("set-cookie"), null);
       }
     }
     for (const pathname of ["/api/newsletter", "/newsletter/archive"]) {

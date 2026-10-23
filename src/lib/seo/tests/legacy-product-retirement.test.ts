@@ -4,15 +4,13 @@ import { test } from "node:test";
 import { unstable_getResponseFromNextConfig } from "next/experimental/testing/server";
 import nextConfig from "../../../../next.config";
 import { buildSitemap } from "../../../app/sitemap";
-import { GET as eurusd } from "../../../app/api/markets/eurusd/intelligence/route";
-import { GET as eurjpy } from "../../../app/api/markets/eurjpy/intelligence/route";
-import { GET as eurgbp } from "../../../app/api/markets/eurgbp/intelligence/route";
-import { GET as eurchf } from "../../../app/api/markets/eurchf/intelligence/route";
-import { GET as estr } from "../../../app/api/markets/estr/intelligence/route";
-import { GET as cron, POST as cronPost } from "../../../app/api/cron/ecb-live-progression/route";
+import { NextRequest } from "next/server";
+import { createChronoverseProxyV1, config } from "../../../proxy";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
 const products = ["eurusd", "eurjpy", "eurgbp", "eurchf", "estr"];
 test("retired public URLs reach the final research route in one permanent hop", async () => {
+  const handler = createChronoverseProxyV1(async () => { throw new Error("public APIs must not refresh sessions"); });
   for (const host of ["chronoversecapital.com", "www.chronoversecapital.com"]) {
     for (const path of ["/markets", ...products.map(id => `/markets/${id}`), "/markets/estr/history", "/intelligence", "/research"]) {
       const response = await unstable_getResponseFromNextConfig({ url: `https://${host}${path}?utm_source=legacy`, nextConfig });
@@ -25,14 +23,36 @@ test("retired public URLs reach the final research route in one permanent hop", 
       assert.equal(final.headers.get("location"), null);
     }
   }
+  // Similar names and live APIs must not inherit the retirement policy.
+  for (const path of ["/api/newsletter", "/api/webhooks/lemon-squeezy", "/api/markets-news", "/api/billing-help", "/api/market-database", "/billings", "/billing-help"]) {
+    const response = await handler(new NextRequest(`https://chronoversecapital.com${path}`));
+    assert.equal(response.status, 200, path);
+    assert.equal(response.headers.get("location"), null, path);
+    assert.equal(response.headers.get("x-middleware-next"), "1", path);
+  }
 });
-test("retired market APIs and acquisition cron never read caller input", async () => {
-  const hostile = new Proxy({} as Request, { get() { throw new Error("request accessed"); } });
-  for (const handler of [eurusd, eurjpy, eurgbp, eurchf, estr, cron, cronPost] as ((request: Request) => Response | Promise<Response>)[]) {
-    const response = await handler(hostile);
-    assert.equal(response.status, 410);
-    assert.equal(response.headers.get("cache-control"), "no-store");
-    assert.deepEqual(await response.json(), { status: "retired" });
+test("retired API families respond before auth, body parsing, redirects and rewrites", async () => {
+  const handler = createChronoverseProxyV1(async () => { throw new Error("authentication invoked"); });
+  for (const host of ["chronoversecapital.com", "www.chronoversecapital.com", "apps.chronoversecapital.com", "newsletter.chronoversecapital.com", "preview.vercel.app"]) {
+    for (const path of ["/api/markets", ...[...products, "gold", "oil"].map(id => `/api/markets/${id}/intelligence`), "/api/markets/unknown/file.svg", "/api/market-data", "/api/cron/ecb-live-progression", "/api/billing/checkout", "/api/billing/portal"]) {
+      assert.equal(unstable_doesMiddlewareMatch({ config, nextConfig, url: `https://${host}${path}`, headers: { host } }), true);
+      for (const method of ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"]) {
+        const request = new NextRequest(`https://${host}${path}`, { method, headers: { host, "next-action": "fixture" } });
+        Object.defineProperty(request, "body", { get() { throw new Error("body read"); } });
+        const response = await handler(request);
+        assert.equal(response.status, 410);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow");
+        for (const header of ["location", "x-middleware-rewrite", "set-cookie"]) assert.equal(response.headers.get(header), null);
+        assert.deepEqual(await response.json(), { status: "retired" });
+      }
+    }
+    for (const path of ["/billing", "/billing/history", "/billing/file.svg"]) {
+      const response = await handler(new NextRequest(`https://${host}${path}`, { headers: { host } }));
+      assert.equal(response.status, 308);
+      assert.equal(response.headers.get("location"), "https://chronoversecapital.com/contact");
+      assert.equal(response.headers.get("set-cookie"), null);
+    }
   }
 });
 test("retired implementation is removed and editorial market subjects remain indexable", () => {

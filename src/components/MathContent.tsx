@@ -15,7 +15,7 @@ interface MathContentProps {
  * Since article content can arrive either as structured Sanity Portable Text
  * (rendered via `PortableTextContent`) or as raw legacy Blogger HTML
  * (rendered via `dangerouslySetInnerHTML`), we can't rely on a markdown-only
- * pipeline (remark-math/rehype-katex) which expects a markdown AST. Instead,
+ * pipeline which expects a markdown AST. Instead,
  * this wrapper walks the rendered DOM after mount/hydration and converts any
  * `$$...$$` (block/display) or `$...$` (inline) LaTeX expressions found in
  * text nodes into properly formatted KaTeX markup — covering both content

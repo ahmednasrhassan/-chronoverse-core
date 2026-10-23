@@ -87,7 +87,7 @@ export default function TermsOfServicePage() {
         </p>
         <p>
           Historical transaction records and refund handling are retained.
-          For assistance, use <Link href="/billing">Purchase support</Link>,
+          For assistance, use <Link href="/contact">Purchase support</Link>,
           the <Link href="/contact">support path</Link>, or the contact details
           on the original receipt. Do not send payment-card details.
         </p>

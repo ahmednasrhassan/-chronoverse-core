@@ -63,7 +63,7 @@ test("expired sessions refresh through the real Supabase SDK and reach request a
     {}, { rsc: "1", "next-router-state-tree": "[]" },
     { rsc: "1", "next-router-prefetch": "1", purpose: "prefetch" },
   ];
-  for (const pathname of ["/account", "/auth/confirm", "/billing/history", "/account/profile"]) {
+  for (const pathname of ["/account", "/auth/confirm", "/auth", "/account/profile"]) {
     for (const variant of variants) {
       const headers = { host: APEX, cookie: `${COOKIE}=${cookieValue}`, ...variant };
       const url = `https://${APEX}${pathname}?_rsc=test`;

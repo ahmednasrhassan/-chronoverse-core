@@ -9,7 +9,6 @@ const readSource = (relativePath: string) =>
 const sources = {
   about: readSource("src/app/(site)/about/page.tsx"),
   account: readSource("src/app/(site)/account/page.tsx"),
-  billing: readSource("src/app/(site)/billing/page.tsx"),
   contact: readSource("src/app/(site)/contact/page.tsx"),
   methodology: readSource("src/app/(site)/methodology/page.tsx"),
   dataSources: readSource("src/app/(site)/data-sources/page.tsx"),
@@ -46,12 +45,12 @@ assert.match(sources.account, /Sign in without a password/);
 assert.match(sources.account, /current Chronoverse access state/);
 assert.doesNotMatch(sources.account, /LEMON-70|access code|Early Access/i);
 
-assert.doesNotMatch(sources.billing, /\$15\.99 monthly/);
-assert.doesNotMatch(sources.billing, /\$150\.99 annually/);
-assert.doesNotMatch(sources.billing, /href="\/pricing"/);
-assert.doesNotMatch(sources.billing, /ManageSubscriptionButton|portalAvailable/);
-assert.match(sources.billing, /Contact page/);
-assert.doesNotMatch(sources.billing, /LEMON-70|access code/i);
+assert.doesNotMatch(sources.contact, /\$15\.99 monthly/);
+assert.doesNotMatch(sources.contact, /\$150\.99 annually/);
+assert.doesNotMatch(sources.contact, /href="\/pricing"/);
+assert.doesNotMatch(sources.contact, /ManageSubscriptionButton|portalAvailable/);
+assert.match(sources.contact, /mailto:/);
+assert.doesNotMatch(sources.contact, /LEMON-70|access code/i);
 
 for (const reason of [
   "account",

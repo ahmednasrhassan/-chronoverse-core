@@ -12,7 +12,7 @@ import Contact from "../../../app/(site)/contact/page";
 import Editorial from "../../../app/(site)/editorial-policy/page";
 import Terms from "../../../app/(site)/terms-of-service/page";
 import Privacy from "../../../app/(site)/privacy-policy/page";
-import Billing from "../../../app/(site)/billing/page";
+import { default as Support } from "../../../app/(site)/contact/page";
 import { isFreeOnlyMode } from "../../../config/siteAvailability";
 import { createAccessResolverV1 } from "../../auth/access";
 
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
   assert.doesNotMatch(shell, /Five free market tools|Explore Free Market Tools|href="\/markets"/i);
   assert.match(shell, /Published research fixture/);
   assert.match(shell, /Newsletter|newsletter/);
-  const billing = render(await Billing());
+  const billing = render(createElement(Support));
   assert.match(billing, /one-time books/);
   assert.match(billing, /Lemon Squeezy and Gumroad/);
   assert.match(billing, /refund/);

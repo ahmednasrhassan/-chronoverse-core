@@ -1,0 +1,366 @@
+{
+  "date": "2026-10-23",
+  "baseline": "f782aee",
+  "historicalCleanupCommit": "686ada939bbf30d34d174887782d4a3c69fbbce8",
+  "removedFiles": [
+    "docs/legacy-cleanup-20261023.md",
+    "docs/legacy-cleanup-branch-removed-files.txt",
+    "docs/legacy-cleanup-removed-files.txt",
+    "docs/legacy-cleanup-retained-dependencies.json",
+    "docs/legacy-cleanup-verification.json",
+    "src/app/(site)/billing/page.tsx",
+    "src/app/(site)/markets/bitcoin/page.tsx",
+    "src/app/(site)/markets/gold/page.tsx",
+    "src/app/(site)/markets/oil/page.tsx",
+    "src/app/(site)/markets/sp500/page.tsx",
+    "src/app/api/billing/checkout/route.ts",
+    "src/app/api/billing/portal/route.ts",
+    "src/app/api/cron/ecb-live-progression/route.ts",
+    "src/app/api/market-data/route.ts",
+    "src/app/api/markets/estr/intelligence/route.ts",
+    "src/app/api/markets/eurchf/intelligence/route.ts",
+    "src/app/api/markets/eurgbp/intelligence/route.ts",
+    "src/app/api/markets/eurjpy/intelligence/route.ts",
+    "src/app/api/markets/eurusd/intelligence/route.ts",
+    "src/app/api/markets/gold/intelligence/route.ts",
+    "src/app/api/markets/oil/intelligence/route.ts",
+    "src/lib/billing/tests/billingUi.test.ts",
+    "src/lib/billing/tests/lemonCheckoutRoute.test.ts",
+    "src/lib/billing/tests/lemonPortalRoute.test.ts",
+    "src/lib/sanity/aiSeo.ts"
+  ],
+  "modifiedFiles": [
+    "README.md",
+    "docs/free-only-mode.md",
+    "eslint.config.mjs",
+    "package-lock.json",
+    "package.json",
+    "scripts/benchmarks/production-proxy-smoke.mjs",
+    "scripts/tests/run-readiness.mjs",
+    "src/app/(site)/account/page.tsx",
+    "src/app/(site)/faq/page.tsx",
+    "src/app/(site)/privacy-policy/page.tsx",
+    "src/app/(site)/terms-of-service/page.tsx",
+    "src/components/MathContent.tsx",
+    "src/components/navigation/tests/administrativeSurfaces.test.ts",
+    "src/components/navigation/tests/institutionalNavigation.test.ts",
+    "src/config/institutionalNavigation.ts",
+    "src/config/siteConfig.ts",
+    "src/lib/auth/tests/proxy-matcher.test.ts",
+    "src/lib/auth/tests/proxy-session-refresh.test.ts",
+    "src/lib/auth/tests/proxy.test.ts",
+    "src/lib/sanity/tests/hardening.test.ts",
+    "src/lib/seo/tests/canonical-host.test.ts",
+    "src/lib/seo/tests/commercial-public-truth.test.ts",
+    "src/lib/seo/tests/free-only-public.test.ts",
+    "src/lib/seo/tests/indexing-safeguards.test.ts",
+    "src/lib/seo/tests/legacy-product-retirement.test.ts",
+    "src/proxy.ts"
+  ],
+  "addedFiles": [
+    "docs/retirement-audit.json",
+    "scripts/tests/publisher.test.mjs"
+  ],
+  "publisherRename": {
+    "from": "publish-article.js",
+    "to": "publish-article.mjs",
+    "why": "Preserve editorial publishing; repair pre-existing CommonJS lint, undeclared dependencies, and old marked heading callback"
+  },
+  "removedPackages": [
+    "rehype-katex",
+    "remark-math"
+  ],
+  "retainedPackages": {
+    "@aws-sdk/client-ses": {
+      "range": "^3.1095.0",
+      "kind": "dependencies",
+      "why": "Newsletter delivery and editorial publication notifications"
+    },
+    "@sanity/client": {
+      "range": "^7.26.2",
+      "kind": "dependencies",
+      "why": "CMS reads, publishing and migration tooling"
+    },
+    "@sanity/dashboard": {
+      "range": "^6.0.18",
+      "kind": "dependencies",
+      "why": "Sanity Studio dashboard"
+    },
+    "@sanity/image-url": {
+      "range": "^2.1.1",
+      "kind": "dependencies",
+      "why": "Editorial image URLs"
+    },
+    "@sanity/webhook": {
+      "range": "^4.0.4",
+      "kind": "dependencies",
+      "why": "CMS webhook authentication"
+    },
+    "@supabase/ssr": {
+      "range": "^0.12.7",
+      "kind": "dependencies",
+      "why": "Required account/session integration"
+    },
+    "@supabase/supabase-js": {
+      "range": "^2.116.0",
+      "kind": "dependencies",
+      "why": "Required auth, newsletter and historical financial data access"
+    },
+    "@upstash/redis": {
+      "range": "^1.38.2",
+      "kind": "dependencies",
+      "why": "Sanity webhook replay protection"
+    },
+    "isomorphic-dompurify": {
+      "range": "^2.36.0",
+      "kind": "dependencies",
+      "why": "Editorial HTML sanitization"
+    },
+    "katex": {
+      "range": "^0.18.1",
+      "kind": "dependencies",
+      "why": "Published article math rendering"
+    },
+    "marked": {
+      "range": "^18.0.9",
+      "kind": "dependencies",
+      "why": "Preserved Markdown publication CLI"
+    },
+    "next": {
+      "range": "^16.3.4",
+      "kind": "dependencies",
+      "why": "Application framework and route security"
+    },
+    "next-sanity": {
+      "range": "^13.3.3",
+      "kind": "dependencies",
+      "why": "Sanity Studio integration"
+    },
+    "react": {
+      "range": "^19.2.8",
+      "kind": "dependencies",
+      "why": "Application and Studio rendering"
+    },
+    "react-dom": {
+      "range": "^19.2.8",
+      "kind": "dependencies",
+      "why": "Server/client rendering and rendered regression tests"
+    },
+    "sanity": {
+      "range": "^6.12.0",
+      "kind": "dependencies",
+      "why": "Editorial CMS schemas/actions/Studio"
+    },
+    "styled-components": {
+      "range": "^6.5.3",
+      "kind": "dependencies",
+      "why": "Sanity UI peer dependency"
+    },
+    "@tailwindcss/postcss": {
+      "range": "^4",
+      "kind": "devDependencies",
+      "why": "CSS build"
+    },
+    "@types/node": {
+      "range": "^20",
+      "kind": "devDependencies",
+      "why": "Node typechecking"
+    },
+    "@types/react": {
+      "range": "^19.2.18",
+      "kind": "devDependencies",
+      "why": "React typechecking"
+    },
+    "@types/react-dom": {
+      "range": "^19.2.5",
+      "kind": "devDependencies",
+      "why": "DOM typechecking"
+    },
+    "dotenv": {
+      "range": "^18.0.9",
+      "kind": "devDependencies",
+      "why": "Existing Markdown CLI environment loading, now explicitly declared"
+    },
+    "eslint": {
+      "range": "^9",
+      "kind": "devDependencies",
+      "why": "Required lint gate"
+    },
+    "eslint-config-next": {
+      "range": "^16.3.4",
+      "kind": "devDependencies",
+      "why": "Framework lint rules"
+    },
+    "fast-xml-parser": {
+      "range": "^5.10.1",
+      "kind": "devDependencies",
+      "why": "Feed validation in safe smoke tooling"
+    },
+    "gray-matter": {
+      "range": "^4.0.3",
+      "kind": "devDependencies",
+      "why": "Existing Markdown CLI frontmatter parsing, now explicitly declared"
+    },
+    "tailwindcss": {
+      "range": "^4",
+      "kind": "devDependencies",
+      "why": "Site styling"
+    },
+    "tsx": {
+      "range": "4.23.13",
+      "kind": "devDependencies",
+      "why": "Offline TypeScript/TSX regression execution"
+    },
+    "typescript": {
+      "range": "^5",
+      "kind": "devDependencies",
+      "why": "Required compiler checks"
+    }
+  },
+  "retainedCommercialFiles": {
+    "src/lib/billing/billingManagement.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/commercialIdentity.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/entitlement.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonPaymentLifecycle.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonSubscriptionRefund.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonSubscriptionWebhook.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonWebhookIngress.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonWebhookProductionScope.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lemonWebhookSignature.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/lifecycle.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/lib/billing/vipCommercialConfig.ts": "Historical webhook processing, private reconciliation, or subscription-management dependency retained because production obligations are unverified",
+    "src/app/api/webhooks/lemon-squeezy/route.ts": "Potentially necessary production webhook endpoint; no verified provider retirement"
+  },
+  "preservedMigrations": [
+    "supabase/migrations/202609110001_identity_access.sql",
+    "supabase/migrations/202609120001_lemon_persistence.sql",
+    "supabase/migrations/202609120002_lemon_webhook_receipt_rpc.sql",
+    "supabase/migrations/202609120003_lemon_subscription_webhook.sql",
+    "supabase/migrations/202609120004_lemon_subscription_refund.sql",
+    "supabase/migrations/202609120005_lemon_commercial_access.sql",
+    "supabase/migrations/202609150001_lemon_billing_customer_rpc.sql",
+    "supabase/migrations/202609150002_lemon_webhook_scope_rpc.sql",
+    "supabase/migrations/202609150003_lemon_payment_lifecycle.sql"
+  ],
+  "protectedFilesComparedToBaseline": 21,
+  "dependencyGraph": {
+    "webhook": [
+      "lemonWebhookIngress",
+      "lemonWebhookSignature",
+      "lemonWebhookProductionScope",
+      "lemonSubscriptionWebhook",
+      "lemonSubscriptionRefund",
+      "lemonPaymentLifecycle",
+      "commercialIdentity",
+      "vipCommercialConfig",
+      "Supabase private service clients",
+      "applied receipt/scope/subscription/refund/payment RPC migrations"
+    ],
+    "subscriptionManagement": [
+      "billingManagement",
+      "lifecycle",
+      "entitlement",
+      "vipCommercialConfig",
+      "verified auth clients",
+      "private customer lookup RPC"
+    ],
+    "publication": [
+      "Sanity schemas/client/actions",
+      "sanitization",
+      "KaTeX",
+      "RSS/sitemap/article SEO",
+      "newsletter SES/Supabase",
+      "consent/analytics"
+    ],
+    "authentication": [
+      "account/actions/OTP/confirm",
+      "verified access resolver",
+      "Supabase server/client/config/session proxy",
+      "historical DB access types",
+      "existing auth guards/browser adapter retained within protected authentication infrastructure"
+    ]
+  },
+  "commercialInspection": {
+    "mode": "read-only official provider GETs using existing local credential",
+    "stores": 0,
+    "subscriptions": 0,
+    "orders": 0,
+    "subscriptionInvoices": 0,
+    "webhooks": 0,
+    "productionObligationsVerified": false,
+    "reason": "Credential returns no stores; production store coverage, refunds, disputes, chargebacks and pending webhook obligations remain unverified"
+  },
+  "externalChecks": {
+    "contact": "HTTP 200 at https://chronoversecapital.com/contact",
+    "apps": "HTTP 200 at https://apps.chronoversecapital.com; existing publication response",
+    "appsCname": "ff1d6ea656710dc2.vercel-dns-017.com",
+    "vercelInspection": "Project discoverable; scoped inspection returned 403. Deployment READY unconfirmed."
+  },
+  "verification": {
+    "commands": [
+      {
+        "command": "npm test",
+        "exitCode": 0,
+        "seconds": 61
+      },
+      {
+        "command": "npm run lint",
+        "exitCode": 0,
+        "seconds": 50
+      },
+      {
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "seconds": 12
+      },
+      {
+        "command": "npm run build",
+        "exitCode": 0,
+        "seconds": 169,
+        "localConcurrency": "experimental.cpus=1; RAYON_NUM_THREADS=1 (temporary)"
+      }
+    ],
+    "tests": {
+      "passed": 114,
+      "failed": 0,
+      "files": 56,
+      "skipped": 0,
+      "cancelled": 0,
+      "localEvidence": ".verification/readiness/"
+    },
+    "dependencyAudit": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 7,
+        "high": 17,
+        "critical": 2,
+        "total": 26
+      },
+      "newOrChangedVulnerableNodes": [],
+      "error": false,
+      "command": "npm audit --json",
+      "exitCode": 1
+    },
+    "productionBuildStaticPages": 108,
+    "routes": {
+      "at": "2026-10-23T11:19:45.745Z",
+      "passed": 202,
+      "failed": 0,
+      "publishedArticle": "/gold-s-quiet-return-to-the-global-monetary-system"
+    }
+  },
+  "preExistingIssues": {
+    "fixed": [
+      "publish-article.js: six no-require-imports lint errors",
+      "publisher dependencies were undeclared",
+      "publisher used obsolete marked heading callback"
+    ],
+    "retained": [
+      "Existing raw article-image ESLint warning",
+      "Existing OG Edge-runtime deprecation",
+      "npm audit: 26 advisories in unchanged package nodes (2 critical, 17 high, 7 moderate)"
+    ]
+  },
+  "releasePolicy": "One local cleanup commit. Do not push master: additional npm audit exits 1 with existing unresolved advisories. No production deployment, data migration, environment or domain change."
+}

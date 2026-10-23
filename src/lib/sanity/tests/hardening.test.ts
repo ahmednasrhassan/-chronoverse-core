@@ -612,14 +612,10 @@ function verifyContentAndSeoSafety(): void {
   assert.ok(generated.excerpt.length <= 320);
   assert.ok(generated.seoDescription.length <= 160);
 
-  const aiHelper = readSource("src/lib/sanity/aiSeo.ts");
-  assert.match(aiHelper, /import "server-only"/);
-  assert.match(aiHelper, /process\.env\.GEMINI_API_KEY/);
-  assert.doesNotMatch(aiHelper, /OPENAI_API_KEY|source: "openai"/);
-  assert.match(aiHelper, /typeof excerptValue !== "string"/);
-  assert.match(aiHelper, /typeof descriptionValue !== "string"/);
-  assert.match(aiHelper, /\.slice\(0, 320\)/);
-  assert.match(aiHelper, /\.slice\(0, 160\)/);
+  const studioAction = readSource("src/sanity/actions/generateSeoAction.tsx");
+  assert.match(studioAction, /generateFallbackSeo/);
+  assert.doesNotMatch(studioAction, /GEMINI_API_KEY|generativelanguage|aiSeo/);
+
 }
 
 function verifyPublishWebhookOrdering(): void {

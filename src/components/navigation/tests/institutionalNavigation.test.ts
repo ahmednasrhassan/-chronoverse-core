@@ -68,7 +68,6 @@ assert.deepEqual(
         { label: "About", href: "/about" },
         { label: "FAQ", href: "/faq" },
         { label: "Account", href: "/account" },
-        { label: "Purchase support", href: "/billing" },
         { label: "Contact", href: "/contact" },
       ],
     },

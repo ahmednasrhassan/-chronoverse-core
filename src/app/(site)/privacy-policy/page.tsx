@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
           Authenticated payment notifications may update historical processing
           and refund evidence. Moving to a free-only website does not erase
           those records or remove customer rights. For assistance, use
-          <Link href="/billing"> Purchase support</Link> or
+          <Link href="/contact"> Purchase support</Link> or
           <Link href="/contact"> Contact</Link>.
         </p>
       </InstitutionalSection>

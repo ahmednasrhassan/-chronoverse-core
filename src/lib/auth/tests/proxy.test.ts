@@ -104,8 +104,6 @@ async function main(): Promise<void> {
     "/account/profile",
     "/auth",
     "/auth/confirm",
-    "/billing",
-    "/billing/history",
   ]) {
     assertEqual(requiresAuthSessionRefreshV1(pathname), true,
       `${pathname} requires session refresh`);
@@ -133,7 +131,7 @@ async function main(): Promise<void> {
       `${pathname} skips session refresh`);
   }
 
-  assertEqual(refreshCalls, 6,
+  assertEqual(refreshCalls, 4,
     "only auth-sensitive route families invoke session refresh");
 
   console.log("PASS: proxy bounds Supabase refresh to auth-sensitive routes");

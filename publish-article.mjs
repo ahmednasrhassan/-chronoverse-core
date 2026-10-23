@@ -1,5 +1,5 @@
 /**
- * publish-article.js
+ * publish-article.mjs
  *
  * Write an article as plain Markdown (with a small frontmatter header),
  * and this script converts it to the correct HTML for the `bodyRaw`
@@ -52,21 +52,21 @@
  * USAGE:
  *
  *   Preview only (no upload, just shows what would be sent):
- *     node publish-article.js article.md --dry-run
+ *     node publish-article.mjs article.md --dry-run
  *
  *   Publish as a NEW post:
- *     node publish-article.js article.md
+ *     node publish-article.mjs article.md
  *
  *   Update an EXISTING post that has the same slug, instead of erroring:
- *     node publish-article.js article.md --update
+ *     node publish-article.mjs article.md --update
  */
 
-require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
-const matter = require("gray-matter");
-const { marked } = require("marked");
-const { createClient } = require("@sanity/client");
+import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
+import matter from "gray-matter";
+import { marked } from "marked";
+import { createClient } from "@sanity/client";
 
 const client = createClient({
   projectId: process.env.SANITY_PROJECT_ID,
@@ -81,7 +81,7 @@ const UPDATE_EXISTING = process.argv.includes("--update");
 const filePath = process.argv[2];
 
 if (!filePath || filePath.startsWith("--")) {
-  console.error("Usage: node publish-article.js <article.md> [--dry-run] [--update]");
+  console.error("Usage: node publish-article.mjs <article.md> [--dry-run] [--update]");
   process.exit(1);
 }
 
@@ -152,12 +152,12 @@ async function main() {
   const { protectedMarkdown, blocks } = protectMathBlocks(markdownBody);
 
   const renderer = new marked.Renderer();
-  renderer.heading = (text, level) => {
+  renderer.heading = function ({ tokens, depth }) {
     // Never emit <h1> — the page's only H1 is the post title. A stray
     // single "#" (level 1) in the source Markdown is bumped to H2;
     // levels 2-6 pass through unchanged.
-    const safeLevel = Math.max(level, 2);
-    return `<h${safeLevel}>${text}</h${safeLevel}>\n`;
+    const safeLevel = Math.max(depth, 2);
+    return `<h${safeLevel}>${this.parser.parseInline(tokens)}</h${safeLevel}>\n`;
   };
 
   marked.setOptions({ renderer, gfm: true, breaks: false });

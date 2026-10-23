@@ -21,11 +21,14 @@ part of the test suite.
 
 ## Legacy product retirement
 
-See [the cleanup audit](docs/legacy-cleanup-20261023.md), the
-[exact removed-file inventory](docs/legacy-cleanup-removed-files.txt), and the
-[retained dependency inventory](docs/legacy-cleanup-retained-dependencies.json).
+See [the retirement policy and verification report](docs/free-only-mode.md) and
+[the exact change and dependency inventory](docs/retirement-audit.json).
 
-Historical billing, legal obligations, CMS publishing, newsletter delivery,
-and account identity remain supported. The independent apps hostname is outside
-this publication's application architecture; this repository introduces no apps
-catalog or new payment flow.
+Sanity publishing, newsletter delivery, legal disclosures, and account identity
+remain supported. Historical financial processing is retained pending a verified
+provider retirement. The apps hostname keeps its existing DNS and Vercel setup;
+this cleanup introduces no catalog implementation or payment flow.
+
+The preserved Markdown publishing CLI is `node publish-article.mjs article.md`.
+Use `--dry-run` to inspect output before publishing; category resolution can still
+read Sanity. Its dependencies are included by `npm ci`.
