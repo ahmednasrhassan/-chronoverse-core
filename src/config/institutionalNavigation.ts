@@ -49,8 +49,7 @@ export const LAUNCH_MARKETS_V1 = Object.freeze([
 ] as const satisfies readonly LaunchMarketDisplayV1[]);
 
 export const PUBLIC_PRIMARY_NAV_V1 = Object.freeze([
-  { label: "Markets", href: "/markets" },
-  { label: "Free", href: "/" },
+  { label: "Home", href: "/" },
   { label: "Research", href: "/reports" },
 ] as const satisfies readonly NavigationItemV1[]);
 
@@ -63,8 +62,7 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
   {
     label: "Product",
     links: [
-      { label: "Markets", href: "/markets" },
-      { label: "Free", href: "/" },
+          { label: "Home", href: "/" },
     ],
   },
   {
