@@ -14,7 +14,7 @@ async function main(): Promise<void> {
     [
       {
         source: "/research",
-        destination: "/reports",
+        destination: "https://chronoversecapital.com/reports",
         permanent: true,
       },
     ],
@@ -32,7 +32,6 @@ async function main(): Promise<void> {
   assert.match(llms, /^# Chronoverse Capital/m);
   assert.match(llms, /https:\/\/chronoversecapital\.com/);
   for (const route of [
-    "/markets",
     "/reports",
     "/methodology",
     "/data-sources",

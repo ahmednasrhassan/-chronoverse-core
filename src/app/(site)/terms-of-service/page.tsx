@@ -32,8 +32,8 @@ export default function TermsOfServicePage() {
           do not use the service.
         </p>
         <p>
-          The launch market-intelligence surface covers EUR/USD, EUR/JPY,
-          EUR/GBP, EUR/CHF, and €STR. Free provides the Lite projection.
+          The website publishes independent financial research, market analysis,
+          and economic commentary. Articles and the newsletter are available free.
           Published editorial research may discuss broader subjects. This
           website does not offer paid memberships or checkout.
         </p>

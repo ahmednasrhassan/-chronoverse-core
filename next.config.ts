@@ -7,11 +7,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: "/research",
-        destination: "/reports",
+      // Resolve retired aliases and host canonicalization in one permanent hop.
+      ...["/markets/:path*", "/intelligence", "/research"].map((source) => ({
+        source,
+        destination: "https://chronoversecapital.com/reports",
         permanent: true,
-      },
+      })),
     ];
   },
   async headers() {

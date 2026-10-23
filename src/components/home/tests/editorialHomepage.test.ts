@@ -24,7 +24,7 @@ const imageSources = [...html.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)]
 assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
 assert.match(html, /Independent Market Research &amp; Intelligence/);
 assert.match(html, /href="\/reports"[^>]*>Explore Research/);
-assert.match(html, /href="\/markets"[^>]*>Explore Free Market Tools/);
+assert.doesNotMatch(html, /href="\/markets"|Explore Free Market Tools/);
 assert.ok(html.indexOf("</h1>") < html.indexOf('id="latest-research-title"'));
 
 assert.ok(html.indexOf('id="latest-research-title"') < html.indexOf('id="newsletter-title"'));

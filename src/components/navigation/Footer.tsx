@@ -56,8 +56,8 @@ export default function Footer() {
               </span>
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-6 text-secondary">
-              Independent market analysis for disciplined decisions across a
-              focused five-market launch universe.
+              Independent financial research and market analysis for
+              informed decisions.
             </p>
             <div className="mt-7">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">

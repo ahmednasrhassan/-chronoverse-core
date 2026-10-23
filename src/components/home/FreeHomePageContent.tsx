@@ -1,16 +1,11 @@
-import { isFreeOnlyMode } from "@/config/siteAvailability";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import NewsletterForm from "@/components/NewsLetterForm";
-import { siteConfig } from "@/config/siteConfig";
 import { calculateReadTime, getLatestSanityArticles, type ContentItem } from "@/lib/content";
 
 const PRIMARY_CTA_CLASS =
   "chronoverse-primary-cta inline-flex items-center justify-center border border-[#A77BD8] px-5 py-3 text-sm font-semibold transition-colors hover:border-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
-
-const SECONDARY_CTA_CLASS =
-  "inline-flex items-center justify-center border border-[#6F4C91] bg-transparent px-5 py-3 text-sm font-semibold text-[#F3EBDD] transition-colors hover:border-[#C8A7E8] hover:bg-[#15131A] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
 
 const EDITORIAL_HEADING_CLASS =
   "text-[#F3EBDD] [font-family:Georgia,'Times_New_Roman',serif]";
@@ -30,9 +25,7 @@ export function FreeHomePageContent({ researchPreview }: {
 
       {researchPreview}
 
-      {!isFreeOnlyMode() ? <VipConversion /> : null}
 
-      {!isFreeOnlyMode() ? <MembershipAndResearch /> : null}
       <Newsletter />
       <TrustStrip />
     </div>
@@ -92,82 +85,6 @@ function Hero() {
             Our methodology <span aria-hidden="true" className="ml-3">↗</span>
           </Link>
         </aside>
-      </div>
-    </section>
-  );
-}
-
-function VipConversion() {
-  const vipCapabilities = [
-    "€STR rate regimes",
-    "Technical evidence",
-    "Source provenance",
-    "FX conditional scenarios",
-    "FX confidence",
-    "FX invalidation",
-    "Historical context",
-    "Proprietary intelligence",
-  ] as const;
-
-  return (
-    <section className="relative overflow-hidden bg-[#15131A]">
-      <div
-        aria-hidden="true"
-        className="absolute inset-y-0 left-1/2 w-px bg-linear-to-b from-transparent via-[#6F4C91]/50 to-transparent"
-      />
-      <div className="relative mx-auto grid max-w-[88rem] gap-12 px-4 py-16 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-24 xl:py-24">
-        <div className="self-center">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
-            The deeper layer
-          </p>
-          <h2 className={`mt-5 max-w-[12ch] text-4xl leading-[1.05] sm:text-5xl ${EDITORIAL_HEADING_CLASS}`}>
-            Same five markets. A deeper intelligence layer.
-          </h2>
-          <p className="mt-6 max-w-xl text-base leading-7 text-[#CFC5B8]">
-            VIP adds technical and risk evidence and historical context. FX
-            rooms add confidence, conditional scenarios, and invalidation;
-            €STR adds rate features and current rate regimes.
-          </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href="/pricing" className={PRIMARY_CTA_CLASS}>
-              Explore VIP
-              <span aria-hidden="true" className="ml-3">→</span>
-            </Link>
-            <Link href="/pricing" className={SECONDARY_CTA_CLASS}>
-              Compare Free and VIP
-            </Link>
-          </div>
-        </div>
-
-        <div className="py-2">
-          <div className="flex items-center justify-between pb-5 font-mono text-[10px] uppercase tracking-[0.14em] text-[#91889A]">
-            <span>VIP depth map</span>
-            <span>Conceptual layers</span>
-          </div>
-          <ol className="space-y-2">
-            {vipCapabilities.map((capability, index) => (
-              <li
-                key={capability}
-                className={`flex items-center gap-4 border-l border-[#6F4C91]/60 bg-[#0D0D11]/55 px-5 py-3.5 ${
-                  index % 4 === 1
-                    ? "sm:ml-5"
-                    : index % 4 === 2
-                      ? "sm:ml-10"
-                      : index % 4 === 3
-                        ? "sm:ml-16"
-                        : ""
-                }`}
-              >
-                <span className="font-mono text-[10px] text-[#91889A]">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="text-sm font-medium text-[#F3EBDD]">
-                  {capability}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
       </div>
     </section>
   );
@@ -375,102 +292,6 @@ function ResearchFallback() {
         Loading published research…
       </p>
     </section>
-  );
-}
-
-function MembershipAndResearch() {
-  return (
-    <section className="bg-[#0D0D11]">
-      <div className="mx-auto max-w-[84rem] px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-end">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C8A7E8]">
-              Membership &amp; Research
-            </p>
-            <h2 className={`mt-4 text-4xl leading-tight ${EDITORIAL_HEADING_CLASS}`}>
-              Two ways to go further.
-            </h2>
-          </div>
-          <p className="max-w-2xl text-sm leading-6 text-[#CFC5B8] lg:justify-self-end lg:text-right">
-            Choose ongoing five-market intelligence or standalone research.
-            Each has a distinct role and access model.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 xl:grid-cols-2 xl:gap-0">
-          <ServiceCard
-            index="01"
-            eyebrow="Recurring intelligence membership"
-            title="Chronoverse VIP"
-            description="The Deep Intelligence layer for the same five-market universe, designed for ongoing analytical context and decision support."
-            href="/pricing"
-            cta="Explore VIP"
-          />
-          <ServiceCard
-            index="02"
-            eyebrow="Standalone premium research"
-            title="Premium Dossiers"
-            description="Focused research products for readers who need a discrete institutional brief without application membership authority."
-            href={siteConfig.commerce.gumroadResearchUrl}
-            cta="Browse Dossiers"
-            external
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ServiceCard({
-  index,
-  eyebrow,
-  title,
-  description,
-  href,
-  cta,
-  external = false,
-}: {
-  index: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-  external?: boolean;
-}) {
-  const content = (
-    <>
-      {cta}
-      <span aria-hidden="true" className="ml-3">→</span>
-    </>
-  );
-
-  return (
-    <article className="relative min-h-72 bg-[#050506] p-6 sm:p-9 xl:first:mr-2 xl:last:ml-2 xl:last:bg-[#15131A]">
-      <span className="font-mono text-xs text-[#91889A]">{index}</span>
-      <p className="mt-8 font-mono text-[9px] uppercase tracking-[0.18em] text-[#91889A]">
-        {eyebrow}
-      </p>
-      <h3 className={`mt-3 text-3xl ${EDITORIAL_HEADING_CLASS}`}>{title}</h3>
-      <p className="mt-4 max-w-xl text-sm leading-6 text-[#CFC5B8]">{description}</p>
-      {external ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 inline-flex items-center border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-        >
-          {content}
-        </a>
-      ) : (
-        <Link
-          href={href}
-          className="mt-8 inline-flex items-center border-b border-[#6F4C91] pb-1 text-sm font-semibold text-[#C8A7E8] hover:border-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]"
-        >
-          {content}
-        </Link>
-      )}
-    </article>
   );
 }
 

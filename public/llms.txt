@@ -1,12 +1,11 @@
 # Chronoverse Capital
 
-> Independent market intelligence for a focused five-market universe: EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR.
+> Independent financial research, market analysis, and economic commentary.
 
 Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
 
 ## Public destinations
 
-- [Markets](https://chronoversecapital.com/markets)
 - [Research](https://chronoversecapital.com/reports)
 - [Methodology](https://chronoversecapital.com/methodology)
 - [Data Sources](https://chronoversecapital.com/data-sources)

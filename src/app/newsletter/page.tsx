@@ -61,7 +61,7 @@ export default function NewsletterPage() {
         </h1>
         <p className="text-sm text-muted leading-relaxed mb-8">
           Receive published market research and analytical updates. Newsletter
-          content is available free alongside the Free Lite market overview.
+          content is available free through our research publication.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">

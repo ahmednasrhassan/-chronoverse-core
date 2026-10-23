@@ -1,0 +1,364 @@
+{
+  "npm": [
+    {
+      "name": "@aws-sdk/client-ses",
+      "versionRange": "^3.1095.0",
+      "scope": "dependencies",
+      "reason": "Newsletter delivery and Sanity publication email."
+    },
+    {
+      "name": "@sanity/client",
+      "versionRange": "^7.26.2",
+      "scope": "dependencies",
+      "reason": "CMS write operations, image migration and source integration."
+    },
+    {
+      "name": "@sanity/dashboard",
+      "versionRange": "^6.0.18",
+      "scope": "dependencies",
+      "reason": "Existing Sanity Studio dashboard widgets."
+    },
+    {
+      "name": "@sanity/image-url",
+      "versionRange": "^2.1.1",
+      "scope": "dependencies",
+      "reason": "Editorial Sanity image URL construction."
+    },
+    {
+      "name": "@sanity/webhook",
+      "versionRange": "^4.0.4",
+      "scope": "dependencies",
+      "reason": "Sanity webhook signature verification."
+    },
+    {
+      "name": "@supabase/ssr",
+      "versionRange": "^0.12.7",
+      "scope": "dependencies",
+      "reason": "Passwordless account sessions and cookie refresh."
+    },
+    {
+      "name": "@supabase/supabase-js",
+      "versionRange": "^2.116.0",
+      "scope": "dependencies",
+      "reason": "Verified account identity and historical billing persistence."
+    },
+    {
+      "name": "@upstash/redis",
+      "versionRange": "^1.38.2",
+      "scope": "dependencies",
+      "reason": "Sanity webhook replay protection; independent of removed market caches."
+    },
+    {
+      "name": "isomorphic-dompurify",
+      "versionRange": "^2.36.0",
+      "scope": "dependencies",
+      "reason": "Editorial content and RSS sanitization."
+    },
+    {
+      "name": "katex",
+      "versionRange": "^0.18.1",
+      "scope": "dependencies",
+      "reason": "Editorial formula rendering in MathContent."
+    },
+    {
+      "name": "marked",
+      "versionRange": "^18.0.9",
+      "scope": "dependencies",
+      "reason": "Pre-existing editorial dependency; no current direct importer found. Kept outside this product-specific removal."
+    },
+    {
+      "name": "next",
+      "versionRange": "^16.3.4",
+      "scope": "dependencies",
+      "reason": "Application framework, routing, metadata and production server."
+    },
+    {
+      "name": "next-sanity",
+      "versionRange": "^13.3.3",
+      "scope": "dependencies",
+      "reason": "Editorial CMS client and Studio integration."
+    },
+    {
+      "name": "react",
+      "versionRange": "^19.2.8",
+      "scope": "dependencies",
+      "reason": "Existing application and Studio components."
+    },
+    {
+      "name": "react-dom",
+      "versionRange": "^19.2.8",
+      "scope": "dependencies",
+      "reason": "Rendering and account form status."
+    },
+    {
+      "name": "rehype-katex",
+      "versionRange": "^7.0.1",
+      "scope": "dependencies",
+      "reason": "Pre-existing editorial math dependency; no current direct importer found. Kept outside this product-specific removal."
+    },
+    {
+      "name": "remark-math",
+      "versionRange": "^6.0.0",
+      "scope": "dependencies",
+      "reason": "Pre-existing editorial math dependency; no current direct importer found. Kept outside this product-specific removal."
+    },
+    {
+      "name": "sanity",
+      "versionRange": "^6.12.0",
+      "scope": "dependencies",
+      "reason": "Published research authoring, schemas, validation and Studio."
+    },
+    {
+      "name": "styled-components",
+      "versionRange": "^6.5.3",
+      "scope": "dependencies",
+      "reason": "Sanity Studio peer dependency."
+    },
+    {
+      "name": "@tailwindcss/postcss",
+      "versionRange": "^4",
+      "scope": "devDependencies",
+      "reason": "Existing Tailwind build integration."
+    },
+    {
+      "name": "@types/node",
+      "versionRange": "^20",
+      "scope": "devDependencies",
+      "reason": "Node scripts, route handlers and test types."
+    },
+    {
+      "name": "@types/react",
+      "versionRange": "^19.2.18",
+      "scope": "devDependencies",
+      "reason": "React component types."
+    },
+    {
+      "name": "@types/react-dom",
+      "versionRange": "^19.2.5",
+      "scope": "devDependencies",
+      "reason": "React DOM types."
+    },
+    {
+      "name": "eslint",
+      "versionRange": "^9",
+      "scope": "devDependencies",
+      "reason": "Repository linting."
+    },
+    {
+      "name": "eslint-config-next",
+      "versionRange": "^16.3.4",
+      "scope": "devDependencies",
+      "reason": "Next and React lint rules."
+    },
+    {
+      "name": "tailwindcss",
+      "versionRange": "^4",
+      "scope": "devDependencies",
+      "reason": "Existing site styles."
+    },
+    {
+      "name": "typescript",
+      "versionRange": "^5",
+      "scope": "devDependencies",
+      "reason": "Static checks and Next source compilation."
+    },
+    {
+      "name": "fast-xml-parser",
+      "versionRange": "^5.10.1",
+      "scope": "devDependencies",
+      "reason": "Retained observational route/RSS smoke script; moved to development dependencies."
+    },
+    {
+      "name": "tsx",
+      "versionRange": "4.23.13",
+      "scope": "devDependencies",
+      "reason": "Pinned development dependency for the existing offline TypeScript regression runner."
+    }
+  ],
+  "retainedCompatibilityFiles": [
+    {
+      "path": "src/lib/billing/billingManagement.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/commercialIdentity.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/entitlement.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonPaymentLifecycle.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonSubscriptionRefund.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonSubscriptionWebhook.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonWebhookIngress.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonWebhookProductionScope.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lemonWebhookSignature.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/lifecycle.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/billing/vipCommercialConfig.ts",
+      "reason": "Historical customer/subscription mapping, signed webhook receipts, refunds, payment lifecycle and reconciliation. No checkout or portal creation service remains."
+    },
+    {
+      "path": "src/lib/auth/access.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/account.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/config.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/flow.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/guards.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/serverConfig.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/supabase/admin.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/supabase/browser.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/supabase/proxy.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/supabase/server.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "src/lib/auth/types.ts",
+      "reason": "Verified account identity, sessions, trusted-role/legacy database response validation. Retired membership composition and VIP-only guard removed."
+    },
+    {
+      "path": "supabase/migrations/202609110001_identity_access.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609120001_lemon_persistence.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609120002_lemon_webhook_receipt_rpc.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609120003_lemon_subscription_webhook.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609120004_lemon_subscription_refund.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609120005_lemon_commercial_access.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609150001_lemon_billing_customer_rpc.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609150002_lemon_webhook_scope_rpc.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "supabase/migrations/202609150003_lemon_payment_lifecycle.sql",
+      "reason": "Historical schema and RPC audit trail; preserved byte-for-byte. No migration applied."
+    },
+    {
+      "path": "src/app/api/webhooks/lemon-squeezy/route.ts",
+      "reason": "Historical signed billing ingress retained unchanged."
+    },
+    {
+      "path": "src/config/siteConfig.ts",
+      "reason": "Existing Gumroad URL and Lemon store hostname retained; no new storefront or checkout."
+    },
+    {
+      "path": "src/lib/sanity/webhookReplay.ts",
+      "reason": "Shared Redis replay protection remains required by CMS ingress."
+    },
+    {
+      "path": "vercel.json",
+      "reason": "Existing newsletter cron retained unchanged. No DNS or Vercel changes."
+    },
+    {
+      "path": "src/lib/content.ts",
+      "reason": "Published article/category queries, editorial HTML sanitization and content data flow."
+    },
+    {
+      "path": "src/sanity/client.ts",
+      "reason": "Existing published research CMS project/dataset integration."
+    },
+    {
+      "path": "src/sanity/image.ts",
+      "reason": "Editorial Sanity image URL generation."
+    },
+    {
+      "path": "src/components/NewsLetterForm.tsx",
+      "reason": "Existing independent newsletter signup client."
+    },
+    {
+      "path": "src/app/api/newsletter/route.ts",
+      "reason": "Existing newsletter subscription endpoint, unchanged."
+    },
+    {
+      "path": "src/app/api/cron/send-newsletter/route.ts",
+      "reason": "Existing SES newsletter dispatch and schedule target, unchanged."
+    },
+    {
+      "path": "src/app/api/webhook/sanity/route.ts",
+      "reason": "Existing editorial publication notifications, unchanged."
+    },
+    {
+      "path": "src/components/MathContent.tsx",
+      "reason": "Existing editorial KaTeX rendering, independent of market tools."
+    },
+    {
+      "path": "src/lib/seo/rss.ts",
+      "reason": "Existing canonical editorial feed and sanitized RSS output."
+    },
+    {
+      "path": "src/app/(site)/disclaimer/page.tsx",
+      "reason": "Existing financial information disclaimer, unchanged."
+    },
+    {
+      "path": "src/app/(site)/privacy-policy/page.tsx",
+      "reason": "Existing privacy and historical purchase disclosures, unchanged."
+    }
+  ]
+}

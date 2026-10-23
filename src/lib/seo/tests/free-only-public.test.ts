@@ -13,9 +13,6 @@ import Editorial from "../../../app/(site)/editorial-policy/page";
 import Terms from "../../../app/(site)/terms-of-service/page";
 import Privacy from "../../../app/(site)/privacy-policy/page";
 import Billing from "../../../app/(site)/billing/page";
-import VipOverview from "../../../app/(vip)/vip/page";
-import VipMarkets from "../../../app/(vip)/vip/markets/page";
-import VipMarket from "../../../app/(vip)/vip/markets/[market]/page";
 import { isFreeOnlyMode } from "../../../config/siteAvailability";
 import { createAccessResolverV1 } from "../../auth/access";
 
@@ -27,7 +24,7 @@ async function main(): Promise<void> {
   for (const component of [Header, Footer, About, Faq, Methodology, Manifesto, Contact, Editorial, Terms, Privacy]) {
     const html = render(createElement(component));
     assert.doesNotMatch(html, forbiddenPromotion, component.name);
-    assert.doesNotMatch(html, /\bVIP\b/i, component.name);
+    assert.doesNotMatch(html, /\bVIP\b|Free Lite|five.market|five.product/i, component.name);
   }
   const shell = render(createElement(FreeHomePageContent, {
     researchPreview: createElement("p", null, "Published research fixture"),
@@ -49,19 +46,11 @@ async function main(): Promise<void> {
     assert.match(html, /refund/);
     assert.match(html, /dispute/);
   }
-  const missing = (error: unknown) => (error as { digest?: string }).digest === "NEXT_HTTP_ERROR_FALLBACK;404";
-  await assert.rejects(VipOverview({ searchParams: Promise.resolve({}) }), missing);
-  await assert.rejects(VipMarkets(), missing);
-  for (const market of ["eurusd", "eurjpy", "eurgbp", "eurchf", "estr", "unknown"]) {
-    await assert.rejects(VipMarket({ params: Promise.resolve({ market }) }), missing);
-  }
   // Free identity must not need commercial config, a billing RPC, or payment secrets.
-  const deniedDependency = () => { throw new Error("Unexpected commercial dependency"); };
   const resolver = createAccessResolverV1(async () => ({
     authSubject: "verified-subject",
     trustedAccess: [{ user_id: "internal-user", auth_user_id: "verified-subject", role: "user", access_state: "authenticated_free", can_access_vip: false }],
-    loadCommercialAccess: deniedDependency,
-  }), { commercialAccessEnabled: false, getVipCommercialConfig: deniedDependency, getCurrentTime: deniedDependency });
+  }));
   assert.equal((await resolver()).state, "authenticated_free");
   console.log("PASS: rendered free-only public surfaces, retired pages and billing-independent free identity");
 }

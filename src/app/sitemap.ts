@@ -39,7 +39,6 @@ const STATIC_ROUTES: ReadonlyArray<{
   { path: "editorial-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "faq", changeFrequency: "monthly", priority: 0.4 },
   { path: "freshness", changeFrequency: "monthly", priority: 0.5 },
-  { path: "markets", changeFrequency: "weekly", priority: 0.7 },
   { path: "methodology", changeFrequency: "monthly", priority: 0.6 },
   { path: "newsletter", changeFrequency: "monthly", priority: 0.5 },
   { path: "privacy-policy", changeFrequency: "yearly", priority: 0.3 },

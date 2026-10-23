@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chronoverse Capital
 
-## Getting Started
+Independent financial research publication built with Next.js and Sanity.
 
-First, run the development server:
+## Local development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Install the locked dependencies with `npm ci`, then run `npm run dev`.
+Read `AGENTS.md` and the installed Next.js guides before changing framework code.
+Use the existing deployment configuration for service credentials; never commit secrets.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Verification
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm test` runs all retained unit and integration contracts with outbound networking blocked and inherited service credentials removed.
+- `npm run typecheck` regenerates route types, then checks TypeScript.
+- `npm run lint` checks the whole repository.
+- `npm run build` creates a production build.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Local test evidence is written to ignored `.verification/readiness/` independently
+of Next build output. Live provider writes and production transactions are not
+part of the test suite.
 
-## Learn More
+## Legacy product retirement
 
-To learn more about Next.js, take a look at the following resources:
+See [the cleanup audit](docs/legacy-cleanup-20261023.md), the
+[exact removed-file inventory](docs/legacy-cleanup-removed-files.txt), and the
+[retained dependency inventory](docs/legacy-cleanup-retained-dependencies.json).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Historical billing, legal obligations, CMS publishing, newsletter delivery,
+and account identity remain supported. The independent apps hostname is outside
+this publication's application architecture; this repository introduces no apps
+catalog or new payment flow.

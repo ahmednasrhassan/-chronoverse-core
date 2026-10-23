@@ -1,27 +1,5 @@
 export const ANALYTICS_READY_EVENT_V1 = "chronoverse:analytics-ready";
 
-export const ANALYTICS_PRODUCT_IDS_V1 = Object.freeze([
-  "eurusd",
-  "eurjpy",
-  "eurgbp",
-  "eurchf",
-  "estr",
-] as const);
-
-export type AnalyticsProductIdV1 =
-  (typeof ANALYTICS_PRODUCT_IDS_V1)[number];
-
-export const ANALYTICS_PRODUCT_ACCESS_STATES_V1 = Object.freeze([
-  "anonymous_free",
-  "authenticated_free",
-  "vip_active",
-] as const);
-
-export type AnalyticsProductAccessStateV1 =
-  (typeof ANALYTICS_PRODUCT_ACCESS_STATES_V1)[number];
-
-export type AnalyticsCheckoutPlanV1 = "monthly" | "annual";
-
 export interface AnalyticsStorageV1 {
   readonly getItem: (key: string) => string | null;
 }
@@ -58,7 +36,6 @@ const SAFE_QUERY_KEYS_V1 = Object.freeze([
   "utm_campaign",
   "utm_content",
   "utm_term",
-  "market",
 ] as const);
 
 export function hasAnalyticsConsentV1(storage: AnalyticsStorageV1): boolean {
@@ -140,54 +117,6 @@ export function trackPageViewV1(
   return emitAnalyticsEventV1("page_view", parameters, runtime);
 }
 
-export function trackProductViewV1(
-  contentId: unknown,
-  accessState: unknown,
-  runtime: AnalyticsRuntimeV1 | null = browserRuntimeV1(),
-): boolean {
-  if (!isAnalyticsProductIdV1(contentId)
-    || !isAnalyticsProductAccessStateV1(accessState)
-    || runtime === null
-    || !canEmitAnalyticsV1(runtime)) {
-    return false;
-  }
-
-  return emitAnalyticsEventV1("product_view", {
-    content_type: "market",
-    content_id: contentId,
-    access_state: accessState,
-  }, runtime);
-}
-
-export function trackBeginCheckoutV1(
-  plan: unknown,
-  runtime: AnalyticsRuntimeV1 | null = browserRuntimeV1(),
-): boolean {
-  if ((plan !== "monthly" && plan !== "annual")
-    || runtime === null
-    || !canEmitAnalyticsV1(runtime)) {
-    return false;
-  }
-
-  return emitAnalyticsEventV1("begin_checkout", { plan }, runtime);
-}
-
-export function continueToSuccessfulCheckoutV1(
-  plan: AnalyticsCheckoutPlanV1,
-  checkoutUrl: string,
-  navigate: (url: string) => void,
-  track: (selectedPlan: AnalyticsCheckoutPlanV1) => unknown =
-    trackBeginCheckoutV1,
-): void {
-  try {
-    track(plan);
-  } catch {
-    // Measurement is best-effort and must never interrupt billing navigation.
-  }
-
-  navigate(checkoutUrl);
-}
-
 function canEmitAnalyticsV1(runtime: AnalyticsRuntimeV1): boolean {
   return runtime.loaded
     && typeof runtime.gtag === "function"
@@ -196,7 +125,7 @@ function canEmitAnalyticsV1(runtime: AnalyticsRuntimeV1): boolean {
 }
 
 function emitAnalyticsEventV1(
-  eventName: "page_view" | "product_view" | "begin_checkout",
+  eventName: "page_view",
   parameters: Readonly<Record<string, string>>,
   runtime: AnalyticsRuntimeV1,
 ): boolean {
@@ -232,18 +161,6 @@ function isExcludedAnalyticsPathV1(pathname: string): boolean {
     || pathname === "/api" || pathname.startsWith("/api/")
     || pathname === "/auth" || pathname.startsWith("/auth/")
     || pathname === "/_next" || pathname.startsWith("/_next/");
-}
-
-function isAnalyticsProductIdV1(value: unknown): value is AnalyticsProductIdV1 {
-  return ANALYTICS_PRODUCT_IDS_V1.includes(value as AnalyticsProductIdV1);
-}
-
-function isAnalyticsProductAccessStateV1(
-  value: unknown,
-): value is AnalyticsProductAccessStateV1 {
-  return ANALYTICS_PRODUCT_ACCESS_STATES_V1.includes(
-    value as AnalyticsProductAccessStateV1,
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

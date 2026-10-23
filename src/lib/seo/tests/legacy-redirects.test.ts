@@ -34,7 +34,7 @@ function verifyIntelligenceAndProductsPolicy(): void {
   );
   assert.match(
     intelligenceRedirect.digest || "",
-    /^NEXT_REDIRECT;replace;\/markets;308;/,
+    /^NEXT_REDIRECT;replace;\/reports;308;/,
   );
   assert.doesNotMatch(intelligenceRedirect.digest || "", /\/vip|\/account/);
 
@@ -45,7 +45,7 @@ function verifyIntelligenceAndProductsPolicy(): void {
     "src/app/(site)/intelligence/page.tsx",
   );
   const productsSource = readSource("src/app/(site)/products/page.tsx");
-  assert.match(intelligenceSource, /permanentRedirect\("\/markets"\)/);
+  assert.match(intelligenceSource, /permanentRedirect\("\/reports"\)/);
   assert.doesNotMatch(intelligenceSource, /"\/vip"|"\/account"/);
   assert.match(productsSource, /notFound\(\)/);
   assert.doesNotMatch(productsSource, /redirect/i);
@@ -157,7 +157,7 @@ function verifySearchPolicy(): void {
     buildSitemap({ posts: [], categorySlugs: [] }).map((entry) => entry.url),
   );
   const origin = "https://chronoversecapital.com";
-  assert.equal(urls.has(`${origin}/markets`), true);
+  assert.equal(urls.has(`${origin}/markets`), false);
   assert.equal(urls.has(`${origin}/pricing`), false);
 
   for (const legacyOrPrivateUrl of [

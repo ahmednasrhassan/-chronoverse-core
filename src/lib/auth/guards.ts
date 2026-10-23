@@ -8,7 +8,6 @@ import type {
 
 export type AccessDenialCodeV1 =
   | "authentication-required"
-  | "vip-required"
   | "access-invalid";
 
 export class AccessGuardErrorV1 extends Error {
@@ -21,14 +20,8 @@ export class AccessGuardErrorV1 extends Error {
   }
 }
 
-export type VipAuthorizedAccessV1 = Extract<
-  AuthenticatedAccessV1,
-  { readonly canAccessVip: true }
->;
-
 export interface AccessGuardsV1 {
   readonly requireAuthenticated: () => Promise<AuthenticatedAccessV1>;
-  readonly requireVip: () => Promise<VipAuthorizedAccessV1>;
 }
 
 /** Creates stateless guards that invoke the authoritative resolver per call. */
@@ -45,24 +38,6 @@ export function createAccessGuardsV1(
 
       return access;
     },
-    requireVip: async () => {
-      const access = validateResolvedAccessV1(await resolveAccess());
-
-      if (!access.isAuthenticated) {
-        throw new AccessGuardErrorV1("authentication-required");
-      }
-
-      // Trusted elevated roles authorize directly, before entitlement state.
-      if (access.state === "owner" || access.state === "admin") {
-        return access;
-      }
-
-      if (access.state === "vip_active") {
-        return access;
-      }
-
-      throw new AccessGuardErrorV1("vip-required");
-    },
   });
 }
 
@@ -70,7 +45,6 @@ const productionGuardsV1 = createAccessGuardsV1(resolveAccessV1);
 
 export const requireAuthenticatedV1 =
   productionGuardsV1.requireAuthenticated;
-export const requireVipV1 = productionGuardsV1.requireVip;
 
 function validateResolvedAccessV1(value: AccessResultV1): AccessResultV1 {
   if (!isRecord(value)) {
@@ -133,10 +107,6 @@ function invalidAccess(): AccessGuardErrorV1 {
 function messageForDenialV1(code: AccessDenialCodeV1): string {
   if (code === "authentication-required") {
     return "A verified authenticated identity is required.";
-  }
-
-  if (code === "vip-required") {
-    return "VIP access is required.";
   }
 
   return "Resolved access state is invalid.";

@@ -42,3 +42,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local verification evidence (independent of Next build output)
+.verification/
+baseline-*.log
+baseline-*.tap
+cleanup-*.log
+.verification-package-lock.log

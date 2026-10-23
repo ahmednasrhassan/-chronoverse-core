@@ -14,17 +14,6 @@ import {
   CHRONOVERSE_ROLES_V1,
 } from "../types";
 
-const FOUNDATION_COMPOSITION_V1 = Object.freeze({
-  getVipCommercialConfig: () => Object.freeze({
-    storeId: "1",
-    productId: "2",
-    monthlyVariantId: "3",
-    annualVariantId: "4",
-    variantIds: Object.freeze(["3", "4"] as const),
-  }),
-  getCurrentTime: () => "2026-09-12T12:00:00.000Z",
-});
-
 function assertEqual<T>(actual: T, expected: T, label: string): void {
   if (!Object.is(actual, expected)) {
     throw new Error(
@@ -50,7 +39,7 @@ async function verifyRoleAccessMapping(): Promise<void> {
 
   const anonymous = createAccessResolverV1(
     async () => null,
-    FOUNDATION_COMPOSITION_V1,
+
   );
   assertDeepEqual(await anonymous(), {
     state: "anonymous_free",
@@ -80,9 +69,9 @@ async function verifyRoleAccessMapping(): Promise<void> {
           auth_user_id: "verified-auth-subject",
           ...testCase,
         }],
-        loadCommercialAccess: async () => [],
+
       }),
-      FOUNDATION_COMPOSITION_V1,
+
     );
     const first = await resolver();
     const second = await resolver();
@@ -107,9 +96,9 @@ async function verifyRoleAccessMapping(): Promise<void> {
         access_state: "vip_active",
         can_access_vip: true,
       }],
-      loadCommercialAccess: async () => [],
+
     }),
-    FOUNDATION_COMPOSITION_V1,
+
   );
 
   try {
@@ -160,10 +149,6 @@ function auditArchitecture(): void {
     `${authDirectory}serverConfig.ts`, "utf8");
   const proxyClientSource = readFileSync(
     `${authDirectory}supabase/proxy.ts`, "utf8");
-  const canonicalMarketSource = readFileSync(
-    `${repositoryDirectory}src/lib/markets/services/canonicalProductResults.ts`,
-    "utf8",
-  );
   const migrationSource = readFileSync(
     `${repositoryDirectory}supabase/migrations/202609110001_identity_access.sql`,
     "utf8",
@@ -201,8 +186,8 @@ function auditArchitecture(): void {
     "getSession is not authorization truth");
   assertEqual(accessSource.includes("unstable_cache"), false,
     "access resolver is not globally cached");
-  assertEqual(accessSource.includes('"resolve_my_commercial_access_v1"'), true,
-    "normal authenticated access uses the caller-bound commercial RPC");
+  assertEqual(accessSource.includes('"resolve_my_commercial_access_v1"'), false,
+    "publication identity never queries retired memberships");
   assertEqual(accessSource.includes('.schema("app_private")'), false,
     "access resolver never requests the unexposed private schema");
   assertEqual(accessSource.toLowerCase().includes("email"), false,
@@ -221,8 +206,6 @@ function auditArchitecture(): void {
     assertEqual(proxyClientSource.includes(forbiddenLookup), false,
       `proxy performs no ${forbiddenLookup} authorization lookup`);
   }
-  assertEqual(canonicalMarketSource.includes("/auth/"), false,
-    "canonical market cache imports no authentication state");
   for (const path of sourceFiles) {
     const source = readFileSync(path, "utf8");
     if (source.includes("unstable_cache")) {

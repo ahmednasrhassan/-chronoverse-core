@@ -11,24 +11,15 @@ import { metadata as dmcaMetadata } from "@/app/(site)/dmca/page";
 import { metadata as editorialPolicyMetadata } from "@/app/(site)/editorial-policy/page";
 import { metadata as faqMetadata } from "@/app/(site)/faq/page";
 import { metadata as freshnessMetadata } from "@/app/(site)/freshness/page";
-import { metadata as marketsMetadata } from "@/app/(site)/markets/page";
 import { metadata as methodologyMetadata } from "@/app/(site)/methodology/page";
-import { metadata as pricingMetadata } from "@/app/(site)/pricing/page";
 import { metadata as privacyPolicyMetadata } from "@/app/(site)/privacy-policy/page";
 import { metadata as reportsMetadata } from "@/app/(site)/reports/page";
 import { metadata as termsMetadata } from "@/app/(site)/terms-of-service/page";
 import { publicSocialImage } from "../metadata";
 import { canonicalSiteOrigin } from "../site-url";
 
-const HOMEPAGE_TITLE = "Chronoverse Capital | Five-Market Intelligence";
+const HOMEPAGE_TITLE = "Chronoverse Capital | Independent Financial Research";
 const PERSONAL_PORTRAIT_ID = "a03a88e45b450a8f347633edf76d251bd9881fea";
-const EXPECTED_LAUNCH_MARKETS = [
-  "EUR/USD",
-  "EUR/JPY",
-  "EUR/GBP",
-  "EUR/CHF",
-  "€STR",
-] as const;
 
 type StaticRouteExpectation = {
   pathname: string;
@@ -42,7 +33,6 @@ const STATIC_ROUTES = [
     title: "Independent Market Research & Intelligence",
     metadata: homeMetadata,
   },
-  { pathname: "/markets", title: "Markets", metadata: marketsMetadata },
   {
     pathname: "/reports",
     title: "Research Reports",
@@ -178,20 +168,5 @@ for (const route of STATIC_ROUTES) {
 
 assert.equal(new Set(resolvedTitles).size, STATIC_ROUTES.length);
 assert.equal(new Set(resolvedDescriptions).size, STATIC_ROUTES.length);
-
-const marketsDescription = requireString(
-  marketsMetadata.description,
-  "/markets description",
-);
-for (const market of EXPECTED_LAUNCH_MARKETS) {
-  assert.ok(marketsDescription.includes(market), `/markets must include ${market}`);
-}
-assert.doesNotMatch(marketsDescription, /Gold|Bitcoin|Oil|Nasdaq|S&P|DXY/i);
-assert.match(marketsDescription, /Free Lite/);
-
-assert.equal(pricingMetadata.title, "Page not found");
-assert.deepEqual(pricingMetadata.robots, { index: false, follow: false });
-assert.equal(pricingMetadata.alternates, undefined);
-assert.doesNotMatch(JSON.stringify(pricingMetadata), /VIP|pricing|15\.99|150\.99/i);
 
 console.log("PASS: SEO-B2 static route metadata");

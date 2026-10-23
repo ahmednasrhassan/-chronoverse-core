@@ -17,11 +17,6 @@ import { getMiddlewareRouteMatcher } from "next/dist/shared/lib/router/utils/mid
 
 import nextConfig from "../../../../next.config";
 import { config, createChronoverseProxyV1 } from "../../../proxy";
-import { createCheckoutRouteHandlerV1 } from "../../../app/api/billing/checkout/route";
-import { createPortalRouteHandlerV1 } from "../../../app/api/billing/portal/route";
-import { createAccessGuardsV1 } from "../guards";
-import { enforceVipPageAccessV1 } from "../vipPageAccess";
-import type { AccessResultV1 } from "../types";
 
 const APEX = "chronoversecapital.com";
 const FAMILIES = ["account", "auth", "billing", "vip"];
@@ -307,47 +302,4 @@ test("existing Next redirects and security headers survive the public apex bypas
   assert.equal(response.headers.get("x-frame-options"), "SAMEORIGIN");
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
   assert.equal(response.headers.get("referrer-policy"), "origin-when-cross-origin");
-});
-
-test("direct VIP guards and billing APIs enforce authorization independently of proxy", async () => {
-  const anonymous: AccessResultV1 = {
-    state: "anonymous_free", isAuthenticated: false, authSubject: null,
-    userId: null, role: null, canAccessVip: false,
-  };
-  const free: AccessResultV1 = {
-    state: "authenticated_free", isAuthenticated: true, authSubject: "verified-subject",
-    userId: "internal-user", role: "user", canAccessVip: false,
-  };
-  for (const [access, destination] of [[anonymous, "/account"], [free, "/pricing"]] as const) {
-    const guards = createAccessGuardsV1(async () => access);
-    for (const pathname of ["/vip", "/vip/markets", "/vip/markets/eurusd"]) {
-      assert.equal(matches(APEX, pathname), true);
-      await assert.rejects(
-        enforceVipPageAccessV1(guards.requireVip, (url) => { throw new Error(`redirect:${url}`); }),
-        { message: `redirect:${destination}` },
-      );
-    }
-  }
-  const guards = createAccessGuardsV1(async () => anonymous);
-  const checkout = createCheckoutRouteHandlerV1({ createCheckout: async () => {
-    await guards.requireAuthenticated();
-    throw new Error("anonymous checkout reached provider");
-  } });
-  const portal = createPortalRouteHandlerV1({ createPortal: async () => {
-    await guards.requireAuthenticated();
-    throw new Error("anonymous portal reached provider");
-  } });
-  for (const [pathname, handler, body] of [
-    ["/api/billing/checkout", checkout, JSON.stringify({ plan: "monthly" })],
-    ["/api/billing/portal", portal, undefined],
-  ] as const) {
-    assert.equal(matches(APEX, pathname), false);
-    const response = await handler(new Request(`https://${APEX}${pathname}`, { method: "POST", body }));
-    assert.equal(response.status, 410);
-    assert.deepEqual(await response.json(), { ok: false, error: pathname.endsWith("checkout") ? "checkout-disabled" : "portal-disabled" });
-  }
-  const failure = new Error("trusted access unavailable");
-  await assert.rejects(enforceVipPageAccessV1(async () => { throw failure; }, () => {
-    throw new Error("resolver failure must propagate");
-  }), failure);
 });
