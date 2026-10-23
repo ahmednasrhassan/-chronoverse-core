@@ -19,9 +19,3 @@ export function isRetiredCommercialPath(pathname: string): boolean {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
-
-export const RETIRED_PAGE_METADATA = Object.freeze({
-  title: "Page not found",
-  description: "The requested page is unavailable.",
-  robots: { index: false, follow: false },
-});

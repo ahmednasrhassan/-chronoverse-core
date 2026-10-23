@@ -5,7 +5,7 @@ import { formatAccountAccessStateV1 } from "../account";
 const expectedLabels = [
   ["anonymous_free", "Free — anonymous"],
   ["authenticated_free", "Free — authenticated"],
-  ["vip_active", "VIP Active"],
+  ["vip_active", "Historical paid access"],
   ["admin", "Administrator"],
   ["owner", "Owner"],
   ["unavailable", "Unavailable"],

@@ -1,26 +1,8 @@
 import "server-only";
 
-import { requireAuthenticatedV1 } from "../auth/guards";
-import type { AuthenticatedAccessV1 } from "../auth/types";
 
 export const LEMON_CHRONOVERSE_USER_ID_FIELD_V1 =
   "chronoverse_user_id" as const;
-
-export interface LemonCheckoutCustomDataV1 {
-  readonly chronoverse_user_id: string;
-}
-
-export type CommercialIdentityErrorCodeV1 = "trusted-user-id-invalid";
-
-export class CommercialIdentityErrorV1 extends Error {
-  readonly code: CommercialIdentityErrorCodeV1;
-
-  constructor(code: CommercialIdentityErrorCodeV1) {
-    super("Trusted commercial identity is invalid.");
-    this.name = "CommercialIdentityErrorV1";
-    this.code = code;
-  }
-}
 
 export type UntrustedLemonIdentityErrorCodeV1 =
   | "custom-data-missing"
@@ -42,29 +24,6 @@ export type UntrustedLemonIdentityResultV1 =
     grantsAccess: false;
     error: UntrustedLemonIdentityErrorCodeV1;
   }>;
-
-type RequireAuthenticatedCommercialIdentityV1 =
-  () => Promise<Pick<AuthenticatedAccessV1, "userId">>;
-
-/** Creates trusted checkout data from one authoritative authenticated lookup. */
-export function createLemonCheckoutCustomDataResolverV1(
-  requireAuthenticated: RequireAuthenticatedCommercialIdentityV1,
-): () => Promise<LemonCheckoutCustomDataV1> {
-  return async () => {
-    const access = await requireAuthenticated();
-
-    if (!isCanonicalUuidV1(access.userId)) {
-      throw new CommercialIdentityErrorV1("trusted-user-id-invalid");
-    }
-
-    return Object.freeze({
-      [LEMON_CHRONOVERSE_USER_ID_FIELD_V1]: access.userId,
-    }) as LemonCheckoutCustomDataV1;
-  };
-}
-
-export const resolveLemonCheckoutCustomDataV1 =
-  createLemonCheckoutCustomDataResolverV1(requireAuthenticatedV1);
 
 /**
  * Parses syntax only. A successful result remains unverified and grants no

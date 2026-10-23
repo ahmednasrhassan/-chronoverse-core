@@ -25,9 +25,9 @@ const geistMono = Geist_Mono({
   adjustFontFallback: true,
 });
 
-const DEFAULT_TITLE = "Chronoverse Capital | Five-Market Intelligence";
+const DEFAULT_TITLE = "Chronoverse Capital | Independent Financial Research";
 const DEFAULT_DESCRIPTION =
-  "Free Lite market intelligence for EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and €STR, alongside independent market research.";
+  "Independent financial research, market analysis, and economic commentary from Chronoverse Capital.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -51,16 +51,7 @@ export const metadata: Metadata = {
 
   description: DEFAULT_DESCRIPTION,
 
-  keywords: [
-    "EUR/USD",
-    "EUR/JPY",
-    "EUR/GBP",
-    "EUR/CHF",
-    "€STR",
-    "Market Intelligence",
-    "Financial Research",
-    "Chronoverse Capital",
-  ],
+  keywords: ["Financial Research", "Market Analysis", "Chronoverse Capital"],
 
   robots: {
     index: true,

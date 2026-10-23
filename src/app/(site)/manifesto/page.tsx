@@ -25,17 +25,16 @@ export default function ManifestoPage() {
     >
       <InstitutionalSection title="Focused coverage">
         <p>
-          The launch product covers EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and
-          €STR. Broader editorial subjects do not become additional public
-          products.
+          Financial research may cover currencies, interest rates, economic
+          policy, and other market subjects. Each article defines its own scope.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="One canonical truth">
         <p>
-          Free Lite begins with official observations and canonical analysis.
+          Research begins with identified sources and evidence.
           Source identity and derived interpretation remain distinct in the
-          public projection.
+          published analysis.
         </p>
       </InstitutionalSection>
 
@@ -58,7 +57,7 @@ export default function ManifestoPage() {
       <InstitutionalSection title="Commercial restraint">
         <p>
           Sponsorship and other commercial arrangements remain separate from
-          Free Lite intelligence, analytical outputs,
+          research findings
           and editorial conclusions.
         </p>
       </InstitutionalSection>

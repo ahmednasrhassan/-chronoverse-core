@@ -21,7 +21,6 @@ const sources = {
   dmca: readSource("src/app/(site)/dmca/page.tsx"),
   faq: readSource("src/app/(site)/faq/page.tsx"),
   manifesto: readSource("src/app/(site)/manifesto/page.tsx"),
-  sponsors: readSource("src/app/(site)/sponsors/page.tsx"),
 };
 
 assert.equal(
@@ -35,8 +34,8 @@ assert.equal(
   "the obsolete non-routable sponsor copy must not survive",
 );
 
-assert.match(sources.about, /Free intelligence and research/);
-assert.match(sources.about, /Editorial Research/);
+assert.match(sources.about, /Independent financial research/);
+assert.match(sources.about, /Research archive/);
 assert.match(sources.about, /Ahmed N\. Hassan — LinkedIn/);
 assert.doesNotMatch(
   sources.about,
@@ -50,10 +49,7 @@ assert.doesNotMatch(sources.account, /LEMON-70|access code|Early Access/i);
 assert.doesNotMatch(sources.billing, /\$15\.99 monthly/);
 assert.doesNotMatch(sources.billing, /\$150\.99 annually/);
 assert.doesNotMatch(sources.billing, /href="\/pricing"/);
-assert.match(
-  sources.billing,
-  /state\.portalAvailable \? <ManageSubscriptionButton \/> : null/,
-);
+assert.doesNotMatch(sources.billing, /ManageSubscriptionButton|portalAvailable/);
 assert.match(sources.billing, /Contact page/);
 assert.doesNotMatch(sources.billing, /LEMON-70|access code/i);
 
@@ -69,49 +65,10 @@ for (const reason of [
 assert.doesNotMatch(sources.contact, /href="\/sponsors"/);
 assert.doesNotMatch(sources.contact, /within \d+|response within|guaranteed response/i);
 
-for (const methodBoundary of [
-  "European Central Bank",
-  "canonical normalization",
-  "Free Lite",
-
-  "Historical charts",
-  "technical evidence",
-  "degraded",
-  "not predictive certainty",
-]) {
-  assert.match(
-    sources.methodology,
-    new RegExp(methodBoundary, "i"),
-    "methodology must retain " + methodBoundary,
-  );
+for (const source of [sources.methodology, sources.dataSources, sources.freshness]) {
+  assert.doesNotMatch(source, /Free Lite|VIP|five.market|RANGE_ROWS/);
+  assert.match(source, /research|Research/);
 }
-assert.match(
-  sources.methodology,
-  /not predictive certainty,[\s\S]*guaranteed signals,[\s\S]*backtested-performance claims/,
-);
-
-assert.match(sources.dataSources, /daily\s+reference-rate observations/);
-assert.match(sources.dataSources, /official €STR series/);
-assert.match(sources.dataSources, /normalizes those observations/);
-assert.doesNotMatch(sources.dataSources, /Yahoo|Marketstack/i);
-
-for (const rangeRow of [
-  /range: "1D", fx: "Unsupported", estr: "Unsupported"/,
-  /range: "5D", fx: "Conditional", estr: "Conditional"/,
-  /range: "1M", fx: "Supported", estr: "Supported"/,
-  /range: "3M", fx: "Supported", estr: "Supported"/,
-  /range: "6M", fx: "Supported", estr: "Supported"/,
-  /range: "1Y", fx: "Supported", estr: "Supported"/,
-  /range: "2Y", fx: "Supported", estr: "Supported"/,
-  /range: "5Y", fx: "Unsupported", estr: "Supported"/,
-  /range: "MAX",[\s\S]*fx: "Unsupported",[\s\S]*estr: "Official history since inception"/,
-]) {
-  assert.match(sources.freshness, rangeRow);
-}
-assert.match(sources.freshness, /not-assessed/);
-assert.match(sources.freshness, /Weekends, holidays/);
-assert.match(sources.freshness, /Requested coverage/);
-assert.match(sources.freshness, /at least two official\s+observations/);
 
 for (const disclaimerBoundary of [
   /informational and analytical purposes only/,
@@ -122,7 +79,6 @@ for (const disclaimerBoundary of [
   assert.match(sources.disclaimer, disclaimerBoundary);
 }
 
-assert.match(sources.terms, /Free provides the Lite projection/);
 assert.match(sources.terms, /Passwordless sign-in verifies identity/);
 assert.match(sources.terms, /Historical purchases and support/);
 assert.match(sources.terms, /one-time books/);
@@ -175,7 +131,7 @@ assert.doesNotMatch(
   /our designated agent|Designated Agent Contact|respond expeditiously/i,
 );
 
-assert.match(sources.faq, /exactly EUR\/USD, EUR\/JPY, EUR\/GBP, EUR\/CHF, and\s+€STR/);
+assert.match(sources.faq, /Independent financial research/);
 assert.match(sources.faq, /Historical purchase obligations/);
 assert.doesNotMatch(sources.faq, /LEMON-70|access code/i);
 
@@ -187,7 +143,6 @@ assert.doesNotMatch(
   /Document Clearance|Intelligence Network|Established 2026/i,
 );
 
-assert.match(sources.sponsors, /if \(isFreeOnlyMode\(\)\) retiredNotFound\(\)/);
 
 const allCurrentSources = Object.values(sources).join("\n");
 assert.doesNotMatch(

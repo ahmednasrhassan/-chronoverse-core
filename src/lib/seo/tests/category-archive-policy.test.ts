@@ -15,7 +15,7 @@ import type {
 
 const repositoryRoot = process.cwd();
 const readSource = (relativePath: string) =>
-  readFileSync(path.join(repositoryRoot, relativePath), "utf8");
+  readFileSync(path.join(repositoryRoot, relativePath), "utf8").replace(/\r\n/g, "\n");
 
 const article: ContentItem = {
   slug: "liquidity-cycle-update",

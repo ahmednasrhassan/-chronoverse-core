@@ -4,7 +4,6 @@ import path from "node:path";
 
 import {
   FOOTER_NAV_GROUPS_V1,
-  LAUNCH_MARKETS_V1,
   PUBLIC_ACCOUNT_NAV_V1,
   PUBLIC_PRIMARY_NAV_V1,
 } from "../../../config/institutionalNavigation";
@@ -19,26 +18,9 @@ const socialIconSource = readSource("src/components/socialicons.tsx");
 const aboutSource = readSource("src/app/(site)/about/page.tsx");
 
 assert.deepEqual(
-  LAUNCH_MARKETS_V1.map(({ productId, label, kind }) => ({
-    productId,
-    label,
-    kind,
-  })),
-  [
-    { productId: "eurusd", label: "EUR/USD", kind: "fx" },
-    { productId: "eurjpy", label: "EUR/JPY", kind: "fx" },
-    { productId: "eurgbp", label: "EUR/GBP", kind: "fx" },
-    { productId: "eurchf", label: "EUR/CHF", kind: "fx" },
-    { productId: "estr", label: "€STR", kind: "rate" },
-  ],
-  "launch navigation must expose exactly the five approved markets",
-);
-
-assert.deepEqual(
   PUBLIC_PRIMARY_NAV_V1.map(({ label, href }) => ({ label, href })),
   [
-    { label: "Markets", href: "/markets" },
-    { label: "Free", href: "/" },
+    { label: "Home", href: "/" },
     { label: "Research", href: "/reports" },
   ],
   "desktop and mobile primary navigation must share the approved IA",
@@ -65,10 +47,9 @@ assert.deepEqual(
   })),
   [
     {
-      label: "Product",
+      label: "Publication",
       links: [
-        { label: "Markets", href: "/markets" },
-        { label: "Free", href: "/" },
+        { label: "Home", href: "/" },
       ],
     },
     {
@@ -239,8 +220,7 @@ for (const [name, imageUrl] of [
 }
 
 for (const currentSection of [
-  "Current platform",
-  "Free intelligence and research",
+  "Independent financial research",
   "Independent analytical position",
   "Founder and leadership",
   "Trust and contact",
@@ -251,7 +231,7 @@ for (const currentSection of [
   );
 }
 
-assert.match(aboutSource, /LAUNCH_MARKETS_V1\.map/);
+assert.match(aboutSource, /independent financial research publication/);
 assert.doesNotMatch(
   aboutSource,
   /Ahmed Abdel Fattah|Temporal Alpha|crypto|digital.asset|AfriKDP|\bXM\b|strategic partner|ecosystem alliance|affiliate/i,

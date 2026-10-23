@@ -1,7 +1,4 @@
-@import "tailwindcss";
-
-/* Preserved paid source must not contribute production CSS utilities. */
-@source not "../../archive/legacy-paid-intelligence";
+@import "tailwindcss" source("../");
 
 @layer base {
   :root {

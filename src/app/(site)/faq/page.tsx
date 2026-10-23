@@ -10,7 +10,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Frequently Asked Questions",
   description:
-    "Find answers about Chronoverse market coverage, free access, ECB data, published research, and purchase support.",
+    "Find answers about published financial research, free accounts, the newsletter, and purchase support.",
   pathname: "/faq",
 });
 
@@ -19,32 +19,13 @@ export default function FaqPage() {
     <InstitutionalPage
       eyebrow="Knowledge base"
       title="Frequently Asked Questions"
-      summary="Concise answers to durable questions about launch coverage, access, data, research, and support."
+      summary="Answers about research, account access, source dates, and historical purchase support."
     >
-      <InstitutionalSection title="Which markets are included?">
-        <p>
-          Chronoverse covers exactly EUR/USD, EUR/JPY, EUR/GBP, EUR/CHF, and
-          €STR. €STR is a benchmark rate, not a currency pair. Editorial
-          research may discuss other subjects without adding them to the
-          product.
-        </p>
+      <InstitutionalSection title="What does Chronoverse publish?">
+        <p>Independent financial research, market analysis, and economic commentary. Browse published articles in <Link href="/reports">Research</Link> or subscribe to the newsletter.</p>
       </InstitutionalSection>
-
-      <InstitutionalSection title="What is available free?">
-        <p>
-          All five markets use the Free Lite projection, with reference values,
-          market context, freshness and availability limits. Published articles,
-          archives and the newsletter remain available free.
-        </p>
-      </InstitutionalSection>
-
-      <InstitutionalSection title="Is the data live or intraday?">
-        <p>
-          No. The launch surface uses official ECB daily reference-rate
-          observations for the four FX products and the official ECB €STR
-          series. It does not present streaming, tick, intraday, or OHLC data.
-          See <Link href="/freshness">Freshness &amp; Availability</Link>.
-        </p>
+      <InstitutionalSection title="How current is the research?">
+        <p>Each article reflects information available at publication. Source observations may be revised. See <Link href="/freshness">Freshness &amp; Availability</Link> for context.</p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Do I need a paid account?">

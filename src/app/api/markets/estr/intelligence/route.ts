@@ -1,8 +1,7 @@
-import {
-  getFiveProductVipDeepResponseV1,
-} from "@/lib/markets/services/vipDeepDelivery";
-
-/** Returns VIP Deep only after trusted access authorization. */
+/** Compatibility tombstone for a permanently retired market product. */
 export async function GET(): Promise<Response> {
-  return getFiveProductVipDeepResponseV1("estr");
+  return Response.json({ status: "retired" }, {
+    status: 410,
+    headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" },
+  });
 }

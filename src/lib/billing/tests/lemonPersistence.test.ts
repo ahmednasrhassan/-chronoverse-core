@@ -44,7 +44,7 @@ function auditLemonPersistence(): void {
   const identityMigrationPath = `${repositoryRoot}supabase/migrations/` +
     "202609110001_identity_access.sql";
   const guardsPath = `${repositoryRoot}src/lib/auth/guards.ts`;
-  const migration = readFileSync(migrationPath, "utf8").toLowerCase();
+  const migration = readFileSync(migrationPath, "utf8").replace(/\r\n/g, "\n").toLowerCase();
   const identityMigration = readFileSync(identityMigrationPath, "utf8")
     .replace(/\r\n/g, "\n");
   const guards = readFileSync(guardsPath, "utf8");
@@ -229,9 +229,9 @@ function auditLemonPersistence(): void {
     .digest("hex");
   assertEqual(identityHash, IDENTITY_MIGRATION_SHA256,
     "deployed identity migration content remains unchanged");
-  assertIncludes(guards, 'access.state === "owner"',
+  assertIncludes(guards, 'value.state === "owner"',
     "owner trusted-role authorization remains explicit");
-  assertIncludes(guards, 'access.state === "admin"',
+  assertIncludes(guards, 'value.state === "admin"',
     "admin trusted-role authorization remains explicit");
 }
 

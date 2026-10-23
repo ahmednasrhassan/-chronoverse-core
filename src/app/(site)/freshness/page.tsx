@@ -1,133 +1,25 @@
 import type { Metadata } from "next";
-
-import {
-  InstitutionalPage,
-  InstitutionalSection,
-} from "@/components/content/InstitutionalPage";
+import Link from "next/link";
+import { InstitutionalPage, InstitutionalSection } from "@/components/content/InstitutionalPage";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Freshness & Availability",
-  description:
-    "Understand official reference timing, publication gaps, supported ranges, and availability limits for Chronoverse market data.",
+  description: "Publication dates, source reference periods, and availability limits for Chronoverse research.",
   pathname: "/freshness",
 });
 
-const RANGE_ROWS = [
-  { range: "1D", fx: "Unsupported", estr: "Unsupported" },
-  { range: "5D", fx: "Conditional", estr: "Conditional" },
-  { range: "1M", fx: "Supported", estr: "Supported" },
-  { range: "3M", fx: "Supported", estr: "Supported" },
-  { range: "6M", fx: "Supported", estr: "Supported" },
-  { range: "1Y", fx: "Supported", estr: "Supported" },
-  { range: "2Y", fx: "Supported", estr: "Supported" },
-  { range: "5Y", fx: "Unsupported", estr: "Supported" },
-  {
-    range: "MAX",
-    fx: "Unsupported",
-    estr: "Official history since inception",
-  },
-] as const;
-
-export default function FreshnessPage() {
+export default function Page() {
   return (
-    <InstitutionalPage
-      eyebrow="Operational disclosure"
-      title="Freshness & Availability"
-      summary="Chronoverse uses official daily or reference observations. Timestamps, freshness labels, and coverage states describe the evidence available; they do not promise live delivery."
-    >
-      <InstitutionalSection title="Cadence and timestamps">
-        <p>
-          FX values are ECB daily reference-rate observations. €STR values are
-          observations from the ECB&apos;s official €STR series. A source
-          reference date identifies the observation; retrieval time and
-          page-render time describe different events and should not be treated
-          as the market reference time.
-        </p>
-        <p>
-          Current canonical product projections assess freshness against the
-          source&apos;s publication cadence. Provenance records the assessment
-          time and reports within-cadence, stale, unknown, or unavailable as
-          supported by the evidence. Within-cadence describes reference-data
-          timing; it does not mean live or real-time data. Unknown means the
-          available evidence cannot establish freshness.
-        </p>
-        <p>
-          Historical chart series have separate provenance and retain{" "}
-          <strong className="text-primary">not-assessed</strong> or stale
-          freshness. A current product&apos;s cadence assessment does not
-          assess every observation in a sibling historical series.
-        </p>
+    <InstitutionalPage eyebrow="Research publication" title="Freshness & Availability" summary="Publication dates, source reference periods, and availability limits for Chronoverse research.">
+      <InstitutionalSection title="Publication and reference dates">
+        <p>An article reflects information available at publication. A source reference period, source release date, and article update date describe different events.</p>
       </InstitutionalSection>
-
-      <InstitutionalSection title="Publication gaps">
-        <p>
-          Weekends, holidays, and other official non-publication dates are not
-          filled with synthetic observations. An official series can therefore
-          contain calendar gaps without implying that an intraday price is
-          missing.
-        </p>
+      <InstitutionalSection title="Availability and revisions">
+        <p>Source material may be delayed, revised, incomplete, or temporarily unavailable. An older article is historical analysis and should be read in its original context.</p>
       </InstitutionalSection>
-
-      <InstitutionalSection title="Coverage and availability">
-        <p>
-          Requested coverage is the calendar window selected by the user.
-          Observed coverage is the official data actually available inside that
-          window. Results may be marked partial or unavailable when the source
-          does not cover the full request or a required module cannot be
-          verified.
-        </p>
-        <p>
-          A conditional 5D range is available only when at least two official
-          observations exist in its exact window. Chronoverse does not remap an
-          unsupported range to a different period.
-        </p>
-      </InstitutionalSection>
-
-      <InstitutionalSection title="Current historical range support">
-        <div className="max-w-full overflow-x-auto">
-          <table className="w-full table-fixed border-collapse text-left text-sm">
-            <caption className="sr-only">
-              Historical range support for launch FX products and €STR
-            </caption>
-            <thead>
-              <tr className="border-b border-border text-primary">
-                <th scope="col" className="px-3 py-3 font-semibold">
-                  Range
-                </th>
-                <th scope="col" className="px-3 py-3 font-semibold">
-                  EUR FX products
-                </th>
-                <th scope="col" className="px-3 py-3 font-semibold">
-                  €STR
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {RANGE_ROWS.map((row) => (
-                <tr key={row.range} className="border-b border-border/70">
-                  <th
-                    scope="row"
-                    className="whitespace-nowrap px-3 py-3 font-mono font-medium text-primary"
-                  >
-                    {row.range}
-                  </th>
-                  <td className="px-3 py-3">{row.fx}</td>
-                  <td className="px-3 py-3">{row.estr}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </InstitutionalSection>
-
       <InstitutionalSection title="Decision boundary">
-        <p>
-          Data and analysis may be delayed, incomplete, revised, partial, or
-          unavailable. Verify current conditions through suitable primary
-          sources before making a decision; historical availability does not
-          guarantee future continuity.
-        </p>
+        <p>Published research is informational and does not guarantee current prices or future outcomes. Consult suitable primary sources and the <Link href="/disclaimer">Financial Information Disclaimer</Link>.</p>
       </InstitutionalSection>
     </InstitutionalPage>
   );

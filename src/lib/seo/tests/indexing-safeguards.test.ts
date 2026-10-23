@@ -142,9 +142,6 @@ function verifyRoutePolicies(): void {
     "HistoricalPurchaseSupport",
     "one-time books",
     "historical records and refund handling",
-    "Subscription facts are private",
-    "No active paid subscription is recorded",
-    "ManageSubscriptionButton",
   ]) {
     assert.ok(
       billingSource.includes(preservedBillingTruth),

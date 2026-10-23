@@ -32,7 +32,7 @@ export function formatAccountAccessStateV1(
   const labels: Record<AccountShellStateV1["accessState"], string> = {
     anonymous_free: "Free — anonymous",
     authenticated_free: "Free — authenticated",
-    vip_active: "VIP Active",
+    vip_active: "Historical paid access",
     admin: "Administrator",
     owner: "Owner",
     unavailable: "Unavailable",

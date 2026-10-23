@@ -125,22 +125,16 @@ function auditCallerBoundCommercialAccessV1(): void {
       `migration exposes no ${forbidden}`);
   }
 
-  const elevatedReturnAt = accessSource.indexOf(
-    'trustedaccess.role === "owner" || trustedaccess.role === "admin"',
-  );
-  const compositionAt = accessSource.indexOf("composecommercialaccessv1(");
-  assertEqual(elevatedReturnAt >= 0 && elevatedReturnAt < compositionAt, true,
-    "owner and admin return before commercial composition");
-  assertEqual(accessSource.includes('"resolve_my_commercial_access_v1"'), true,
-    "production resolver calls the exact caller-bound RPC");
+  assertEqual(accessSource.includes('"resolve_my_commercial_access_v1"'), false,
+    "publication identity no longer reads historical memberships");
   assertEqual(accessSource.includes('.schema("app_private")'), false,
     "production resolver never selects the private Data API schema");
   assertEqual(accessSource.includes("unstable_cache"), false,
     "commercial access is not globally cached");
   assertEqual(accessSource.includes("react.cache"), false,
     "commercial access is not placed in a shared React cache");
-  assertEqual(accessSource.includes("refund_affected"), true,
-    "persisted refund evidence maps into entitlement facts");
+  assertEqual(accessSource.includes("refund_affected"), false,
+    "historical refunds are reconciled outside publication identity");
   assertEqual(accessSource.includes("fetch("), false,
     "commercial resolution makes no Lemon API call");
 

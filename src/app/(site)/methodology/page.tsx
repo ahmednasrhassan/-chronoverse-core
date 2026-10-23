@@ -1,84 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-
-import {
-  InstitutionalPage,
-  InstitutionalSection,
-} from "@/components/content/InstitutionalPage";
+import { InstitutionalPage, InstitutionalSection } from "@/components/content/InstitutionalPage";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Methodology",
-  description:
-    "How Chronoverse transforms official ECB market observations into bounded analytical evidence.",
+  description: "How Chronoverse develops evidence-led financial research and communicates analytical limits.",
   pathname: "/methodology",
 });
 
-export default function MethodologyPage() {
+export default function Page() {
   return (
-    <InstitutionalPage
-      eyebrow="Research controls"
-      title="Methodology"
-      summary="Chronoverse transforms identified official observations into bounded analytical evidence while preserving source, timestamp, and availability context."
-    >
-      <InstitutionalSection title="Official source acquisition">
-        <p>
-          Launch inputs are official European Central Bank daily reference
-          observations for EUR/USD, EUR/JPY, EUR/GBP, and EUR/CHF, plus the
-          official €STR series. These are daily or reference observations, not
-          streaming prices, ticks, intraday quotes, or OHLC bars.
-        </p>
+    <InstitutionalPage eyebrow="Research publication" title="Methodology" summary="How Chronoverse develops evidence-led financial research and communicates analytical limits.">
+      <InstitutionalSection title="Source selection">
+        <p>Research begins with identified source material relevant to the question. Authors should check dates, figures, and attributed claims against the available evidence.</p>
       </InstitutionalSection>
-
-      <InstitutionalSection title="Canonical normalization and provenance">
-        <p>
-          Chronoverse validates the expected product and series identity,
-          normalizes source observations into a shared product model, and keeps
-          the source reference date distinct from retrieval and page-render
-          time. Raw ECB data remains provider data; the normalization,
-          transformation, and intelligence layer is Chronoverse work.
-        </p>
+      <InstitutionalSection title="Analysis and uncertainty">
+        <p>We distinguish sourced facts from interpretation, assumptions, and scenarios. Missing evidence and material uncertainty should be made clear, rather than replaced with unsupported certainty.</p>
       </InstitutionalSection>
-
-      <InstitutionalSection title="Free Lite projection">
-        <p>
-          Free Lite presents a bounded projection of the canonical five-product
-          analysis. Official source observations remain distinct from derived
-          analytical output, and neither is a streaming market price.
-        </p>
-        <p>
-          Historical charts and source-history coverage describe official daily
-          or reference observations. Available source history does not imply
-          that every analytical layer is part of the public Lite display.
-        </p>
-      </InstitutionalSection>
-
-      <InstitutionalSection title="Signals, risk, and evidence">
-        <p>
-          The analytical layer organizes technical evidence, signal state,
-          risk context, and supporting or conflicting evidence into
-          classifications. A module may be partial, degraded, or unavailable
-          when its required evidence is missing; unavailable evidence is not
-          silently replaced with an assumed value.
-        </p>
-      </InstitutionalSection>
-
       <InstitutionalSection title="Interpretation limits">
-        <p>
-          Outputs are analytical classifications, not predictive certainty,
-          guaranteed signals, backtested-performance claims, trade orders, or
-          personalized instructions. Users remain responsible for evaluating
-          assumptions, suitability, liquidity, and risk.
-        </p>
+        <p>Research is informational analysis, not personalized advice, trade orders, predictive certainty, or a guarantee of performance. Readers remain responsible for evaluating suitability and risk.</p>
       </InstitutionalSection>
-
       <InstitutionalSection title="Related controls">
-        <p>
-          Read <Link href="/data-sources">Data Sources</Link>,{" "}
-          <Link href="/freshness">Freshness &amp; Availability</Link>, and the{" "}
-          <Link href="/disclaimer">Financial Information Disclaimer</Link>{" "}
-          alongside the product output.
-        </p>
+        <p>Read <Link href="/data-sources">Data Sources</Link>, <Link href="/editorial-policy">Editorial Policy</Link>, and the <Link href="/disclaimer">Financial Information Disclaimer</Link> alongside published research.</p>
       </InstitutionalSection>
     </InstitutionalPage>
   );

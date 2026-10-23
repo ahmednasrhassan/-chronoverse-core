@@ -265,7 +265,6 @@ async function verifySitemapPolicyAndAtomicity(): Promise<void> {
     "/faq",
     "/freshness",
     "/newsletter",
-    "/markets",
     "/methodology",
     "/privacy-policy",
     "/reports",
