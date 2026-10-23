@@ -10,6 +10,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 import { canonicalSiteOrigin } from "@/lib/seo/site-url";
 
 import "./globals.css";
+import "./platform.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +26,9 @@ const geistMono = Geist_Mono({
   adjustFontFallback: true,
 });
 
-const DEFAULT_TITLE = "Chronoverse Capital | Independent Financial Research";
+const DEFAULT_TITLE = "Chronoverse Capital | Original Software & Independent Ideas";
 const DEFAULT_DESCRIPTION =
-  "Independent financial research, market analysis, and economic commentary from Chronoverse Capital.";
+  "Original software applications, independent research and considered ideas from Chronoverse Capital.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
 
   description: DEFAULT_DESCRIPTION,
 
-  keywords: ["Financial Research", "Market Analysis", "Chronoverse Capital"],
+  keywords: ["Original Software", "Independent Research", "Chronoverse Capital"],
 
   robots: {
     index: true,

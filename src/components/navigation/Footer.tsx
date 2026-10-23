@@ -1,16 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import {
-  PinterestIcon,
-  RedditIcon,
-  XIcon,
-} from "@/components/socialicons";
+import { PinterestIcon, RedditIcon, XIcon } from "@/components/socialicons";
 import { FOOTER_NAV_GROUPS_V1 } from "@/config/institutionalNavigation";
 import { siteConfig } from "@/config/siteConfig";
 
-const FOOTER_LINK_CLASS =
-  "rounded-sm text-[13px] text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+const FOOTER_LINK_CLASS = "cv-footer-link";
 
 const FOOTER_SOCIAL_LINKS = [
   {
@@ -35,17 +30,17 @@ const FOOTER_SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-[#6F4C91]/25 bg-[#0D0D11] text-secondary">
+    <footer className="cv-footer mt-auto border-t border-border bg-card text-secondary">
       <div className="mx-auto max-w-[88rem] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div className="grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))]">
-          <div className="sm:col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))]">
+          <div className="col-span-2 lg:col-span-1">
             <Link
-              href="/"
+              href="https://chronoversecapital.com/"
               aria-label="Chronoverse Capital home"
               className="inline-flex items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mauve focus-visible:ring-offset-2 focus-visible:ring-offset-page"
             >
               <Image
-                src="/chronoverse-capital-official-logo.png"
+                src="/icon.png"
                 alt=""
                 width={40}
                 height={40}
@@ -56,8 +51,8 @@ export default function Footer() {
               </span>
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-6 text-secondary">
-              Independent financial research and market analysis for
-              informed decisions.
+              Original software. Independent ideas. A considered platform for
+              useful applications and a clearer perspective.
             </p>
             <div className="mt-7">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-muted">
@@ -90,7 +85,14 @@ export default function Footer() {
               <ul className="mt-4 space-y-3">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href} className={FOOTER_LINK_CLASS}>
+                    <Link
+                      href={
+                        link.href.startsWith("/")
+                          ? `https://chronoversecapital.com${link.href}`
+                          : link.href
+                      }
+                      className={FOOTER_LINK_CLASS}
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -102,9 +104,9 @@ export default function Footer() {
 
         <div className="mt-12 grid gap-3 border-t border-[#6F4C91]/25 pt-6 text-xs leading-5 text-muted lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <p>
-            Chronoverse output is informational and analytical, not
-            personalized financial advice or a trade order. Market data may be
-            delayed, incomplete, revised, or unavailable.
+            Software, research and a point of view. Editorial material is
+            informational, not personalized financial advice. No software
+            application is currently available for purchase or download.
           </p>
           <p>
             © {new Date().getFullYear()} Chronoverse Capital. All rights

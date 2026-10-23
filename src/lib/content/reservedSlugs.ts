@@ -8,6 +8,7 @@ export const RESERVED_ROOT_SLUGS = Object.freeze([
   "about",
   "account",
   "api",
+  "apps",
   "archive",
   "auth",
   "billing",

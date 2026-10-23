@@ -8,9 +8,10 @@ export default function SiteLayout({
 }>) {
   return (
     <div className="min-h-screen bg-page text-primary">
+      <a className="cv-skip-link" href="#main-content">Skip to content</a>
       <Header />
 
-      <main className="min-h-screen w-full bg-page">
+      <main id="main-content" className="min-h-screen w-full bg-page" tabIndex={-1}>
         {children}
       </main>
 

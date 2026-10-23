@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import Header from "../../../components/navigation/Header";
 import Footer from "../../../components/navigation/Footer";
-import { FreeHomePageContent } from "../../../components/home/FreeHomePageContent";
+import { PlatformHomePageContent } from "../../../components/platform/PlatformHomePage";
 import About from "../../../app/(site)/about/page";
 import Faq from "../../../app/(site)/faq/page";
 import Methodology from "../../../app/(site)/methodology/page";
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
     assert.doesNotMatch(html, forbiddenPromotion, component.name);
     assert.doesNotMatch(html, /\bVIP\b|Free Lite|five.market|five.product/i, component.name);
   }
-  const shell = render(createElement(FreeHomePageContent, {
+  const shell = render(createElement(PlatformHomePageContent, {
     researchPreview: createElement("p", null, "Published research fixture"),
   }));
   assert.doesNotMatch(shell, forbiddenPromotion);
@@ -36,13 +36,13 @@ async function main(): Promise<void> {
   assert.match(shell, /Newsletter|newsletter/);
   const billing = render(createElement(Support));
   assert.match(billing, /one-time books/);
-  assert.match(billing, /Lemon Squeezy and Gumroad/);
+  assert.doesNotMatch(billing, /Lemon Squeezy|Gumroad/);
   assert.match(billing, /refund/);
   assert.doesNotMatch(billing, forbiddenPromotion);
   assert.doesNotMatch(billing, /Manage subscription|\bVIP\b|No active paid subscription/);
   for (const page of [Terms, Privacy, Contact]) {
     const html = render(createElement(page));
-    assert.match(html, /Lemon Squeezy and Gumroad/);
+    assert.doesNotMatch(html, /Lemon Squeezy|Gumroad/);
     assert.match(html, /refund/);
     assert.match(html, /dispute/);
   }

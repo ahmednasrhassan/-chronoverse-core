@@ -22,9 +22,7 @@ export default function PrivacyPolicyPage() {
       title="Privacy Policy"
       summary="This policy describes the information processed by the current Chronoverse Capital website and the choices available on its account, newsletter, contact, and analytics surfaces."
     >
-      <p className="text-xs font-mono text-muted">
-        Last updated: October 2026
-      </p>
+      <p className="text-xs font-mono text-muted">Last updated: October 2026</p>
 
       <InstitutionalSection title="1. Information processed">
         <ul className="list-disc space-y-2 pl-5">
@@ -35,8 +33,8 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong className="text-primary">Newsletter:</strong> the email
-            address submitted to join the newsletter and its active
-            subscription record.
+            address submitted to join the newsletter and its active subscription
+            record.
           </li>
           <li>
             <strong className="text-primary">Contact:</strong> the address and
@@ -61,19 +59,17 @@ export default function PrivacyPolicyPage() {
           links and to resolve the trusted access state. Newsletter information
           is used to maintain and operate the requested subscription. Contact
           messages are used to respond to the subject raised. Request metadata
-          may be used for delivery, reliability, abuse prevention, and
-          security.
+          may be used for delivery, reliability, abuse prevention, and security.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="3. Current service boundaries">
         <p>
-          Supabase supports the current identity and passwordless
-          authentication flow. Newsletter subscriber records are persisted
-          through the site&apos;s Sanity service, and an Amazon SES email
-          notification may support newsletter operations. Credentials used by
-          these integrations remain server-side and are not fields users are
-          asked to submit.
+          Supabase supports the current identity and passwordless authentication
+          flow. Newsletter subscriber records are persisted through the
+          site&apos;s Sanity service, and an Amazon SES email notification may
+          support newsletter operations. Credentials used by these integrations
+          remain server-side and are not fields users are asked to submit.
         </p>
         <p>
           Providers process information under their own terms and privacy
@@ -105,14 +101,14 @@ export default function PrivacyPolicyPage() {
       <InstitutionalSection title="5. Historical purchases and external websites">
         <p>
           This website does not offer checkout or ask for payment-card details.
-          Previous Lemon Squeezy and Gumroad sales were one-time books or
-          digital products. Their privacy practices apply to the transactions
-          they processed. Historical order and customer records may be retained
-          for delivery, accounting, refunds, disputes and applicable obligations.
+          Previous sales were one-time books. The providers that handled those
+          transactions operate under their own privacy practices. Historical
+          order and customer records may be retained for delivery, accounting,
+          refunds, disputes and applicable obligations.
         </p>
         <p>
-          Authenticated payment notifications may update historical processing
-          and refund evidence. Moving to a free-only website does not erase
+          This platform no longer processes payment notifications. Historical
+          records are preserved; the change in website focus does not erase
           those records or remove customer rights. For assistance, use
           <Link href="/contact"> Purchase support</Link> or
           <Link href="/contact"> Contact</Link>.
@@ -122,10 +118,10 @@ export default function PrivacyPolicyPage() {
       <InstitutionalSection title="6. Choices and requests">
         <p>
           You may decline optional analytics in the consent controls. Requests
-          concerning account, newsletter, contact, or other personal
-          information can be sent to the published address below. Available
-          rights and exceptions depend on applicable law and the circumstances
-          of the request.
+          concerning account, newsletter, contact, or other personal information
+          can be sent to the published address below. Available rights and
+          exceptions depend on applicable law and the circumstances of the
+          request.
         </p>
         <p>
           Do not send passwords, one-time sign-in links, card numbers, or other

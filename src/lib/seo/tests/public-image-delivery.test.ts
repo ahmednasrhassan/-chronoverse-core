@@ -225,7 +225,7 @@ async function verifyLegacyImageConservatism(): Promise<void> {
 }
 
 function verifyRenderContracts(): void {
-  const homepageSource = readSource("src/app/(site)/page.tsx") + "\n" + readSource("src/components/home/FreeHomePageContent.tsx");
+  const homepageSource = readSource("src/app/(site)/page.tsx") + "\n" + readSource("src/components/home/ResearchPreview.tsx");
   const articleSource = readSource("src/app/(site)/[slug]/page.tsx");
   const headerSource = readSource("src/components/navigation/Header.tsx");
   const nextConfigSource = readSource("next.config.ts");
@@ -234,13 +234,8 @@ function verifyRenderContracts(): void {
   assert.match(researchImageRouteSource, /signal:\s*AbortSignal\.timeout\(5000\)/);
 
   assert.match(homepageSource, /article\.cardImageUrl \|\| article\.imageUrl/);
-  assert.match(
-    homepageSource,
-    /function getResearchImageRelayUrl[\s\S]*?\/api\/research-image\?url=\$\{encodeURIComponent\(url\)\}/,
-  );
-  assert.match(homepageSource, /media="\(min-width: 640px\)"/);
-  assert.match(homepageSource, /srcSet=\{secondaryImageSrc\}/);
-  assert.match(homepageSource, /\(max-width: 639px\) 100vw, 136px/);
+  assert.match(homepageSource, /\/api\/research-image\?url=\$\{encodeURIComponent\(article.cardImageUrl\)\}/);
+  assert.match(homepageSource, /\(max-width: 767px\) 100vw, \(max-width: 1023px\) 50vw, 33vw/);
   assert.match(homepageSource, /alt=\{article\.imageAlt \|\| ""\}/);
   assert.match(homepageSource, /loading="lazy"/);
   assert.match(homepageSource, /decoding="async"/);

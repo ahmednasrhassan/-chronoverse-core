@@ -9,7 +9,7 @@ export const publicSocialImage = {
   url: buildCanonicalUrl("/chronoverse-social.png"),
   width: 1200,
   height: 630,
-  alt: `${siteConfig.name} institutional macroeconomic intelligence`,
+  alt: `${siteConfig.name} original software and independent ideas`,
 } as const;
 
 export type PublicPageMetadataInput = {

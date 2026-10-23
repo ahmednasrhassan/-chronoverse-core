@@ -1,5 +1,9 @@
 # Security release recovery — 2026-10-23
 
+This is the historical security release record. The later
+[software platform release](software-platform-release.md) preserves these patches
+and supersedes the commercial-runtime retention hold after owner confirmation.
+
 Recovered from cleanup commit `06b7e6719ce8aebc1f9d25c398427d16429ee04f` on
 `master`. The interrupted installation had replaced some packages without updating
 the tracked lockfile. The untracked article/RSS sanitization regression and local

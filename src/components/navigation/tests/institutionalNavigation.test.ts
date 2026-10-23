@@ -20,8 +20,10 @@ const aboutSource = readSource("src/app/(site)/about/page.tsx");
 assert.deepEqual(
   PUBLIC_PRIMARY_NAV_V1.map(({ label, href }) => ({ label, href })),
   [
-    { label: "Home", href: "/" },
-    { label: "Research", href: "/reports" },
+    { label: "Home", href: "https://chronoversecapital.com/" },
+    { label: "Applications", href: "https://apps.chronoversecapital.com/" },
+    { label: "Research", href: "https://chronoversecapital.com/reports" },
+    { label: "About", href: "https://chronoversecapital.com/about" },
   ],
   "desktop and mobile primary navigation must share the approved IA",
 );
@@ -29,8 +31,7 @@ assert.deepEqual(
 assert.deepEqual(
   PUBLIC_ACCOUNT_NAV_V1.map(({ label, href }) => ({ label, href })),
   [
-    { label: "Account", href: "/account" },
-    { label: "Sign In", href: "/account" },
+    { label: "Account", href: "https://chronoversecapital.com/account" },
   ],
   "account actions must truthfully reuse the working Account route",
 );
@@ -47,9 +48,10 @@ assert.deepEqual(
   })),
   [
     {
-      label: "Publication",
+      label: "Platform",
       links: [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "https://chronoversecapital.com/" },
+        { label: "Applications", href: "https://apps.chronoversecapital.com/" },
       ],
     },
     {
@@ -230,7 +232,7 @@ for (const currentSection of [
   );
 }
 
-assert.match(aboutSource, /independent financial research publication/);
+assert.match(aboutSource, /independent platform/);
 assert.doesNotMatch(
   aboutSource,
   /Ahmed Abdel Fattah|Temporal Alpha|crypto|digital.asset|AfriKDP|\bXM\b|strategic partner|ecosystem alliance|affiliate/i,

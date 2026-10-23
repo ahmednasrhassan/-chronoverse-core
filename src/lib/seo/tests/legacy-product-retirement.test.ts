@@ -24,7 +24,7 @@ test("retired public URLs reach the final research route in one permanent hop", 
     }
   }
   // Similar names and live APIs must not inherit the retirement policy.
-  for (const path of ["/api/newsletter", "/api/webhooks/lemon-squeezy", "/api/markets-news", "/api/billing-help", "/api/market-database", "/billings", "/billing-help"]) {
+  for (const path of ["/api/newsletter", "/api/markets-news", "/api/billing-help", "/api/market-database", "/billings", "/billing-help"]) {
     const response = await handler(new NextRequest(`https://chronoversecapital.com${path}`));
     assert.equal(response.status, 200, path);
     assert.equal(response.headers.get("location"), null, path);
@@ -34,7 +34,7 @@ test("retired public URLs reach the final research route in one permanent hop", 
 test("retired API families respond before auth, body parsing, redirects and rewrites", async () => {
   const handler = createChronoverseProxyV1(async () => { throw new Error("authentication invoked"); });
   for (const host of ["chronoversecapital.com", "www.chronoversecapital.com", "apps.chronoversecapital.com", "newsletter.chronoversecapital.com", "preview.vercel.app"]) {
-    for (const path of ["/api/markets", ...[...products, "gold", "oil"].map(id => `/api/markets/${id}/intelligence`), "/api/markets/unknown/file.svg", "/api/market-data", "/api/cron/ecb-live-progression", "/api/billing/checkout", "/api/billing/portal"]) {
+    for (const path of ["/api/markets", ...[...products, "gold", "oil"].map(id => `/api/markets/${id}/intelligence`), "/api/markets/unknown/file.svg", "/api/market-data", "/api/cron/ecb-live-progression", "/api/billing/checkout", "/api/billing/portal", "/api/webhooks/lemon-squeezy"]) {
       assert.equal(unstable_doesMiddlewareMatch({ config, nextConfig, url: `https://${host}${path}`, headers: { host } }), true);
       for (const method of ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"]) {
         const request = new NextRequest(`https://${host}${path}`, { method, headers: { host, "next-action": "fixture" } });

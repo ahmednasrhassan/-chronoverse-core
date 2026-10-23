@@ -4,6 +4,7 @@ import { isRetiredCommercialPath } from '@/config/siteAvailability';
 
 import { refreshSupabaseSessionV1 } from '@/lib/auth/supabase/proxy';
 import { buildCanonicalUrl } from '@/lib/seo/site-url';
+import { APPLICATIONS_ORIGIN } from '@/config/applications';
 
 /**
  * Newsletter Subdomain Alignment:
@@ -45,7 +46,7 @@ export function createChronoverseProxyV1(
     try { pathname = decodeURIComponent(pathname); } catch { /* Invalid paths fall through to Next. */ }
     // Tombstones execute before authentication, body parsing and host rewrites.
     // No product route or provider service is needed to retire these APIs.
-    if (['/api/markets', '/api/billing', '/api/market-data', '/api/cron/ecb-live-progression'].some(
+    if (['/api/markets', '/api/billing', '/api/market-data', '/api/cron/ecb-live-progression', '/api/webhooks/lemon-squeezy'].some(
       route => pathname === route || pathname.startsWith(`${route}/`),
     )) {
       return NextResponse.json({ status: 'retired' }, {
@@ -72,6 +73,24 @@ export function createChronoverseProxyV1(
     if (canonicalHostUrl !== null) {
       // Redirect before authentication: apex owns the session and private route.
       return NextResponse.redirect(canonicalHostUrl, 308);
+    }
+    const host = getRequestHostV1(request);
+    if (host === PRODUCTION_SEARCH_HOSTNAME_V1 && (pathname === '/apps' || pathname.startsWith('/apps/'))) {
+      const target = new URL(APPLICATIONS_ORIGIN);
+      target.pathname = pathname.slice('/apps'.length) || '/';
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target, 308);
+    }
+    if (host === 'apps.chronoversecapital.com') {
+      // Identity and editorial links remain on the main site. Only catalog
+      // documents are rewritten; APIs and static assets keep their boundaries.
+      if (requiresAuthSessionRefreshV1(pathname) || ['/reports', '/about', '/contact', '/newsletter', '/terms-of-service', '/privacy-policy'].includes(pathname)) {
+        const target = new URL(buildCanonicalUrl(pathname));
+        target.search = request.nextUrl.search;
+        return NextResponse.redirect(target, 308);
+      }
+      const rewrite = getApplicationsRewriteUrlV1(request);
+      if (rewrite) return NextResponse.rewrite(rewrite, { request });
     }
     const sessionResponse = requiresAuthSessionRefreshV1(
       request.nextUrl.pathname,
@@ -117,7 +136,7 @@ export function getWwwCanonicalRedirectUrlV1(request: NextRequest): URL | null {
 export function getPreviewRobotsHeaderValueV1(
   hostname: string,
 ): string | null {
-  return hostname.toLowerCase() === PRODUCTION_SEARCH_HOSTNAME_V1
+  return [PRODUCTION_SEARCH_HOSTNAME_V1, 'apps.chronoversecapital.com'].includes(hostname.toLowerCase())
     ? null
     : PREVIEW_ROBOTS_HEADER_VALUE_V1;
 }
@@ -181,6 +200,16 @@ export function getNewsletterRewriteUrlV1(request: NextRequest): URL | null {
   return null;
 }
 
+export function getApplicationsRewriteUrlV1(request: NextRequest): URL | null {
+  if (getRequestHostV1(request) !== 'apps.chronoversecapital.com') return null;
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith('/api/') || pathname === '/api' || pathname.startsWith('/_next/') || pathname === '/favicon.ico' || pathname.startsWith('/apps/') || pathname === '/apps') return null;
+  if (pathname !== '/robots.txt' && pathname !== '/sitemap.xml' && /\.[a-z0-9]+$/i.test(pathname)) return null;
+  const url = request.nextUrl.clone();
+  url.pathname = `/apps${pathname === '/' ? '' : pathname}`;
+  return url;
+}
+
 function getRequestHostV1(request: NextRequest): string {
   const hostHeader = request.headers.get('host') || request.nextUrl.host;
   return hostHeader.split(':')[0].toLowerCase();
@@ -192,6 +221,8 @@ export const config = {
   matcher: [
     { source: '/api/markets/:path*' },
     { source: '/api/billing/:path*' },
+    { source: '/api/webhooks/lemon-squeezy/:path*' },
+    { source: '/apps/:path*' },
     { source: '/api/market-data/:path*' },
     { source: '/api/cron/ecb-live-progression/:path*' },
     { source: '/billing/:path*' },

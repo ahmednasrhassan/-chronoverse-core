@@ -12,7 +12,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "About",
   description:
-    "Learn about Chronoverse Capital's independent financial research, evidence-led analysis, and editorial team.",
+    "Learn about Chronoverse Capital's original software platform, independent research and editorial team.",
   pathname: "/about",
 });
 
@@ -49,8 +49,13 @@ export default function AboutPage() {
     <InstitutionalPage
       eyebrow="Company"
       title="About Chronoverse Capital"
-      summary="Chronoverse Capital is an independent financial research publication."
+      summary="An independent platform for original software applications, thoughtful research and considered ideas."
     >
+      <InstitutionalSection title="Original software, independent by design">
+        <p>Chronoverse Capital is developing a focused platform for original downloadable software. Our <a href="https://apps.chronoversecapital.com/">applications catalog</a> is free to browse. No applications have been released yet; features, system requirements and availability will be published with each future release.</p>
+        <p>Independent financial research remains part of Chronoverse. Existing articles, the research archive and newsletter continue to be available.</p>
+      </InstitutionalSection>
+
       <InstitutionalSection title="Independent financial research">
         <p>
           Chronoverse Capital publishes financial research, market analysis,

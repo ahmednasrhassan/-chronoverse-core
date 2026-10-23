@@ -10,7 +10,7 @@ async function main(): Promise<void> {
   for (const page of [Terms, Privacy, Faq]) {
     const html = renderToStaticMarkup(createElement(page));
     assert.match(html, /one-time books/);
-    assert.match(html, /Lemon Squeezy and Gumroad/);
+    assert.doesNotMatch(html, /Lemon Squeezy|Gumroad|payment notifications may update/);
     assert.match(html, /refund/);
     assert.doesNotMatch(html, /href="\/pricing"|shop\.chronoversecapital|VIP checkout is available|\$15\.99|\$150\.99/);
   }

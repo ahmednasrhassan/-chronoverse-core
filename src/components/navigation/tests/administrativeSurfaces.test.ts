@@ -54,7 +54,7 @@ assert.doesNotMatch(sources.contact, /LEMON-70|access code/i);
 
 for (const reason of [
   "account",
-  "billing",
+  "software",
   "source question",
   "correction",
   "historical purchase",

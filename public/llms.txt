@@ -1,10 +1,12 @@
 # Chronoverse Capital
 
-> Independent financial research, market analysis, and economic commentary.
+> Original software applications and independent ideas, alongside published financial research.
 
 Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
 
 ## Public destinations
+
+- [Applications](https://apps.chronoversecapital.com/)
 
 - [Research](https://chronoversecapital.com/reports)
 - [Methodology](https://chronoversecapital.com/methodology)

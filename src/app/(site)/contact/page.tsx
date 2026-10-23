@@ -11,7 +11,7 @@ import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = buildPublicPageMetadata({
   title: "Contact",
   description:
-    "Contact Chronoverse Capital about account access, billing, research sources, corrections, or historical purchase support.",
+    "Contact Chronoverse Capital about software, account access, research sources, corrections, or historical purchase support.",
   pathname: "/contact",
 });
 
@@ -20,7 +20,7 @@ export default function ContactPage() {
     <InstitutionalPage
       eyebrow="Contact"
       title="Contact Chronoverse Capital"
-      summary="Use the published contact address for account, billing, research, correction, or historical purchase support."
+      summary="Use the published contact address for software, account, research, correction, or historical purchase support."
     >
       <InstitutionalSection title="Direct contact">
         <p>
@@ -59,8 +59,7 @@ export default function ContactPage() {
 
       <InstitutionalSection title="Historical purchase support">
         <p>
-          Previous Lemon Squeezy and Gumroad orders were one-time books or
-          digital products. Include the order reference and describe any
+          Previous orders were one-time books. Include the order reference and describe any
           delivery, refund or dispute issue. Original purchase terms and
           applicable customer rights remain in effect.
         </p>

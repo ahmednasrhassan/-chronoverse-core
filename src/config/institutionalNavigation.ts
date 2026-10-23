@@ -4,20 +4,22 @@ interface NavigationItemV1 {
 }
 
 export const PUBLIC_PRIMARY_NAV_V1 = Object.freeze([
-  { label: "Home", href: "/" },
-  { label: "Research", href: "/reports" },
+  { label: "Home", href: "https://chronoversecapital.com/" },
+  { label: "Applications", href: "https://apps.chronoversecapital.com/" },
+  { label: "Research", href: "https://chronoversecapital.com/reports" },
+  { label: "About", href: "https://chronoversecapital.com/about" },
 ] as const satisfies readonly NavigationItemV1[]);
 
 export const PUBLIC_ACCOUNT_NAV_V1 = Object.freeze([
-  { label: "Account", href: "/account" },
-  { label: "Sign In", href: "/account" },
+  { label: "Account", href: "https://chronoversecapital.com/account" },
 ] as const satisfies readonly NavigationItemV1[]);
 
 export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
   {
-    label: "Publication",
+    label: "Platform",
     links: [
-          { label: "Home", href: "/" },
+      { label: "Home", href: "https://chronoversecapital.com/" },
+      { label: "Applications", href: "https://apps.chronoversecapital.com/" },
     ],
   },
   {

@@ -1,7 +1,7 @@
 /**
- * Deployment policy for this free-only application. Deliberately independent
+ * Deployment policy for free browsing. Deliberately independent
  * of credentials, request parameters, cookies and deployment environment.
- * Historical billing/webhook processing is a separate concern and is retained.
+ * The retired commercial runtime is removed; historical database records remain.
  */
 export function isFreeOnlyMode(): boolean {
   return true;
