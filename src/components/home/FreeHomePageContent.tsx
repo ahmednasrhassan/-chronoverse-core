@@ -3,10 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import NewsletterForm from "@/components/NewsLetterForm";
-import HomeMarketTools from "./HomeMarketTools";
 import { siteConfig } from "@/config/siteConfig";
 import { calculateReadTime, getLatestSanityArticles, type ContentItem } from "@/lib/content";
-import { getFiveProductFreeLiteProjectionMapV1 } from "@/lib/markets/services/canonicalProductResults";
 
 const PRIMARY_CTA_CLASS =
   "chronoverse-primary-cta inline-flex items-center justify-center border border-[#A77BD8] px-5 py-3 text-sm font-semibold transition-colors hover:border-[#C8A7E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]";
@@ -21,23 +19,9 @@ export function ResearchPreview() {
   return <Suspense fallback={<ResearchFallback />}><LatestResearch /></Suspense>;
 }
 
-export function MarketToolsPreview() {
-  return (
-    <Suspense fallback={<p className="mx-auto max-w-[88rem] px-6 py-12 text-sm text-[#CFC5B8]">Loading free market references…</p>}>
-      <LatestMarketTools />
-    </Suspense>
-  );
-}
-
-async function LatestMarketTools() {
-  const projections = await getFiveProductFreeLiteProjectionMapV1();
-  return <HomeMarketTools projections={projections} />;
-}
-
 /** Pure presentation boundary for fixture-based verification of the public shell. */
-export function FreeHomePageContent({ researchPreview, marketTools }: {
+export function FreeHomePageContent({ researchPreview }: {
   researchPreview: ReactNode;
-  marketTools: ReactNode;
 }) {
 
   return (
@@ -45,8 +29,6 @@ export function FreeHomePageContent({ researchPreview, marketTools }: {
       <Hero />
 
       {researchPreview}
-
-      {marketTools}
 
       {!isFreeOnlyMode() ? <VipConversion /> : null}
 
@@ -90,14 +72,10 @@ function Hero() {
               Explore Research
               <span aria-hidden="true" className="ml-3">→</span>
             </Link>
-            <Link href="/markets" className={SECONDARY_CTA_CLASS}>
-              Explore Free Market Tools
-            </Link>
           </div>
           <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-[10px] uppercase tracking-[0.13em] text-[#91889A]">
             <span>Open-access research</span>
             <span>Source-led analysis</span>
-            <span>Five free market tools</span>
           </div>
         </div>
 
@@ -107,8 +85,8 @@ function Hero() {
             A longer view.<br />A clearer context.
           </p>
           <p className="mt-5 text-sm leading-7 text-[#CFC5B8]">
-            Financial history, macroeconomic research and transparent market
-            references, freely available to every reader.
+            Financial history and macroeconomic research, freely available
+            to every reader.
           </p>
           <Link href="/methodology" className="mt-6 inline-flex border-b border-[#6F4C91] pb-1 text-sm text-[#C8A7E8] hover:text-[#F3EBDD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8]">
             Our methodology <span aria-hidden="true" className="ml-3">↗</span>
