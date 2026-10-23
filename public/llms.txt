@@ -1,6 +1,6 @@
 # Chronoverse Capital
 
-> Original software applications and independent ideas, alongside published financial research.
+> An independent, English-language platform for original downloadable software, supported by editorial research on economics, finance and history. The software catalog is in pre-launch; no applications are released yet.
 
 Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
 
@@ -14,5 +14,12 @@ Canonical site: [Chronoverse Capital](https://chronoversecapital.com/)
 - [Freshness & Availability](https://chronoversecapital.com/freshness)
 - [About](https://chronoversecapital.com/about)
 - [Contact](https://chronoversecapital.com/contact)
+- [Frequently Asked Questions](https://chronoversecapital.com/faq)
+- [Privacy Policy](https://chronoversecapital.com/privacy-policy)
+- [Cookie Policy](https://chronoversecapital.com/cookie-policy)
+- [Purchase and Refund Information](https://chronoversecapital.com/refund-policy)
+- [Terms of Service](https://chronoversecapital.com/terms-of-service)
+
+The apps catalog is separate from the existing Gumroad storefront at https://shop.chronoversecapital.com/. Future eligible releases will link to verified Gumroad product pages; no software checkout, subscriptions or licensing are currently implemented here.
 
 Public information is analytical and informational, not personalized financial advice.

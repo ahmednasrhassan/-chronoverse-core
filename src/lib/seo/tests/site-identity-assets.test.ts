@@ -8,7 +8,9 @@ const resolveRepositoryPath = (relativePath: string) =>
 const readSource = (relativePath: string) =>
   readFileSync(resolveRepositoryPath(relativePath), "utf8");
 
-const publicLogoPath = resolveRepositoryPath("public/chronoverse-capital-official-logo.png");
+const publicLogoPath = resolveRepositoryPath(
+  "public/chronoverse-capital-official-logo.png",
+);
 const publicSocialImagePath = resolveRepositoryPath(
   "public/chronoverse-social.png",
 );
@@ -52,14 +54,24 @@ for (const invalidLegacyAsset of [
 const layoutSource = readSource("src/app/layout.tsx");
 const metadataSource = readSource("src/lib/seo/metadata.ts");
 const articleSeoSource = readSource("src/lib/seo/article.ts");
-const ogSource = readSource("src/app/api/og/route.tsx");
-const genericIdentitySources = [layoutSource, metadataSource, articleSeoSource, ogSource].join("\n");
+const ogSource =
+  readSource("src/app/api/og/route.tsx") +
+  readSource("src/lib/seo/social-image.tsx");
+const genericIdentitySources = [
+  layoutSource,
+  metadataSource,
+  articleSeoSource,
+  ogSource,
+].join("\n");
 const personalPortraitId = "a03a88e45b450a8f347633edf76d251bd9881fea";
 
 assert.doesNotMatch(layoutSource, /\bicons\s*:/);
 assert.doesNotMatch(metadataSource, /\bicons\s*:/);
 assert.equal(genericIdentitySources.includes(personalPortraitId), false);
-assert.match(articleSeoSource, /buildCanonicalUrl\("\/chronoverse-capital-official-logo\.png"\)/);
+assert.match(
+  articleSeoSource,
+  /buildCanonicalUrl\("\/chronoverse-capital-official-logo\.png"\)/,
+);
 assert.match(ogSource, /Chronoverse Capital/);
 assert.doesNotMatch(ogSource, /\bAfrico\b|strategic partner/i);
 assert.doesNotMatch(ogSource, /\bVIP\b|checkout|billing|entitlement/i);

@@ -108,7 +108,7 @@ function verifyMetadataFoundation(): void {
   assert.deepEqual(metadata.openGraph?.images, [publicSocialImage]);
   assert.equal(
     publicSocialImage.url,
-    "https://chronoversecapital.com/chronoverse-social.png",
+    "https://chronoversecapital.com/social-image",
   );
   assert.equal(publicSocialImage.width, 1200);
   assert.equal(publicSocialImage.height, 630);

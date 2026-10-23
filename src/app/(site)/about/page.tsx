@@ -19,17 +19,15 @@ export const metadata: Metadata = buildPublicPageMetadata({
 const ACTIVE_TEAM_MEMBERS = [
   {
     name: "Ahmed Sayed Younis",
-    role: "Trading and market analysis",
-    description:
-      "Contributes to active trading work, market analysis, and analytical review.",
+    role: "Market analysis",
+    description: "Contributes to market analysis and analytical review.",
     imageUrl:
       "https://cdn.sanity.io/images/xfs4j01p/production/be70d39bfca56986f8a16aee34afe753934009e9-896x1198.png?w=336&h=336&fit=crop&crop=center&auto=format&q=80",
   },
   {
     name: "Mohamed Younes",
-    role: "Trading and market analysis",
-    description:
-      "Contributes to active trading work, market analysis, and market interpretation.",
+    role: "Market analysis",
+    description: "Contributes to market analysis and market interpretation.",
     imageUrl:
       "https://cdn.sanity.io/images/xfs4j01p/production/a198b6ca1d4adc3d8bc92b60f0cbe5422a313935-500x729.webp?w=336&h=336&fit=crop&crop=center&auto=format&q=80",
   },
@@ -44,23 +42,45 @@ const ACTIVE_TEAM_MEMBERS = [
 ] as const;
 
 export default function AboutPage() {
-
   return (
     <InstitutionalPage
+      pathname="/about"
       eyebrow="Company"
       title="About Chronoverse Capital"
-      summary="An independent platform for original software applications, thoughtful research and considered ideas."
+      summary="An independent, English-language platform for original downloadable software, supported by research on economics, finance and history."
     >
       <InstitutionalSection title="Original software, independent by design">
-        <p>Chronoverse Capital is developing a focused platform for original downloadable software. Our <a href="https://apps.chronoversecapital.com/">applications catalog</a> is free to browse. No applications have been released yet; features, system requirements and availability will be published with each future release.</p>
-        <p>Independent financial research remains part of Chronoverse. Existing articles, the research archive and newsletter continue to be available.</p>
+        <p>
+          Chronoverse Capital is developing a focused platform for original
+          downloadable software. Our{" "}
+          <a href="https://apps.chronoversecapital.com/">
+            applications catalog
+          </a>{" "}
+          is free to browse. No applications have been released yet; features,
+          system requirements and availability will be published with each
+          future release.
+        </p>
+        <p>
+          We intend to publish purpose-built downloadable tools for focused
+          work. The first product, categories and supported systems have not yet
+          been confirmed. Independent articles and the research newsletter
+          provide context and a broader perspective alongside the software
+          platform.
+        </p>
+        <p>
+          The catalog is separate from the{" "}
+          <a href={siteConfig.storefrontUrl}>Gumroad storefront</a>. Future
+          eligible releases will link to their verified Gumroad product pages.
+          There is no software checkout, subscription or license system on this
+          website.
+        </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Independent financial research">
         <p>
-          Chronoverse Capital publishes financial research, market analysis,
-          and economic commentary. Our <Link href="/reports">Research archive</Link>
-          {" "}contains published articles and independent analysis.
+          Chronoverse Capital publishes financial research, market analysis, and
+          economic commentary. Our <Link href="/reports">Research archive</Link>{" "}
+          contains published articles and independent analysis.
         </p>
         <p>
           We distinguish source observations, analytical interpretation, and
@@ -72,16 +92,16 @@ export default function AboutPage() {
         <p>
           Chronoverse presents analytical evidence and classifications, not
           personalized advice, trade orders, or assured outcomes. Commercial
-          arrangements do not determine our research or editorial
-          conclusions.
+          arrangements do not determine our research or editorial conclusions.
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="Trading and market analysis team">
+      <InstitutionalSection title="Research contributors">
         <p>
-          These active Chronoverse Capital team members contribute to trading,
-          market analysis, and the review and interpretation of market
-          information.
+          The following contributors are listed in Chronoverse&apos;s editorial
+          profiles for market analysis, review and interpretation. These
+          profiles describe research contributions, not investment advisory
+          services.
         </p>
         <ul className="grid gap-4 pt-2 md:grid-cols-3">
           {ACTIVE_TEAM_MEMBERS.map((member) => (
@@ -136,10 +156,14 @@ export default function AboutPage() {
           the controls behind the public surface.
         </p>
         <p>
-          Use <Link href="/contact">Contact</Link> for account, billing,
+          Use <Link href="/contact">Contact</Link> for software, account,
           research, correction, or historical purchase-support inquiries. Our{" "}
           <Link href="/manifesto">operating principles</Link> describe the
-          restraint applied across the platform.
+          principles applied across the platform. The{" "}
+          <Link href="/privacy-policy">Privacy Policy</Link>,{" "}
+          <Link href="/cookie-policy">Cookie Policy</Link> and{" "}
+          <Link href="/refund-policy">purchase-support information</Link>{" "}
+          explain current service boundaries.
         </p>
       </InstitutionalSection>
     </InstitutionalPage>

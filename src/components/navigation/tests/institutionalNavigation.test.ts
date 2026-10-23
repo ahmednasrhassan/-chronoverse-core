@@ -30,9 +30,7 @@ assert.deepEqual(
 
 assert.deepEqual(
   PUBLIC_ACCOUNT_NAV_V1.map(({ label, href }) => ({ label, href })),
-  [
-    { label: "Account", href: "https://chronoversecapital.com/account" },
-  ],
+  [{ label: "Account", href: "https://chronoversecapital.com/account" }],
   "account actions must truthfully reuse the working Account route",
 );
 assert.match(headerSource, /PUBLIC_PRIMARY_NAV_V1\.map/);
@@ -52,6 +50,10 @@ assert.deepEqual(
       links: [
         { label: "Home", href: "https://chronoversecapital.com/" },
         { label: "Applications", href: "https://apps.chronoversecapital.com/" },
+        {
+          label: "Gumroad storefront",
+          href: "https://shop.chronoversecapital.com/",
+        },
       ],
     },
     {
@@ -78,6 +80,8 @@ assert.deepEqual(
       links: [
         { label: "Terms", href: "/terms-of-service" },
         { label: "Privacy", href: "/privacy-policy" },
+        { label: "Cookies", href: "/cookie-policy" },
+        { label: "Purchase & refund information", href: "/refund-policy" },
         {
           label: "Financial Information Disclaimer",
           href: "/disclaimer",
@@ -94,7 +98,7 @@ const discoverableHrefs: readonly string[] = [
   ...PUBLIC_PRIMARY_NAV_V1.map((item) => item.href),
   ...PUBLIC_ACCOUNT_NAV_V1.map((item) => item.href),
   ...FOOTER_NAV_GROUPS_V1.flatMap((group) =>
-    group.links.map((item) => item.href)
+    group.links.map((item) => item.href),
   ),
 ];
 
@@ -108,7 +112,7 @@ const footerLinks: readonly {
   readonly label: string;
   readonly href: string;
 }[] = FOOTER_NAV_GROUPS_V1.flatMap((group) =>
-  group.links.map(({ label, href }) => ({ label, href }))
+  group.links.map(({ label, href }) => ({ label, href })),
 );
 
 for (const [label, href] of [
@@ -213,7 +217,10 @@ for (const [name, imageUrl] of [
     "https://cdn.sanity.io/images/xfs4j01p/production/c9b34301e4a2b857b1878fd640c57e6396708422-1911x1856.webp",
   ],
 ] as const) {
-  assert.ok(aboutSource.includes(name), `${name} must appear on the About page`);
+  assert.ok(
+    aboutSource.includes(name),
+    `${name} must appear on the About page`,
+  );
   assert.ok(
     aboutSource.includes(imageUrl),
     `${name} must retain the historical Sanity image reference`,
@@ -232,7 +239,7 @@ for (const currentSection of [
   );
 }
 
-assert.match(aboutSource, /independent platform/);
+assert.match(aboutSource, /independent, English-language platform/);
 assert.doesNotMatch(
   aboutSource,
   /Ahmed Abdel Fattah|Temporal Alpha|crypto|digital.asset|AfriKDP|\bXM\b|strategic partner|ecosystem alliance|affiliate/i,
@@ -254,4 +261,6 @@ for (const genericHomepage of [
 
 assert.doesNotMatch(footerSource, /affs\.click|sponsor|affiliate/i);
 
-console.log("PASS: institutional navigation, footer identity, and launch scope");
+console.log(
+  "PASS: institutional navigation, footer identity, and launch scope",
+);

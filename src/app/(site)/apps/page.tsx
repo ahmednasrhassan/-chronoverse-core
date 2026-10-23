@@ -1,26 +1,31 @@
 import type { Metadata } from "next";
 import { AppDiscovery } from "@/components/applications/AppDiscovery";
 import { applications, applicationUrl } from "@/config/applications";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+import { buildSiteJsonLd } from "@/lib/seo/structured-data";
+import { StructuredData } from "@/components/content/StructuredData";
+import { Breadcrumbs } from "@/components/content/Breadcrumbs";
+import { siteConfig } from "@/config/siteConfig";
 
-export const metadata: Metadata = {
-  title: "Applications",
+export const metadata: Metadata = buildPublicPageMetadata({
+  title: "Software Applications",
   description:
-    "Explore original Chronoverse software. Browse the catalog freely and find clear product features, system requirements and release availability. No applications released yet.",
-  alternates: { canonical: applicationUrl() },
-  openGraph: {
-    title: "Original applications | Chronoverse Capital",
-    description:
-      "Independent software, purposefully built. Discover the Chronoverse applications catalog.",
-    url: applicationUrl(),
-    siteName: "Chronoverse Capital",
-    type: "website",
-  },
-};
+    "Explore the pre-launch catalog for original Chronoverse downloadable software. No applications are released yet. Browse freely without an account.",
+  pathname: "/",
+  site: "apps",
+});
 
 export default function ApplicationsPage() {
   return (
     <div className="cv-platform">
+      <StructuredData data={buildSiteJsonLd("apps")} />
       <section className="cv-catalog-hero cv-container">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: siteConfig.url + "/" },
+            { label: "Applications", href: applicationUrl() },
+          ]}
+        />
         <p className="cv-eyebrow">Chronoverse / Software catalog</p>
         <div className="cv-catalog-title-row">
           <h1>
@@ -75,7 +80,15 @@ export default function ApplicationsPage() {
         </div>
       </section>
       <div className="cv-catalog-contact cv-container">
-        <p>Questions about the platform?</p>
+        <div>
+          <p>Browse here. Purchase through Gumroad, when available.</p>
+          <p className="cv-catalog-purchase-note">
+            The catalog is in pre-launch. Future eligible applications will link
+            to their verified Gumroad product pages. The{" "}
+            <a href={siteConfig.storefrontUrl}>Gumroad storefront</a> is a
+            separate website; no software checkout is offered here.
+          </p>
+        </div>
         <a
           href="https://chronoversecapital.com/contact"
           className="cv-text-link"

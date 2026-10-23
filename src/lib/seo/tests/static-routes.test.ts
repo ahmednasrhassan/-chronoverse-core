@@ -30,7 +30,7 @@ type StaticRouteExpectation = {
 const STATIC_ROUTES = [
   {
     pathname: "/",
-    title: "Original Software. Independent by Design.",
+    title: "Original Downloadable Software",
     metadata: homeMetadata,
   },
   {
@@ -96,10 +96,7 @@ function requireString(value: unknown, label: string): string {
   return value;
 }
 
-function requireRecord(
-  value: unknown,
-  label: string,
-): Record<string, unknown> {
+function requireRecord(value: unknown, label: string): Record<string, unknown> {
   assert.ok(value && typeof value === "object", `${label} must be present`);
   return value as Record<string, unknown>;
 }
@@ -119,11 +116,18 @@ for (const route of STATIC_ROUTES) {
     `${label} canonical`,
   );
   const canonicalUrl = new URL(canonical);
-  const openGraph = requireRecord(route.metadata.openGraph, `${label} Open Graph`);
+  const openGraph = requireRecord(
+    route.metadata.openGraph,
+    `${label} Open Graph`,
+  );
   const twitter = requireRecord(route.metadata.twitter, `${label} Twitter`);
 
   assert.equal(title, route.title);
-  assert.notEqual(title, HOMEPAGE_TITLE, `${label} must not reuse homepage title`);
+  assert.notEqual(
+    title,
+    HOMEPAGE_TITLE,
+    `${label} must not reuse homepage title`,
+  );
   assert.equal(canonicalUrl.origin, canonicalSiteOrigin);
   assert.equal(canonicalUrl.pathname, route.pathname);
   assert.equal(canonicalUrl.search, "", `${label} canonical must omit query`);

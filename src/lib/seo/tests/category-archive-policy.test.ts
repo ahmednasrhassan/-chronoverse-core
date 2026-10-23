@@ -2,20 +2,20 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { metadata as archiveMetadata } from "@/app/(site)/archive/page";
+import { buildArchiveMetadata } from "@/app/(site)/archive/page";
 import {
   buildCategoryMetadataV1,
   requirePopulatedCategoryV1,
 } from "@/app/(site)/category/[slug]/page";
 import { metadata as reportsMetadata } from "@/app/(site)/reports/page";
-import type {
-  CategoryPageContentV1,
-  ContentItem,
-} from "@/lib/content";
+import type { CategoryPageContentV1, ContentItem } from "@/lib/content";
 
 const repositoryRoot = process.cwd();
 const readSource = (relativePath: string) =>
-  readFileSync(path.join(repositoryRoot, relativePath), "utf8").replace(/\r\n/g, "\n");
+  readFileSync(path.join(repositoryRoot, relativePath), "utf8").replace(
+    /\r\n/g,
+    "\n",
+  );
 
 const article: ContentItem = {
   slug: "liquidity-cycle-update",
@@ -34,10 +34,7 @@ const populatedCategory: CategoryPageContentV1 = {
   articles: [article],
 };
 
-function requireRecord(
-  value: unknown,
-  label: string,
-): Record<string, unknown> {
+function requireRecord(value: unknown, label: string): Record<string, unknown> {
   assert.ok(value && typeof value === "object", `${label} must be present`);
   return value as Record<string, unknown>;
 }
@@ -54,7 +51,10 @@ function expectNotFound(
     received = error;
   }
 
-  assert.ok(received instanceof Error, `${label} throws a Next not-found error`);
+  assert.ok(
+    received instanceof Error,
+    `${label} throws a Next not-found error`,
+  );
   assert.equal(
     (received as Error & { readonly digest?: string }).digest,
     "NEXT_HTTP_ERROR_FALLBACK;404",
@@ -69,10 +69,7 @@ function verifyCategoryBehaviorAndMetadata(): void {
     "a real populated category remains render-capable",
   );
   expectNotFound(null, "invalid category");
-  expectNotFound(
-    { ...populatedCategory, articles: [] },
-    "real empty category",
-  );
+  expectNotFound({ ...populatedCategory, articles: [] }, "real empty category");
 
   const metadata = buildCategoryMetadataV1(populatedCategory);
   const canonical = "https://chronoversecapital.com/category/macro-liquidity";
@@ -153,9 +150,7 @@ function verifyCategoryQueryBoundary(): void {
   assert.doesNotMatch(categoryPageSource, /slug\.replace\(\/-\/g/);
   assert.doesNotMatch(categoryPageSource, /Explore comprehensive/);
 
-  const categorySchemaSource = readSource(
-    "src/sanity/schemaTypes/category.ts",
-  );
+  const categorySchemaSource = readSource("src/sanity/schemaTypes/category.ts");
   assert.match(categorySchemaSource, /name: 'description'/);
   assert.match(categorySchemaSource, /type: 'text'/);
 }
@@ -200,8 +195,12 @@ function verifyReportsDiscovery(): void {
 }
 
 function verifyArchiveAndSitemapPolicy(): void {
+  const archiveMetadata = buildArchiveMetadata(1);
   assert.equal(archiveMetadata.title, "Archive");
-  assert.match(String(archiveMetadata.description), /published Chronoverse research/);
+  assert.match(
+    String(archiveMetadata.description),
+    /published Chronoverse research/,
+  );
 
   const robots = requireRecord(archiveMetadata.robots, "Archive robots");
   assert.equal(robots.index, false);
@@ -211,8 +210,8 @@ function verifyArchiveAndSitemapPolicy(): void {
   assert.equal(googleBot.follow, true);
   assert.equal(
     archiveMetadata.alternates?.canonical,
-    undefined,
-    "Archive has no index-encouraging canonical",
+    "https://chronoversecapital.com/archive",
+    "Archive has its own identity while retaining noindex",
   );
 
   const archiveSource = readSource("src/app/(site)/archive/page.tsx");
@@ -227,7 +226,10 @@ function verifyArchiveAndSitemapPolicy(): void {
   );
   assert.match(sitemapSource, /hasGeneralCategory/);
   assert.match(sitemapSource, /slug\.current == \$generalSlug/);
-  assert.match(sitemapSource, /hasUncategorizedPosts\s*&&\s*hasGeneralCategory/);
+  assert.match(
+    sitemapSource,
+    /hasUncategorizedPosts\s*&&\s*hasGeneralCategory/,
+  );
   assert.match(
     sitemapSource,
     /defined\(category->slug\.current\)/,

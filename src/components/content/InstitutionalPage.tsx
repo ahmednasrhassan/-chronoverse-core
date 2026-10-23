@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
+import { Breadcrumbs } from "./Breadcrumbs";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
 interface InstitutionalPageProps {
   readonly eyebrow: string;
   readonly title: string;
   readonly summary: string;
   readonly children: ReactNode;
+  readonly pathname?: string;
 }
 
 interface InstitutionalSectionProps {
@@ -17,9 +20,18 @@ export function InstitutionalPage({
   title,
   summary,
   children,
+  pathname,
 }: InstitutionalPageProps) {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+      {pathname ? (
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: buildCanonicalUrl("/") },
+            { label: title, href: buildCanonicalUrl(pathname) },
+          ]}
+        />
+      ) : null}
       <header className="max-w-3xl border-b border-border pb-10">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-mauve">
           {eyebrow}

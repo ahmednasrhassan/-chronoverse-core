@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 import {
   getArchivePage,
   parseArchivePage,
@@ -8,19 +9,34 @@ import {
 } from "@/lib/archive";
 import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "Archive",
-  description:
-    "Directory of published Chronoverse research organized by editorial category.",
-  robots: {
-    index: false,
-    follow: true,
-    googleBot: {
+export function buildArchiveMetadata(page: number): Metadata {
+  const metadata = buildPublicPageMetadata({
+    title: page > 1 ? `Archive — Page ${page}` : "Archive",
+    description:
+      "Directory of published Chronoverse research organized by editorial category.",
+    pathname: "/archive",
+  });
+  const canonical = `https://chronoversecapital.com/archive${page > 1 ? `?page=${page}` : ""}`;
+  return {
+    ...metadata,
+    alternates: { ...metadata.alternates, canonical },
+    openGraph: { ...metadata.openGraph, url: canonical },
+    robots: {
       index: false,
       follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
     },
-  },
-};
+  };
+}
+
+export async function generateMetadata({
+  searchParams,
+}: ArchiveIndexPageProps): Promise<Metadata> {
+  return buildArchiveMetadata(parseArchivePage((await searchParams).page));
+}
 
 /**
  * Intelligence Archive Index
@@ -59,9 +75,10 @@ export default async function ArchiveIndexPage({
   for (const post of posts) {
     const categoryTitle = post.category || DEFAULT_CATEGORY;
     const categorySlug = post.categorySlug || DEFAULT_CATEGORY_SLUG;
-    const categoryHref = post.category && post.categorySlug
-      ? `/category/${post.categorySlug}`
-      : undefined;
+    const categoryHref =
+      post.category && post.categorySlug
+        ? `/category/${post.categorySlug}`
+        : undefined;
 
     if (!sectionsMap.has(categorySlug)) {
       sectionsMap.set(categorySlug, {
@@ -84,7 +101,6 @@ export default async function ArchiveIndexPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 space-y-10 font-mono">
-
       {/* Header */}
       <header className="border-b border-border pb-8 space-y-2">
         <span className="bg-[#C8A7E8]/15 text-[#C8A7E8] px-3 py-1 rounded-md text-xs font-semibold border border-[#C8A7E8]/30 inline-block">
@@ -94,8 +110,8 @@ export default async function ArchiveIndexPage({
           Intelligence <span className="text-[#C8A7E8]">Archive Index</span>
         </h1>
         <p className="text-[#CFC5B8] text-sm font-sans">
-          Directory of published Chronoverse research, organized by its
-          recorded editorial category.
+          Directory of published Chronoverse research, organized by its recorded
+          editorial category.
         </p>
       </header>
 
@@ -139,7 +155,11 @@ export default async function ArchiveIndexPage({
                       {post.title}
                     </Link>
                     <time className="text-xs text-[#CFC5B8] font-mono whitespace-nowrap">
-                      [{post.date ? new Date(post.date).toISOString().split("T")[0] : "—"}]
+                      [
+                      {post.date
+                        ? new Date(post.date).toISOString().split("T")[0]
+                        : "—"}
+                      ]
                     </time>
                   </li>
                 ))}
@@ -184,7 +204,6 @@ export default async function ArchiveIndexPage({
       <footer className="border-t border-border pt-8 text-center text-xs text-muted">
         {"// Chronoverse Intelligence Ledger | Automated Directory Node //"}
       </footer>
-
     </div>
   );
 }

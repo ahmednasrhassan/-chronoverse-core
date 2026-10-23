@@ -33,6 +33,7 @@ const STATIC_ROUTES: ReadonlyArray<{
   { path: "", changeFrequency: "daily", priority: 1.0 },
   { path: "about", changeFrequency: "monthly", priority: 0.6 },
   { path: "contact", changeFrequency: "monthly", priority: 0.5 },
+  { path: "cookie-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "data-sources", changeFrequency: "monthly", priority: 0.5 },
   { path: "disclaimer", changeFrequency: "yearly", priority: 0.3 },
   { path: "dmca", changeFrequency: "yearly", priority: 0.3 },
@@ -43,6 +44,7 @@ const STATIC_ROUTES: ReadonlyArray<{
   { path: "newsletter", changeFrequency: "monthly", priority: 0.5 },
   { path: "privacy-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "reports", changeFrequency: "weekly", priority: 0.9 },
+  { path: "refund-policy", changeFrequency: "yearly", priority: 0.3 },
   { path: "terms-of-service", changeFrequency: "yearly", priority: 0.3 },
 ];
 

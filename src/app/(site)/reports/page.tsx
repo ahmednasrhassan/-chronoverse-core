@@ -1,13 +1,15 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { getSanityArticles, stripHtml, calculateReadTime } from '@/lib/content';
-import { buildPublicPageMetadata } from '@/lib/seo/metadata';
+import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/content/Breadcrumbs";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
+import Link from "next/link";
+import { getSanityArticles, stripHtml, calculateReadTime } from "@/lib/content";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
-  title: 'Research Reports',
+  title: "Research Reports",
   description:
-    'Browse editorial research on markets, macro liquidity, and cyclical dynamics.',
-  pathname: '/reports',
+    "Browse editorial research on markets, macro liquidity, and cyclical dynamics.",
+  pathname: "/reports",
 });
 
 /**
@@ -25,9 +27,16 @@ export default async function ReportsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: buildCanonicalUrl("/") },
+          { label: "Research", href: buildCanonicalUrl("/reports") },
+        ]}
+      />
       <header className="mb-12 border-b border-border pb-8">
         <h1 className="text-4xl font-bold text-[#F3EBDD] mb-4">
-          Research & <span className="text-[#C8A7E8]">Intelligence Reports</span>
+          Research &{" "}
+          <span className="text-[#C8A7E8]">Intelligence Reports</span>
         </h1>
         <p className="text-[#CFC5B8] text-lg">
           Published research, macro liquidity analysis, and cyclical dynamics.
@@ -42,9 +51,13 @@ export default async function ReportsPage() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => {
             const rawText = stripHtml(
-              article.legacyBody || article.bodyContent || article.content || ''
+              article.legacyBody ||
+                article.bodyContent ||
+                article.content ||
+                "",
             );
-            const summary = rawText.length > 160 ? `${rawText.slice(0, 160)}...` : rawText;
+            const summary =
+              rawText.length > 160 ? `${rawText.slice(0, 160)}...` : rawText;
             const readTime = `${calculateReadTime(rawText)} min read`;
 
             return (
@@ -77,7 +90,9 @@ export default async function ReportsPage() {
                       {article.title}
                     </Link>
                   </h2>
-                  <p className="text-[#CFC5B8] text-sm mb-6 line-clamp-3">{summary}</p>
+                  <p className="text-[#CFC5B8] text-sm mb-6 line-clamp-3">
+                    {summary}
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-[#CFC5B8]">

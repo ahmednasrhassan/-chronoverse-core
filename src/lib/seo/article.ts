@@ -2,20 +2,14 @@ import type { Metadata } from "next";
 
 import { siteConfig } from "@/config/siteConfig";
 import { primaryRssPath, siteLocale } from "@/lib/seo/metadata";
-import {
-  buildCanonicalUrl,
-  canonicalSiteOrigin,
-} from "@/lib/seo/site-url";
+import { buildCanonicalUrl, canonicalSiteOrigin } from "@/lib/seo/site-url";
 
 const ARTICLE_DESCRIPTION_MAX_LENGTH = 160;
 const SITE_DESCRIPTION_FALLBACK =
   "Independent market research from Chronoverse Capital.";
 
 export type ArticleDescriptionSource =
-  | "seoDescription"
-  | "excerpt"
-  | "body"
-  | "site";
+  "seoDescription" | "excerpt" | "body" | "site";
 
 export interface ArticleSeoInput {
   readonly slug: string;
@@ -66,9 +60,10 @@ function trimWithoutInventing(value: string, maxLength: number): string {
 
   const candidate = value.slice(0, maxLength + 1);
   const lastSpace = candidate.lastIndexOf(" ");
-  return (lastSpace >= Math.floor(maxLength * 0.7)
-    ? candidate.slice(0, lastSpace)
-    : value.slice(0, maxLength)
+  return (
+    lastSpace >= Math.floor(maxLength * 0.7)
+      ? candidate.slice(0, lastSpace)
+      : value.slice(0, maxLength)
   ).trimEnd();
 }
 
@@ -85,10 +80,9 @@ function normalizeHttpUrl(value?: string): string | undefined {
   }
 }
 
-export function resolveArticleDescription(input: Pick<
-  ArticleSeoInput,
-  "seoDescription" | "excerpt" | "bodyText"
->): {
+export function resolveArticleDescription(
+  input: Pick<ArticleSeoInput, "seoDescription" | "excerpt" | "bodyText">,
+): {
   readonly description: string;
   readonly source: ArticleDescriptionSource;
 } {
@@ -196,9 +190,7 @@ export function buildArticleMetadata(article: NormalizedArticleSeo): Metadata {
       url: article.canonicalUrl,
       siteName: siteConfig.name,
       locale: siteLocale,
-      ...(article.publishedAt
-        ? { publishedTime: article.publishedAt }
-        : {}),
+      ...(article.publishedAt ? { publishedTime: article.publishedAt } : {}),
       ...(article.modifiedAt ? { modifiedTime: article.modifiedAt } : {}),
       ...(article.author ? { authors: [article.author] } : {}),
       ...(article.category ? { section: article.category } : {}),
@@ -219,6 +211,7 @@ export function buildArticleJsonLd(
   return {
     "@context": "https://schema.org",
     "@type": "Article",
+    inLanguage: "en",
     headline: article.title,
     description: article.description,
     url: article.canonicalUrl,
@@ -234,6 +227,8 @@ export function buildArticleJsonLd(
     ...(article.featuredImage ? { image: article.featuredImage.url } : {}),
     publisher: {
       "@type": "Organization",
+      "@id": `${siteConfig.url}/#organization`,
+      url: `${siteConfig.url}/`,
       name: siteConfig.name,
       logo: {
         "@type": "ImageObject",

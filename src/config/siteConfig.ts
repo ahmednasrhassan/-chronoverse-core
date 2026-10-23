@@ -3,10 +3,11 @@ export const canonicalSiteOrigin = "https://chronoversecapital.com";
 export const siteConfig = {
   name: "Chronoverse Capital",
   description:
-    "Original software applications and independent ideas from Chronoverse Capital",
+    "An independent, English-language platform for original downloadable software, supported by editorial research on economics, finance and history.",
   url: canonicalSiteOrigin,
   // Official contact email used across contact and policy surfaces.
   contactEmail: "info@chronoversecapital.com",
+  storefrontUrl: "https://shop.chronoversecapital.com",
   founder: {
     name: "Ahmed N. Hassan",
     linkedInUrl: "https://www.linkedin.com/in/ahmed-n-hassan-09b739238",

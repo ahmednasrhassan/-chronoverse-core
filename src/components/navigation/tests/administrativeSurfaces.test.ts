@@ -48,7 +48,10 @@ assert.doesNotMatch(sources.account, /LEMON-70|access code|Early Access/i);
 assert.doesNotMatch(sources.contact, /\$15\.99 monthly/);
 assert.doesNotMatch(sources.contact, /\$150\.99 annually/);
 assert.doesNotMatch(sources.contact, /href="\/pricing"/);
-assert.doesNotMatch(sources.contact, /ManageSubscriptionButton|portalAvailable/);
+assert.doesNotMatch(
+  sources.contact,
+  /ManageSubscriptionButton|portalAvailable/,
+);
 assert.match(sources.contact, /mailto:/);
 assert.doesNotMatch(sources.contact, /LEMON-70|access code/i);
 
@@ -62,18 +65,25 @@ for (const reason of [
   assert.match(sources.contact, new RegExp(reason, "i"));
 }
 assert.doesNotMatch(sources.contact, /href="\/sponsors"/);
-assert.doesNotMatch(sources.contact, /within \d+|response within|guaranteed response/i);
+assert.doesNotMatch(
+  sources.contact,
+  /within \d+|response within|guaranteed response/i,
+);
 
-for (const source of [sources.methodology, sources.dataSources, sources.freshness]) {
+for (const source of [
+  sources.methodology,
+  sources.dataSources,
+  sources.freshness,
+]) {
   assert.doesNotMatch(source, /Free Lite|VIP|five.market|RANGE_ROWS/);
   assert.match(source, /research|Research/);
 }
 
 for (const disclaimerBoundary of [
   /informational and analytical purposes only/,
-  /not trade orders/,
-  /do not guarantee\s+future performance/,
-  /delayed, incomplete, revised, inaccurate, or\s+unavailable/,
+  /not an offer, recommendation, or solicitation/,
+  /do not guarantee\s+future\s+performance/,
+  /delayed, incomplete, revised, inaccurate or\s+unavailable/,
 ]) {
   assert.match(sources.disclaimer, disclaimerBoundary);
 }
@@ -120,7 +130,10 @@ assert.doesNotMatch(
   sources.editorial,
   /guaranteed unbiased|mandatory multi-stage/i,
 );
-assert.match(sources.editorial, /does not claim that every item receives a named\s+reviewer/);
+assert.match(
+  sources.editorial,
+  /does not claim that every item receives a named\s+reviewer/,
+);
 
 assert.match(sources.dmca, /physical or electronic signature/);
 assert.match(sources.dmca, /Counter-notice/);
@@ -130,18 +143,19 @@ assert.doesNotMatch(
   /our designated agent|Designated Agent Contact|respond expeditiously/i,
 );
 
-assert.match(sources.faq, /Independent financial research/);
+assert.match(sources.faq, /original downloadable applications/);
+assert.match(sources.faq, /No applications have been released yet/);
+assert.match(sources.faq, /independent\s+articles on economics, finance and history/);
 assert.match(sources.faq, /Historical purchase obligations/);
 assert.doesNotMatch(sources.faq, /LEMON-70|access code/i);
 
-assert.match(sources.manifesto, /Focused coverage/);
-assert.match(sources.manifesto, /One canonical truth/);
+assert.match(sources.manifesto, /Purpose before claims/);
+assert.match(sources.manifesto, /Identifiable evidence/);
 assert.match(sources.manifesto, /Evidence before claims/);
 assert.doesNotMatch(
   sources.manifesto,
   /Document Clearance|Intelligence Network|Established 2026/i,
 );
-
 
 const allCurrentSources = Object.values(sources).join("\n");
 assert.doesNotMatch(

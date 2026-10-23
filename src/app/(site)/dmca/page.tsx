@@ -18,6 +18,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 export default function DmcaPage() {
   return (
     <InstitutionalPage
+      pathname="/dmca"
       eyebrow="Copyright"
       title="Copyright and DMCA Notices"
       summary="Chronoverse Capital provides this contact path for good-faith notices about material published on the website."
@@ -47,11 +48,11 @@ export default function DmcaPage() {
 
       <InstitutionalSection title="Counter-notice">
         <p>
-          If material you provided is removed or restricted and you believe
-          that resulted from mistake or misidentification, reply through the
-          same contact path. Identify the material, its former location, your
-          contact information, and the basis for your request. Additional
-          information may be required before the request can be evaluated.
+          If material you provided is removed or restricted and you believe that
+          resulted from mistake or misidentification, reply through the same
+          contact path. Identify the material, its former location, your contact
+          information, and the basis for your request. Additional information
+          may be required before the request can be evaluated.
         </p>
       </InstitutionalSection>
 
@@ -63,9 +64,9 @@ export default function DmcaPage() {
           guarantee a particular outcome.
         </p>
         <p>
-          Knowingly material misstatements can have legal consequences.
-          Consider obtaining qualified advice if you are uncertain about your
-          rights or obligations.
+          Knowingly material misstatements can have legal consequences. Consider
+          obtaining qualified advice if you are uncertain about your rights or
+          obligations.
         </p>
       </InstitutionalSection>
 

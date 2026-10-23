@@ -10,14 +10,21 @@ async function main(): Promise<void> {
   for (const page of [Terms, Privacy, Faq]) {
     const html = renderToStaticMarkup(createElement(page));
     assert.match(html, /one-time books/);
-    assert.doesNotMatch(html, /Lemon Squeezy|Gumroad|payment notifications may update/);
+    assert.doesNotMatch(html, /Lemon Squeezy|payment notifications may update/);
+    assert.match(html, /Gumroad/);
+    assert.match(html, /future|Future/);
     assert.match(html, /refund/);
-    assert.doesNotMatch(html, /href="\/pricing"|shop\.chronoversecapital|VIP checkout is available|\$15\.99|\$150\.99/);
+    assert.doesNotMatch(
+      html,
+      /href="\/pricing"|shop\.chronoversecapital\.com\/l\/|VIP checkout is available|\$15\.99|\$150\.99/,
+    );
   }
   const support = renderToStaticMarkup(createElement(Support));
   assert.match(support, /delivery, refund or dispute issue/);
   assert.match(support, /Original purchase terms and/);
-  console.log("PASS: free-only legal and support disclosures preserve historical customer obligations");
+  console.log(
+    "PASS: free-only legal and support disclosures preserve historical customer obligations",
+  );
 }
 
 void main();

@@ -1,8 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
+import { NewsletterSignupPause } from "./NewsletterSignupPause";
 
 export default function NewsletterForm() {
+  return NEWSLETTER_SIGNUPS_PAUSED ? <NewsletterSignupPause /> : <ActiveNewsletterForm />;
+}
+
+// Retained for a future reviewed reactivation; public rendering stays paused.
+export function ActiveNewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [feedback, setFeedback] = useState("");

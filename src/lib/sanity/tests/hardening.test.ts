@@ -442,7 +442,7 @@ async function verifyPublishWebhookSharedVerifier(): Promise<void> {
     const route = readSource("src/app/api/webhook/sanity/route.ts");
     assert.match(
       route,
-      /beginSanityWebhookOperation\("publish", verified\.idempotencyKey\)/,
+      /key: `publication:\$\{documentId\}`/,
     );
   } finally {
     if (previousWebhookSecret === undefined) delete process.env.SANITY_WEBHOOK_SECRET;
@@ -558,7 +558,7 @@ async function verifyCronFailsClosed(): Promise<void> {
   }
 
   const route = readSource("src/app/api/cron/send-newsletter/route.ts");
-  assert.match(route, /Failed to send one newsletter email/);
+  assert.match(route, /Newsletter digest processing failed/);
   assert.doesNotMatch(route, /Failed to send to \$\{subscriber\.email\}/);
 }
 
@@ -622,24 +622,25 @@ function verifyPublishWebhookOrdering(): void {
   const route = readSource("src/app/api/webhook/sanity/route.ts");
   const handler = route.slice(route.indexOf("export async function POST"));
   const verification = handler.indexOf("verifySanityWebhookRequest");
-  const fetches = handler.indexOf("Promise.all", verification);
-  const lease = handler.indexOf("beginSanityWebhookOperation", fetches);
-  const broadcast = handler.indexOf("broadcastToSubscribers(post", lease);
-  assert.ok(verification >= 0 && verification < fetches && fetches < lease && lease < broadcast);
+  const config = handler.indexOf("getNewsletterConfig", verification);
+  const delivery = handler.indexOf("deliverCampaign", config);
+  assert.ok(verification >= 0 && verification < config && config < delivery);
   assert.match(route, /verified\.operation !== "create"/);
   assert.match(route, /documentType !== "post"/);
   assert.match(route, /becamePublished !== true/);
   assert.match(route, /documentId\.startsWith\("drafts\."\)/);
   assert.match(route, /_rev == \$revision/);
   assert.match(route, /publishedAt <= now\(\)/);
-  assert.match(route, /_type == "subscriber" && active != false/);
-  assert.match(route, /\[0\.\.\.1000\]/);
-  assert.match(route, /if \(subscribers\.length === 0\)/);
-  assert.match(route, /if \(!lease\)/);
-  assert.match(route, /Webhook delivery already processed/);
-  assert.match(route, /Failed to send one article email/);
-  assert.doesNotMatch(route, /SUBSCRIBER_EMAILS/);
-  assert.doesNotMatch(route, /Failed to send.*\$\{email\}/);
+  assert.match(route, /publication:\$\{documentId\}/);
+  assert.match(route, /result\.complete \? 200 : 503/);
+  assert.doesNotMatch(route, /SUBSCRIBER_EMAILS|fetchActiveSubscribers|console\.error\([^)]*email/);
+  const store = readSource("src/lib/newsletter/store.ts");
+  assert.match(store, /getNewsletterReadClient/);
+  assert.match(store, /getNewsletterWriteClient/);
+  assert.match(store, /ifRevisionId/);
+  const dispatch = readSource("src/lib/newsletter/delivery.ts");
+  assert.match(dispatch, /complete = counts\.failed \+ counts\.unknown \+ counts\.pending === 0/);
+  assert.match(dispatch, /if \(complete && !campaign\.complete\)/);
 }
 
 async function main(): Promise<void> {

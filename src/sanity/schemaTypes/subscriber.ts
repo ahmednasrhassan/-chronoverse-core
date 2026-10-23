@@ -32,6 +32,13 @@ export default defineType({
       initialValue: true,
     }),
     defineField({
+      name: 'suppressed',
+      title: 'Suppressed',
+      type: 'boolean',
+      readOnly: true,
+      description: 'Delivery suppression is managed by the protected newsletter workflow. Public signup cannot remove it.',
+    }),
+    defineField({
       name: 'source',
       title: 'Source',
       type: 'string',

@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 
 import { siteConfig } from "@/config/siteConfig";
 import { buildCanonicalUrl } from "@/lib/seo/site-url";
+import { APPLICATIONS_ORIGIN } from "@/config/applications";
 
 export const siteLocale = "en_US";
 export const primaryRssPath = "/rss.xml";
 export const publicSocialImage = {
-  url: buildCanonicalUrl("/chronoverse-social.png"),
+  url: buildCanonicalUrl("/social-image"),
   width: 1200,
   height: 630,
   alt: `${siteConfig.name} original software and independent ideas`,
@@ -16,6 +17,7 @@ export type PublicPageMetadataInput = {
   title: string;
   description: string;
   pathname: string;
+  site?: "main" | "apps";
   openGraphTitle?: string;
   openGraphDescription?: string;
   twitterTitle?: string;
@@ -32,26 +34,35 @@ export function buildPublicPageMetadata({
   title,
   description,
   pathname,
+  site = "main",
   openGraphTitle = title,
   openGraphDescription = description,
   twitterTitle = openGraphTitle,
   twitterDescription = openGraphDescription,
 }: PublicPageMetadataInput): Metadata {
-  const canonicalUrl = buildCanonicalUrl(pathname);
+  const mainUrl = buildCanonicalUrl(pathname);
+  const canonicalUrl =
+    site === "apps"
+      ? new URL(new URL(mainUrl).pathname, APPLICATIONS_ORIGIN).href
+      : mainUrl;
 
   return {
     title,
     description,
     alternates: {
       canonical: canonicalUrl,
-      types: {
-        "application/rss+xml": [
-          {
-            url: buildCanonicalUrl(primaryRssPath),
-            title: `${siteConfig.name} - RSS Feed`,
-          },
-        ],
-      },
+      ...(site === "main"
+        ? {
+            types: {
+              "application/rss+xml": [
+                {
+                  url: buildCanonicalUrl(primaryRssPath),
+                  title: `${siteConfig.name} - RSS Feed`,
+                },
+              ],
+            },
+          }
+        : {}),
     },
     openGraph: {
       type: "website",

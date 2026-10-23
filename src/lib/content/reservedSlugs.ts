@@ -14,6 +14,7 @@ export const RESERVED_ROOT_SLUGS = Object.freeze([
   "billing",
   "category",
   "contact",
+  "cookie-policy",
   "data-sources",
   "disclaimer",
   "dmca",
@@ -31,6 +32,8 @@ export const RESERVED_ROOT_SLUGS = Object.freeze([
   "privacy-policy",
   "products",
   "reports",
+  "refund-policy",
+  "social-image",
   "research",
   "robots.txt",
   "rss.xml",
@@ -66,7 +69,5 @@ export function validatePublicRootSlug(
     return `The root slug "${normalizeRootSlug(slug)}" is reserved by the application.`;
   }
 
-  return ROOT_SLUG_FORMAT.test(slug)
-    ? true
-    : ROOT_SLUG_FORMAT_ERROR;
+  return ROOT_SLUG_FORMAT.test(slug) ? true : ROOT_SLUG_FORMAT_ERROR;
 }

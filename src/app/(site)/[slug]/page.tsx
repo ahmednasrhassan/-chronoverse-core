@@ -10,6 +10,8 @@ import PortableTextContent from "@/components/PortableTextContent";
 import AIExecutiveSummary from "@/components/AIExecutiveSummary";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import ArticleShareButtons from "@/components/ArticleShareButtons";
+import { Breadcrumbs } from "@/components/content/Breadcrumbs";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
 import AudioReader from "@/components/AudioReader";
 import MathContent from "@/components/MathContent";
 import { SHIMMER_BLUR_DATA_URL } from "@/lib/blurPlaceholder";
@@ -83,7 +85,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
   if (slug.endsWith(".html")) {
@@ -97,9 +101,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (isReservedRootSlug(slug)) notFound();
   const content = requireRootContent(
-    await resolveRootContent(
-      getArticleForRoute(slug),
-      () => getPageForRoute(slug),
+    await resolveRootContent(getArticleForRoute(slug), () =>
+      getPageForRoute(slug),
     ),
   );
 
@@ -125,9 +128,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   if (isReservedRootSlug(slug)) notFound();
 
   const content = requireRootContent(
-    await resolveRootContent(
-      getArticleForRoute(slug),
-      () => getPageForRoute(slug),
+    await resolveRootContent(getArticleForRoute(slug), () =>
+      getPageForRoute(slug),
     ),
   );
 
@@ -148,7 +150,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       : "";
 
     return (
-      <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
+      <article className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
         <div className="fixed top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,#C8A7E8,#d97706,#C8A7E8)] z-50 opacity-80 print:hidden" />
 
         <div className="mb-10 border-b border-border/80 pb-8 print:border-none print:pb-2">
@@ -189,7 +191,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             <p>{currentPage.bodyContent}</p>
           )}
         </article>
-      </main>
+      </article>
     );
   }
 
@@ -216,12 +218,15 @@ export default async function UniversalArticlePage({ params }: PageProps) {
     : "Related Intelligence (Auto-Curated)";
 
   // Extract pure human-readable text safely from Sanity blocks or legacy HTML
-  const rawText = Array.isArray(currentPost?.body) && currentPost.body.length > 0
-    ? currentPost.body
-        .filter((block) => block._type === "block" && Array.isArray(block.children))
-        .map((block) => block.children.map((c) => c.text || "").join(" "))
-        .join("\n\n")
-    : stripHtml(currentPost?.legacyBody || currentPost?.content || "");
+  const rawText =
+    Array.isArray(currentPost?.body) && currentPost.body.length > 0
+      ? currentPost.body
+          .filter(
+            (block) => block._type === "block" && Array.isArray(block.children),
+          )
+          .map((block) => block.children.map((c) => c.text || "").join(" "))
+          .join("\n\n")
+      : stripHtml(currentPost?.legacyBody || currentPost?.content || "");
 
   // Calculate estimated read time dynamically (approx. 200 words per minute)
   const readTimeMinutes = calculateReadTime(rawText);
@@ -239,7 +244,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
         !p.startsWith("::") &&
         !p.toLowerCase().startsWith("classification:") &&
         !p.toLowerCase().startsWith("focus:") &&
-        !p.toLowerCase().startsWith("intel protocol")
+        !p.toLowerCase().startsWith("intel protocol"),
     );
   const executiveSummaryPoints =
     naturalParagraphs.length >= 3
@@ -248,7 +253,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           currentPost.title,
           currentPost.category,
           rawText,
-          currentPost.keywords
+          currentPost.keywords,
         );
 
   // Tags rendered in the UI — either editor-authored in Sanity or the
@@ -259,7 +264,9 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   // Content ingestion already normalizes editorial artifacts before derivation.
   // Retain the final raw-render HTML sanitation boundary.
   const transformedLegacyBody = currentPost.legacyBody || "";
-  const sanitizedLegacyBody = transformedLegacyBody ? sanitizeHtml(transformedLegacyBody) : "";
+  const sanitizedLegacyBody = transformedLegacyBody
+    ? sanitizeHtml(transformedLegacyBody)
+    : "";
   const articleSeo = getArticleSeo(currentPost);
   const articleSchema = buildArticleJsonLd(articleSeo);
   // --- Automatic Internal Links & Related Articles Engine ---
@@ -269,8 +276,7 @@ export default async function UniversalArticlePage({ params }: PageProps) {
     .filter((item: ContentItem) => {
       const sameCategory = item.category === currentPost.category;
       const sharedKeywords = item.keywords?.some((kw: string) =>
-
-        currentPost.keywords?.includes(kw)
+        currentPost.keywords?.includes(kw),
       );
       return sameCategory || sharedKeywords;
     });
@@ -300,15 +306,23 @@ export default async function UniversalArticlePage({ params }: PageProps) {
   }));
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
-
+    <article className="max-w-4xl mx-auto px-4 py-12 print:px-0 print:py-4 selection:bg-[#C8A7E8]/30 selection:text-[#C8A7E8]">
       {/* Premium Top Reading Progress Bar (dynamically tracks scroll position) */}
       <ReadingProgressBar />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonForHtml(articleSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonForHtml(articleSchema),
+        }}
       />
       {/* Article Header & Admin Controls */}
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: buildCanonicalUrl("/") },
+          { label: "Research", href: buildCanonicalUrl("/reports") },
+          { label: currentPost.title, href: articleSeo.canonicalUrl },
+        ]}
+      />
       <div className="mb-10 border-b border-border/80 pb-8 print:border-none print:pb-2">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
@@ -349,11 +363,8 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             />
 
             <PrintButton />
-
-
           </div>
         </div>
-
 
         <h1 className="text-3xl md:text-5xl font-extrabold text-mauve mt-3 mb-6 leading-[1.2] tracking-tight print:text-black">
           {currentPost.title}
@@ -361,7 +372,9 @@ export default async function UniversalArticlePage({ params }: PageProps) {
 
         <div className="flex items-center justify-between text-xs text-secondary pt-2 print:text-gray-500">
           <span>Published on {currentPost.date}</span>
-          <span className="uppercase tracking-wider font-semibold text-muted print:hidden">Chronoverse Intelligence</span>
+          <span className="uppercase tracking-wider font-semibold text-muted print:hidden">
+            Chronoverse Intelligence
+          </span>
         </div>
 
         {/* Auto-Generated / Editor-Curated Tags */}
@@ -377,7 +390,6 @@ export default async function UniversalArticlePage({ params }: PageProps) {
             ))}
           </div>
         )}
-
       </div>
 
       {/* Dynamic Hero Image Section (Falls back gracefully if null) */}
@@ -429,7 +441,9 @@ export default async function UniversalArticlePage({ params }: PageProps) {
       {/* Source-derived executive summary, rendered before the article body. */}
       <AIExecutiveSummary points={executiveSummaryPoints} />
       {/* Browser text-to-speech reader */}
-      <AudioReader textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`} />
+      <AudioReader
+        textToRead={`${currentPost?.title || ""}. ${sanitizedLegacyBody || currentPost?.content || ""}`}
+      />
 
       {/* Enhanced Article Content Area: Seamlessly supports legacy Blogger HTML and new Sanity Portable Text.
           Priority order: `legacyBody` raw HTML (Blogger imports) takes priority when populated, otherwise the
@@ -453,11 +467,13 @@ export default async function UniversalArticlePage({ params }: PageProps) {
           links curated in Sanity (`manualRelatedLinks`); otherwise falls
           back to the automated TOP 8 relevance-scored articles computed
           in `computeTopRelatedArticles` (src/lib/relatedArticles.ts). */}
-      <InternalLinksBox articles={relatedArticles} title={relatedArticlesTitle} />
+      <InternalLinksBox
+        articles={relatedArticles}
+        title={relatedArticlesTitle}
+      />
 
       {/* Author Card Component */}
       <AuthorCard authorName={currentPost.author} />
-
-    </main>
+    </article>
   );
 }

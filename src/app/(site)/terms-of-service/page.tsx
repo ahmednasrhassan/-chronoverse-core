@@ -18,6 +18,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 export default function TermsOfServicePage() {
   return (
     <InstitutionalPage
+      pathname="/terms-of-service"
       eyebrow="Legal framework"
       title="Terms of Service"
       summary="These terms describe the boundaries for using the Chronoverse Capital software catalog, accounts and published research."
@@ -43,9 +44,9 @@ export default function TermsOfServicePage() {
       <InstitutionalSection title="2. Accounts and access">
         <p>
           Passwordless sign-in verifies identity. The server-side account record
-          establishes identity and any administrative role. Free market
-          intelligence does not require payment. Signing in does not purchase or
-          elevate product access.
+          establishes identity and any administrative role. Browsing the catalog
+          and reading research do not require payment. Signing in does not
+          purchase software or grant a software license.
         </p>
         <p>
           Keep sign-in links and account access secure. Do not attempt to enter
@@ -65,10 +66,10 @@ export default function TermsOfServicePage() {
 
       <InstitutionalSection title="4. Data and service availability">
         <p>
-          Official observations and derived outputs may be delayed, incomplete,
-          revised, partial, degraded, or unavailable. Chronoverse does not
-          promise continuous service, a particular publication time, or a
-          specific analytical outcome.
+          Published information and source material may be delayed, incomplete,
+          revised or unavailable. Chronoverse does not promise continuous
+          service, a particular publication time, or a specific analytical
+          outcome.
         </p>
         <p>
           Source and range limits are described in{" "}
@@ -85,11 +86,29 @@ export default function TermsOfServicePage() {
           cancel delivery, refund, dispute or other existing obligations.
         </p>
         <p>
-          Historical transaction records are preserved. Payment processing on
-          this website has ended. For assistance, use{" "}
-          <Link href="/contact">Purchase support</Link>, the{" "}
-          <Link href="/contact">support path</Link>, or the contact details on
-          the original receipt. Do not send payment-card details.
+          Historical transaction records are preserved. For assistance, see{" "}
+          <Link href="/refund-policy">Purchase and Refund Information</Link>,
+          use <Link href="/contact">purchase support</Link>, or the contact
+          details on the original receipt. Do not send payment-card details.
+        </p>
+      </InstitutionalSection>
+      <InstitutionalSection title="Future software and Gumroad">
+        <p>
+          The{" "}
+          <a href="https://apps.chronoversecapital.com/">
+            applications catalog
+          </a>{" "}
+          is free to browse and currently in pre-launch. The{" "}
+          <a href={siteConfig.storefrontUrl}>Gumroad storefront</a> is a
+          separate website. Future eligible applications will link to their
+          verified Gumroad product pages after launch.
+        </p>
+        <p>
+          This website does not currently provide software checkout,
+          subscriptions or licensing. No product-specific refund policy, license
+          or support guarantee is created by browsing the catalog. Review the
+          verified product information and applicable checkout terms before any
+          future purchase.
         </p>
       </InstitutionalSection>
 

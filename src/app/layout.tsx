@@ -4,8 +4,7 @@ import Script from "next/script";
 import { Suspense } from "react";
 
 import CookieConsentWrapper from "@/components/CookieConsentWrapper";
-import AnalyticsPageViewTracker from
-  "@/components/analytics/AnalyticsPageViewTracker";
+import AnalyticsPageViewTracker from "@/components/analytics/AnalyticsPageViewTracker";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 import { canonicalSiteOrigin } from "@/lib/seo/site-url";
 
@@ -26,9 +25,9 @@ const geistMono = Geist_Mono({
   adjustFontFallback: true,
 });
 
-const DEFAULT_TITLE = "Chronoverse Capital | Original Software & Independent Ideas";
+const DEFAULT_TITLE = "Chronoverse Capital | Original Downloadable Software";
 const DEFAULT_DESCRIPTION =
-  "Original software applications, independent research and considered ideas from Chronoverse Capital.";
+  "An independent, English-language platform for original downloadable software, with editorial research on economics, finance and history. The apps catalog is in pre-launch.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -47,12 +46,16 @@ export const metadata: Metadata = {
 
   title: {
     default: DEFAULT_TITLE,
-    template: "%s | Chronoverse",
+    template: "%s | Chronoverse Capital",
   },
 
   description: DEFAULT_DESCRIPTION,
 
-  keywords: ["Original Software", "Independent Research", "Chronoverse Capital"],
+  keywords: [
+    "Original Software",
+    "Independent Research",
+    "Chronoverse Capital",
+  ],
 
   robots: {
     index: true,
@@ -65,8 +68,7 @@ export const metadata: Metadata = {
   },
 };
 
-const GA_MEASUREMENT_ID =
-  process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W";
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-DWYKG5J33W";
 const GA_MEASUREMENT_ID_JSON = JSON.stringify(GA_MEASUREMENT_ID);
 
 export default function RootLayout({

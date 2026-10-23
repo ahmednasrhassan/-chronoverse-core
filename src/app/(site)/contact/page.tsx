@@ -18,6 +18,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 export default function ContactPage() {
   return (
     <InstitutionalPage
+      pathname="/contact"
       eyebrow="Contact"
       title="Contact Chronoverse Capital"
       summary="Use the published contact address for software, account, research, correction, or historical purchase support."
@@ -28,7 +29,8 @@ export default function ContactPage() {
           <a href={"mailto:" + siteConfig.contactEmail}>
             {siteConfig.contactEmail}
           </a>
-          . The public site does not submit an unseen contact form.
+          . Use this address for software questions, account help, editorial
+          corrections and historical purchase support.
         </p>
       </InstitutionalSection>
 
@@ -39,11 +41,12 @@ export default function ContactPage() {
             access state shown on the <Link href="/account">Account page</Link>.
           </li>
           <li>
-            For billing or standalone research support, identify the relevant
-            offering or order without sending payment-card details.
+            For software questions, describe the task or platform you are asking
+            about. For a past purchase, include the order reference without
+            payment-card details.
           </li>
           <li>
-            For a source question or correction, include the page, market,
+            For a source question or correction, include the article URL,
             reference date, and the specific statement or observation at issue.
           </li>
         </ul>
@@ -51,17 +54,21 @@ export default function ContactPage() {
 
       <InstitutionalSection title="Security boundary">
         <p>
-          Do not send passwords, one-time sign-in links, API keys, card
-          numbers, or other secrets by email. Chronoverse does not promise a
-          particular response time.
+          Do not send passwords, one-time sign-in links, API keys, card numbers,
+          or other secrets by email.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Historical purchase support">
         <p>
-          Previous orders were one-time books. Include the order reference and describe any
-          delivery, refund or dispute issue. Original purchase terms and
-          applicable customer rights remain in effect.
+          Previous orders were one-time books. Include the order reference and
+          describe any delivery, refund or dispute issue. Original purchase
+          terms and applicable customer rights remain in effect.
+        </p>
+        <p>
+          See <Link href="/refund-policy">Purchase and Refund Information</Link>{" "}
+          for historical orders and the distinction between our catalog and the
+          separate Gumroad storefront.
         </p>
       </InstitutionalSection>
 

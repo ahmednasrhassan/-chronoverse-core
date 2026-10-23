@@ -1,4 +1,37 @@
 /* Retains the established palette and Geist fonts from globals.css. */
+.cv-breadcrumbs {
+  margin-bottom: 1.8rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.cv-breadcrumbs ol,
+.cv-breadcrumbs li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+.cv-breadcrumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.cv-breadcrumbs a:focus-visible {
+  outline: 2px solid var(--accent-mauve);
+  outline-offset: 4px;
+}
+.cv-catalog-purchase-note {
+  max-width: 66ch;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.cv-catalog-purchase-note a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .cv-container {
   width: min(100% - 3rem, 80rem);
   margin-inline: auto;

@@ -20,6 +20,10 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
     links: [
       { label: "Home", href: "https://chronoversecapital.com/" },
       { label: "Applications", href: "https://apps.chronoversecapital.com/" },
+      {
+        label: "Gumroad storefront",
+        href: "https://shop.chronoversecapital.com/",
+      },
     ],
   },
   {
@@ -46,6 +50,8 @@ export const FOOTER_NAV_GROUPS_V1 = Object.freeze([
     links: [
       { label: "Terms", href: "/terms-of-service" },
       { label: "Privacy", href: "/privacy-policy" },
+      { label: "Cookies", href: "/cookie-policy" },
+      { label: "Purchase & refund information", href: "/refund-policy" },
       {
         label: "Financial Information Disclaimer",
         href: "/disclaimer",

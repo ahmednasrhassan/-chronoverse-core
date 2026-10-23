@@ -10,10 +10,14 @@ import { createSupabaseServerClientV1 } from "@/lib/auth/supabase/server";
 
 import EmailOtpForm from "./EmailOtpForm";
 import { signOutActionV1 } from "./actions";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Chronoverse Capital account identity and access status.",
+  ...buildPublicPageMetadata({
+    title: "Account",
+    description: "Chronoverse Capital account identity and access status.",
+    pathname: "/account",
+  }),
   robots: {
     index: false,
     follow: false,
@@ -44,11 +48,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const authError = Array.isArray(params.authError)
     ? params.authError[0]
     : params.authError;
-  const errorMessage = authError === "callback"
-    ? "That sign-in link could not be confirmed. Please request a new one."
-    : authError === "signout"
-    ? "We could not complete sign-out. Please try again."
-    : null;
+  const errorMessage =
+    authError === "callback"
+      ? "That sign-in link could not be confirmed. Please request a new one."
+      : authError === "signout"
+        ? "We could not complete sign-out. Please try again."
+        : null;
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
@@ -86,8 +91,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
         {state.accessState === "unavailable" ? (
           <p className="mt-5 text-sm text-secondary" role="status">
-            Trusted access is currently unavailable. No elevated access has
-            been granted.
+            Trusted access is currently unavailable. No elevated access has been
+            granted.
           </p>
         ) : null}
 
@@ -117,7 +122,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         )}
 
         <div className="mt-8 border-t border-border pt-6 text-sm leading-6 text-secondary">
-          <h2 className="font-semibold text-primary">Account and purchase help</h2>
+          <h2 className="font-semibold text-primary">
+            Account and purchase help
+          </h2>
           <p className="mt-2">
             Signing in verifies your free account identity. For help with a
             historical book or digital-product purchase, visit{" "}

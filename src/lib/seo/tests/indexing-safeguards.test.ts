@@ -58,10 +58,7 @@ function verifyRobotsPolicy(): void {
       `${metadataProtectedRoute} remains governed by its noindex policy`,
     );
   }
-  assert.equal(
-    policy.sitemap,
-    "https://chronoversecapital.com/sitemap.xml",
-  );
+  assert.equal(policy.sitemap, "https://chronoversecapital.com/sitemap.xml");
 
   const source = readFileSync(
     fileURLToPath(new URL("../../../app/robots.ts", import.meta.url)),
@@ -83,7 +80,11 @@ function verifyRoutePolicies(): void {
     const componentStart = source.search(/export default (?:async )?function/);
 
     assert.notEqual(metadataStart, -1, `${route.pathname} exports metadata`);
-    assert.notEqual(componentStart, -1, `${route.pathname} exports a component`);
+    assert.notEqual(
+      componentStart,
+      -1,
+      `${route.pathname} exports a component`,
+    );
     assert.ok(
       componentStart > metadataStart,
       `${route.pathname} metadata precedes its component`,
@@ -127,10 +128,21 @@ function verifyRoutePolicies(): void {
     );
   }
 
-  const supportSource = readFileSync(fileURLToPath(new URL("../../../app/(site)/contact/page.tsx", import.meta.url)), "utf8");
-  for (const truth of ["Historical purchase support", "refund or dispute", "Original purchase terms"])
-    assert.ok(supportSource.includes(truth), `contact preserves ${truth}`);
-
+  const supportSource = readFileSync(
+    fileURLToPath(
+      new URL("../../../app/(site)/contact/page.tsx", import.meta.url),
+    ),
+    "utf8",
+  );
+  for (const truth of [
+    "Historical purchase support",
+    "refund or dispute",
+    "Original purchase terms",
+  ])
+    assert.ok(
+      supportSource.replace(/\s+/g, " ").includes(truth),
+      `contact preserves ${truth}`,
+    );
 }
 
 function request(hostname: string, pathname: string): NextRequest {
@@ -207,9 +219,8 @@ async function verifyPreviewProtection(): Promise<void> {
     "a rewritten preview response receives preview protection",
   );
   assert.equal(
-    new URL(
-      newsletterPreviewResponse.headers.get("x-middleware-rewrite")!,
-    ).pathname,
+    new URL(newsletterPreviewResponse.headers.get("x-middleware-rewrite")!)
+      .pathname,
     "/newsletter/archive",
     "preview protection preserves the newsletter rewrite",
   );

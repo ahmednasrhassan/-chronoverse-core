@@ -4,8 +4,15 @@ import {
   InstitutionalPage,
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
+import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = {
+  ...buildPublicPageMetadata({
+    title: "Operating Principles",
+    description:
+      "The principles behind Chronoverse's original software platform and independent editorial research.",
+    pathname: "/manifesto",
+  }),
   robots: {
     index: false,
     follow: true,
@@ -19,30 +26,31 @@ export const metadata: Metadata = {
 export default function ManifestoPage() {
   return (
     <InstitutionalPage
+      pathname="/manifesto"
       eyebrow="Operating principles"
-      title="The Chronoverse Manifesto"
-      summary="A short statement of the restraint applied to market intelligence and published research."
+      title="Operating Principles"
+      summary="Original software with a clear purpose. Independent editorial work with identifiable sources and honest limits."
     >
-      <InstitutionalSection title="Focused coverage">
+      <InstitutionalSection title="Purpose before claims">
         <p>
-          Financial research may cover currencies, interest rates, economic
-          policy, and other market subjects. Each article defines its own scope.
+          The software catalog is in pre-launch. Product information should
+          describe confirmed capabilities, requirements and availability,
+          without invented results or unsupported performance claims.
         </p>
       </InstitutionalSection>
 
-      <InstitutionalSection title="One canonical truth">
+      <InstitutionalSection title="Identifiable evidence">
         <p>
-          Research begins with identified sources and evidence.
-          Source identity and derived interpretation remain distinct in the
-          published analysis.
+          Research begins with identified sources and evidence. Source identity
+          and derived interpretation remain distinct in the published analysis.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Evidence before claims">
         <p>
-          Source identity, reference time, freshness status, and availability
-          limits belong with analytical output. Unknown or not-assessed
-          freshness is not presented as live delivery.
+          Source dates, reference periods and material uncertainty belong with
+          editorial analysis. Historical information should not be presented as
+          current market data.
         </p>
       </InstitutionalSection>
 
@@ -57,8 +65,7 @@ export default function ManifestoPage() {
       <InstitutionalSection title="Commercial restraint">
         <p>
           Sponsorship and other commercial arrangements remain separate from
-          research findings
-          and editorial conclusions.
+          research findings and editorial conclusions.
         </p>
       </InstitutionalSection>
     </InstitutionalPage>

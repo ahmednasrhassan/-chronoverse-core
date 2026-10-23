@@ -8,6 +8,8 @@ import {
   stripHtml,
 } from "@/lib/content";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+import { Breadcrumbs } from "@/components/content/Breadcrumbs";
+import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -22,7 +24,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = requirePopulatedCategoryV1(
     await getSanityCategoryPageBySlugV1(slug),
@@ -62,6 +66,16 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: buildCanonicalUrl("/") },
+          { label: "Research", href: buildCanonicalUrl("/reports") },
+          {
+            label: category.title,
+            href: buildCanonicalUrl(`/category/${category.slug}`),
+          },
+        ]}
+      />
       <header className="mb-12 border-b border-border pb-8">
         <span className="bg-[#C8A7E8]/15 text-[#C8A7E8] px-3 py-1 rounded-md text-xs font-semibold border border-[#C8A7E8]/30 inline-block mb-4 uppercase tracking-wider">
           Category
@@ -70,19 +84,18 @@ export default async function CategoryPage({ params }: PageProps) {
           {category.title}
         </h1>
         {category.description ? (
-          <p className="text-[#CFC5B8] text-lg mb-3">
-            {category.description}
-          </p>
+          <p className="text-[#CFC5B8] text-lg mb-3">{category.description}</p>
         ) : null}
         <p className="text-[#CFC5B8] text-lg">
-          {articles.length} {articles.length === 1 ? "article" : "articles"} filed under this category.
+          {articles.length} {articles.length === 1 ? "article" : "articles"}{" "}
+          filed under this category.
         </p>
       </header>
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => {
           const summary = stripHtml(
-            article.legacyBody || article.bodyContent || article.content || ""
+            article.legacyBody || article.bodyContent || article.content || "",
           ).slice(0, 140);
 
           return (
@@ -108,7 +121,9 @@ export default async function CategoryPage({ params }: PageProps) {
 
               <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-[#CFC5B8]">
                 <span>{article.date}</span>
-                <span className="text-[#C8A7E8] font-semibold">Read Article →</span>
+                <span className="text-[#C8A7E8] font-semibold">
+                  Read Article →
+                </span>
               </div>
             </Link>
           );

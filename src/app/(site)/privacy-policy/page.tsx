@@ -6,6 +6,7 @@ import {
   InstitutionalSection,
 } from "@/components/content/InstitutionalPage";
 import { siteConfig } from "@/config/siteConfig";
+import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildPublicPageMetadata({
@@ -18,6 +19,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 export default function PrivacyPolicyPage() {
   return (
     <InstitutionalPage
+      pathname="/privacy-policy"
       eyebrow="Data protection and transparency"
       title="Privacy Policy"
       summary="This policy describes the information processed by the current Chronoverse Capital website and the choices available on its account, newsletter, contact, and analytics surfaces."
@@ -34,7 +36,9 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong className="text-primary">Newsletter:</strong> the email
             address submitted to join the newsletter and its active subscription
-            record.
+            record, signup time and source. Delivery safeguards also record
+            opt-outs, suppression status and dispatch outcomes. Unsubscribe
+            links contain an encrypted token used to process the opt-out.
           </li>
           <li>
             <strong className="text-primary">Contact:</strong> the address and
@@ -66,15 +70,19 @@ export default function PrivacyPolicyPage() {
       <InstitutionalSection title="3. Current service boundaries">
         <p>
           Supabase supports the current identity and passwordless authentication
-          flow. Newsletter subscriber records are persisted through the
-          site&apos;s Sanity service, and an Amazon SES email notification may
-          support newsletter operations. Credentials used by these integrations
-          remain server-side and are not fields users are asked to submit.
+          flow. Sanity stores published content and newsletter subscriber
+          records. The newsletter delivery workflow uses Amazon SES.{" "}
+          {NEWSLETTER_SIGNUPS_PAUSED ? "New newsletter signups and delivery are temporarily paused. Existing subscribers can still use their unsubscribe links. " : ""}
+          Public signup, when available, records the subscription; it does not
+          itself send an email.
+          Vercel hosts the website and its server routes. Credentials used by
+          these integrations remain server-side and are not fields users are
+          asked to submit.
         </p>
         <p>
           Providers process information under their own terms and privacy
-          practices. Chronoverse does not publish a fixed retention period or
-          storage-location promise on this page.
+          practices. For questions about retention, processing locations or a
+          particular record, contact the address below.
         </p>
       </InstitutionalSection>
 
@@ -84,6 +92,12 @@ export default function PrivacyPolicyPage() {
           through the site&apos;s consent controls. Necessary storage records
           the consent choice locally; advertising storage remains denied by the
           current controls.
+        </p>
+        <p>
+          Analytics is limited to the main website; the apps catalog does not
+          load the analytics library. Read the{" "}
+          <Link href="/cookie-policy">Cookie Policy</Link> for storage details
+          and instructions for resetting your choices.
         </p>
         <p>
           Google&apos;s privacy information is available at{" "}
@@ -100,11 +114,12 @@ export default function PrivacyPolicyPage() {
 
       <InstitutionalSection title="5. Historical purchases and external websites">
         <p>
-          This website does not offer checkout or ask for payment-card details.
-          Previous sales were one-time books. The providers that handled those
-          transactions operate under their own privacy practices. Historical
-          order and customer records may be retained for delivery, accounting,
-          refunds, disputes and applicable obligations.
+          The main website and apps catalog do not offer checkout or ask for
+          payment-card details. Previous sales were one-time books. The
+          providers that handled those transactions operate under their own
+          privacy practices. Historical order and customer records may be
+          retained for delivery, accounting, refunds, disputes and applicable
+          obligations.
         </p>
         <p>
           This platform no longer processes payment notifications. Historical
@@ -112,6 +127,21 @@ export default function PrivacyPolicyPage() {
           those records or remove customer rights. For assistance, use
           <Link href="/contact"> Purchase support</Link> or
           <Link href="/contact"> Contact</Link>.
+        </p>
+      </InstitutionalSection>
+      <InstitutionalSection title="Gumroad and future software purchases">
+        <p>
+          The apps catalog is in pre-launch. The{" "}
+          <a href={siteConfig.storefrontUrl}>Gumroad storefront</a> is separate
+          from the catalog. A future eligible application will link to its
+          verified Gumroad product page, where the applicable checkout terms and
+          provider privacy information can be reviewed. No software purchase
+          integration or license system is active on this website.
+        </p>
+        <p>
+          Read{" "}
+          <Link href="/refund-policy">Purchase and Refund Information</Link> for
+          the current purchase-support boundaries.
         </p>
       </InstitutionalSection>
 

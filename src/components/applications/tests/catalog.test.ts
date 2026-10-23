@@ -58,7 +58,7 @@ test("public catalog has an honest empty state and publishes no fixture products
     [applicationUrl()],
   );
   assert.equal(isReservedRootSlug("apps"), true);
-  assert.equal(catalogMetadata.title, "Applications");
+  assert.equal(catalogMetadata.title, "Software Applications");
   assert.equal(catalogMetadata.alternates?.canonical, applicationUrl());
   const robots = catalogRobots();
   assert.equal(robots.headers.get("Content-Type"), "text/plain; charset=utf-8");

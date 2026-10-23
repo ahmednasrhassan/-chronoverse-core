@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/api/research-image", "/api/og"],
         disallow: [
           "/api/",
           "/api/*",
@@ -30,7 +30,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         // Explicit crawl permissions for standard Google crawlers
         userAgent: ["Googlebot", "Googlebot-Image"],
-        allow: ["/", "/_next/static/"],
+        allow: ["/", "/_next/static/", "/api/research-image", "/api/og"],
         disallow: [
           "/api/",
           "/studio/",

@@ -17,6 +17,7 @@ export const metadata: Metadata = buildPublicPageMetadata({
 export default function EditorialPolicyPage() {
   return (
     <InstitutionalPage
+      pathname="/editorial-policy"
       eyebrow="Governance and standards"
       title="Editorial Policy"
       summary="These standards govern the sourcing, disclosure, visual treatment, publication responsibility, and correction of Chronoverse research and analytical content."
@@ -28,9 +29,9 @@ export default function EditorialPolicyPage() {
       <InstitutionalSection title="Source attribution">
         <p>
           Published work should identify material sources and distinguish
-          sourced facts, analytical interpretation, and hypothetical
-          scenarios. Dates, figures, and attributed claims should be checked
-          against the source available to the author or editor at publication.
+          sourced facts, analytical interpretation, and hypothetical scenarios.
+          Dates, figures, and attributed claims should be checked against the
+          source available to the author or editor at publication.
         </p>
       </InstitutionalSection>
 
@@ -39,8 +40,8 @@ export default function EditorialPolicyPage() {
           Tools may assist with drafting, summarization, formatting, analysis,
           or visual production. Tool output is not evidence by itself. The
           identified author or editor remains responsible for material selected
-          for publication and should not present unsupported generated claims
-          as verified facts.
+          for publication and should not present unsupported generated claims as
+          verified facts.
         </p>
       </InstitutionalSection>
 
@@ -48,16 +49,17 @@ export default function EditorialPolicyPage() {
         <p>
           Sponsorship, affiliate, or other commercial relationships should be
           disclosed where relevant and remain separate from editorial
-          conclusions. They do not determine research findings or editorial conclusions.
+          conclusions. They do not determine research findings or editorial
+          conclusions.
         </p>
       </InstitutionalSection>
 
       <InstitutionalSection title="Visual integrity">
         <p>
           Images are illustrative unless their context identifies them as
-          documentary source material. Captions, alternative text, and
-          metadata should not invent provenance or describe an image more
-          specifically than the available source supports.
+          documentary source material. Captions, alternative text, and metadata
+          should not invent provenance or describe an image more specifically
+          than the available source supports.
         </p>
       </InstitutionalSection>
 

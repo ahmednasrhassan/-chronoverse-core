@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { APPLICATIONS_ORIGIN } from "@/config/applications";
+import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
 import { ArchitecturalMark } from "./ArchitecturalMark";
 
 export function PlatformHomePageContent({
@@ -27,9 +28,9 @@ export function PlatformHomePageContent({
             </span>
           </h1>
           <p className="cv-hero-intro">
-            Thoughtfully built applications for focused work. An independent
-            platform where research, clear thinking and useful software come
-            together.
+            Chronoverse Capital is an independent, English-language platform for
+            original downloadable software and focused work. Research on
+            economics, finance and history supports a broader perspective.
           </p>
           <div className="cv-actions">
             <a
@@ -61,7 +62,8 @@ export function PlatformHomePageContent({
             <p className="cv-section-copy">
               A considered collection of original applications. Each release
               will have its own space to explain what it does, who it is for and
-              what you need to run it.
+              what you need to run it. Product categories and supported systems
+              have not yet been confirmed.
             </p>
             <a href={APPLICATIONS_ORIGIN} className="cv-text-link">
               Visit the apps catalog <span aria-hidden="true">↗</span>
@@ -145,15 +147,18 @@ export function PlatformHomePageContent({
         <div>
           <p>
             For questions about Chronoverse, our research or future software,
-            get in touch. Follow published research through our existing
-            newsletter.
+            get in touch.{" "}
+            {NEWSLETTER_SIGNUPS_PAUSED
+              ? "Newsletter signups and delivery are temporarily paused. Published research remains available on the website."
+              : "Follow published research through our existing newsletter."}
           </p>
           <div className="cv-actions">
             <Link href="/contact" className="cv-button cv-button-primary">
               Get in touch <span aria-hidden="true">↗</span>
             </Link>
             <Link href="/newsletter" className="cv-text-link">
-              The newsletter <span aria-hidden="true">→</span>
+              {NEWSLETTER_SIGNUPS_PAUSED ? "Newsletter status" : "The newsletter"}{" "}
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
