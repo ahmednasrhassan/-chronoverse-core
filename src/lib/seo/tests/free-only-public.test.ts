@@ -6,8 +6,6 @@ import Footer from "../../../components/navigation/Footer";
 import { FreeHomePageContent } from "../../../components/home/FreeHomePageContent";
 import About from "../../../app/(site)/about/page";
 import Faq from "../../../app/(site)/faq/page";
-import HomeMarketTools from "../../../components/home/HomeMarketTools";
-import FreeMarketSurface from "../../../components/home/FreeMarketSurface";
 import Methodology from "../../../app/(site)/methodology/page";
 import Manifesto from "../../../app/(site)/manifesto/page";
 import Contact from "../../../app/(site)/contact/page";
@@ -31,15 +29,12 @@ async function main(): Promise<void> {
     assert.doesNotMatch(html, forbiddenPromotion, component.name);
     assert.doesNotMatch(html, /\bVIP\b/i, component.name);
   }
-  const projections = { eurusd: null, eurjpy: null, eurgbp: null, eurchf: null, estr: null };
-  assert.doesNotMatch(render(createElement(FreeMarketSurface, { projections })), forbiddenPromotion);
   const shell = render(createElement(FreeHomePageContent, {
-    marketTools: createElement(HomeMarketTools, { projections }),
     researchPreview: createElement("p", null, "Published research fixture"),
   }));
   assert.doesNotMatch(shell, forbiddenPromotion);
   assert.doesNotMatch(shell, /\bVIP\b|Premium Dossiers|Membership &amp; Research/i);
-  for (const market of ["EUR/USD", "EUR/JPY", "EUR/GBP", "EUR/CHF", "\u20acSTR"]) assert.ok(shell.includes(market), market);
+  assert.doesNotMatch(shell, /Five free market tools|Explore Free Market Tools|href="\/markets"/i);
   assert.match(shell, /Published research fixture/);
   assert.match(shell, /Newsletter|newsletter/);
   const billing = render(await Billing());
