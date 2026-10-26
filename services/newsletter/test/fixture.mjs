@@ -89,6 +89,7 @@ export function fixture() {
     state.documents.set("CAMPAIGN#2026-10-26", { pk: "CAMPAIGN#2026-10-26", id: "2026-10-26", end: Date.parse("2026-10-26T09:00:00Z"), articles: [approvedFixtureArticle({ id: "urn:chronoverse:article:fixture", title: "Fixture", summary: "Fixture", url: "https://chronoversecapital.com/fixture", published: Date.parse("2026-10-25T08:00:00Z") }, state.time)] });
     return { id, campaign: "2026-10-26" };
   }
+  /** @param {number | null} [exp] Confirmation expiry, or null for unsubscribe. */
   const token = (id, purpose = "unsubscribe", tokenNonce = "u".repeat(32), exp = null) => capability(keys.capabilityKey, purpose, id, tokenNonce, exp);
   return { state, env, keys, deps, service, api, subscribe, confirmed, token };
 }

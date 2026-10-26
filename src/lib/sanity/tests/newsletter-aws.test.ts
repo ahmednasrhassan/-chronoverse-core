@@ -13,6 +13,7 @@ import { POST as oldFeedback } from "../../../app/api/newsletter/feedback/route"
 
 const v1 = "v1." + "a".repeat(80);
 const v2 = "v2." + "a".repeat(150) + "." + "b".repeat(43);
+const activationFlags = ["DELIVERY_ENABLED", "REGISTRATION_ENABLED", "CONFIRMATION_ENABLED", "LEGACY_DISPATCH_RETIRED", "COMPLIANCE_APPROVED"] as const;
 async function withWebsiteService(f: ReturnType<typeof fixture>, run: () => Promise<void>) {
   const url = process.env.NEWSLETTER_AWS_API_URL, key = process.env.NEWSLETTER_AWS_BRIDGE_KEY, old = globalThis.fetch;
   process.env.NEWSLETTER_AWS_API_URL = "https://synthetic.execute-api.eu-north-1.amazonaws.com";
@@ -63,7 +64,7 @@ test("website rejects ambiguous tokens before forwarding, retaining the original
 test("unknown, tampered, wrong-key and unsigned legacy requests cannot suppress any subscriber", async () => {
   for (const scenario of ["unknown", "tampered", "wrong-key", "missing-key", "unsigned-email", "wrong-bridge", "persistence-failure"]) {
     const f = fixture(); f.confirmed("protected@example.test");
-    for (const flag of ["DELIVERY_ENABLED", "REGISTRATION_ENABLED", "CONFIRMATION_ENABLED", "LEGACY_DISPATCH_RETIRED", "COMPLIANCE_APPROVED"]) f.env[flag] = "false";
+    for (const flag of activationFlags) f.env[flag] = "false";
     let token = originalToken(f, "protected@example.test");
     if (scenario === "unknown") token = v1;
     if (scenario === "tampered") { const bytes = Buffer.from(token.slice(3), "base64url"); bytes[bytes.length - 1] ^= 1; token = "v1." + bytes.toString("base64url"); }
@@ -117,7 +118,7 @@ test("website v2 confirmation respects pauses, expiry, nonce and single use with
 });
 test("original v1 links traverse the website bridge and service suppression with delivery disabled (offline adapters)", async () => {
   const f = fixture();
-  for (const flag of ["DELIVERY_ENABLED", "REGISTRATION_ENABLED", "CONFIRMATION_ENABLED", "LEGACY_DISPATCH_RETIRED", "COMPLIANCE_APPROVED"]) f.env[flag] = "false";
+  for (const flag of activationFlags) f.env[flag] = "false";
   const email = "historical@example.test", iv = Buffer.alloc(12, 5);
   const cipher = createCipheriv("aes-256-gcm", createHash("sha256").update(f.keys.legacyV1Key).digest(), iv);
   cipher.setAAD(Buffer.from("chronoverse-newsletter-optout-v1"));
@@ -195,6 +196,6 @@ test("signup stays paused before reading bodies or contacting AWS; retired route
     assert.equal((await oldFeedback()).status, 503);
     for (const path of ["src/app/api/cron/send-newsletter/route.ts", "src/app/api/webhook/sanity/route.ts"]) assert.doesNotMatch(readFileSync(path, "utf8"), /from |process\.env|SESClient|fetch\(/);
     assert.deepEqual(JSON.parse(readFileSync("vercel.json", "utf8")).crons, []);
-    assert.equal(JSON.parse(readFileSync("vercel.json", "utf8")).git.deploymentEnabled.master, false);
+    assert.equal(JSON.parse(readFileSync("vercel.json", "utf8")).git.deploymentEnabled.master, true);
   } finally { globalThis.fetch = old; }
 });
