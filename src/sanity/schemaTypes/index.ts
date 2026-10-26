@@ -2,7 +2,6 @@ import post from './post'
 import page from './page'
 import author from './author'
 import category from './category'
-import subscriber from './subscriber'
 import { comment } from './comment'
 
 /**
@@ -13,6 +12,6 @@ import { comment } from './comment'
  * `src/app/studio/page.tsx`) can group them into distinct "Posts" and
  * "Pages" sections in the sidebar.
  */
-export const schemaTypes = [post, page, author, category, subscriber, comment]
+export const schemaTypes = [post, page, author, category, comment]
 
 export default schemaTypes

@@ -1,0 +1,10 @@
+{
+  "region": "eu-north-1",
+  "accountId": "REPLACE_PRIVATELY",
+  "roleArn": "REPLACE_WITH_APPROVED_READ_ONLY_ROLE_ARN",
+  "tableArn": "REPLACE_WITH_EXACT_LEDGER_TABLE_ARN",
+  "contactList": "REPLACE_WITH_DEDICATED_NEWSLETTER_LIST",
+  "awsExe": "C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe",
+  "auth": { "kind": "login" },
+  "maxSnapshots": 100
+}

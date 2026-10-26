@@ -32,12 +32,13 @@ export default function NewsletterPage() {
 
 function ActiveNewsletterPage() {
   const [email, setEmail] = useState("");
+  const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [feedback, setFeedback] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || status === "loading") return;
+    if (!email.trim() || !consent || status === "loading") return;
 
     setStatus("loading");
     setFeedback("");
@@ -46,7 +47,7 @@ function ActiveNewsletterPage() {
       const res = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), consent }),
       });
 
       let data: { status?: string } = {};
@@ -56,10 +57,11 @@ function ActiveNewsletterPage() {
         // A non-JSON server error must not be mistaken for a subscription.
       }
 
-      if (res.ok && data.status === "success") {
+      if (res.ok && data.status === "pending") {
         setStatus("success");
-        setFeedback("You're subscribed. Welcome to the Chronoverse dispatch list.");
+        setFeedback("If eligible, check your inbox and confirm your subscription.");
         setEmail("");
+        setConsent(false);
       } else {
         setStatus("error");
         setFeedback("Subscription could not be completed. Please try again.");
@@ -87,12 +89,17 @@ function ActiveNewsletterPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="email"
+            aria-label="Email address"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             className="w-full px-4 py-3 rounded-xl bg-raised border border-border text-primary placeholder:text-muted focus:outline-none focus:border-[#C8A7E8] transition-colors"
           />
+        <label className="flex items-start gap-2 text-sm text-muted sm:col-span-2">
+          <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          I agree to receive the free weekly Chronoverse Capital research newsletter. I can unsubscribe at any time.
+        </label>
           <button
             type="submit"
             disabled={status === "loading"}

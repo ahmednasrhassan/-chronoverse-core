@@ -12,6 +12,7 @@ const groups = {
   "auth": ["src/lib/auth/tests"],
   public: ["src/components", "src/lib/seo/tests"],
   content: ["src/lib/sanity/tests", "src/lib/content/tests", "src/lib/analytics/tests", "src/app/api/amazon/tests"],
+  newsletter: ["services/newsletter/test"],
 };
 const selected = process.argv.slice(2);
 if (selected.some(name => !Object.hasOwn(groups, name))) {

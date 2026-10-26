@@ -2,6 +2,12 @@
 
 # dependencies
 /node_modules
+**/node_modules/
+**/.aws-sam/
+.newsletter-private/
+# Private owner snapshots/configuration are never website artifacts.
+.newsletter-backup-private/
+*.cvnb
 /.pnp
 .pnp.*
 .yarn/*
@@ -49,3 +55,27 @@ baseline-*.log
 baseline-*.tap
 cleanup-*.log
 .verification-package-lock.log
+
+# Local AWS authentication, SAM state, private deployment inputs and releases.
+**/.aws/
+/~/
+**/samconfig.toml
+**/samconfig.*.toml
+**/credentials
+**/credentials.json
+**/aws-credentials*.json
+**/parameters.private.json
+**/parameters*.local.json
+**/*private*parameters*.json
+**/disabled-parameters.json
+**/discovery-disabled-parameters.json
+/release/
+/releases/
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.pfx
+*.p12
+*.key

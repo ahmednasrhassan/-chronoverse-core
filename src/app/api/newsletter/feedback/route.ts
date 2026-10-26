@@ -1,4 +1,4 @@
-import { handleNewsletterFeedback } from "@/lib/newsletter/feedback";
-
-export const runtime = "nodejs";
-export async function POST(request: Request) { return handleNewsletterFeedback(request); }
+// Preserve retry semantics until the owner reconciles historical SNS subscriptions.
+export function POST() {
+  return Response.json({ code: "newsletter_feedback_migration_required" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+}

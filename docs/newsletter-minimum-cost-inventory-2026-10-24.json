@@ -1,0 +1,889 @@
+{
+  "date": "2026-10-24",
+  "decision": "LOCAL PREPARATION ONLY; provisioning unapproved; live activation NO-GO",
+  "branch": "master",
+  "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+  "scope": "No AWS account/resource API calls, uploads, provisioning, subscriber access, emails, secret/address retrieval, Git mutations or website changes. Anonymous public AWS pricing/documentation reads only.",
+  "backup": {
+    "zip": "E:\\chronoverse-app\\-chronoverse-core-master\\.verification\\newsletter-minimum-cost-20261024-192828Z\\before.zip",
+    "sha256": "cf023175ce33fce5266dea651b2a451485eb4093215fef13db2138bc47842f1a",
+    "filesReadbackVerified": 268,
+    "noPreexistingFilesRemoved": true,
+    "websiteFilesUnchanged": 190
+  },
+  "filesChangedThisTask": [
+    "docs/newsletter-lambda-quota-compatibility-2026-10-24.md",
+    "docs/newsletter-owner-deployment-runbook-2026-10-24.md",
+    "services/newsletter/README.md",
+    "services/newsletter/src/aws.mjs",
+    "services/newsletter/src/service.mjs",
+    "services/newsletter/template.json"
+  ],
+  "filesAddedThisTask": [
+    "services/newsletter/test/cost.test.mjs",
+    "docs/newsletter-minimum-cost-2026-10-24.md",
+    "docs/newsletter-minimum-cost-inventory-2026-10-24.json"
+  ],
+  "sourceFilesDeletedThisTask": [],
+  "retiredTemplateAlarmDefinitions": [
+    "ApiErrorAlarm",
+    "ApiFailureAlarm",
+    "ContactSyncErrorAlarm",
+    "FeedbackErrorAlarm",
+    "HeldAlarm",
+    "PlannerErrorAlarm",
+    "ProviderFailureAlarm",
+    "QueueProcessingFailureAlarm",
+    "ThrottledAlarm",
+    "WorkerErrorAlarm"
+  ],
+  "newTemplateAlarmDefinitions": [
+    "ExecutionHealthAlarm",
+    "SafetyBacklogAlarm",
+    "SafetyFailureAlarm"
+  ],
+  "priorWork": "Complete uncommitted rebuild and prior fixes preserved; preexisting legacy source deletions are not new task deletions.",
+  "resources": [
+    {
+      "logicalId": "Ledger",
+      "type": "AWS::DynamoDB::Table",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Durable consent, suppression, idempotency, replay, article and send-lease records; on-demand table/GSI and PITR storage."
+    },
+    {
+      "logicalId": "Contacts",
+      "type": "AWS::SES::ContactList",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Dedicated explicit opt-out/sending-denial controls; reuses external verified domain identity."
+    },
+    {
+      "logicalId": "Configuration",
+      "type": "AWS::SES::ConfigurationSet",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Dedicated explicit opt-out/sending-denial controls; reuses external verified domain identity."
+    },
+    {
+      "logicalId": "FailureQueue",
+      "type": "AWS::SQS::Queue",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Usage-only requests, no queue-existence fee; 14-day retry/recovery retention unchanged."
+    },
+    {
+      "logicalId": "PlanQueue",
+      "type": "AWS::SQS::Queue",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Usage-only requests, no queue-existence fee; 14-day retry/recovery retention unchanged."
+    },
+    {
+      "logicalId": "DigestQueue",
+      "type": "AWS::SQS::Queue",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Usage-only requests, no queue-existence fee; 14-day retry/recovery retention unchanged."
+    },
+    {
+      "logicalId": "FeedbackQueue",
+      "type": "AWS::SQS::Queue",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Usage-only requests, no queue-existence fee; 14-day retry/recovery retention unchanged."
+    },
+    {
+      "logicalId": "FeedbackTopic",
+      "type": "AWS::SNS::Topic",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "FeedbackTopicPolicy",
+      "type": "AWS::SNS::TopicPolicy",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "FeedbackQueuePolicy",
+      "type": "AWS::SQS::QueuePolicy",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "FeedbackSubscription",
+      "type": "AWS::SNS::Subscription",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "EventDestination",
+      "type": "AWS::SES::ConfigurationSetEventDestination",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "ApiLogs",
+      "type": "AWS::Logs::LogGroup",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Bounded 14-day diagnostics, retained on deletion; no fixed group fee."
+    },
+    {
+      "logicalId": "ApiRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "ApiFunction",
+      "type": "AWS::Serverless::Function",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Usage-only execution, no reservations/provisioned concurrency; unchanged 256 MB ARM64/60 seconds."
+    },
+    {
+      "logicalId": "PlannerLogs",
+      "type": "AWS::Logs::LogGroup",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Bounded 14-day diagnostics, retained on deletion; no fixed group fee."
+    },
+    {
+      "logicalId": "PlannerRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "PlannerFunction",
+      "type": "AWS::Serverless::Function",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Usage-only execution, no reservations/provisioned concurrency; unchanged 256 MB ARM64/60 seconds."
+    },
+    {
+      "logicalId": "WorkerLogs",
+      "type": "AWS::Logs::LogGroup",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Bounded 14-day diagnostics, retained on deletion; no fixed group fee."
+    },
+    {
+      "logicalId": "WorkerRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "WorkerFunction",
+      "type": "AWS::Serverless::Function",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Usage-only execution, no reservations/provisioned concurrency; unchanged 256 MB ARM64/60 seconds."
+    },
+    {
+      "logicalId": "FeedbackLogs",
+      "type": "AWS::Logs::LogGroup",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Bounded 14-day diagnostics, retained on deletion; no fixed group fee."
+    },
+    {
+      "logicalId": "FeedbackRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "FeedbackFunction",
+      "type": "AWS::Serverless::Function",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Usage-only execution, no reservations/provisioned concurrency; unchanged 256 MB ARM64/60 seconds."
+    },
+    {
+      "logicalId": "ContactSyncLogs",
+      "type": "AWS::Logs::LogGroup",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Bounded 14-day diagnostics, retained on deletion; no fixed group fee."
+    },
+    {
+      "logicalId": "ContactSyncRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "ContactSyncFunction",
+      "type": "AWS::Serverless::Function",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Usage-only execution, no reservations/provisioned concurrency; unchanged 256 MB ARM64/60 seconds."
+    },
+    {
+      "logicalId": "HttpApi",
+      "type": "AWS::Serverless::HttpApi",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Unsubscribe/recovery availability, usage-based HTTP requests, no paid custom domain."
+    },
+    {
+      "logicalId": "PlannerMapping",
+      "type": "AWS::Lambda::EventSourceMapping",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Safety mappings stay active; planner/worker disabled by default. No provisioned pollers; stream filters preserved."
+    },
+    {
+      "logicalId": "WorkerMapping",
+      "type": "AWS::Lambda::EventSourceMapping",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Safety mappings stay active; planner/worker disabled by default. No provisioned pollers; stream filters preserved."
+    },
+    {
+      "logicalId": "FeedbackMapping",
+      "type": "AWS::Lambda::EventSourceMapping",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Safety mappings stay active; planner/worker disabled by default. No provisioned pollers; stream filters preserved."
+    },
+    {
+      "logicalId": "ContactsMapping",
+      "type": "AWS::Lambda::EventSourceMapping",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Safety mappings stay active; planner/worker disabled by default. No provisioned pollers; stream filters preserved."
+    },
+    {
+      "logicalId": "SchedulerRole",
+      "type": "AWS::IAM::Role",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Existing isolated least-privilege execution/target role, no direct recurring role fee; unchanged."
+    },
+    {
+      "logicalId": "WeeklySchedule",
+      "type": "AWS::Scheduler::Schedule",
+      "classification": "REQUIRED FOR OPERATION",
+      "reason": "Part of protected feedback/suppression routing or weekly planning; no standalone fixed resource fee."
+    },
+    {
+      "logicalId": "DeadLetterAlarm",
+      "type": "AWS::CloudWatch::Alarm",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Actionable fault, native throttle/error, recovery or backlog visibility; notification destination requires approval."
+    },
+    {
+      "logicalId": "ExecutionHealthAlarm",
+      "type": "AWS::CloudWatch::Alarm",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Actionable fault, native throttle/error, recovery or backlog visibility; notification destination requires approval."
+    },
+    {
+      "logicalId": "SafetyFailureAlarm",
+      "type": "AWS::CloudWatch::Alarm",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Actionable fault, native throttle/error, recovery or backlog visibility; notification destination requires approval."
+    },
+    {
+      "logicalId": "SafetyBacklogAlarm",
+      "type": "AWS::CloudWatch::Alarm",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "Actionable fault, native throttle/error, recovery or backlog visibility; notification destination requires approval."
+    }
+  ],
+  "generatedResources": [
+    {
+      "logicalId": "ApiFunctionconfirmPermission",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "API invoke permission or default HTTP stage for protected subscriber-management routes."
+    },
+    {
+      "logicalId": "ApiFunctionsubscribePermission",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "API invoke permission or default HTTP stage for protected subscriber-management routes."
+    },
+    {
+      "logicalId": "ApiFunctionunsubscribePermission",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "API invoke permission or default HTTP stage for protected subscriber-management routes."
+    },
+    {
+      "logicalId": "HttpApiApiGatewayDefaultStage",
+      "classification": "REQUIRED FOR SAFETY",
+      "reason": "API invoke permission or default HTTP stage for protected subscriber-management routes."
+    }
+  ],
+  "authoredResources": 38,
+  "translatedResourcesExpected": 42,
+  "alarmCount": 4,
+  "underlyingBillableAlarmMetrics": 8,
+  "allFiveFlagsFalse": true,
+  "rolesAndSafetyTopologyUnchanged": true,
+  "awsAdapterAndServiceUnchangedOutsideNewInstrumentation": true,
+  "externalResources": [
+    {
+      "name": "Existing chronoverse/newsletter-v2 secret",
+      "classification": "REQUIRED FOR SAFETY",
+      "idleGrossMonthUSD": 0.4
+    },
+    {
+      "name": "Existing verified SES identity",
+      "classification": "REQUIRED FOR OPERATION",
+      "note": "No new identity or DNS changes; account pricing plan/add-ons unknown."
+    },
+    {
+      "name": "Approved private artifact bucket",
+      "classification": "REQUIRED FOR OPERATION",
+      "note": "Not created by template; tiny storage/request charges; preserve rollback versions."
+    },
+    {
+      "name": "Approved operational alarm destination",
+      "classification": "REQUIRED FOR SAFETY",
+      "note": "Currently absent; activation blocked until configured/validated with approval."
+    },
+    {
+      "name": "Approved CloudFormation execution role",
+      "classification": "REQUIRED FOR OPERATION",
+      "note": "External least-privilege role; not created here."
+    }
+  ],
+  "optionalMonitoringRemoved": [
+    "Five duplicate per-function error alarms",
+    "Five separate per-signal fault alarms, replaced by shared SafetyFailure",
+    "Normal success/paused custom metrics",
+    "Diagnostic retention beyond 14 days"
+  ],
+  "unnecessaryNotAdded": [
+    "Paid provisioned pollers/concurrency/capacity",
+    "Extra secret/identity/CMK",
+    "Dedicated IPs or SES Pro/Enterprise dependencies",
+    "VPC/NAT/endpoints",
+    "Paid dashboards/custom domains/tracing extensions"
+  ],
+  "pricing": {
+    "currency": "USD",
+    "region": "eu-north-1",
+    "beforeTaxAllowancesCredits": true,
+    "checked": "2026-10-24",
+    "publicCatalogEvidence": "E:\\chronoverse-app\\-chronoverse-core-master\\.verification\\newsletter-minimum-cost-20261024-192828Z\\public-stockholm-prices.json",
+    "rates": {
+      "alarmMetricMonth": 0.1,
+      "customMetricMonth": 0.3,
+      "logIngestGB": 0.54,
+      "logArchiveGBMonth": 0.028,
+      "lambdaRequest": 2e-07,
+      "armGBSecond": 1.33334e-05,
+      "sqsRequest": 4e-07,
+      "ddbWRU": 6.7e-07,
+      "ddbRRU": 1.345e-07,
+      "ddbPaidGBMonth": 0.269,
+      "pitrGBMonth": 0.21,
+      "httpRequest": 1.06e-06,
+      "secretMonth": 0.4,
+      "secretAPICall": 5e-06,
+      "s3GBMonth": 0.023,
+      "s3PUT": 5e-06,
+      "s3GET": 4e-07,
+      "snsStandardRequest": 5e-07,
+      "schedulerInvocation": 1e-06,
+      "sesEssentialsMessage": 0.00016,
+      "sesALaCarteMessage": 0.0001,
+      "sesOutboundGB": 0.12
+    },
+    "sesPlanUnknown": true,
+    "sesFixedPlanSurchargesUSD": {
+      "Essentials": 0,
+      "Pro": 105,
+      "Enterprise": 500
+    },
+    "AExistingIdentifiedSecretOnlyUSD": 0.4,
+    "cases": [
+      {
+        "case": "B",
+        "subscribers": 0,
+        "digestMessages": 0.0,
+        "activeSqsMappings": 1,
+        "grossComponentsUSD": {
+          "existingSecret": 0.4,
+          "alarmMetrics": 0.8,
+          "sesMessages": 0.0,
+          "sesData": 0.0,
+          "secretReads": 0.0,
+          "lambdaRequests": 0.0,
+          "lambdaExecution": 0.0,
+          "ddbRequests": 0.0,
+          "ddbStorageBeforeAllowance": 0.0,
+          "pitr": 0.0,
+          "logsIngest": 0.0,
+          "logsArchive": 0.0,
+          "artifactStorage": 0.000115,
+          "snsRequests": 0.0,
+          "sqsWorkRequests": 0.0,
+          "scheduler": 0.0
+        },
+        "emptyPollRequestPlanningRange": [
+          259200.0,
+          648000.0
+        ],
+        "emptyPollCostRangeUSD": [
+          0.10368,
+          0.2592
+        ],
+        "illustrativeGrossTotalUSD": [
+          1.303795,
+          1.459315
+        ],
+        "mainGrossBudgetUsesFivePollersUSD": 1.459315,
+        "mainPublishedBudgetRangeUSD": [
+          1.46,
+          1.6
+        ],
+        "twoPollerLowerBoundIsSensitivityOnly": "Do not assume the two-poller optimization applies: MaximumConcurrency disables it. Budget the five-poller end and observe actuals with approval.",
+        "beforeGrossTotalExcludingExtraOldMetricsAndLogsUSD": [
+          1.603795,
+          1.759315
+        ]
+      },
+      {
+        "case": "C",
+        "subscribers": 100,
+        "digestMessages": 434.5,
+        "activeSqsMappings": 3,
+        "grossComponentsUSD": {
+          "existingSecret": 0.4,
+          "alarmMetrics": 0.8,
+          "sesMessages": 0.06952000000000001,
+          "sesData": 0.00166848,
+          "secretReads": 0.0021725000000000004,
+          "lambdaRequests": 0.00019118,
+          "lambdaExecution": 0.00347601738,
+          "ddbRequests": 0.004079955,
+          "ddbStorageBeforeAllowance": 0.00040350000000000005,
+          "pitr": 0.00021,
+          "logsIngest": 0.0027,
+          "logsArchive": 6.533333333333334e-05,
+          "artifactStorage": 0.000115,
+          "snsRequests": 0.00021725,
+          "sqsWorkRequests": 0.0010428,
+          "scheduler": 4.345e-06
+        },
+        "emptyPollRequestPlanningRange": [
+          777600.0,
+          1944000.0
+        ],
+        "emptyPollCostRangeUSD": [
+          0.31104,
+          0.7776
+        ],
+        "illustrativeGrossTotalUSD": [
+          1.596906,
+          2.063466
+        ],
+        "mainGrossBudgetUsesFivePollersUSD": 2.063466,
+        "mainPublishedBudgetRangeUSD": [
+          2.06,
+          2.3
+        ],
+        "twoPollerLowerBoundIsSensitivityOnly": "Do not assume the two-poller optimization applies: MaximumConcurrency disables it. Budget the five-poller end and observe actuals with approval.",
+        "beforeGrossTotalExcludingExtraOldMetricsAndLogsUSD": [
+          1.896906,
+          2.363466
+        ]
+      },
+      {
+        "case": "D",
+        "subscribers": 1000,
+        "digestMessages": 4345.0,
+        "activeSqsMappings": 3,
+        "grossComponentsUSD": {
+          "existingSecret": 0.4,
+          "alarmMetrics": 0.8,
+          "sesMessages": 0.6952,
+          "sesData": 0.0166848,
+          "secretReads": 0.021725,
+          "lambdaRequests": 0.0017553799999999997,
+          "lambdaExecution": 0.029546147729999996,
+          "ddbRequests": 0.04079955,
+          "ddbStorageBeforeAllowance": 0.004035,
+          "pitr": 0.0021,
+          "logsIngest": 0.013500000000000002,
+          "logsArchive": 0.0003266666666666667,
+          "artifactStorage": 0.000115,
+          "snsRequests": 0.0021725,
+          "sqsWorkRequests": 0.010428,
+          "scheduler": 4.345e-06
+        },
+        "emptyPollRequestPlanningRange": [
+          777600.0,
+          1944000.0
+        ],
+        "emptyPollCostRangeUSD": [
+          0.31104,
+          0.7776
+        ],
+        "illustrativeGrossTotalUSD": [
+          2.349432,
+          2.815992
+        ],
+        "mainGrossBudgetUsesFivePollersUSD": 2.815992,
+        "mainPublishedBudgetRangeUSD": [
+          2.82,
+          3.1
+        ],
+        "twoPollerLowerBoundIsSensitivityOnly": "Do not assume the two-poller optimization applies: MaximumConcurrency disables it. Budget the five-poller end and observe actuals with approval.",
+        "beforeGrossTotalExcludingExtraOldMetricsAndLogsUSD": [
+          2.649432,
+          3.115992
+        ]
+      }
+    ],
+    "fixedMonthlyGrossSavingUSD": 0.3,
+    "fixedMonthlyAlarmGrossBeforeUSD": 1.1,
+    "fixedMonthlyAlarmGrossAfterUSD": 0.8,
+    "customMetricSavingFormula": "0.30 * (old aggregate published metric-hours - new published SafetyFailure metric-hours) / 720; no idle metric emission means no idle metric saving.",
+    "logArchiveSavingFormula": "ingested GB per 30 days * (30-14)/30 * 0.028; ignores compression and actual age distribution; ingestion separate.",
+    "allowances": "Shared/account-eligibility dependent; gross model ignores them. Do not apply provisioned DynamoDB capacity free units to on-demand requests. Credits separate/expiring.",
+    "limitations": [
+      "Not an account bill or measured workload",
+      "SES plan/add-ons, KMS, other services and allowance consumption unverified",
+      "32KB mail, two-second 256MB worker, request/storage/log budgets illustrative",
+      "Feedback polling retained; poller range sensitivity, not a guaranteed cap",
+      "History growth/retries/hostile traffic may increase costs",
+      "No guaranteed account-specific net costs or credit duration"
+    ]
+  },
+  "artifacts": {
+    "result": "PASS",
+    "root": "E:\\cv-nl-cost-20261024-192828",
+    "zip": "E:\\cv-nl-cost-20261024-192828\\packages-release\\newsletter-runtime.zip",
+    "sha256": "3a407cc8b2cd8cc584baa8bf52d9cf44e98ab2a49d07ab22f90e04ff3011e92b",
+    "compressedBytes": 4188886,
+    "uncompressedBytes": 12440065,
+    "files": 4123,
+    "sharedByFunctions": {
+      "ApiFunction": "src/handlers.api",
+      "PlannerFunction": "src/handlers.planner",
+      "WorkerFunction": "src/handlers.worker",
+      "FeedbackFunction": "src/handlers.feedback",
+      "ContactSyncFunction": "src/handlers.contacts"
+    },
+    "allFiveBuiltFirstPartyModulesMatchRepository": true,
+    "releaseFunctionsShareOneInspectedZip": true,
+    "excludedNonRuntimeFiles": [
+      "node_modules/.bin/fxparser",
+      "node_modules/.bin/fxparser.cmd",
+      "node_modules/.bin/fxparser.ps1",
+      "package-lock.json"
+    ],
+    "runtimeModules": [
+      "src/aws.mjs",
+      "src/discovery.mjs",
+      "src/domain.mjs",
+      "src/handlers.mjs",
+      "src/rss.mjs",
+      "src/service.mjs"
+    ],
+    "dependencyProvenance": "Reused byte-for-byte from the prior quota-verified ZIP with unchanged approved lock. Fresh SAM NpmCI/npm ls and 114 built-dependency tests independently passed. Third-party files were rehashed from the ZIP in memory, not redundantly from all five SAM dependency directories.",
+    "noFirstPartyPrivateDataEnvCredentialsBackupsTestsReportsOrMigrationFiles": true,
+    "nativeBinaries": [],
+    "releaseTemplate": "E:\\cv-nl-cost-20261024-192828\\release-template.json",
+    "releaseTemplateSha256": "056aa73dde4a78a377c4bfac9e41ae0d2c1796f56fde7fe8fe6a01b7fad109a0",
+    "sourceLockSha256": "7619255b164dfcc36a983743490ddcdca051b21b621912c3bbda11f0ddc92af3",
+    "authoredResources": 38,
+    "localTranslatedResources": 42,
+    "resourceTypes": {
+      "AWS::DynamoDB::Table": 1,
+      "AWS::SES::ContactList": 1,
+      "AWS::SES::ConfigurationSet": 1,
+      "AWS::SQS::Queue": 4,
+      "AWS::SNS::Topic": 1,
+      "AWS::SNS::TopicPolicy": 1,
+      "AWS::SQS::QueuePolicy": 1,
+      "AWS::SNS::Subscription": 1,
+      "AWS::SES::ConfigurationSetEventDestination": 1,
+      "AWS::Logs::LogGroup": 5,
+      "AWS::IAM::Role": 6,
+      "AWS::Lambda::EventSourceMapping": 4,
+      "AWS::Scheduler::Schedule": 1,
+      "AWS::CloudWatch::Alarm": 4,
+      "AWS::Lambda::Function": 5,
+      "AWS::Lambda::Permission": 3,
+      "AWS::ApiGatewayV2::Api": 1,
+      "AWS::ApiGatewayV2::Stage": 1
+    },
+    "generatedIds": [
+      "ApiFunctionconfirmPermission",
+      "ApiFunctionsubscribePermission",
+      "ApiFunctionunsubscribePermission",
+      "HttpApiApiGatewayDefaultStage"
+    ],
+    "defaultControlMatrix": {
+      "parameters": {
+        "DeliveryEnabled": "false",
+        "RegistrationEnabled": "false",
+        "ConfirmationEnabled": "false",
+        "LegacyDispatchRetired": "false",
+        "ComplianceApproved": "false"
+      },
+      "mailRoles": [],
+      "scheduler": "DISABLED",
+      "sesSending": false
+    },
+    "conditionCombinationsChecked": 32,
+    "syntheticTranslationNotice": "Inventory only; synthetic S3 reference, no upload/AWS account access. Not a deployment artifact.",
+    "unchangedDependencyArchiveSha256": "6a644693848126f9a83c2a14eb799be28d670c22b949de31a1beaa29ccd6d308"
+  },
+  "validation": {
+    "backend-tests-result": {
+      "exitCode": 0
+    },
+    "focused-lint-result": {
+      "exitCode": 0
+    },
+    "all-regressions-result": {
+      "exitCode": 1
+    },
+    "all-regressions-summary": {
+      "date": "2026-10-24T19:35:52.165Z",
+      "node": "v22.23.4",
+      "platform": "win32",
+      "groups": [
+        {
+          "name": "safety",
+          "files": 2,
+          "deferred": [],
+          "code": 1,
+          "signal": null,
+          "tests": 10,
+          "pass": 9,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 45048
+        },
+        {
+          "name": "auth",
+          "files": 8,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 21,
+          "pass": 21,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 128713
+        },
+        {
+          "name": "public",
+          "files": 29,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 79,
+          "pass": 79,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 358476
+        },
+        {
+          "name": "content",
+          "files": 8,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 24,
+          "pass": 24,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 33388
+        },
+        {
+          "name": "newsletter",
+          "files": 7,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 114,
+          "pass": 114,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 37357
+        }
+      ]
+    },
+    "safety-retry-result": {
+      "exitCode": 0
+    },
+    "safety-retry-summary": {
+      "date": "2026-10-24T19:46:39.905Z",
+      "node": "v22.23.4",
+      "platform": "win32",
+      "groups": [
+        {
+          "name": "safety",
+          "files": 2,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 10,
+          "pass": 10,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 15780
+        }
+      ]
+    },
+    "built-dependencies-tests-result": {
+      "exitCode": 0,
+      "seconds": 67.74,
+      "dependencyTree": "E:\\cv-nl-cost-20261024-192828\\build1\\ApiFunction\\node_modules",
+      "tests": 114
+    },
+    "artifact-smoke-result": {
+      "exitCode": 0,
+      "platform": "Windows Node22; not managed Linux/ARM64 execution"
+    },
+    "service-check-result": {
+      "exitCode": 0
+    },
+    "runbook-parse-result": {
+      "blocks": 8,
+      "result": "PASS",
+      "errors": [],
+      "executed": false
+    },
+    "build": [
+      {
+        "check": "sam-validate",
+        "exitCode": 0,
+        "seconds": 166.38
+      },
+      {
+        "check": "sam-build",
+        "exitCode": 0,
+        "seconds": 630.76
+      },
+      {
+        "check": "npm-ls",
+        "exitCode": 0,
+        "seconds": 86.37
+      },
+      {
+        "check": "artifact-review",
+        "exitCode": 0,
+        "seconds": 42.58
+      },
+      {
+        "check": "sam-release-validate",
+        "exitCode": 0,
+        "seconds": 90.22
+      }
+    ],
+    "finalSuccessfulGroups": {
+      "result": "PASS",
+      "tests": 248,
+      "groups": [
+        {
+          "name": "safety",
+          "files": 2,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 10,
+          "pass": 10,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 15780
+        },
+        {
+          "name": "auth",
+          "files": 8,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 21,
+          "pass": 21,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 128713
+        },
+        {
+          "name": "public",
+          "files": 29,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 79,
+          "pass": 79,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 358476
+        },
+        {
+          "name": "content",
+          "files": 8,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 24,
+          "pass": 24,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 33388
+        },
+        {
+          "name": "newsletter",
+          "files": 7,
+          "deferred": [],
+          "code": 0,
+          "signal": null,
+          "tests": 114,
+          "pass": 114,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "durationMs": 37357
+        }
+      ],
+      "initialFailure": "Unchanged publisher dry-run exceeded its existing 30-second child timeout during the first broad run. Safety group passed 10/10 on targeted rerun. Original evidence preserved."
+    },
+    "samGuard": {
+      "result": "PASS",
+      "records": [
+        {
+          "pid": 6976,
+          "awsApiAttempts": 0,
+          "socketAttempts": 0
+        },
+        {
+          "pid": 12868,
+          "awsApiAttempts": 0,
+          "socketAttempts": 0
+        },
+        {
+          "pid": 13296,
+          "awsApiAttempts": 0,
+          "socketAttempts": 0
+        },
+        {
+          "pid": 5812,
+          "awsApiAttempts": 0,
+          "socketAttempts": 0
+        }
+      ],
+      "notice": "Public npm child downloads and separate anonymous public pricing/doc reads are distinct from AWS account/resource access."
+    }
+  },
+  "remainingActivationGates": [
+    "Approved notification destination and incident owner",
+    "Managed-service synthetic tests",
+    "Separate SES non-send API pacing",
+    "Quota-ten contention and opt-out availability",
+    "Historical suppression/unsubscribe recovery and old sender containment",
+    "Private compliance/address/consent and payment continuity",
+    "Separate complete RSS/website routing release"
+  ],
+  "nextAwsActionRequiringApproval": "Metadata-only DescribeSecret for existing ARN; no GetSecretValue. Defer provisioning for minimum spend."
+}

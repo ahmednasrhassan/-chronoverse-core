@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "sequence": 1,
+  "publicationApproved": false,
+  "approvedBy": "REQUIRES_FOUNDER_SELECTED_EDITOR",
+  "approvedAt": "REQUIRES_REAL_APPROVAL_TIMESTAMP",
+  "expiresAt": "REQUIRES_REAL_FRESHNESS_DEADLINE",
+  "articles": [
+    {
+      "id": "REQUIRES_EXISTING_STABLE_ARTICLE_ID",
+      "url": "REQUIRES_APPROVED_CANONICAL_HTTPS_REFERENCE",
+      "title": "REQUIRES_APPROVED_TITLE",
+      "summary": "REQUIRES_APPROVED_PLAIN_TEXT_SUMMARY",
+      "publishedAt": "REQUIRES_ORIGINAL_PUBLICATION_TIMESTAMP",
+      "publicationApproved": false,
+      "approvedBy": "REQUIRES_FOUNDER_SELECTED_EDITOR",
+      "approvedAt": "REQUIRES_REAL_APPROVAL_TIMESTAMP",
+      "provenance": {
+        "sourceId": "REQUIRES_ORIGINAL_SOURCE_ID",
+        "revision": "REQUIRES_ORIGINAL_SOURCE_REVISION",
+        "originalPublishedAt": "REQUIRES_ORIGINAL_PUBLICATION_TIMESTAMP",
+        "evidenceSha256": "REQUIRES_SHA256_OF_RETAINED_PUBLICATION_EVIDENCE"
+      }
+    }
+  ]
+}

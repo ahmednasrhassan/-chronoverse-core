@@ -11,12 +11,13 @@ export default function NewsletterForm() {
 // Retained for a future reviewed reactivation; public rendering stays paused.
 export function ActiveNewsletterForm() {
   const [email, setEmail] = useState("");
+  const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [feedback, setFeedback] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!email.trim() || status === "loading") return;
+    if (!email.trim() || !consent || status === "loading") return;
 
     setStatus("loading");
     setFeedback("");
@@ -25,7 +26,7 @@ export function ActiveNewsletterForm() {
       const res = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), consent }),
       });
 
       let data: { status?: string } = {};
@@ -35,10 +36,11 @@ export function ActiveNewsletterForm() {
         // تفادي انهيار التطبيق لو أرجع الخادم استجابة نصية/HTML عند حدوث خطأ غير متوقع
       }
 
-      if (res.ok && data.status === "success") {
+      if (res.ok && data.status === "pending") {
         setStatus("success");
-        setFeedback("You're subscribed. Welcome to the Chronoverse dispatch list.");
+        setFeedback("If eligible, check your inbox and confirm your subscription.");
         setEmail("");
+        setConsent(false);
       } else {
         setStatus("error");
         setFeedback("Subscription could not be completed. Please try again.");
@@ -64,6 +66,10 @@ export function ActiveNewsletterForm() {
           onChange={(e) => setEmail(e.target.value)}
           className="min-w-0 border-0 border-b border-[#6F4C91] bg-transparent px-1 py-3.5 text-sm text-[#F3EBDD] placeholder:text-[#91889A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A7E8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#15131A]"
         />
+        <label className="flex items-start gap-2 text-sm text-muted sm:col-span-2">
+          <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          I agree to receive the free weekly Chronoverse Capital research newsletter. I can unsubscribe at any time.
+        </label>
         <button
           type="submit"
           disabled={status === "loading"}

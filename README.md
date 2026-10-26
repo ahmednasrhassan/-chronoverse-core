@@ -32,3 +32,18 @@ this cleanup introduces no catalog implementation or payment flow.
 The preserved Markdown publishing CLI is `node publish-article.mjs article.md`.
 Use `--dry-run` to inspect output before publishing; category resolution can still
 read Sanity. Its dependencies are included by `npm ci`.
+# AWS newsletter replacement
+
+Read the [final blocker review](docs/newsletter-final-blocker-resolution-2026-10-26.md)
+before pushing: durable legacy exclusions and Scheduler trust are fixed locally;
+production website subscriber continuity remains an unresolved release blocker.
+
+Newsletter signup and delivery remain disabled pending owner approval. The local
+AWS replacement, infrastructure, synthetic tests and migration tooling live in
+[services/newsletter](services/newsletter/README.md). Read the
+[owner setup, migration and activation guide](docs/newsletter-aws-owner-guide-2026-10-24.md)
+before any AWS access, configuration or deployment.
+
+Install its isolated dependencies with `npm ci --prefix services/newsletter --ignore-scripts`.
+`npm test` includes the replacement's offline tests; run that group alone with
+`npm test -- newsletter`. This does not authorize a real subscriber read/write or email.

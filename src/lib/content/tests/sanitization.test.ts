@@ -32,6 +32,7 @@ test("RSS sanitizes legacy HTML and escapes its remaining text as XML", () => {
   const html = '<script>alert(1)</script><p>Rates <strong>2.5%</strong> &amp; reserves &lt; 3.</p><img src="x" onerror="alert(2)">';
   assert.equal(legacyHtmlToPlainText(html), "Rates 2.5% & reserves < 3.");
   const xml = buildRssXml([{
+    _id: "sanitization-rss-fixture",
     slug: "rates-research", title: "Rates & reserves", publishedAt: "2026-10-23T00:00:00Z",
     bodyRaw: html, seoDescription: null, excerpt: null, bodyPlainText: null,
     categoryTitle: null, authorName: null,

@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-25",
+  "decision": "LOCAL INDEPENDENCE IMPLEMENTED/TESTED; editorial and deployment inputs unconfigured; production deployment/activation/recovery NOT APPROVED OR VERIFIED",
+  "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+  "branch": "master",
+  "baselinePrivateReviewZipSha256": "37d9cae937d6b968f59f3a867eb19f38620f4191db87aa108262fc01b469b8eb",
+  "modifiedFiles": [
+    {
+      "path": "docs/newsletter-aws-owner-guide-2026-10-24.md",
+      "reason": "Mark website-dependent instructions/artifacts historical and link the independent runtime contract.",
+      "sha256": "1c6ba4f0a0b5ebde9e17a436d3d68ad94b20928829a8758a68abbaf29c289cbc"
+    },
+    {
+      "path": "docs/newsletter-owner-deployment-runbook-2026-10-24.md",
+      "reason": "Preserve approval boundaries; identify new inputs/module inventory and prohibit executing the old Change Set as this revision.",
+      "sha256": "2c70c0a372a0bbec54d22dc20af1baeba0ee322f93fca4d17dbfbf5907297292"
+    },
+    {
+      "path": "services/newsletter/README.md",
+      "reason": "Make the current independent architecture and remaining approval gates the authoritative entry point.",
+      "sha256": "f55718ea443fb8fca31e88a9ddc656cb6e3897c5215e0efa57d76760502cfbbe"
+    },
+    {
+      "path": "services/newsletter/package.json",
+      "reason": "Promote already-installed locked Smithy signing/checksum packages to direct pinned dependencies without a download.",
+      "sha256": "8cb71c2b8923e7c9fae9b7fa58495b7dcf9d1851e62f3ce4210861041d7bf04c"
+    },
+    {
+      "path": "services/newsletter/package-lock.json",
+      "reason": "Record only the two direct dependency promotions; preserve every package resolution/integrity.",
+      "sha256": "8a09b3b12bc239bc838ccc569d819efc7c99ea2119f1244f6a61d4fd7e6578d9"
+    },
+    {
+      "path": "services/newsletter/src/aws.mjs",
+      "reason": "Select S3 content, retain a monotonic conditional checkpoint and atomic campaign snapshot guard using existing DynamoDB permissions, and construct one-click headers.",
+      "sha256": "7ec7040ecfcb25c32d117331fdc92454d4c41a70996cda17a645dcc057b6fc84"
+    },
+    {
+      "path": "services/newsletter/src/discovery.mjs",
+      "reason": "Preserve original source provenance while retaining existing deterministic windows, deduplication and campaign selection.",
+      "sha256": "beb97842e3d916abcc96447dc4f1390426648f55c06c33c18562694e5f225f4e"
+    },
+    {
+      "path": "services/newsletter/src/domain.mjs",
+      "reason": "Require durable content-source approval for digest sends; identify old RSS constants as compatibility-only.",
+      "sha256": "8f5aa184eb0b91891875056c54eddaa5cb58e85bac7c1cd421f902eb3a465798"
+    },
+    {
+      "path": "services/newsletter/src/rss.mjs",
+      "reason": "Carry the independently generated unsubscribe URL to the mail adapter; retain optional legacy parser/fetch regression coverage.",
+      "sha256": "3efc3313218bc8032fcec69cf99680284a0340f7aa8caaee94bcf35f26260e10"
+    },
+    {
+      "path": "services/newsletter/src/service.mjs",
+      "reason": "Use the independent public origin and public HTTP wrapper; require explicit current content approval/provenance before campaigns or sends.",
+      "sha256": "f80b50801847b1d23fdb6bc0f8efacbde527e12879c4d42e3d8d13984616399d"
+    },
+    {
+      "path": "services/newsletter/template.json",
+      "reason": "Configure existing content bucket/key and independent origin, add AWS-owned/legacy management routes, and grant only gated exact-key planner S3 reads.",
+      "sha256": "26bfe350a4ba3dbe70d844afb08b22c94add60b811df5b01c3bef9591fa193f8"
+    },
+    {
+      "path": "services/newsletter/test/discovery.test.mjs",
+      "reason": "Supply explicit synthetic approval metadata through the legacy parser fixture without removing any existing assertion.",
+      "sha256": "bfa86413d079f755485954f254eb163643897a0fd4942b15e310618bc4225a80"
+    },
+    {
+      "path": "services/newsletter/test/fixture.mjs",
+      "reason": "Supply an independent synthetic origin and explicit synthetic archive/campaign approval evidence.",
+      "sha256": "8b88c917cd5f93d38ad6342bf55097bddad88c4e597a54429c6e02612b3b4ec8"
+    },
+    {
+      "path": "services/newsletter/test/template.test.mjs",
+      "reason": "Add route, independence and exact-key S3 permission checks while retaining the original activation/security assertions.",
+      "sha256": "ed1cf93193c8f7481c986c49839c7f40d7f9836f7e209f58a9bf0c4c001b5329"
+    }
+  ],
+  "addedFiles": [
+    {
+      "path": "services/newsletter/src/content.mjs",
+      "reason": "Validate explicitly approved, fresh, versioned S3 content with original provenance, cutover rules and anti-rollback state.",
+      "sha256": "f3c2968cea097133c51698e8f4f80fcb69a28b56b67ba12e609be26e47601121"
+    },
+    {
+      "path": "services/newsletter/src/http.mjs",
+      "reason": "Serve accessible AWS registration and safe management forms, trusted API Gateway client limiting, POST/one-click transitions and legacy path aliases.",
+      "sha256": "7ab9c81f7e3b485f0f196081f4f3691eb7507a944fd24e16094898523e9f2a47"
+    },
+    {
+      "path": "services/newsletter/content-manifest.example.json",
+      "reason": "Provide an intentionally unapproved/invalid draft; manufacture no actual publication evidence.",
+      "sha256": "baaac94af8e645679ff02c4337953f9b1ed165dbf52d25b3d51641712ad536a6"
+    },
+    {
+      "path": "services/newsletter/scripts/content.mjs",
+      "reason": "Provide offline counts/hash-only manifest inspection with no approval, upload or cloud operation.",
+      "sha256": "a73fc5761e380d1b83f578923ba897967f89efce52b0901da1953c8886da180f"
+    },
+    {
+      "path": "services/newsletter/test/content.test.mjs",
+      "reason": "Exercise archive approval, timestamps/provenance, history prevention, outages, signed reads and checkpoint races with synthetic transports.",
+      "sha256": "bf130e9482180fda1f8812739e4a3c1c28ab34af82815213b10ebf304c5db9b8"
+    },
+    {
+      "path": "services/newsletter/test/public-http.test.mjs",
+      "reason": "Exercise independent public flows, anti-abuse, token/GET/POST safety, one-click/legacy continuity and suppression without emails or AWS calls.",
+      "sha256": "bebd51e278eaf6d12b3145b8970714f909a69921b82c0d7ad84c4efa016693af"
+    },
+    {
+      "path": "docs/newsletter-aws-independence-2026-10-25.md",
+      "reason": "Document the implemented contract, founder decisions, cost assumptions, migration/recovery limits and artifact replacement requirements.",
+      "sha256": "557d5411c0ec52d76376173e529b4cf98cd0ca5b823a6dbb5d4cb1b56ab09ac3"
+    },
+    {
+      "path": "docs/newsletter-aws-independence-implementation-2026-10-25.md",
+      "reason": "Record exact scope, validation evidence, preservation and final readiness status.",
+      "sha256": "baf83c34fd14b8b84d358540f3a9f0a75210233b51468110c16232d7f87a0d5e"
+    },
+    {
+      "path": "docs/newsletter-aws-independence-inventory-2026-10-25.json",
+      "reason": "Provide the machine-readable final changed-file inventory and validation evidence."
+    }
+  ],
+  "deletedFilesThisTask": [],
+  "validation": {
+    "finalNewsletterTests": {
+      "check": "complete-newsletter-offline-release-regressions",
+      "exitCode": 0,
+      "seconds": 14.75,
+      "tests": 193,
+      "pass": 193,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0
+    },
+    "samValidation": {
+      "check": "sam-validate-lint-release",
+      "exitCode": 0,
+      "seconds": 21.38
+    },
+    "localTranslation": {
+      "result": "PASS",
+      "authoredResources": 38,
+      "translatedResources": 50,
+      "sourceAndTranslatedActivationCombinations": 32,
+      "syntheticOnly": true,
+      "notDeployableArtifact": true
+    },
+    "eslint": {
+      "check": "focused-eslint",
+      "exitCode": 0,
+      "files": 13,
+      "seconds": 148.42
+    },
+    "finalAliasEslint": {
+      "check": "final-route-alias-eslint",
+      "exitCode": 0,
+      "files": 3,
+      "seconds": 32.75
+    },
+    "productionRecovery": "UNVERIFIED",
+    "awsRuntimeArm64": "UNVERIFIED",
+    "awsOrSocketAttempts": 0,
+    "privateAuthenticationReadAttempts": 0
+  },
+  "preservation": {
+    "unexpectedChangesToPreexistingFiles": [],
+    "websiteSourceFilesUnchanged": 190,
+    "backupToolFilesUnchanged": 20,
+    "preexistingTrackedDeletionsPreserved": 15,
+    "oldRuntimeZipReleaseTemplateAndPrivateReviewZipPreserved": true,
+    "stagedFiles": [],
+    "gitMutations": "None",
+    "awsApiCalls": "None; guarded/mocked local verification only",
+    "packageDownloads": 0,
+    "emailsSent": 0,
+    "productionDataOperations": 0,
+    "s3Uploads": 0
+  },
+  "cost": {
+    "rateEvidence": "Saved 2026-10-24 Stockholm public catalogs; not freshly re-queried or account-bill verified",
+    "newAuthoredServices": 0,
+    "authoredResources": 38,
+    "translatedResources": 50,
+    "additionalGeneratedInvokePermissions": 8,
+    "incrementalIllustrativeUSDMonth": "less than 0.01 with modest weekly version history and about 1000 additional public page visits/month",
+    "pausedGrossUSDMonth": [
+      1.46,
+      1.6
+    ],
+    "weekly100SubscribersGrossUSDMonth": [
+      2.06,
+      2.3
+    ],
+    "weekly1000SubscribersGrossUSDMonth": [
+      2.82,
+      3.1
+    ],
+    "approximately4Target": "Within modeled low-volume assumptions; not guaranteed",
+    "unknowns": [
+      "actual usage/retained versions",
+      "SES plan/add-ons",
+      "KMS",
+      "tax",
+      "other services",
+      "shared allowances/credits/payment continuity"
+    ]
+  },
+  "evidenceDirectory": ".verification\\newsletter-independence-20261025",
+  "ownerGates": [
+    "approved S3 isolation/versioning/encryption/retention and exact object",
+    "real publishing authority, original evidence, cutover, approval/revocation/freshness process",
+    "public origin and historical URL routing continuity",
+    "new private source review and new approved release packaging/change set",
+    "managed IAM/S3/SES, non-send pacing, quotas, delivered one-click validation",
+    "legacy suppression/key/sender containment, lawful identity/address/privacy, monitoring and payment continuity",
+    "AWS restore exercise including S3 versions and monotonic content checkpoint"
+  ],
+  "inventorySelfHashOmitted": true,
+  "completionDate": "2026-10-26",
+  "ownerTimezone": "Africa/Cairo"
+}

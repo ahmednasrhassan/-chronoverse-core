@@ -47,6 +47,7 @@ const page: PageContentItem = {
 };
 
 const rssPost: RssArticle = {
+  _id: "rss-fixture-published",
   slug: post.slug,
   title: post.title,
   publishedAt: post.publishedAt || null,

@@ -145,7 +145,8 @@ test("policies describe actual storage and preserve purchase boundaries without 
     "Google Analytics",
   ])
     assert.ok(privacy.includes(provider));
-  assert.match(privacy, /does not itself send an email/);
+  assert.match(privacy, /replacement.*being prepared/);
+  assert.match(privacy, /confirmation through the submitted mailbox/);
   assert.doesNotMatch(
     privacy,
     /Lemon Squeezy|GDPR compliant|never sell|EU.only/i,

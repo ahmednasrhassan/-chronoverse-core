@@ -47,9 +47,6 @@ const deskStructure = (S: StructureBuilder) =>
         .child(S.documentTypeList('category').title('Categories')),
       S.divider(),
       S.listItem()
-        .title('Newsletter Subscribers')
-        .child(S.documentTypeList('subscriber').title('Newsletter Subscribers')),
-      S.listItem()
         .title('Legacy Comments')
         .child(S.documentTypeList('comment').title('Legacy Comments')),
     ])

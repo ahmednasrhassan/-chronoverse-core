@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
             address submitted to join the newsletter and its active subscription
             record, signup time and source. Delivery safeguards also record
             opt-outs, suppression status and dispatch outcomes. Unsubscribe
-            links contain an encrypted token used to process the opt-out.
+            links contain a protected token used to process the opt-out.
           </li>
           <li>
             <strong className="text-primary">Contact:</strong> the address and
@@ -70,11 +70,12 @@ export default function PrivacyPolicyPage() {
       <InstitutionalSection title="3. Current service boundaries">
         <p>
           Supabase supports the current identity and passwordless authentication
-          flow. Sanity stores published content and newsletter subscriber
-          records. The newsletter delivery workflow uses Amazon SES.{" "}
-          {NEWSLETTER_SIGNUPS_PAUSED ? "New newsletter signups and delivery are temporarily paused. Existing subscribers can still use their unsubscribe links. " : ""}
-          Public signup, when available, records the subscription; it does not
-          itself send an email.
+          flow. Sanity stores published content and historical newsletter
+          records. An AWS newsletter replacement using Amazon SES and a durable
+          consent and suppression ledger is being prepared.{" "}
+          {NEWSLETTER_SIGNUPS_PAUSED ? "New newsletter signups and delivery remain paused. If an existing unsubscribe link cannot be processed, contact us for opt-out help. " : ""}
+          When approved and available, new subscriptions require an explicit
+          request and confirmation through the submitted mailbox.
           Vercel hosts the website and its server routes. Credentials used by
           these integrations remain server-side and are not fields users are
           asked to submit.

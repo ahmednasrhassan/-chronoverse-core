@@ -1,0 +1,9 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Effect": "Allow", "Action": ["dynamodb:DescribeTable", "dynamodb:Scan"], "Resource": "REPLACE_WITH_EXACT_LEDGER_TABLE_ARN", "Condition": { "StringEquals": { "aws:RequestedRegion": "eu-north-1" } } },
+    { "Effect": "Allow", "Action": ["ses:GetContactList", "ses:ListContacts"], "Resource": "REPLACE_WITH_EXACT_NEWSLETTER_CONTACT_LIST_ARN", "Condition": { "StringEquals": { "aws:RequestedRegion": "eu-north-1" } } },
+    { "Effect": "Allow", "Action": "ses:GetSuppressedDestination", "Resource": "*", "Condition": { "StringEquals": { "aws:RequestedRegion": "eu-north-1" } } },
+    { "Effect": "Allow", "Action": "sts:GetCallerIdentity", "Resource": "*" }
+  ]
+}

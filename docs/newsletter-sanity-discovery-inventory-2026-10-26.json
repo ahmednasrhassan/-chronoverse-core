@@ -1,0 +1,218 @@
+{
+  "date": "2026-10-26",
+  "status": "IMPLEMENTED AND OFFLINE TESTED; DISABLED; PRODUCTION UNVERIFIED",
+  "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+  "branch": "master",
+  "modifiedFiles": [
+    {
+      "path": "services/newsletter/src/service.mjs",
+      "reason": "Validate AWS publication eligibility before planning/claiming, preserve approved first-cutover catch-up, and carry final eligibility context.",
+      "beforeSha256": "f80b50801847b1d23fdb6bc0f8efacbde527e12879c4d42e3d8d13984616399d",
+      "sha256": "5362e904f4de6866f69151f64afb18cd5696e7749d4b6d19cccb5109593c5a5c"
+    },
+    {
+      "path": "services/newsletter/src/aws.mjs",
+      "reason": "Recheck publication eligibility immediately before the existing SES handoff, using existing ledger read permissions.",
+      "beforeSha256": "7ec7040ecfcb25c32d117331fdc92454d4c41a70996cda17a645dcc057b6fc84",
+      "sha256": "ea73d41cb40bddc0d6194565ada269d3fe65cbe767f8fa9d54531a7c9e504fb7"
+    },
+    {
+      "path": "services/newsletter/template.json",
+      "reason": "Move weekly enqueue to Monday 09:10 UTC, retaining the Monday 09:00 article/consent boundary and all original role/resource/activation assertions.",
+      "beforeSha256": "26bfe350a4ba3dbe70d844afb08b22c94add60b811df5b01c3bef9591fa193f8",
+      "sha256": "1d628e54fa8b0f05a1abee7a5852dd6eb282dbb9cb304dbb7f7aabfaad0eb517"
+    },
+    {
+      "path": "services/newsletter/README.md",
+      "reason": "Link the current automatic-source contract and mark old release snapshots superseded.",
+      "beforeSha256": "f55718ea443fb8fca31e88a9ddc656cb6e3897c5215e0efa57d76760502cfbbe",
+      "sha256": "ed77c718ad446cbbdd2b276833a1015aae14e7b0691229f5e1ea6132e9e5a6d7"
+    }
+  ],
+  "addedFiles": [
+    {
+      "path": "services/newsletter/src/publication.mjs",
+      "reason": "AWS-only source-policy freshness, revision, unpublication and concurrent-check guards; safe pre-send deferral.",
+      "sha256": "81a90fd1a4f4d7873318acfb816410bd6bcca4a056f264b67e22268ecfda44ea"
+    },
+    {
+      "path": "services/newsletter/src/sanity-discovery.mjs",
+      "reason": "Bounded tokenless published-source scans, catch-up, provenance, stable identities, retirement/tombstones and conditional manifest publication workflow.",
+      "sha256": "806ed0ecae73fd687efb6bfcfb6fe24fb568594f51951bc8b9cd844b14192456"
+    },
+    {
+      "path": "services/newsletter/src/publication-aws.mjs",
+      "reason": "Narrow conditional DynamoDB and signed exact-object S3/versioning adapters.",
+      "sha256": "4294a626974cfe16f8131b57b7adb43ff3b34ebe938d899b6cf131aae13c2e19"
+    },
+    {
+      "path": "services/newsletter/src/discovery-handler.mjs",
+      "reason": "Private scheduled discovery Lambda entry point with bounded public queries and aggregate-only logs.",
+      "sha256": "1de73498badfa29ec3adcd49b4fe2ca018f5999c58bf7cfe08d9f5a65ccc88e6"
+    },
+    {
+      "path": "services/newsletter/discovery-template.json",
+      "reason": "Isolated disabled companion using existing ledger, S3 object and failure queue; no public API, secret or mail privileges.",
+      "sha256": "357ccf3af2c2cc736270f5cc846e9158aa32b78c13697f20bc8e69c5c2c4e32d"
+    },
+    {
+      "path": "services/newsletter/test/sanity-discovery.test.mjs",
+      "reason": "Synthetic discovery, timing, outage, persistence, concurrency and long-running rolling-manifest regressions.",
+      "sha256": "b856e5192f6d5a698fe2c1c00e5856e67c82c6cda051be532ebe09a5ab66947c"
+    },
+    {
+      "path": "services/newsletter/test/publication.test.mjs",
+      "reason": "AWS-only send eligibility, revoked snapshots, exact SDK/IAM behavior and companion activation matrix coverage.",
+      "sha256": "aca7ad304bded7b20db7fc9fced12104f22e33060e32e4ac65d97bf19696c8f9"
+    },
+    {
+      "path": "docs/newsletter-sanity-discovery-2026-10-26.md",
+      "reason": "Verified Sanity fields, implementation/security/configuration, boundaries, cost model and production limitations.",
+      "sha256": "0447e3e7a66dd3ef404af5059dfbfac664a8413cdf42b427aab6275d59eecf8e"
+    },
+    {
+      "path": "docs/newsletter-sanity-discovery-inventory-2026-10-26.json",
+      "reason": "Exact task delta, source hashes and validation/preservation records.",
+      "selfHashOmitted": true
+    }
+  ],
+  "deletedFiles": [],
+  "validation": {
+    "existingTestAssertionsUnchanged": true,
+    "originalTests": 193,
+    "addedTests": 49,
+    "totalPass": 242,
+    "fail": 0,
+    "skipped": 0,
+    "testsLog": ".verification\\newsletter-sanity-discovery-20261026\\newsletter-tests-accepted.log",
+    "results": ".verification\\newsletter-sanity-discovery-20261026\\accepted-results.json",
+    "matrix": {
+      "result": "PASS",
+      "templates": {
+        "newsletter": {
+          "sourceSha256": "1d628e54fa8b0f05a1abee7a5852dd6eb282dbb9cb304dbb7f7aabfaad0eb517",
+          "sourceCombinations": 32,
+          "translatedCombinations": 32,
+          "bucketCasesPerCombination": 2,
+          "authoredResources": 38,
+          "translatedResources": 50
+        },
+        "discovery": {
+          "sourceSha256": "357ccf3af2c2cc736270f5cc846e9158aa32b78c13697f20bc8e69c5c2c4e32d",
+          "sourceCombinations": 32,
+          "translatedCombinations": 32,
+          "bucketCasesPerCombination": 2,
+          "authoredResources": 6,
+          "translatedResources": 6
+        }
+      },
+      "syntheticOnly": true,
+      "awsCalls": 0
+    },
+    "sourceAndTranslatedActivationMatrices": "32 combinations each, main and companion; configured/empty bucket cases",
+    "lint": "All eight initial changed JS files passed; each later edited subset passed on the final corresponding source version. Source/translated SAM lint passed.",
+    "guardCounters": [
+      {
+        "pid": 1184,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 5968,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 6988,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 8504,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 8032,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 1768,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 11428,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      },
+      {
+        "pid": 9300,
+        "awsApiAttempts": 0,
+        "socketAttempts": 0
+      }
+    ],
+    "networkOrAuthViolations": 0
+  },
+  "configuration": {
+    "region": "eu-north-1",
+    "contentBucket": "chronoverse-nl-artifacts-957261948953-eun1",
+    "manifestKey": "newsletter-content/approved.json",
+    "sourceNamespaceFromRepositoryDefaults": {
+      "project": "xfs4j01p",
+      "dataset": "production",
+      "apiVersion": "2024-03-01"
+    },
+    "liveSourceAccessVerified": false,
+    "discoveryUTC": "09:00 daily",
+    "weeklyEnqueueUTC": "Monday 09:10",
+    "weeklyWindowEndUTC": "Monday 09:00",
+    "freshnessMs": 3600000,
+    "lookbackDays": 35,
+    "manifestMaxArticles": 40,
+    "allFiveActivationDefaults": "false in both templates",
+    "publicOriginDefault": "",
+    "additionalDurablePolicyGate": "CONTROL.sanityPublishedStateApproved=true, not seeded",
+    "contentCutover": "Existing real CONTROL.contentStartAt required; not seeded"
+  },
+  "preservation": {
+    "previousReleaseArtifacts": {
+      "E:\\cv-nl-independent-disabled-20261026-003212\\release\\newsletter-runtime.zip": "c18715df9db8b2958d0d548e6d3e1d4f8d879ebb8ffd3de1d2f13c48db3ac651",
+      "E:\\cv-nl-independent-disabled-20261026-003212\\release\\release-template.json": "69e9c862573f26f646b628d6a70c4d893b5a605ace12eeb5d8b13d995f71d628",
+      "E:\\cv-nl-independent-disabled-20261026-003212\\release\\disabled-parameters.json": "fc2969c580019bcac9bbb1fece3be6056af61db7175c3de3000bf3fa752fa8bc"
+    },
+    "previousReleaseStatus": "PRESERVED BUT SUPERSEDED for automatic discovery",
+    "originalOtherNewsletterFilesUnchanged": true,
+    "encryptedBackupTool": "Unmodified; documented full-table raw capture includes additional ledger rows; managed restore unverified",
+    "packageOrDependencyChanges": false,
+    "gitStagedCommittedPushed": false,
+    "awsCalls": 0,
+    "liveSanityCalls": 0,
+    "s3Uploads": 0,
+    "emailsSent": 0,
+    "subscriberDataOperations": 0,
+    "changeSetAccessedOrModified": false
+  },
+  "limitations": [
+    "No reliable immutable first-publication evidence for pre-cutover drafts: conservative exclusion; extending eligibility needs a separately approved publishing metadata/workflow change.",
+    "Daily polling is not instantaneous unpublication detection; mail requires a fresh post-boundary AWS snapshot <=1 hour old and holds immediately on known failed/in-progress scans.",
+    "Frozen revisions can hold an issue; no automatic rewriting or replay of accepted/uncertain claims.",
+    "More than 35 days of missed scans, over 40 retained publications, or aging unassigned backlog is an explicit incident/hold rather than silent loss.",
+    "Actual public source policy/billing, managed S3/DynamoDB/ARM64/SES behavior, pacing and coordinated recovery remain unverified."
+  ],
+  "cost": {
+    "basis": "Existing saved Stockholm 2026-10-24 rates; no new pricing/network query",
+    "incrementalAWSIllustrativeMonthUSD": [
+      0.01,
+      0.05
+    ],
+    "weekly1000TotalIllustrativeMonthUSD": [
+      2.83,
+      3.15
+    ],
+    "beforeTaxAllowancesCredits": true,
+    "sanityCharges": "UNVERIFIED; not included",
+    "guaranteed4DollarCap": false
+  }
+}

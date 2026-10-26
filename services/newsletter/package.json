@@ -1,0 +1,29 @@
+{
+  "name": "chronoverse-newsletter-aws",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node scripts/test.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1095.0",
+    "@aws-sdk/client-secrets-manager": "3.1095.0",
+    "@aws-sdk/client-sesv2": "3.1095.0",
+    "@aws-sdk/client-sqs": "3.1095.0",
+    "@aws-sdk/lib-dynamodb": "3.1095.0",
+    "fast-xml-parser": "5.10.1",
+    "@smithy/core": "3.36.2",
+    "@smithy/signature-v4": "5.7.4"
+  },
+  "overrides": {
+    "@aws-sdk/util-dynamodb": "3.996.7"
+  },
+  "files": [
+    "src/"
+  ]
+}

@@ -15,6 +15,7 @@ const readSource = (relativePath: string) =>
   readFileSync(path.join(repositoryRoot, relativePath), "utf8");
 
 const basePost: RssArticle = {
+  _id: "article-euro-liquidity",
   slug: "euro-liquidity-update",
   title: "Euro & Liquidity <Update>",
   publishedAt: "2026-09-13T07:08:09.123Z",
@@ -64,6 +65,7 @@ function verifyDescriptionOrderAndLegacySafety(): void {
 function verifyCanonicalRssXml(): void {
   const withoutAuthor: RssArticle = {
     ...basePost,
+    _id: "article-no-author",
     slug: "author-omitted",
     title: "No author",
     authorName: null,
@@ -72,6 +74,7 @@ function verifyCanonicalRssXml(): void {
   };
   const legacyPost: RssArticle = {
     ...basePost,
+    _id: "article-legacy-body",
     slug: "legacy-body",
     title: "Legacy body",
     authorName: null,
@@ -109,7 +112,7 @@ function verifyCanonicalRssXml(): void {
   );
   assert.match(
     xml,
-    /<guid isPermaLink="true">https:\/\/chronoversecapital\.com\/euro-liquidity-update<\/guid>/,
+    /<guid isPermaLink="false">urn:chronoverse:article:article-euro-liquidity<\/guid>/,
   );
   assert.match(xml, /<pubDate>Sun, 13 Sep 2026 07:08:09 GMT<\/pubDate>/);
   assert.match(
@@ -136,7 +139,8 @@ async function verifyFeedRedirectAndQueryBoundary(): Promise<void> {
   const feedSource = readSource("src/app/feed.xml/route.ts");
   assert.match(rssSource, /defined\(publishedAt\)/);
   assert.match(rssSource, /publishedAt <= now\(\)/);
-  assert.match(rssSource, /order\(publishedAt desc\) \[0\.\.\.50\]/);
+  assert.match(rssSource, /order\(publishedAt desc, _id asc\)/);
+  assert.doesNotMatch(rssSource, /\[0\.\.\.50\]/);
   assert.match(rssSource, /"bodyRaw": bodyRaw/);
   assert.match(rssSource, /"authorName": author->name/);
   assert.match(rssSource, /buildRssXml\(posts\)/);

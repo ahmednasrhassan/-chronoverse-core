@@ -108,6 +108,7 @@ async function main(): Promise<void> {
   assert.equal(computeTopRelatedArticles(article, candidatesForRanking, 1)[0].slug, "policy");
 
   const rss: RssArticle = {
+    _id: "editorial-artifact-rss-fixture",
     slug: article.slug, title: article.title, publishedAt: rawPost.publishedAt,
     seoDescription: rows[0], excerpt: rows[1], bodyPlainText: contaminated,
     bodyRaw: rawPost.legacyBody, categoryTitle: null, authorName: null,

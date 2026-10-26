@@ -1,4 +1,4 @@
-import { client } from "@/sanity/client";
+import { freshClient } from "@/sanity/client";
 import { buildRssXml, type RssArticle } from "@/lib/seo/rss";
 
 /**
@@ -7,12 +7,12 @@ import { buildRssXml, type RssArticle } from "@/lib/seo/rss";
  * Fetches published `post` documents directly from Sanity (most recent
  * first) and formats them into a valid RSS XML document. Consumed by:
  *   - Standard RSS reader clients (via /rss.xml).
- *   - The `/api/cron/send-newsletter` Vercel Cron job, which reads the same
- *     underlying Sanity data (via `getRecentPosts`) to build the daily
- *     newsletter digest.
+ *   - The separately deployed AWS weekly digest, which reads this public feed.
  */
 
-export const dynamic = "force-static";
+// Scheduled publications become visible without a webhook or website deployment.
+// Cache only successful public responses, for at most five minutes at the edge.
+export const dynamic = "force-dynamic";
 
 /**
  * Fetches published posts (i.e. `publishedAt` is set and not in the future)
@@ -24,8 +24,10 @@ async function getPublishedPosts(): Promise<RssArticle[]> {
       defined(slug.current) &&
       defined(publishedAt) &&
       publishedAt <= now() &&
-      !(_id in path('drafts.**'))
-    ] | order(publishedAt desc) [0...50] {
+      !(_id in path('drafts.**')) &&
+      !(_id in path('versions.**'))
+    ] | order(publishedAt desc, _id asc) {
+      _id,
       "slug": slug.current,
       title,
       publishedAt,
@@ -37,8 +39,9 @@ async function getPublishedPosts(): Promise<RssArticle[]> {
       "authorName": author->name
     }`;
 
-  const posts = await client.fetch<RssArticle[]>(query);
-  return posts || [];
+  const posts = await freshClient.fetch<RssArticle[]>(query, {}, { cache: "no-store" });
+  if (!Array.isArray(posts)) throw new Error("Invalid public article response");
+  return posts;
 }
 
 type PublishedPostsLoader = () => Promise<RssArticle[]>;
@@ -54,6 +57,7 @@ export async function createRssResponse(
       status: 200,
       headers: {
         "Content-Type": "application/rss+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=0, s-maxage=300, must-revalidate",
       },
     });
   } catch {
@@ -61,6 +65,7 @@ export async function createRssResponse(
       status: 503,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
       },
     });
   }

@@ -402,53 +402,12 @@ async function verifySignedRevalidationRoute(): Promise<void> {
 }
 
 async function verifyPublishWebhookSharedVerifier(): Promise<void> {
-  const previousWebhookSecret = process.env.SANITY_WEBHOOK_SECRET;
-  process.env.SANITY_WEBHOOK_SECRET = secret;
-
-  try {
-    const response = await publishWebhookPost(
-      await signedRequest(
-        { documentType: "page", becamePublished: true },
-        {
-          "sanity-project-id": projectId,
-          "sanity-dataset": dataset,
-          "idempotency-key": '"newsletter/opaque?attempt=1"',
-        },
-      ),
-    );
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), {
-      status: "skipped",
-      message: "Not a new published post",
-    });
-
-    const bloggerResponse = await bloggerWebhookPost(
-      await signedRequest(
-        { documentType: "post" },
-        {
-          "sanity-project-id": projectId,
-          "sanity-dataset": dataset,
-          "sanity-operation": "delete",
-          "idempotency-key": '"blogger-images/opaque?attempt=1"',
-        },
-      ),
-    );
-    assert.equal(bloggerResponse.status, 200);
-    assert.deepEqual(await bloggerResponse.json(), {
-      status: "skipped",
-      message: "Unsupported document operation",
-    });
-
-    const route = readSource("src/app/api/webhook/sanity/route.ts");
-    assert.match(
-      route,
-      /key: `publication:\$\{documentId\}`/,
-    );
-  } finally {
-    if (previousWebhookSecret === undefined) delete process.env.SANITY_WEBHOOK_SECRET;
-    else process.env.SANITY_WEBHOOK_SECRET = previousWebhookSecret;
+  for (const body of ["{}", "not-json"]) {
+    const response = await publishWebhookPost();
+    assert.equal(response.status, 410, body);
   }
 }
+
 
 function verifyBloggerBoundaries(): void {
   assert.equal(isAllowedBloggerImageUrl("https://images.blogspot.com/a.png"), true);
@@ -494,7 +453,7 @@ async function verifyRouteGuardsAndWriteConfiguration(): Promise<void> {
   delete process.env.SANITY_WEBHOOK_SECRET;
 
   try {
-    for (const handler of [bloggerWebhookPost, publishWebhookPost, revalidatePost]) {
+    for (const handler of [bloggerWebhookPost, revalidatePost]) {
       const response = await handler(
         new Request("https://chronoversecapital.com/api/webhook/test", {
           method: "POST",
@@ -539,28 +498,11 @@ async function verifyRouteGuardsAndWriteConfiguration(): Promise<void> {
 }
 
 async function verifyCronFailsClosed(): Promise<void> {
-  const previous = process.env.CRON_SECRET;
-  delete process.env.CRON_SECRET;
-  try {
-    const response = await newsletterCronGet(
-      new Request("https://chronoversecapital.com/api/cron/send-newsletter"),
-    );
-    assert.equal(response.status, 503);
-
-    process.env.CRON_SECRET = "expected-cron-secret";
-    const unauthorized = await newsletterCronGet(
-      new Request("https://chronoversecapital.com/api/cron/send-newsletter"),
-    );
-    assert.equal(unauthorized.status, 401);
-  } finally {
-    if (previous === undefined) delete process.env.CRON_SECRET;
-    else process.env.CRON_SECRET = previous;
-  }
-
+  assert.equal((await newsletterCronGet()).status, 410);
   const route = readSource("src/app/api/cron/send-newsletter/route.ts");
-  assert.match(route, /Newsletter digest processing failed/);
-  assert.doesNotMatch(route, /Failed to send to \$\{subscriber\.email\}/);
+  assert.doesNotMatch(route, /sendNewsletter|SESClient|createNewsletterStore|process\.env/);
 }
+
 
 function verifyAuthoringContracts(): void {
   const post = readSource("src/sanity/schemaTypes/post.ts");
@@ -590,7 +532,7 @@ function verifyAuthoringContracts(): void {
   }
 
   const schemaRegistry = readSource("src/sanity/schemaTypes/index.ts");
-  for (const schema of ["post", "page", "author", "category", "subscriber", "comment"]) {
+  for (const schema of ["post", "page", "author", "category", "comment"]) {
     assert.match(schemaRegistry, new RegExp(`\\b${schema}\\b`));
   }
 }
@@ -620,28 +562,11 @@ function verifyContentAndSeoSafety(): void {
 
 function verifyPublishWebhookOrdering(): void {
   const route = readSource("src/app/api/webhook/sanity/route.ts");
-  const handler = route.slice(route.indexOf("export async function POST"));
-  const verification = handler.indexOf("verifySanityWebhookRequest");
-  const config = handler.indexOf("getNewsletterConfig", verification);
-  const delivery = handler.indexOf("deliverCampaign", config);
-  assert.ok(verification >= 0 && verification < config && config < delivery);
-  assert.match(route, /verified\.operation !== "create"/);
-  assert.match(route, /documentType !== "post"/);
-  assert.match(route, /becamePublished !== true/);
-  assert.match(route, /documentId\.startsWith\("drafts\."\)/);
-  assert.match(route, /_rev == \$revision/);
-  assert.match(route, /publishedAt <= now\(\)/);
-  assert.match(route, /publication:\$\{documentId\}/);
-  assert.match(route, /result\.complete \? 200 : 503/);
-  assert.doesNotMatch(route, /SUBSCRIBER_EMAILS|fetchActiveSubscribers|console\.error\([^)]*email/);
-  const store = readSource("src/lib/newsletter/store.ts");
-  assert.match(store, /getNewsletterReadClient/);
-  assert.match(store, /getNewsletterWriteClient/);
-  assert.match(store, /ifRevisionId/);
-  const dispatch = readSource("src/lib/newsletter/delivery.ts");
-  assert.match(dispatch, /complete = counts\.failed \+ counts\.unknown \+ counts\.pending === 0/);
-  assert.match(dispatch, /if \(complete && !campaign\.complete\)/);
+  assert.doesNotMatch(route, /verifySanityWebhookRequest|deliverCampaign|SESClient|createNewsletterStore/);
+  assert.match(route, /status: 410/);
+  assert.match(readSource("src/app/api/revalidate/handler.ts"), /verifySanityWebhookRequest/);
 }
+
 
 async function main(): Promise<void> {
   await verifyWebhookSecurity();

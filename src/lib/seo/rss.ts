@@ -2,6 +2,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 import { buildCanonicalUrl } from "@/lib/seo/site-url";
 import { normalizeEditorialArtifacts } from "@/lib/editorialArtifacts";
+import { isReservedRootSlug, validatePublicRootSlug } from "@/lib/content/reservedSlugs";
 
 export const RSS_CHANNEL_TITLE = "Chronoverse Capital";
 export const RSS_CHANNEL_DESCRIPTION =
@@ -18,6 +19,7 @@ const NAMED_HTML_ENTITIES: Readonly<Record<string, string>> = {
 };
 
 export interface RssArticle {
+  readonly _id: string;
   readonly slug: string | null;
   readonly title: string | null;
   readonly publishedAt: string | null;
@@ -30,7 +32,12 @@ export interface RssArticle {
 }
 
 export function escapeXml(value: string): string {
-  return value
+  // XML 1.0 excludes controls, unpaired surrogates and U+FFFE/U+FFFF.
+  return Array.from(value).filter((character) => {
+    const code = character.codePointAt(0)!;
+    return code === 9 || code === 10 || code === 13 ||
+      (code >= 0x20 && code <= 0xd7ff) || (code >= 0xe000 && code <= 0xfffd) || code >= 0x10000;
+  }).join("")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -75,10 +82,10 @@ function decodeHtmlCodePoint(
 export function resolveRssDescription(post: RssArticle): string {
   const authored = normalizeEditorialArtifacts(post.seoDescription || "").trim() ||
     normalizeEditorialArtifacts(post.excerpt || "").trim();
-  if (authored) return authored;
+  if (authored) return legacyHtmlToPlainText(authored);
 
   const bodyText =
-    normalizeEditorialArtifacts(post.bodyPlainText || "").trim() || legacyHtmlToPlainText(post.bodyRaw);
+    legacyHtmlToPlainText(post.bodyPlainText) || legacyHtmlToPlainText(post.bodyRaw);
   if (bodyText.length <= 300) return bodyText;
 
   const candidate = bodyText.slice(0, 301);
@@ -87,22 +94,27 @@ export function resolveRssDescription(post: RssArticle): string {
     .trimEnd();
 }
 
-function validPubDate(value: string): string | undefined {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toUTCString();
-}
-
 export function buildRssXml(
   posts: readonly RssArticle[],
   buildDate: Date = new Date(),
 ): string {
-  const items = posts
+  if (!Array.isArray(posts) || posts.length > 5000) throw new Error("RSS archive exceeds supported size");
+  const ids = new Set<string>();
+  const links = new Set<string>();
+  const eligible = posts.filter((post) =>
+    typeof post._id === "string" && /^[a-zA-Z0-9_.-]+$/.test(post._id) &&
+    !/^(drafts|versions)\./.test(post._id) &&
+    post.slug && validatePublicRootSlug(post.slug) === true && !isReservedRootSlug(post.slug) &&
+    post.title?.trim() && post.publishedAt && Number.isFinite(Date.parse(post.publishedAt)) &&
+    Date.parse(post.publishedAt) <= buildDate.getTime(),
+  ).sort((a, b) => Date.parse(b.publishedAt!) - Date.parse(a.publishedAt!) ||
+    a._id.localeCompare(b._id, "en") || a.slug!.localeCompare(b.slug!, "en"));
+  const items = eligible
     .map((post) => {
-      if (!post.slug || !post.title || !post.publishedAt) return "";
-      const pubDate = validPubDate(post.publishedAt);
-      if (!pubDate) return "";
-
       const link = buildCanonicalUrl(`/${post.slug}`);
+      if (ids.has(post._id) || links.has(link)) return "";
+      ids.add(post._id); links.add(link);
+      const pubDate = new Date(post.publishedAt!).toUTCString();
       const category = post.categoryTitle?.trim()
         ? `\n      <category>${escapeXml(post.categoryTitle.trim())}</category>`
         : "";
@@ -112,16 +124,16 @@ export function buildRssXml(
 
       return `
     <item>
-      <title>${escapeXml(post.title)}</title>
+      <title>${escapeXml(post.title!.trim())}</title>
       <link>${escapeXml(link)}</link>
-      <guid isPermaLink="true">${escapeXml(link)}</guid>
+      <guid isPermaLink="false">urn:chronoverse:article:${escapeXml(post._id)}</guid>
       <pubDate>${pubDate}</pubDate>
       <description>${escapeXml(resolveRssDescription(post))}</description>${category}${creator}
     </item>`;
     })
     .join("");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>${escapeXml(RSS_CHANNEL_TITLE)}</title>
@@ -132,4 +144,7 @@ export function buildRssXml(
     <atom:link href="${RSS_CANONICAL_URL}" rel="self" type="application/rss+xml" />${items}
   </channel>
 </rss>`;
+  // Never silently truncate the archive: AWS needs every still-public backlog item.
+  if (Buffer.byteLength(xml) > 2000000) throw new Error("RSS archive exceeds supported size");
+  return xml;
 }

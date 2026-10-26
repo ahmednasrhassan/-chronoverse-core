@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-25",
+  "decision": "LOCAL IMPLEMENTATION PREPARED; production integration BLOCKED until explicit owner approval",
+  "branch": "master",
+  "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+  "filesChangedThisTask": [
+    ".gitignore"
+  ],
+  "filesCreatedThisTask": [
+    "tools/newsletter-backup/README.md",
+    "tools/newsletter-backup/cli.mjs",
+    "tools/newsletter-backup/config.example.json",
+    "tools/newsletter-backup/iam-readonly.example.json",
+    "tools/newsletter-backup/package-lock.json",
+    "tools/newsletter-backup/package.json",
+    "tools/newsletter-backup/scripts/test.mjs",
+    "tools/newsletter-backup/src/aws.mjs",
+    "tools/newsletter-backup/src/crypto.mjs",
+    "tools/newsletter-backup/src/model.mjs",
+    "tools/newsletter-backup/src/prompt.mjs",
+    "tools/newsletter-backup/src/safe.mjs",
+    "tools/newsletter-backup/src/storage.mjs",
+    "tools/newsletter-backup/src/sync.mjs",
+    "tools/newsletter-backup/test/aws.test.mjs",
+    "tools/newsletter-backup/test/core.test.mjs",
+    "tools/newsletter-backup/test/fixtures.mjs",
+    "tools/newsletter-backup/test/prompt.test.mjs",
+    "tools/newsletter-backup/test/storage.test.mjs",
+    "tools/newsletter-backup/windows-storage.ps1",
+    "docs/newsletter-local-backup-2026-10-25.md",
+    "docs/newsletter-local-backup-inventory-2026-10-25.json"
+  ],
+  "filesDeletedThisTask": [],
+  "hashes": {
+    "tools/newsletter-backup/README.md": "9550e2fdc1bc8105c481635e8a52ee0ab6e69054937a5c30c05fa3eba11fc4c3",
+    "tools/newsletter-backup/cli.mjs": "9c5480cb228b9f90e92d7ceda65a5cf7b92bc05166505f5ef3f5150bc7b2c4e8",
+    "tools/newsletter-backup/config.example.json": "c4bdfdf187da9997a07a235484250f0c35d45f87b118abf55bbe877ba3e44256",
+    "tools/newsletter-backup/iam-readonly.example.json": "dc30c9261bb1bb17b1f114357a4a5416c4ab889325d2e1c6f49eed5734ee3cab",
+    "tools/newsletter-backup/package-lock.json": "ddcf86befc44b39832b1c17e9f4a5198d94f511c5320f0b4fb90decea6bce885",
+    "tools/newsletter-backup/package.json": "5907792f493eb9d88de52a475b4832233d62fb260e59c439edeb80925abdb994",
+    "tools/newsletter-backup/scripts/test.mjs": "4f6a6260b0e6d4c9901777ccecce969e7ce43b2b1a62aa5605b08e8ee1b90976",
+    "tools/newsletter-backup/src/aws.mjs": "d29c0d2563ca14ccaa7dddc2dd10c08e1b3c77f770c44c920bff0d340cfe718a",
+    "tools/newsletter-backup/src/crypto.mjs": "3d660b2e590972c5bd5c8c812128215948be8e5311f17684f8911031e0411960",
+    "tools/newsletter-backup/src/model.mjs": "f48ac705ae58b176e0a6b216d03c59043f151c04179182916f626c8584906fb5",
+    "tools/newsletter-backup/src/prompt.mjs": "abc8ff956193689c05a18b605009a7cb27e124155b28e216d36cbf0a179ebc82",
+    "tools/newsletter-backup/src/safe.mjs": "698a38665b6865c4fdcb5afe6b9fda0e39ee59c4fddf539b13077eb50ce8489f",
+    "tools/newsletter-backup/src/storage.mjs": "e62e5e000a60a07576cf3b53e0ba948a285f5090c97c0138c4305cf05c424c5e",
+    "tools/newsletter-backup/src/sync.mjs": "a2b0b6cfda284fab6cc3525882108820b2df3469c73725368a1e409744e38a4f",
+    "tools/newsletter-backup/test/aws.test.mjs": "772e4d8695fb03632a86416b2d9ee88a897c79162ad2d2b496f7e2b16e49accc",
+    "tools/newsletter-backup/test/core.test.mjs": "db9e501b561bec104ca17eaf346836b91af169970a1032853193e3e7a8dfacc9",
+    "tools/newsletter-backup/test/fixtures.mjs": "8d5d4de02b32eeafc43105c4bd5a9ee645b5c14b42576000b5dd0cd745054e87",
+    "tools/newsletter-backup/test/prompt.test.mjs": "314054a1e32cae1c9b6b9c0640c2101154bb035d8b7db5b7c3359541df692c96",
+    "tools/newsletter-backup/test/storage.test.mjs": "460107c2a4672540ced07cbc24231292ab244f7bc3b47177bc0fe9ed9624deb3",
+    "tools/newsletter-backup/windows-storage.ps1": "033519eb186ed2ecf086350d3cd0be1a12357f441b5ff21bb93cb79070996517",
+    "docs/newsletter-local-backup-2026-10-25.md": "7703963b70fce0670de3bc789159cd92915fea362c7050d96089f8082c6fffd4",
+    ".gitignore": "9787c939508e73e3ed46135c9c867fc0ed281ca243a85e22bbd43f7b1e978a4b"
+  },
+  "backup": {
+    "zip": "E:\\chronoverse-app\\-chronoverse-core-master\\.verification\\newsletter-owner-backup-20261024-201145Z\\before.zip",
+    "sha256": "3f776d4dbfb2a77de27620cc16384d498b69daf9aaf9a1a7db44f940e34a2ba2",
+    "readbackVerifiedFiles": 271
+  },
+  "preservation": {
+    "preexistingUnchangedFiles": 270,
+    "preexistingChangedFiles": [
+      ".gitignore"
+    ],
+    "gitignoreOnlyAddsPrivateExclusions": true,
+    "newsletterServiceAndTemplateUnchanged": true,
+    "websiteSourceFilesUnchanged": 190,
+    "priorReleaseArtifactUnchanged": "E:\\cv-nl-cost-20261024-192828\\packages-release\\newsletter-runtime.zip",
+    "allFiveFlagsFalse": true,
+    "commitsPushesDeployments": 0
+  },
+  "validation": {
+    "utilityTests": {
+      "tests": 44,
+      "pass": 44,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0
+    },
+    "newsletterRegressionTests": 114,
+    "results": {
+      "utility-tests-verified-result": {
+        "exitCode": 0
+      },
+      "utility-lint-final-result": {
+        "exitCode": 0,
+        "files": 14
+      },
+      "newsletter-regressions-result": {
+        "exitCode": 0
+      },
+      "static-checks-result": {
+        "awsCommandsExecuted": false,
+        "parsedGuideBlocks": 4,
+        "parseErrors": [],
+        "helpExitCode": 0
+      },
+      "guide-parse-final-result": {
+        "commandsExecuted": false,
+        "result": "PASS",
+        "errors": [],
+        "powershellBlocks": 4
+      },
+      "cli-help-final-result": {
+        "exitCode": 0
+      },
+      "npm-ls-result": {
+        "exitCode": 0
+      }
+    },
+    "dependencyInstall": [
+      {
+        "check": "npm-lock",
+        "exitCode": 0,
+        "seconds": 168.46
+      },
+      {
+        "check": "npm-ci",
+        "exitCode": 0,
+        "seconds": 77.64
+      }
+    ],
+    "registry": "Public npm only; no lifecycle scripts or audit/fund; approved lockfile saved locally, not Git-committed",
+    "websiteBuildAndSam": "Not repeated: implementation/template and previously verified release artifacts are unchanged."
+  },
+  "architecture": {
+    "type": "Private Windows terminal only; no web listener/browser storage/daemon",
+    "vaultDefault": "%LOCALAPPDATA%\\Chronoverse\\NewsletterBackups",
+    "encryptedFiles": [
+      "vault.cvnb",
+      "snapshot-NNNNNNNN.cvnb",
+      "recovery-UUID.cvnb"
+    ],
+    "plaintextException": "Nonsecret auth/config metadata under owner/SYSTEM ACL; AWS CLI owns its separate temporary cache. No subscriber plaintext files or utility credential files.",
+    "crypto": "AES-256-GCM; scrypt N131072 r8 p1; vault salt32 bytes; IV12 bytes/file; authenticated headers; passphrase prompt only",
+    "retention": "No automatic purge; 100 default snapshots (2-1000 configurable), 128MiB active chain, 64MiB decoded file. Manual suppression-preserving rotation; old archives untouched.",
+    "sync": "Inactive by default; approved manual or explicit hourly completion-relative scheduling only while running; non-overlap; cancellation/drain; errors preserve previous success and pause automation.",
+    "recovery": "Offline verification/restore/manual rotation; encrypted review only; SUPPRESSED/HOLD; zero active imports or cloud writes.",
+    "sourceConsistency": "Read window, not atomic snapshot/PITR; newest opt-outs may postdate observation."
+  },
+  "readActions": [
+    "dynamodb:DescribeTable",
+    "dynamodb:Scan",
+    "ses:GetContactList",
+    "ses:ListContacts",
+    "ses:GetSuppressedDestination",
+    "sts:GetCallerIdentity"
+  ],
+  "authentication": "Isolated console-login or existing SSO profile; temporary expiry/session token and exact assumed role/account validated; no static keys or Secrets Manager. Real authentication not tested.",
+  "additionalRecurringAwsResources": 0,
+  "cloudAccountApiCallsInThisTask": 0,
+  "subscriberRecordsReadOrModified": 0,
+  "emailsSent": 0,
+  "awsUploads": 0,
+  "remainingOwnerGates": [
+    "Review exact dedicated table/list/account/role and effective data-read-only permissions/trust",
+    "Approve supported CLI temporary-role login or existing SSO; no users/keys/Organizations/plan upgrades",
+    "Approve encrypted device/profile, passphrase custody, local/offline retention and provider audit privacy",
+    "Approve synthetic managed-service permission/pacing verification before real reads",
+    "Legacy records, unprocessed feedback and key/unsubscribe continuity remain separate",
+    "Brevo-specific conversion/import/activation and AWS restoration require separate approval"
+  ],
+  "evidenceDirectory": "E:\\chronoverse-app\\-chronoverse-core-master\\.verification\\newsletter-owner-backup-20261024-201145Z",
+  "noRealDataNotice": "All test records and credentials synthetic; actual SDK transport mocked; real AWS source disabled in test environment; no production auth/session/cache/secret retrieval."
+}

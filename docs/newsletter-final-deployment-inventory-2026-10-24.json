@@ -1,0 +1,5651 @@
+{
+  "reportDate": "2026-10-24",
+  "decision": {
+    "local": "PREPARED",
+    "awsProvisioning": "BLOCKED pending metadata preflight and explicit approval",
+    "liveActivation": "BLOCKED pending all operational/safety/compliance gates"
+  },
+  "repository": {
+    "path": "E:\\chronoverse-app\\-chronoverse-core-master",
+    "branch": "master",
+    "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+    "indexAndExistingWork": "Preserved; no Git mutation command performed"
+  },
+  "scope": "Local preparation only; no AWS account API, upload, secret retrieval, live configuration, subscriber read/write, mail, commit, push or deployment.",
+  "ownerConfirmedNotIndependentlyQueried": {
+    "region": "eu-north-1",
+    "domain": "chronoversecapital.com",
+    "sesVerifiedDkimSuccessful": true,
+    "sesProductionEnabled": true,
+    "sesQuotaDaily": 50000,
+    "sesQuotaPerSecond": 14,
+    "accountSuppression": [
+      "BOUNCE",
+      "COMPLAINT"
+    ],
+    "contactListsBeforeProvisioning": 0,
+    "activeStacksBeforeProvisioning": 0,
+    "existingSecretName": "chronoverse/newsletter-v2",
+    "secretProperties": [
+      "capabilityKey",
+      "websiteKey"
+    ],
+    "senderEmail": "info@chronoversecapital.com",
+    "postalAddress": "Selected privately; no address value collected",
+    "accountPlan": "credit-backed Free Plan"
+  },
+  "taskChanges": {
+    "modified": [
+      "services/newsletter/src/domain.mjs",
+      "services/newsletter/package.json",
+      "services/newsletter/package-lock.json",
+      "services/newsletter/template.json",
+      "services/newsletter/README.md"
+    ],
+    "added": [
+      "services/newsletter/test/preparation.test.mjs",
+      "docs/newsletter-owner-deployment-runbook-2026-10-24.md",
+      "docs/newsletter-final-deployment-preparation-2026-10-24.md",
+      "docs/newsletter-final-deployment-inventory-2026-10-24.json"
+    ],
+    "deleted": []
+  },
+  "entireWorkingTreeRelativeToHead": [
+    {
+      "status": " M",
+      "path": ".gitignore",
+      "origin": "pre-existing work",
+      "sha256": "b87d4a9ea9001d9db319d6cc0bf63ada3321db5af774031cb15eb0821c01aa7a"
+    },
+    {
+      "status": " M",
+      "path": "README.md",
+      "origin": "pre-existing work",
+      "sha256": "233d6faaf5843977778ad99849eaa0f33e40fab78c6bb07c41691b52e8aae062"
+    },
+    {
+      "status": " M",
+      "path": "package-lock.json",
+      "origin": "pre-existing work",
+      "sha256": "61edb1954cc36b83253d7babc2d97fcca5c83accc2df39494157560e9201d499"
+    },
+    {
+      "status": " M",
+      "path": "package.json",
+      "origin": "pre-existing work",
+      "sha256": "b00f6cf2379e5cd8e41a7122510f303723607486e95d62216ccfc2f0c00f7844"
+    },
+    {
+      "status": " M",
+      "path": "scripts/tests/run-readiness.mjs",
+      "origin": "pre-existing work",
+      "sha256": "e1eac3da73bcb2c949ac880fe5e951264d0394175133a58dfdf28410c4c8a058"
+    },
+    {
+      "status": " M",
+      "path": "src/app/(site)/privacy-policy/page.tsx",
+      "origin": "pre-existing work",
+      "sha256": "60f68fac989179b16d8933a40da918fa5fafd069224f341782bc5634cb65ea62"
+    },
+    {
+      "status": " M",
+      "path": "src/app/api/cron/send-newsletter/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "5fa3144adcde02b7f65f7674080abd93f9149422ab525e7e976eb081b2746c39"
+    },
+    {
+      "status": " M",
+      "path": "src/app/api/newsletter/feedback/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "cc7caaa4f3a8db1ec70cd77c6eb51627403030771e075139b644e2eeb03c1952"
+    },
+    {
+      "status": " M",
+      "path": "src/app/api/newsletter/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "5e015f12ebd5e44c4dfd811f4d865815dfe8cbfee90e64891c68967a0cc3cc57"
+    },
+    {
+      "status": " M",
+      "path": "src/app/api/newsletter/unsubscribe/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "a83147fa3c18f492752f4765f3cfdf05977f3ab7575157d86cd05a91f8839419"
+    },
+    {
+      "status": " M",
+      "path": "src/app/api/webhook/sanity/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "4d7dc164cbb82992fa85f65fb3d83d2a155de6e2c7f136ce2d27dae9f1536ffc"
+    },
+    {
+      "status": " M",
+      "path": "src/app/newsletter/page.tsx",
+      "origin": "pre-existing work",
+      "sha256": "086cb4dd883d5ca89a8cd2f9070de54eac15d9c3dbfc9bfee4640b85b8e1a0f8"
+    },
+    {
+      "status": " M",
+      "path": "src/app/rss.xml/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "0a967ed1878bce3c4dba5cc57f5bf365210502f1bea5a885cf61355add502ae7"
+    },
+    {
+      "status": " M",
+      "path": "src/app/studio/[[...index]]/page.tsx",
+      "origin": "pre-existing work",
+      "sha256": "6ac843e0c19a5cbc16a49bbfa4ab0458f04c5fe93cad3c334e9504781617c52b"
+    },
+    {
+      "status": " M",
+      "path": "src/components/NewsLetterForm.tsx",
+      "origin": "pre-existing work",
+      "sha256": "8cb211b28f836be1df1c9bcb9cf3724bd7daa1d898e7b68361177b7363c33d94"
+    },
+    {
+      "status": " M",
+      "path": "src/components/tests/newsletterForm.test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "31fd82fdd46c2ac1a2420770a3df8940007c69fd7d2d0c980107d1ab073809f4"
+    },
+    {
+      "status": " M",
+      "path": "src/lib/content/tests/editorialArtifacts.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "b9ca3dc9af0069f8af9f400507d2effc72b23c0ae937f9671a275991d07d2fe1"
+    },
+    {
+      "status": " M",
+      "path": "src/lib/content/tests/sanitization.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "fc09cc653427bf5d042041118d0f41fe4f2e3ad889ce9469e1d5308cef71aaeb"
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/body.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/clients.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/config.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/delivery.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/feedback.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/signup.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/store.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/tokens.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/newsletter/transport.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " M",
+      "path": "src/lib/sanity/tests/hardening.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "c585939e7243e7fad3de365e79e8e7da3d39caa07057e21d988d17907f04b484"
+    },
+    {
+      "status": " D",
+      "path": "src/lib/sanity/tests/newsletter-delivery.test.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/sanity/tests/newsletter-feedback.test.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/sanity/tests/newsletter-fixture.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/sanity/tests/newsletter-routes.test.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " D",
+      "path": "src/lib/sanity/tests/newsletter.test.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " M",
+      "path": "src/lib/seo/rss.ts",
+      "origin": "pre-existing work",
+      "sha256": "b8ddbce4201b3e3f7589d2af08c40ec802d1fa0b5a28bdf42b523db24fe39a9c"
+    },
+    {
+      "status": " M",
+      "path": "src/lib/seo/tests/b8b-failure-and-indexing.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "8d0612a65dffcdc75624c1173d61dfa5f4a5783e4573539d2a99d76dfa262ab3"
+    },
+    {
+      "status": " M",
+      "path": "src/lib/seo/tests/platform-identity.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "c5d91a900ae42dedcbae91d921b36e409be6bf8cd4db0c6b8f093c6527540193"
+    },
+    {
+      "status": " M",
+      "path": "src/lib/seo/tests/rss-contract.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "e23cf87159698d92b4ffa7b7ddf2574621c53d2b4a26474bb74422e824cecd2a"
+    },
+    {
+      "status": " M",
+      "path": "src/sanity/schemaTypes/index.ts",
+      "origin": "pre-existing work",
+      "sha256": "5a5e5dac8bd5213ff102d8bc0fc9ced188fa21f4548abce36140760da351bdb3"
+    },
+    {
+      "status": " D",
+      "path": "src/sanity/schemaTypes/subscriber.ts",
+      "origin": "pre-existing work",
+      "sha256": null
+    },
+    {
+      "status": " M",
+      "path": "vercel.json",
+      "origin": "pre-existing work",
+      "sha256": "d4d52e25558e56319226bfaf1658cf45dd98dd318155075101d9936f388aca89"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-aws-file-inventory-2026-10-24.json",
+      "origin": "pre-existing work",
+      "sha256": "74591f6760f0017f7e2f02b90389549ff6306f1a709f91cebf98f97f46eac268"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-aws-owner-guide-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "0ac6c849c08e001122813651152376d32f4ebae759adba8488bba1b6dcc5a993"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-aws-rebuild-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "ccd301ef6bd96d6ac8fac0c68a96ca27bc991e3dd7eac2d42f7e1ea4ad79d167"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-aws-stockholm-deployment-readiness-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "d9c620fab6cade2c162464d38f8243028f5a35c9d8dc47d95054f35040d0dc48"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-confirmation-safety-fix-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "01b66a09eb2af55a843b17f4419b85852c4be8b825bb78a4a1b6ff62464ff277"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-final-deployment-inventory-2026-10-24.json",
+      "origin": "current-task",
+      "sha256": null,
+      "hashNote": "Self hash omitted; final hash stored in ignored evidence."
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-final-deployment-preparation-2026-10-24.md",
+      "origin": "current-task",
+      "sha256": "97647756b5f70a97b501dd28e4434a0aa13d1d18110ea82b4e624dcc97c5cbae"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-owner-deployment-runbook-2026-10-24.md",
+      "origin": "current-task",
+      "sha256": "3ec1c61f7ea5f65408c8f347f067f53c8b35f56ece533fdb055aa62e75ce27aa"
+    },
+    {
+      "status": "??",
+      "path": "docs/newsletter-rss-discovery-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "29233f33041eef5cb96ca1b076da7506c6a2cb5c12b2b75697143e974e03d5f2"
+    },
+    {
+      "status": "??",
+      "path": "docs/phase-1-p0-remediation-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "f6cb2c8f78a46723a5f594e8268e70dffc20f88ec7348fd50ea35165105a9b6f"
+    },
+    {
+      "status": "??",
+      "path": "docs/post-release-quality-audit-2026-10-24-evidence.json",
+      "origin": "pre-existing work",
+      "sha256": "f714a2b5b2adce3eae6d23386e19801d3533b7c4fd9ac8c29914c98a1d9fa2d9"
+    },
+    {
+      "status": "??",
+      "path": "docs/post-release-quality-audit-2026-10-24.md",
+      "origin": "pre-existing work",
+      "sha256": "096c55bff6f10c55cfc9a5db5509329490b13eb4d6fd9e2db6f4644910068679"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/README.md",
+      "origin": "current-task",
+      "sha256": "2a86d7d8af4e093126fb07b77b8a961af9865e3b1c8c09b109be2b179a79966e"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/package-lock.json",
+      "origin": "current-task",
+      "sha256": "7619255b164dfcc36a983743490ddcdca051b21b621912c3bbda11f0ddc92af3"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/package.json",
+      "origin": "current-task",
+      "sha256": "a7ba9f50749ece6cf922ca80085ab35afb3fca20e6299cdce74cffeab2e4fd32"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/scripts/check.mjs",
+      "origin": "pre-existing work",
+      "sha256": "896d1920a39e23e4e2c9110abf2ef9b7a4e2be7b3001d4222f226835232813ba"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/scripts/import.mjs",
+      "origin": "pre-existing work",
+      "sha256": "85f9a8a2aa9b3781ca2d43cf0d86d3738c43e2ca5471081a5b459844c138426b"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/scripts/test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "0e571c6579828af42656232aff570fe621bf2e1cba341c844d14ff4adc312911"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/aws.mjs",
+      "origin": "pre-existing work",
+      "sha256": "dce8b09424fea81fd93aa59584b8018bd55d8505e8f53455e846c7f201b2862a"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/discovery.mjs",
+      "origin": "pre-existing work",
+      "sha256": "b22447442534a81c75f0e814940dcbdaf6cd53f013eeb05062ca997bf5ef0a79"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/domain.mjs",
+      "origin": "current-task",
+      "sha256": "17e256a9a610ee2773971ab743f07bdb9f0e99e8500229255077eb8c1fb4b389"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/handlers.mjs",
+      "origin": "pre-existing work",
+      "sha256": "ce2c24cd834a8c3da2610cccfe44e8553546033c8415d8a515aded738076f8f4"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/migration.mjs",
+      "origin": "pre-existing work",
+      "sha256": "3440d5f34e96d3ea243473d569182aecb7f55b0e00815f815fcf96ab718c498e"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/rss.mjs",
+      "origin": "pre-existing work",
+      "sha256": "a22fba6b9cd57d2c3fe697fdb7e829042af81e855c208782ce9af021c8be2ecb"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/src/service.mjs",
+      "origin": "pre-existing work",
+      "sha256": "6b08357ff8ed5fe813d0de09adbfd0714f0c1d9ec51d32f873e870a55da6d72c"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/template.json",
+      "origin": "current-task",
+      "sha256": "78b9117a0c4a9d9216c10d73a107b4d6b320c97e6040635860b707dbe9ba677d"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/adapters.test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "6bcb41eaab26d3f2869a1d0c66277ca6c8b68ea02a8af4a036aa61dc77383d0d"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/confirmation.test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "57a49b83f0fefbefb9aef3d739a5d868bc4fa8a360a53778783136595be1de2e"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/discovery.test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "8e90152358702beb1b51be5d3b86e75d3740e2491ed483d29c52405dde94b30b"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/fixture.mjs",
+      "origin": "pre-existing work",
+      "sha256": "7e7fa12ca44b84e608f1e56d5e4ec4cf7518deaecf8fdf2e6587dc30c00793c6"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/preparation.test.mjs",
+      "origin": "current-task",
+      "sha256": "4536dc3ddb19f7ef0a3406b4cfe92f3436f715c7c6f8278a0b1838c7a9d1cfc4"
+    },
+    {
+      "status": "??",
+      "path": "services/newsletter/test/system.test.mjs",
+      "origin": "pre-existing work",
+      "sha256": "21522a21dccb7ca19a785416dab04495af9f88a159af38c40ebda6d9cf1cdc59"
+    },
+    {
+      "status": "??",
+      "path": "src/app/api/newsletter/confirm/route.ts",
+      "origin": "pre-existing work",
+      "sha256": "0c927f29f4c315caaa7c718478177d6946a9d238a7cfd90288b5372df2df1fe8"
+    },
+    {
+      "status": "??",
+      "path": "src/lib/newsletterAws/bridge.ts",
+      "origin": "pre-existing work",
+      "sha256": "08208e9dd9efafb7671dfb14e03564fdf62ff65c82c51877d069f37650382537"
+    },
+    {
+      "status": "??",
+      "path": "src/lib/sanity/tests/newsletter-aws.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "67e5cffc1dea58a8235d3638adab91db184e6809f14b59c86bfdd50519af710a"
+    },
+    {
+      "status": "??",
+      "path": "src/lib/seo/tests/rss-discovery.test.ts",
+      "origin": "pre-existing work",
+      "sha256": "72da4bb91210d9d85a055539f9a6fb475d4eaa73bd3362ee481e5445156cbd4c"
+    }
+  ],
+  "preservation": {
+    "result": "PASS",
+    "backupFilesVerified": 262,
+    "changedFromTaskStart": [
+      "services/newsletter/README.md",
+      "services/newsletter/package-lock.json",
+      "services/newsletter/package.json",
+      "services/newsletter/src/domain.mjs",
+      "services/newsletter/template.json"
+    ],
+    "missingFromTaskStart": [],
+    "unchangedFilesFromTaskStart": 257,
+    "websiteAndConfigFilesComparedWithPreviousSuccessfulBuild": 201,
+    "websiteBuildTypecheckFullLint": "Reused previous RSS preparation PASS, not rerun this task; compared exact file hashes.",
+    "unchangedCriticalModules": [
+      "aws.mjs (including atomic confirm persistence)",
+      "service.mjs",
+      "rss.mjs",
+      "discovery.mjs",
+      "test/confirmation.test.mjs"
+    ],
+    "head": "dea9254fb82b90076671d58e884dd58ba61eb1eb",
+    "awsGuardProcesses": 6,
+    "awsApiAttempts": 0,
+    "pythonSocketAttempts": 0,
+    "releaseArtifactHashesVerified": true,
+    "stagedSourcesMatchRepository": true,
+    "noPreviousFileDeleted": true
+  },
+  "artifacts": {
+    "result": "PASS",
+    "zip": "E:\\cv-nl-20261024-154636\\packages\\newsletter-runtime.zip",
+    "sha256": "7db7e373c9090ed880caf11ad4f35f76a3a43715bb0379447a3549ae6b8487d5",
+    "compressedBytes": 4187495,
+    "uncompressedBytes": 12435296,
+    "files": 4123,
+    "sharedByFunctions": {
+      "ApiFunction": "src/handlers.api",
+      "PlannerFunction": "src/handlers.planner",
+      "WorkerFunction": "src/handlers.worker",
+      "FeedbackFunction": "src/handlers.feedback",
+      "ContactSyncFunction": "src/handlers.contacts"
+    },
+    "allFiveSamBuildTreesIdentical": true,
+    "runtimeFiles": [
+      "aws.mjs",
+      "domain.mjs",
+      "handlers.mjs",
+      "rss.mjs",
+      "service.mjs",
+      "discovery.mjs"
+    ],
+    "thirdPartyDependencies": "Only production npm dependencies from the corrected pinned lockfile",
+    "excludedNonRuntimeFiles": [
+      "node_modules/.bin/fxparser",
+      "node_modules/.bin/fxparser.cmd",
+      "node_modules/.bin/fxparser.ps1",
+      "package-lock.json"
+    ],
+    "nativeBinaries": [],
+    "firstPartyDevPrivateOrSubscriberFilesIncluded": false,
+    "releaseTemplate": "E:\\cv-nl-20261024-154636\\release-template.json",
+    "releaseTemplateSha256": "c3169c67e07d6cd7330ffdda93427cdfb5ee3558d7dba6c977ad53f66cac97f6",
+    "sourceLockSha256": "7619255b164dfcc36a983743490ddcdca051b21b621912c3bbda11f0ddc92af3"
+  },
+  "artifactLocations": {
+    "localRoot": "E:\\cv-nl-20261024-154636",
+    "build": "E:\\cv-nl-20261024-154636\\build1",
+    "allowlistedSource": "E:\\cv-nl-20261024-154636\\source-release",
+    "isolatedSamTools": "E:\\cv-nl-20261024-154636\\sam",
+    "evidence": "E:\\chronoverse-app\\-chronoverse-core-master\\.verification\\newsletter-final-preparation-20261024-154636Z"
+  },
+  "externalResourcesNotCreatedByTemplate": {
+    "sesIdentity": "Existing owner-confirmed verified identity, supplied by IdentityArn",
+    "secret": "Existing dedicated secret, supplied by full SecretsArn; no values retrieved",
+    "artifactBucket": "Owner-approved Stockholm S3 bucket required; no bucket selected/created/uploaded",
+    "cloudFormationExecutionRole": "Owner-approved existing scoped role required; separate approval if it must be created",
+    "alarmDestination": "Optional existing operational SNS ARN, empty by default"
+  },
+  "secretContract": {
+    "required": [
+      "capabilityKey",
+      "websiteKey"
+    ],
+    "optional": [
+      "legacyV1Key only if original key is verified"
+    ],
+    "extraProperties": "Not used as credentials; no strict extra-field rejection",
+    "verification": "Mocked transport only; actual values never fetched",
+    "kms": "Customer-managed key requires reviewed scoped decrypt/key-policy permissions; not supplied by this template"
+  },
+  "parameters": {
+    "SecretsArn": {
+      "Type": "String",
+      "Description": "Existing dedicated Secrets Manager secret ARN: capabilityKey, websiteKey, optional original legacyV1Key"
+    },
+    "SenderEmail": {
+      "Type": "String",
+      "AllowedPattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "IdentityArn": {
+      "Type": "String",
+      "Description": "Existing verified SES domain identity ARN; not created or modified by this stack"
+    },
+    "PostalAddress": {
+      "Type": "String",
+      "NoEcho": true,
+      "MinLength": 1,
+      "MaxLength": 500,
+      "Description": "Approved lawful public business mailing address only"
+    },
+    "DeliveryEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "RegistrationEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "ConfirmationEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "LegacyDispatchRetired": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "ComplianceApproved": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "AlarmTopicArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Optional existing operational SNS topic; stack creates no email subscription"
+    }
+  },
+  "conditions": {
+    "HasAlarmTopic": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AlarmTopicArn"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "DigestMaySend": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeliveryEnabled"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ComplianceApproved"
+            },
+            "true"
+          ]
+        }
+      ]
+    },
+    "ConfirmationMaySend": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "RegistrationEnabled"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ConfirmationEnabled"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ComplianceApproved"
+            },
+            "true"
+          ]
+        }
+      ]
+    },
+    "AnyMailMaySend": {
+      "Fn::Or": [
+        {
+          "Condition": "DigestMaySend"
+        },
+        {
+          "Condition": "ConfirmationMaySend"
+        }
+      ]
+    }
+  },
+  "globals": {
+    "Function": {
+      "Runtime": "nodejs22.x",
+      "Architectures": [
+        "arm64"
+      ],
+      "CodeUri": ".",
+      "MemorySize": 256,
+      "Timeout": 60,
+      "Environment": {
+        "Variables": {
+          "TABLE_NAME": {
+            "Ref": "Ledger"
+          },
+          "TABLE_STREAM_ARN": {
+            "Fn::GetAtt": [
+              "Ledger",
+              "StreamArn"
+            ]
+          },
+          "SECRETS_ARN": {
+            "Ref": "SecretsArn"
+          },
+          "SENDER_EMAIL": {
+            "Ref": "SenderEmail"
+          },
+          "POSTAL_ADDRESS": {
+            "Ref": "PostalAddress"
+          },
+          "CONTACT_LIST": {
+            "Ref": "Contacts"
+          },
+          "CONFIGURATION_SET": {
+            "Ref": "Configuration"
+          },
+          "FEEDBACK_TOPIC_ARN": {
+            "Ref": "FeedbackTopic"
+          },
+          "PLAN_QUEUE_URL": {
+            "Ref": "PlanQueue"
+          },
+          "PLAN_QUEUE_ARN": {
+            "Fn::GetAtt": [
+              "PlanQueue",
+              "Arn"
+            ]
+          },
+          "DIGEST_QUEUE_URL": {
+            "Ref": "DigestQueue"
+          },
+          "DIGEST_QUEUE_ARN": {
+            "Fn::GetAtt": [
+              "DigestQueue",
+              "Arn"
+            ]
+          },
+          "FEEDBACK_QUEUE_ARN": {
+            "Fn::GetAtt": [
+              "FeedbackQueue",
+              "Arn"
+            ]
+          },
+          "DELIVERY_ENABLED": {
+            "Ref": "DeliveryEnabled"
+          },
+          "REGISTRATION_ENABLED": {
+            "Ref": "RegistrationEnabled"
+          },
+          "CONFIRMATION_ENABLED": {
+            "Ref": "ConfirmationEnabled"
+          },
+          "LEGACY_DISPATCH_RETIRED": {
+            "Ref": "LegacyDispatchRetired"
+          },
+          "COMPLIANCE_APPROVED": {
+            "Ref": "ComplianceApproved"
+          }
+        }
+      }
+    }
+  },
+  "outputs": {
+    "ApiUrl": {
+      "Value": {
+        "Fn::Sub": "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+      }
+    },
+    "LedgerName": {
+      "Value": {
+        "Ref": "Ledger"
+      }
+    },
+    "ContactListName": {
+      "Value": {
+        "Ref": "Contacts"
+      }
+    },
+    "ConfigurationSetName": {
+      "Value": {
+        "Ref": "Configuration"
+      }
+    },
+    "FeedbackTopicArn": {
+      "Value": {
+        "Ref": "FeedbackTopic"
+      }
+    },
+    "FailureQueueUrl": {
+      "Value": {
+        "Ref": "FailureQueue"
+      }
+    }
+  },
+  "authoredResources": [
+    {
+      "logicalId": "Ledger",
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "DeletionProtectionEnabled": true,
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "pk",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "audienceKey",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "pk",
+            "KeyType": "HASH"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "Audience",
+            "KeySchema": [
+              {
+                "AttributeName": "audienceKey",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "pk",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "SSESpecification": {
+          "SSEEnabled": true
+        },
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "StreamSpecification": {
+          "StreamViewType": "KEYS_ONLY"
+        },
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true
+        }
+      }
+    },
+    {
+      "logicalId": "Contacts",
+      "Type": "AWS::SES::ContactList",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "ContactListName": {
+          "Fn::Sub": "${AWS::StackName}-weekly"
+        },
+        "Topics": [
+          {
+            "TopicName": "weekly-research",
+            "DisplayName": "Weekly research",
+            "Description": "Up to ten published research articles weekly",
+            "DefaultSubscriptionStatus": "OPT_OUT"
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "Configuration",
+      "Type": "AWS::SES::ConfigurationSet",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-events"
+        },
+        "ReputationOptions": {
+          "ReputationMetricsEnabled": true
+        },
+        "SendingOptions": {
+          "SendingEnabled": {
+            "Fn::If": [
+              "AnyMailMaySend",
+              true,
+              false
+            ]
+          }
+        },
+        "SuppressionOptions": {
+          "SuppressedReasons": [
+            "BOUNCE",
+            "COMPLAINT"
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FailureQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    {
+      "logicalId": "PlanQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "DigestQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackTopic",
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "DisplayName": "Chronoverse newsletter feedback"
+      }
+    },
+    {
+      "logicalId": "FeedbackTopicPolicy",
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "Topics": [
+          {
+            "Ref": "FeedbackTopic"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ses.amazonaws.com"
+              },
+              "Action": "sns:Publish",
+              "Resource": {
+                "Ref": "FeedbackTopic"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackQueuePolicy",
+      "Type": "AWS::SQS::QueuePolicy",
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "FeedbackQueue"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com"
+              },
+              "Action": "sqs:SendMessage",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FeedbackQueue",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Ref": "FeedbackTopic"
+                  }
+                },
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackSubscription",
+      "Type": "AWS::SNS::Subscription",
+      "DependsOn": [
+        "FeedbackQueuePolicy"
+      ],
+      "Properties": {
+        "Protocol": "sqs",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "FeedbackQueue",
+            "Arn"
+          ]
+        },
+        "TopicArn": {
+          "Ref": "FeedbackTopic"
+        },
+        "RawMessageDelivery": false
+      }
+    },
+    {
+      "logicalId": "EventDestination",
+      "Type": "AWS::SES::ConfigurationSetEventDestination",
+      "DependsOn": [
+        "FeedbackTopicPolicy",
+        "FeedbackSubscription"
+      ],
+      "Properties": {
+        "ConfigurationSetName": {
+          "Ref": "Configuration"
+        },
+        "EventDestination": {
+          "Name": "newsletter-safety",
+          "Enabled": true,
+          "MatchingEventTypes": [
+            "BOUNCE",
+            "COMPLAINT",
+            "DELIVERY",
+            "REJECT",
+            "RENDERING_FAILURE",
+            "DELIVERY_DELAY",
+            "SUBSCRIPTION"
+          ],
+          "SnsDestination": {
+            "TopicARN": {
+              "Ref": "FeedbackTopic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "logicalId": "ApiLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-api"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "ApiRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ApiLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:ConditionCheckItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "ConfirmationMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "ApiFunction",
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-api"
+        },
+        "Handler": "src/handlers.api",
+        "Role": {
+          "Fn::GetAtt": [
+            "ApiRole",
+            "Arn"
+          ]
+        },
+        "ReservedConcurrentExecutions": 2,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ApiLogs"
+          },
+          "LogFormat": "JSON"
+        },
+        "Events": {
+          "subscribe": {
+            "Type": "HttpApi",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "Path": "/subscribe",
+              "Method": "POST",
+              "PayloadFormatVersion": "2.0"
+            }
+          },
+          "confirm": {
+            "Type": "HttpApi",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "Path": "/confirm",
+              "Method": "POST",
+              "PayloadFormatVersion": "2.0"
+            }
+          },
+          "unsubscribe": {
+            "Type": "HttpApi",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "Path": "/unsubscribe",
+              "Method": "POST",
+              "PayloadFormatVersion": "2.0"
+            }
+          }
+        }
+      },
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      }
+    },
+    {
+      "logicalId": "ApiErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ApiFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-planner"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "PlannerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlannerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  },
+                  "Condition": {
+                    "ForAllValues:StringLike": {
+                      "dynamodb:LeadingKeys": [
+                        "ARTICLE#*",
+                        "ARTICLE_URL#*",
+                        "CAMPAIGN#*"
+                      ]
+                    },
+                    "Null": {
+                      "dynamodb:LeadingKeys": "false"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:Query"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Ledger",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Sub": "${Ledger.Arn}/index/Audience"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "DigestQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlanQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "PlannerFunction",
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-planner"
+        },
+        "Handler": "src/handlers.planner",
+        "Role": {
+          "Fn::GetAtt": [
+            "PlannerRole",
+            "Arn"
+          ]
+        },
+        "ReservedConcurrentExecutions": 2,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "PlannerLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      },
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "PlannerFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-worker"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "WorkerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "WorkerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "DigestMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "DigestQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "WorkerFunction",
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-worker"
+        },
+        "Handler": "src/handlers.worker",
+        "Role": {
+          "Fn::GetAtt": [
+            "WorkerRole",
+            "Arn"
+          ]
+        },
+        "ReservedConcurrentExecutions": 1,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "WorkerLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      },
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "WorkerFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-feedback"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "FeedbackRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "FeedbackFunction",
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-feedback"
+        },
+        "Handler": "src/handlers.feedback",
+        "Role": {
+          "Fn::GetAtt": [
+            "FeedbackRole",
+            "Arn"
+          ]
+        },
+        "ReservedConcurrentExecutions": 2,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "FeedbackLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      },
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "FeedbackFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ContactSyncLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-contacts"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "ContactSyncRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ContactSyncLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact",
+                    "ses:CreateContact",
+                    "ses:UpdateContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "StreamArn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FailureQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "ContactSyncFunction",
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-contacts"
+        },
+        "Handler": "src/handlers.contacts",
+        "Role": {
+          "Fn::GetAtt": [
+            "ContactSyncRole",
+            "Arn"
+          ]
+        },
+        "ReservedConcurrentExecutions": 2,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ContactSyncLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      },
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      }
+    },
+    {
+      "logicalId": "ContactSyncErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ContactSyncFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "HttpApi",
+      "Type": "AWS::Serverless::HttpApi",
+      "Properties": {
+        "StageName": "$default",
+        "DefaultRouteSettings": {
+          "ThrottlingBurstLimit": 5,
+          "ThrottlingRateLimit": 2
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "PlanQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "PlannerFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": {
+          "Fn::If": [
+            "DigestMaySend",
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "DigestQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "WorkerFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": {
+          "Fn::If": [
+            "DigestMaySend",
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "FeedbackQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "FeedbackFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": true
+      }
+    },
+    {
+      "logicalId": "ContactsMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "Ledger",
+            "StreamArn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "ContactSyncFunction"
+        },
+        "StartingPosition": "TRIM_HORIZON",
+        "BatchSize": 10,
+        "BisectBatchOnFunctionError": true,
+        "MaximumRetryAttempts": 5,
+        "MaximumRecordAgeInSeconds": 86400,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "DestinationConfig": {
+          "OnFailure": {
+            "Destination": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "FilterCriteria": {
+          "Filters": [
+            {
+              "Pattern": "{\"eventName\":[\"INSERT\",\"MODIFY\"],\"dynamodb\":{\"Keys\":{\"pk\":{\"S\":[{\"prefix\":\"SUB#\"}]}}}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "SchedulerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "queue-weekly-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "FailureQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "WeeklySchedule",
+      "Type": "AWS::Scheduler::Schedule",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-weekly"
+        },
+        "ScheduleExpression": "cron(0 9 ? * MON *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF"
+        },
+        "State": {
+          "Fn::If": [
+            "DigestMaySend",
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        "Target": {
+          "Arn": {
+            "Fn::GetAtt": [
+              "PlanQueue",
+              "Arn"
+            ]
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "SchedulerRole",
+              "Arn"
+            ]
+          },
+          "Input": "{\"kind\":\"weekly\"}",
+          "DeadLetterConfig": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "Arn"
+              ]
+            }
+          },
+          "RetryPolicy": {
+            "MaximumEventAgeInSeconds": 3600,
+            "MaximumRetryAttempts": 3
+          }
+        }
+      }
+    },
+    {
+      "logicalId": "DeadLetterAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/SQS",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "QueueName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "HeldAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "Held",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "ApiFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ProviderFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "ProviderFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "QueueProcessingFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "QueueProcessingFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ThrottledAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "Throttled",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "runtimeRoleTrustAndPolicies": [
+    {
+      "logicalId": "ApiRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ApiLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:ConditionCheckItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "ConfirmationMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "PlannerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlannerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  },
+                  "Condition": {
+                    "ForAllValues:StringLike": {
+                      "dynamodb:LeadingKeys": [
+                        "ARTICLE#*",
+                        "ARTICLE_URL#*",
+                        "CAMPAIGN#*"
+                      ]
+                    },
+                    "Null": {
+                      "dynamodb:LeadingKeys": "false"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:Query"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Ledger",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Sub": "${Ledger.Arn}/index/Audience"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "DigestQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlanQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "WorkerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "WorkerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "DigestMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "DigestQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "FeedbackRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "ContactSyncRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ContactSyncLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact",
+                    "ses:CreateContact",
+                    "ses:UpdateContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "StreamArn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FailureQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "SchedulerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "queue-weekly-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "FailureQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "localTranslatedResources": [
+    {
+      "logicalId": "Ledger",
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "DeletionProtectionEnabled": true,
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "pk",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "audienceKey",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "pk",
+            "KeyType": "HASH"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "Audience",
+            "KeySchema": [
+              {
+                "AttributeName": "audienceKey",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "pk",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "SSESpecification": {
+          "SSEEnabled": true
+        },
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "StreamSpecification": {
+          "StreamViewType": "KEYS_ONLY"
+        },
+        "TimeToLiveSpecification": {
+          "AttributeName": "expiresAt",
+          "Enabled": true
+        }
+      }
+    },
+    {
+      "logicalId": "Contacts",
+      "Type": "AWS::SES::ContactList",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "ContactListName": {
+          "Fn::Sub": "${AWS::StackName}-weekly"
+        },
+        "Topics": [
+          {
+            "TopicName": "weekly-research",
+            "DisplayName": "Weekly research",
+            "Description": "Up to ten published research articles weekly",
+            "DefaultSubscriptionStatus": "OPT_OUT"
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "Configuration",
+      "Type": "AWS::SES::ConfigurationSet",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-events"
+        },
+        "ReputationOptions": {
+          "ReputationMetricsEnabled": true
+        },
+        "SendingOptions": {
+          "SendingEnabled": {
+            "Fn::If": [
+              "AnyMailMaySend",
+              true,
+              false
+            ]
+          }
+        },
+        "SuppressionOptions": {
+          "SuppressedReasons": [
+            "BOUNCE",
+            "COMPLAINT"
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FailureQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    {
+      "logicalId": "PlanQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "DigestQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackQueue",
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600,
+        "VisibilityTimeout": 360,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "FailureQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackTopic",
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "DisplayName": "Chronoverse newsletter feedback"
+      }
+    },
+    {
+      "logicalId": "FeedbackTopicPolicy",
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "Topics": [
+          {
+            "Ref": "FeedbackTopic"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ses.amazonaws.com"
+              },
+              "Action": "sns:Publish",
+              "Resource": {
+                "Ref": "FeedbackTopic"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackQueuePolicy",
+      "Type": "AWS::SQS::QueuePolicy",
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "FeedbackQueue"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com"
+              },
+              "Action": "sqs:SendMessage",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FeedbackQueue",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Ref": "FeedbackTopic"
+                  }
+                },
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackSubscription",
+      "Type": "AWS::SNS::Subscription",
+      "DependsOn": [
+        "FeedbackQueuePolicy"
+      ],
+      "Properties": {
+        "Protocol": "sqs",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "FeedbackQueue",
+            "Arn"
+          ]
+        },
+        "TopicArn": {
+          "Ref": "FeedbackTopic"
+        },
+        "RawMessageDelivery": false
+      }
+    },
+    {
+      "logicalId": "EventDestination",
+      "Type": "AWS::SES::ConfigurationSetEventDestination",
+      "DependsOn": [
+        "FeedbackTopicPolicy",
+        "FeedbackSubscription"
+      ],
+      "Properties": {
+        "ConfigurationSetName": {
+          "Ref": "Configuration"
+        },
+        "EventDestination": {
+          "Name": "newsletter-safety",
+          "Enabled": true,
+          "MatchingEventTypes": [
+            "BOUNCE",
+            "COMPLAINT",
+            "DELIVERY",
+            "REJECT",
+            "RENDERING_FAILURE",
+            "DELIVERY_DELAY",
+            "SUBSCRIPTION"
+          ],
+          "SnsDestination": {
+            "TopicARN": {
+              "Ref": "FeedbackTopic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "logicalId": "ApiLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-api"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "ApiRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ApiLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:ConditionCheckItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "ConfirmationMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "ApiErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ApiFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-planner"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "PlannerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlannerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  },
+                  "Condition": {
+                    "ForAllValues:StringLike": {
+                      "dynamodb:LeadingKeys": [
+                        "ARTICLE#*",
+                        "ARTICLE_URL#*",
+                        "CAMPAIGN#*"
+                      ]
+                    },
+                    "Null": {
+                      "dynamodb:LeadingKeys": "false"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:Query"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Ledger",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Sub": "${Ledger.Arn}/index/Audience"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "DigestQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "PlanQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "PlannerErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "PlannerFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-worker"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "WorkerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "WorkerLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": {
+                    "Ref": "SecretsArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "DigestMaySend",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ses:SendEmail"
+                      ],
+                      "Resource": [
+                        {
+                          "Ref": "IdentityArn"
+                        },
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${Configuration}"
+                        }
+                      ],
+                      "Condition": {
+                        "StringEquals": {
+                          "ses:FromAddress": {
+                            "Ref": "SenderEmail"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "DigestQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "WorkerErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "WorkerFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-feedback"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "FeedbackRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FeedbackQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "FeedbackErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "FeedbackFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ContactSyncLogs",
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-contacts"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "logicalId": "ContactSyncRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "newsletter-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "ContactSyncLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetContact",
+                    "ses:CreateContact",
+                    "ses:UpdateContact"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/${Contacts}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:GetSuppressedDestination"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                    "StringEquals": {
+                      "aws:RequestedRegion": {
+                        "Ref": "AWS::Region"
+                      }
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Ledger",
+                      "StreamArn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FailureQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "ContactSyncErrorAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Errors",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "ContactSyncFunction"
+            }
+          }
+        ],
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "PlanQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "PlannerFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": {
+          "Fn::If": [
+            "DigestMaySend",
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "DigestQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "WorkerFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": {
+          "Fn::If": [
+            "DigestMaySend",
+            true,
+            false
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "FeedbackQueue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "FeedbackFunction"
+        },
+        "BatchSize": 1,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": true
+      }
+    },
+    {
+      "logicalId": "ContactsMapping",
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "Ledger",
+            "StreamArn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "ContactSyncFunction"
+        },
+        "StartingPosition": "TRIM_HORIZON",
+        "BatchSize": 10,
+        "BisectBatchOnFunctionError": true,
+        "MaximumRetryAttempts": 5,
+        "MaximumRecordAgeInSeconds": 86400,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "DestinationConfig": {
+          "OnFailure": {
+            "Destination": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "FilterCriteria": {
+          "Filters": [
+            {
+              "Pattern": "{\"eventName\":[\"INSERT\",\"MODIFY\"],\"dynamodb\":{\"Keys\":{\"pk\":{\"S\":[{\"prefix\":\"SUB#\"}]}}}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "SchedulerRole",
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "queue-weekly-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "PlanQueue",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "FailureQueue",
+                        "Arn"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "logicalId": "WeeklySchedule",
+      "Type": "AWS::Scheduler::Schedule",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-weekly"
+        },
+        "ScheduleExpression": "cron(0 9 ? * MON *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF"
+        },
+        "State": {
+          "Fn::If": [
+            "DigestMaySend",
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        "Target": {
+          "Arn": {
+            "Fn::GetAtt": [
+              "PlanQueue",
+              "Arn"
+            ]
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "SchedulerRole",
+              "Arn"
+            ]
+          },
+          "Input": "{\"kind\":\"weekly\"}",
+          "DeadLetterConfig": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "Arn"
+              ]
+            }
+          },
+          "RetryPolicy": {
+            "MaximumEventAgeInSeconds": 3600,
+            "MaximumRetryAttempts": 3
+          }
+        }
+      }
+    },
+    {
+      "logicalId": "DeadLetterAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/SQS",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "QueueName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "HeldAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "Held",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "ApiFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ProviderFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "ProviderFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "QueueProcessingFailureAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "QueueProcessingFailure",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ThrottledAlarm",
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "Chronoverse/Newsletter",
+        "MetricName": "Throttled",
+        "Statistic": "Sum",
+        "Period": 300,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": {
+          "Fn::If": [
+            "HasAlarmTopic",
+            [
+              {
+                "Ref": "AlarmTopicArn"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFunction",
+      "Type": "AWS::Lambda::Function",
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        },
+        "SamResourceId": "ApiFunction"
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "synthetic-inventory-only-not-deployed",
+          "S3Key": "newsletter-runtime.zip"
+        },
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-api"
+        },
+        "Handler": "src/handlers.api",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ApiRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Ledger"
+            },
+            "TABLE_STREAM_ARN": {
+              "Fn::GetAtt": [
+                "Ledger",
+                "StreamArn"
+              ]
+            },
+            "SECRETS_ARN": {
+              "Ref": "SecretsArn"
+            },
+            "SENDER_EMAIL": {
+              "Ref": "SenderEmail"
+            },
+            "POSTAL_ADDRESS": {
+              "Ref": "PostalAddress"
+            },
+            "CONTACT_LIST": {
+              "Ref": "Contacts"
+            },
+            "CONFIGURATION_SET": {
+              "Ref": "Configuration"
+            },
+            "FEEDBACK_TOPIC_ARN": {
+              "Ref": "FeedbackTopic"
+            },
+            "PLAN_QUEUE_URL": {
+              "Ref": "PlanQueue"
+            },
+            "PLAN_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "PlanQueue",
+                "Arn"
+              ]
+            },
+            "DIGEST_QUEUE_URL": {
+              "Ref": "DigestQueue"
+            },
+            "DIGEST_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "DigestQueue",
+                "Arn"
+              ]
+            },
+            "FEEDBACK_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "FeedbackQueue",
+                "Arn"
+              ]
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 2,
+        "Architectures": [
+          "arm64"
+        ],
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ApiLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFunctionconfirmPermission",
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ApiFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/confirm",
+            {
+              "__ApiId__": {
+                "Ref": "HttpApi"
+              },
+              "__Stage__": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFunctionsubscribePermission",
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ApiFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/subscribe",
+            {
+              "__ApiId__": {
+                "Ref": "HttpApi"
+              },
+              "__Stage__": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "ApiFunctionunsubscribePermission",
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ApiFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/POST/unsubscribe",
+            {
+              "__ApiId__": {
+                "Ref": "HttpApi"
+              },
+              "__Stage__": "*"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "PlannerFunction",
+      "Type": "AWS::Lambda::Function",
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        },
+        "SamResourceId": "PlannerFunction"
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "synthetic-inventory-only-not-deployed",
+          "S3Key": "newsletter-runtime.zip"
+        },
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-planner"
+        },
+        "Handler": "src/handlers.planner",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "PlannerRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Ledger"
+            },
+            "TABLE_STREAM_ARN": {
+              "Fn::GetAtt": [
+                "Ledger",
+                "StreamArn"
+              ]
+            },
+            "SECRETS_ARN": {
+              "Ref": "SecretsArn"
+            },
+            "SENDER_EMAIL": {
+              "Ref": "SenderEmail"
+            },
+            "POSTAL_ADDRESS": {
+              "Ref": "PostalAddress"
+            },
+            "CONTACT_LIST": {
+              "Ref": "Contacts"
+            },
+            "CONFIGURATION_SET": {
+              "Ref": "Configuration"
+            },
+            "FEEDBACK_TOPIC_ARN": {
+              "Ref": "FeedbackTopic"
+            },
+            "PLAN_QUEUE_URL": {
+              "Ref": "PlanQueue"
+            },
+            "PLAN_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "PlanQueue",
+                "Arn"
+              ]
+            },
+            "DIGEST_QUEUE_URL": {
+              "Ref": "DigestQueue"
+            },
+            "DIGEST_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "DigestQueue",
+                "Arn"
+              ]
+            },
+            "FEEDBACK_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "FeedbackQueue",
+                "Arn"
+              ]
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 2,
+        "Architectures": [
+          "arm64"
+        ],
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "PlannerLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    {
+      "logicalId": "WorkerFunction",
+      "Type": "AWS::Lambda::Function",
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        },
+        "SamResourceId": "WorkerFunction"
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "synthetic-inventory-only-not-deployed",
+          "S3Key": "newsletter-runtime.zip"
+        },
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-worker"
+        },
+        "Handler": "src/handlers.worker",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "WorkerRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Ledger"
+            },
+            "TABLE_STREAM_ARN": {
+              "Fn::GetAtt": [
+                "Ledger",
+                "StreamArn"
+              ]
+            },
+            "SECRETS_ARN": {
+              "Ref": "SecretsArn"
+            },
+            "SENDER_EMAIL": {
+              "Ref": "SenderEmail"
+            },
+            "POSTAL_ADDRESS": {
+              "Ref": "PostalAddress"
+            },
+            "CONTACT_LIST": {
+              "Ref": "Contacts"
+            },
+            "CONFIGURATION_SET": {
+              "Ref": "Configuration"
+            },
+            "FEEDBACK_TOPIC_ARN": {
+              "Ref": "FeedbackTopic"
+            },
+            "PLAN_QUEUE_URL": {
+              "Ref": "PlanQueue"
+            },
+            "PLAN_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "PlanQueue",
+                "Arn"
+              ]
+            },
+            "DIGEST_QUEUE_URL": {
+              "Ref": "DigestQueue"
+            },
+            "DIGEST_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "DigestQueue",
+                "Arn"
+              ]
+            },
+            "FEEDBACK_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "FeedbackQueue",
+                "Arn"
+              ]
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 1,
+        "Architectures": [
+          "arm64"
+        ],
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "WorkerLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    {
+      "logicalId": "FeedbackFunction",
+      "Type": "AWS::Lambda::Function",
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        },
+        "SamResourceId": "FeedbackFunction"
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "synthetic-inventory-only-not-deployed",
+          "S3Key": "newsletter-runtime.zip"
+        },
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-feedback"
+        },
+        "Handler": "src/handlers.feedback",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "FeedbackRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Ledger"
+            },
+            "TABLE_STREAM_ARN": {
+              "Fn::GetAtt": [
+                "Ledger",
+                "StreamArn"
+              ]
+            },
+            "SECRETS_ARN": {
+              "Ref": "SecretsArn"
+            },
+            "SENDER_EMAIL": {
+              "Ref": "SenderEmail"
+            },
+            "POSTAL_ADDRESS": {
+              "Ref": "PostalAddress"
+            },
+            "CONTACT_LIST": {
+              "Ref": "Contacts"
+            },
+            "CONFIGURATION_SET": {
+              "Ref": "Configuration"
+            },
+            "FEEDBACK_TOPIC_ARN": {
+              "Ref": "FeedbackTopic"
+            },
+            "PLAN_QUEUE_URL": {
+              "Ref": "PlanQueue"
+            },
+            "PLAN_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "PlanQueue",
+                "Arn"
+              ]
+            },
+            "DIGEST_QUEUE_URL": {
+              "Ref": "DigestQueue"
+            },
+            "DIGEST_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "DigestQueue",
+                "Arn"
+              ]
+            },
+            "FEEDBACK_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "FeedbackQueue",
+                "Arn"
+              ]
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 2,
+        "Architectures": [
+          "arm64"
+        ],
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "FeedbackLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    {
+      "logicalId": "ContactSyncFunction",
+      "Type": "AWS::Lambda::Function",
+      "Metadata": {
+        "BuildProperties": {
+          "UseNpmCi": true
+        },
+        "SamResourceId": "ContactSyncFunction"
+      },
+      "Properties": {
+        "Code": {
+          "S3Bucket": "synthetic-inventory-only-not-deployed",
+          "S3Key": "newsletter-runtime.zip"
+        },
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-contacts"
+        },
+        "Handler": "src/handlers.contacts",
+        "MemorySize": 256,
+        "Role": {
+          "Fn::GetAtt": [
+            "ContactSyncRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs22.x",
+        "Timeout": 60,
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "Ledger"
+            },
+            "TABLE_STREAM_ARN": {
+              "Fn::GetAtt": [
+                "Ledger",
+                "StreamArn"
+              ]
+            },
+            "SECRETS_ARN": {
+              "Ref": "SecretsArn"
+            },
+            "SENDER_EMAIL": {
+              "Ref": "SenderEmail"
+            },
+            "POSTAL_ADDRESS": {
+              "Ref": "PostalAddress"
+            },
+            "CONTACT_LIST": {
+              "Ref": "Contacts"
+            },
+            "CONFIGURATION_SET": {
+              "Ref": "Configuration"
+            },
+            "FEEDBACK_TOPIC_ARN": {
+              "Ref": "FeedbackTopic"
+            },
+            "PLAN_QUEUE_URL": {
+              "Ref": "PlanQueue"
+            },
+            "PLAN_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "PlanQueue",
+                "Arn"
+              ]
+            },
+            "DIGEST_QUEUE_URL": {
+              "Ref": "DigestQueue"
+            },
+            "DIGEST_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "DigestQueue",
+                "Arn"
+              ]
+            },
+            "FEEDBACK_QUEUE_ARN": {
+              "Fn::GetAtt": [
+                "FeedbackQueue",
+                "Arn"
+              ]
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            }
+          }
+        },
+        "Tags": [
+          {
+            "Key": "lambda:createdBy",
+            "Value": "SAM"
+          }
+        ],
+        "ReservedConcurrentExecutions": 2,
+        "Architectures": [
+          "arm64"
+        ],
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "ContactSyncLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    {
+      "logicalId": "HttpApi",
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Body": {
+          "info": {
+            "version": "1.0",
+            "title": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          "paths": {
+            "/subscribe": {
+              "post": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations"
+                  },
+                  "payloadFormatVersion": "2.0"
+                },
+                "responses": {}
+              }
+            },
+            "/confirm": {
+              "post": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations"
+                  },
+                  "payloadFormatVersion": "2.0"
+                },
+                "responses": {}
+              }
+            },
+            "/unsubscribe": {
+              "post": {
+                "x-amazon-apigateway-integration": {
+                  "httpMethod": "POST",
+                  "type": "aws_proxy",
+                  "uri": {
+                    "Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations"
+                  },
+                  "payloadFormatVersion": "2.0"
+                },
+                "responses": {}
+              }
+            }
+          },
+          "openapi": "3.0.1",
+          "tags": [
+            {
+              "name": "httpapi:createdBy",
+              "x-amazon-apigateway-tag-value": "SAM"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "logicalId": "HttpApiApiGatewayDefaultStage",
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "DefaultRouteSettings": {
+          "ThrottlingBurstLimit": 5,
+          "ThrottlingRateLimit": 2
+        },
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "Tags": {
+          "httpapi:createdBy": "SAM"
+        },
+        "AutoDeploy": true
+      }
+    }
+  ],
+  "translationWarning": "INVENTORY ONLY: synthetic S3 location, not an upload or deployable release. Actual managed change set remains authoritative.",
+  "samGeneratedResourceIds": [
+    "ApiFunctionconfirmPermission",
+    "ApiFunctionsubscribePermission",
+    "ApiFunctionunsubscribePermission",
+    "HttpApiApiGatewayDefaultStage"
+  ],
+  "resourceSummary": {
+    "authoredResources": 45,
+    "processedResourcesLocal": 49,
+    "conditionsChecked": 32,
+    "default": {
+      "parameters": {
+        "DeliveryEnabled": "false",
+        "RegistrationEnabled": "false",
+        "ConfirmationEnabled": "false",
+        "LegacyDispatchRetired": "false",
+        "ComplianceApproved": "false"
+      },
+      "mailRoles": [],
+      "scheduler": "DISABLED",
+      "sesConfigurationSending": false
+    },
+    "roles": [
+      {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-api"
+        },
+        "ReservedConcurrentExecutions": 2,
+        "Handler": "src/handlers.api"
+      },
+      {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-planner"
+        },
+        "ReservedConcurrentExecutions": 2,
+        "Handler": "src/handlers.planner"
+      },
+      {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-worker"
+        },
+        "ReservedConcurrentExecutions": 1,
+        "Handler": "src/handlers.worker"
+      },
+      {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-feedback"
+        },
+        "ReservedConcurrentExecutions": 2,
+        "Handler": "src/handlers.feedback"
+      },
+      {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-contacts"
+        },
+        "ReservedConcurrentExecutions": 2,
+        "Handler": "src/handlers.contacts"
+      }
+    ],
+    "resourceTypes": {
+      "AWS::DynamoDB::Table": 1,
+      "AWS::SES::ContactList": 1,
+      "AWS::SES::ConfigurationSet": 1,
+      "AWS::SQS::Queue": 4,
+      "AWS::SNS::Topic": 1,
+      "AWS::SNS::TopicPolicy": 1,
+      "AWS::SQS::QueuePolicy": 1,
+      "AWS::SNS::Subscription": 1,
+      "AWS::SES::ConfigurationSetEventDestination": 1,
+      "AWS::Logs::LogGroup": 5,
+      "AWS::IAM::Role": 6,
+      "AWS::CloudWatch::Alarm": 11,
+      "AWS::Lambda::EventSourceMapping": 4,
+      "AWS::Scheduler::Schedule": 1,
+      "AWS::Lambda::Function": 5,
+      "AWS::Lambda::Permission": 3,
+      "AWS::ApiGatewayV2::Api": 1,
+      "AWS::ApiGatewayV2::Stage": 1
+    }
+  },
+  "tests": {
+    "date": "2026-10-24T16:02:09.215Z",
+    "node": "v22.23.4",
+    "platform": "win32",
+    "groups": [
+      {
+        "name": "safety",
+        "files": 2,
+        "deferred": [],
+        "code": 0,
+        "signal": null,
+        "tests": 10,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 47689
+      },
+      {
+        "name": "auth",
+        "files": 8,
+        "deferred": [],
+        "code": 0,
+        "signal": null,
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 178142
+      },
+      {
+        "name": "public",
+        "files": 29,
+        "deferred": [],
+        "code": 0,
+        "signal": null,
+        "tests": 79,
+        "pass": 79,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 273390
+      },
+      {
+        "name": "content",
+        "files": 8,
+        "deferred": [],
+        "code": 0,
+        "signal": null,
+        "tests": 24,
+        "pass": 24,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 38876
+      },
+      {
+        "name": "newsletter",
+        "files": 5,
+        "deferred": [],
+        "code": 0,
+        "signal": null,
+        "tests": 92,
+        "pass": 92,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "durationMs": 56240
+      }
+    ]
+  },
+  "checkResults": {
+    "release-build-results": [
+      {
+        "check": "npm-ci-release",
+        "exitCode": 0,
+        "seconds": 33.82
+      },
+      {
+        "check": "npm-ls-release",
+        "exitCode": 0,
+        "seconds": 2.36
+      },
+      {
+        "check": "sam-build",
+        "exitCode": 0,
+        "seconds": 68.64,
+        "output": "E:\\cv-nl-20261024-154636\\build1"
+      }
+    ],
+    "sam-release-validate-result": {
+      "exitCode": 0,
+      "seconds": 22.15,
+      "template": "E:\\cv-nl-20261024-154636\\release-template.json"
+    },
+    "sam-validation-results": [
+      {
+        "check": "sam-version",
+        "exitCode": 0,
+        "seconds": 46.37
+      },
+      {
+        "check": "sam-validate",
+        "exitCode": 0,
+        "seconds": 219.84
+      }
+    ],
+    "focused-lint-result": {
+      "exitCode": 0,
+      "seconds": 241.88
+    },
+    "built-dependencies-tests-result": {
+      "exitCode": 0,
+      "seconds": 15.5,
+      "dependencyTree": "Actual SAM-built ApiFunction/node_modules",
+      "node": "22.23.4"
+    },
+    "artifact-smoke-result": {
+      "exitCode": 0,
+      "seconds": 11.8
+    },
+    "all-regressions-result": {
+      "exitCode": 0,
+      "seconds": 604.87,
+      "node": "node-v22.23.4-win-x64"
+    },
+    "final-local-checks": {
+      "serviceSyntaxAndInfrastructureInvariants": "PASS",
+      "gitDiffCheck": "PASS; existing CRLF normalization warnings only"
+    }
+  },
+  "costAssessment": {
+    "source": "See report and public-stockholm-price-evidence.json; gross usage estimates, not account bills",
+    "disabledMonthlyUsd": [
+      1,
+      4
+    ],
+    "active1000MonthlyBudgetUsd": [
+      4,
+      10
+    ],
+    "active10000MonthlyBudgetUsd": [
+      10,
+      20
+    ],
+    "hypothetical100000MonthlyBudgetUsd": [
+      79,
+      102
+    ],
+    "capacityWarning": "100k audience not currently operationally approved; quota/design review required",
+    "freePlan": "No inherent paid-account requirement established; actual service access/credits/expiry/quotas unverified. Account closure threatens unsubscribe continuity. No upgrade authorized."
+  },
+  "remainingBlockers": [
+    "Approve account metadata preflight; require current unreserved Lambda concurrency >=109",
+    "Verify exact existing secret ARN/encryption metadata without value access",
+    "Approve artifact bucket and scoped CloudFormation permissions",
+    "Approve package upload and actual change-set creation/review/execution separately",
+    "Synthetic managed-service validation, no real mail",
+    "Historical suppression/unsubscribe recovery and containment of old immutable senders",
+    "Website RSS/management release and effective public routes",
+    "Operational alarms, account/credit continuity, lawful identity/address/consent readiness"
+  ],
+  "nextAwsActionRequiringApproval": "aws lambda get-account-settings --region eu-north-1 --query AccountLimit --output json --no-cli-pager",
+  "firstResourceWrite": "Separately approved artifact bucket creation only if no approved bucket exists; then approved sam package upload; no command executed."
+}

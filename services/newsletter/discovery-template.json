@@ -1,0 +1,570 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "Disabled publication-only companion for the existing Newsletter ledger, S3 object and failure queue. No mail permissions or public endpoint.",
+  "Parameters": {
+    "DeliveryEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "RegistrationEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "ConfirmationEnabled": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "LegacyDispatchRetired": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "ComplianceApproved": {
+      "Type": "String",
+      "Default": "false",
+      "AllowedValues": [
+        "false",
+        "true"
+      ]
+    },
+    "ExistingLedgerName": {
+      "Type": "String",
+      "AllowedPattern": "[A-Za-z0-9_.-]{3,255}"
+    },
+    "FailureQueueArn": {
+      "Type": "String",
+      "AllowedPattern": "arn:aws:sqs:eu-north-1:[0-9]{12}:[A-Za-z0-9_-]+"
+    },
+    "ContentBucket": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$"
+    },
+    "ContentManifestKey": {
+      "Type": "String",
+      "Default": "newsletter-content/approved.json",
+      "AllowedPattern": "^[A-Za-z0-9][A-Za-z0-9/_.-]{0,400}$"
+    },
+    "SanityProjectId": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^[a-z0-9]{1,30}$"
+    },
+    "SanityDataset": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^[a-z0-9][a-z0-9_-]{0,31}$"
+    },
+    "ArticleOrigin": {
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^$|^https://[a-z0-9-]+(?:\\.[a-z0-9-]+)+$"
+    }
+  },
+  "Conditions": {
+    "HasSource": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "ContentBucket"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "SanityProjectId"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "SanityDataset"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "ArticleOrigin"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "MayDiscover": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DeliveryEnabled"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "true"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ComplianceApproved"
+            },
+            "true"
+          ]
+        },
+        {
+          "Condition": "HasSource"
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "DiscoveryLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${AWS::StackName}-publications"
+        },
+        "RetentionInDays": 14
+      }
+    },
+    "DiscoveryRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "publication-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "DiscoveryLogs",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Fn::If": [
+                    "MayDiscover",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "dynamodb:GetItem"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExistingLedgerName}"
+                      },
+                      "Condition": {
+                        "ForAllValues:StringLike": {
+                          "dynamodb:LeadingKeys": [
+                            "CONTROL",
+                            "PUBLICATION#*",
+                            "ARTICLE#*"
+                          ]
+                        },
+                        "Null": {
+                          "dynamodb:LeadingKeys": "false"
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "MayDiscover",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "dynamodb:PutItem"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExistingLedgerName}"
+                      },
+                      "Condition": {
+                        "ForAllValues:StringLike": {
+                          "dynamodb:LeadingKeys": [
+                            "PUBLICATION#*",
+                            "DISCOVERY"
+                          ]
+                        },
+                        "Null": {
+                          "dynamodb:LeadingKeys": "false"
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "MayDiscover",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:GetObject"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": "arn:${AWS::Partition}:s3:::${ContentBucket}/${ContentManifestKey}"
+                      },
+                      "Condition": {
+                        "StringEquals": {
+                          "s3:ResourceAccount": {
+                            "Ref": "AWS::AccountId"
+                          }
+                        },
+                        "Bool": {
+                          "aws:SecureTransport": "true"
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "MayDiscover",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:PutObject"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": "arn:${AWS::Partition}:s3:::${ContentBucket}/${ContentManifestKey}"
+                      },
+                      "Condition": {
+                        "StringEquals": {
+                          "s3:ResourceAccount": {
+                            "Ref": "AWS::AccountId"
+                          },
+                          "s3:x-amz-server-side-encryption": "AES256"
+                        },
+                        "Bool": {
+                          "aws:SecureTransport": "true"
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Fn::If": [
+                    "MayDiscover",
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:GetBucketVersioning"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": "arn:${AWS::Partition}:s3:::${ContentBucket}"
+                      },
+                      "Condition": {
+                        "StringEquals": {
+                          "s3:ResourceAccount": {
+                            "Ref": "AWS::AccountId"
+                          }
+                        },
+                        "Bool": {
+                          "aws:SecureTransport": "true"
+                        }
+                      }
+                    },
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Ref": "FailureQueueArn"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DiscoveryFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "BuildMethod": "nodejs22.x",
+        "BuildProperties": {
+          "UseNpmCi": true
+        }
+      },
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-publications"
+        },
+        "Handler": "src/discovery-handler.discover",
+        "Runtime": "nodejs22.x",
+        "Architectures": [
+          "arm64"
+        ],
+        "Timeout": 120,
+        "MemorySize": 256,
+        "CodeUri": ".",
+        "Role": {
+          "Fn::GetAtt": [
+            "DiscoveryRole",
+            "Arn"
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "ExistingLedgerName"
+            },
+            "CONTENT_BUCKET": {
+              "Ref": "ContentBucket"
+            },
+            "CONTENT_MANIFEST_KEY": {
+              "Ref": "ContentManifestKey"
+            },
+            "SANITY_PROJECT_ID": {
+              "Ref": "SanityProjectId"
+            },
+            "SANITY_DATASET": {
+              "Ref": "SanityDataset"
+            },
+            "ARTICLE_ORIGIN": {
+              "Ref": "ArticleOrigin"
+            },
+            "DELIVERY_ENABLED": {
+              "Ref": "DeliveryEnabled"
+            },
+            "REGISTRATION_ENABLED": {
+              "Ref": "RegistrationEnabled"
+            },
+            "CONFIRMATION_ENABLED": {
+              "Ref": "ConfirmationEnabled"
+            },
+            "LEGACY_DISPATCH_RETIRED": {
+              "Ref": "LegacyDispatchRetired"
+            },
+            "COMPLIANCE_APPROVED": {
+              "Ref": "ComplianceApproved"
+            },
+            "CONTENT_BUCKET_OWNER": {
+              "Ref": "AWS::AccountId"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "DiscoveryLogs"
+          },
+          "LogFormat": "JSON"
+        }
+      }
+    },
+    "DiscoveryInvokeConfig": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "DiscoveryFunction"
+        },
+        "Qualifier": "$LATEST",
+        "MaximumEventAgeInSeconds": 3600,
+        "MaximumRetryAttempts": 2,
+        "DestinationConfig": {
+          "OnFailure": {
+            "Destination": {
+              "Ref": "FailureQueueArn"
+            }
+          }
+        }
+      }
+    },
+    "DiscoverySchedulerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule-group/default"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": {
+          "Fn::If": [
+            "MayDiscover",
+            [
+              {
+                "PolicyName": "discovery-invoke",
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "lambda:InvokeFunction"
+                      ],
+                      "Resource": {
+                        "Fn::GetAtt": [
+                          "DiscoveryFunction",
+                          "Arn"
+                        ]
+                      }
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "sqs:SendMessage"
+                      ],
+                      "Resource": {
+                        "Ref": "FailureQueueArn"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "DailyDiscovery": {
+      "Type": "AWS::Scheduler::Schedule",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-daily-publications"
+        },
+        "ScheduleExpression": "cron(0 9 * * ? *)",
+        "ScheduleExpressionTimezone": "UTC",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF"
+        },
+        "State": {
+          "Fn::If": [
+            "MayDiscover",
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        "Target": {
+          "Arn": {
+            "Fn::GetAtt": [
+              "DiscoveryFunction",
+              "Arn"
+            ]
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "DiscoverySchedulerRole",
+              "Arn"
+            ]
+          },
+          "Input": "{\"kind\":\"sanity-discovery\"}",
+          "DeadLetterConfig": {
+            "Arn": {
+              "Ref": "FailureQueueArn"
+            }
+          },
+          "RetryPolicy": {
+            "MaximumEventAgeInSeconds": 3600,
+            "MaximumRetryAttempts": 2
+          }
+        }
+      }
+    }
+  }
+}

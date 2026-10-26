@@ -62,13 +62,13 @@ test("public newsletter signup stays paused and retained forms preserve persiste
               requests += 1;
               assert.equal(url, "/api/newsletter");
               assert.equal(options.method, "POST");
-              assert.deepEqual(JSON.parse(options.body), { email: "Reader@Example.Test" });
+              assert.deepEqual(JSON.parse(options.body), { email: "Reader@Example.Test", consent: true });
               return new Promise((resolve, reject) => {
                 complete = () => {
                   if (result === "network-error") reject(new Error("offline"));
                   else if (result === "non-json") resolve(new Response("unavailable", { status: 502 }));
                   else resolve(Response.json(
-                    result === "success" ? { status: "success" } : result === "invalid-success" ? {} : { status: "error" },
+                    result === "success" ? { status: "pending" } : result === "invalid-success" ? {} : { status: "error" },
                     { status: result === "service-error" ? 503 : 200 },
                   ));
                 };
@@ -79,6 +79,9 @@ test("public newsletter signup stays paused and retained forms preserve persiste
               setValue.call(input, "Reader@Example.Test");
               input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
             });
+            await act(async () => { form.dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true })); });
+            assert.equal(requests, 0, "explicit consent is required");
+            await act(async () => { container.querySelector("input[type=checkbox]").click(); });
             await act(async () => { form.dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true })); });
             assert.equal(requests, 1);
             assert.equal(button.disabled, true);
@@ -91,7 +94,7 @@ test("public newsletter signup stays paused and retained forms preserve persiste
             assert.ok(feedback);
             assert.equal(feedback.getAttribute("aria-live"), "polite");
             if (result === "success") {
-              assert.match(feedback.textContent, /You're subscribed/);
+              assert.match(feedback.textContent, /check your inbox and confirm/);
               assert.equal(input.value, "");
             } else {
               assert.match(feedback.textContent, /could not be completed|Network error/);
