@@ -7,6 +7,26 @@ export const FEED = `${ORIGIN}/rss.xml`;
 export const TOPIC = "weekly-research";
 export const CONSENT_VERSION = "weekly-research-v1";
 export const CONSENT_TEXT = "I agree to receive the free weekly Chronoverse Capital research newsletter. I can unsubscribe at any time.";
+export const ENROLLMENT_POLICY = "aws-fresh-double-opt-in-2026-10-27-v1";
+export const SUPPORT_EMAIL = "info@chronoversecapital.com";
+export const FORWARD_ONLY_STATUS = "HISTORICAL_RECOVERY_UNRESOLVED";
+export function audienceInitializationReady(control) {
+  return control?.migrationComplete === true || (control?.forwardOnlyReady === true &&
+    control.forwardOnlyPolicy === ENROLLMENT_POLICY && control.historicalRecoveryStatus === FORWARD_ONLY_STATUS &&
+    /^[a-f0-9]{64}$/.test(control.forwardOnlyReceipt || ""));
+}
+export function pendingEnrollment(record) {
+  return record?.state === "PENDING" && record.enrollmentPolicy === ENROLLMENT_POLICY &&
+    record.consentVersion === CONSENT_VERSION && record.consentText === CONSENT_TEXT &&
+    Number.isSafeInteger(record.requestedAt) && record.requestedAt >= 0 && /^[A-Za-z0-9_-]{32}$/.test(record.confirmationNonce || "");
+}
+export function campaignEligible(record) {
+  return record?.state === "CONFIRMED" && record.confirmedPolicy === ENROLLMENT_POLICY &&
+    record.awsConsentVersion === CONSENT_VERSION && record.awsConsentText === CONSENT_TEXT &&
+    Number.isSafeInteger(record.awsRequestedAt) && record.awsRequestedAt >= 0 && Number.isSafeInteger(record.confirmedAt) && record.confirmedAt >= record.awsRequestedAt &&
+    /^[A-Za-z0-9_-]{32}$/.test(record.confirmedRequestNonce || "") && /^[A-Za-z0-9_-]{32}$/.test(record.unsubscribeNonce || "") &&
+    record.suppressedAt === undefined && record.suppressionReason === undefined;
+}
 export const hash = value => createHash("sha256").update(value).digest("hex");
 export function emailAddress(value) {
   if (typeof value !== "string") throw new Error("invalid_input");
@@ -68,7 +88,7 @@ export function assertConfirmationAllowed(env, control) {
       env.LEGACY_DISPATCH_RETIRED !== "true" || env.COMPLIANCE_APPROVED !== "true" ||
       control?.registrationEnabled !== true || control?.confirmationEnabled !== true ||
       control?.legacyRetired !== true || control?.complianceApproved !== true ||
-      control?.migrationComplete !== true) throw new Error("sending_paused");
+      !audienceInitializationReady(control)) throw new Error("sending_paused");
 }
 export function assertMailAllowed(env, control, kind) {
   // A durable confirmation pause also stops new confirmation emails. Require
@@ -76,7 +96,7 @@ export function assertMailAllowed(env, control, kind) {
   if (kind === "confirmation") assertConfirmationAllowed(env, control);
   if (!["digest", "confirmation"].includes(kind) || env.LEGACY_DISPATCH_RETIRED !== "true" || env.COMPLIANCE_APPROVED !== "true" ||
       !control || control.legacyRetired !== true || control.complianceApproved !== true ||
-      (kind === "digest" && (env.DELIVERY_ENABLED !== "true" || control.deliveryEnabled !== true || control.migrationComplete !== true || control.contentSourceApproved !== true)) ||
+      (kind === "digest" && (env.DELIVERY_ENABLED !== "true" || control.deliveryEnabled !== true || !audienceInitializationReady(control) || control.contentSourceApproved !== true)) ||
       (kind === "confirmation" && (env.REGISTRATION_ENABLED !== "true" || env.CONFIRMATION_ENABLED !== "true" || control.registrationEnabled !== true)) ||
       !env.SENDER_EMAIL || emailAddress(env.SENDER_EMAIL) !== env.SENDER_EMAIL ||
       !env.POSTAL_ADDRESS?.trim() || /[\r\n\x00]/.test(env.POSTAL_ADDRESS) || env.POSTAL_ADDRESS.length > 500 ||

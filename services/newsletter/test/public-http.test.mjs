@@ -123,7 +123,8 @@ test("public flows preserve provider/ledger suppression and disabled registratio
   for (const state of ["SUPPRESSED", "HOLD", "provider"]) {
     const f = fixture(), email = "new@example.test", id = subscriberId(email);
     if (state === "provider") f.state.suppressed.add(email); else f.state.documents.set(`SUB#${id}`, { pk: `SUB#${id}`, id, email, state });
-    assert.equal((await register(f)).statusCode, 202); assert.equal(f.state.sends.length, 0);
+    assert.equal((await register(f)).statusCode, 202); assert.equal(f.state.sends.length, state === "HOLD" ? 1 : 0);
+    if (state === "HOLD") { assert.equal(f.state.documents.get(`SUB#${id}`).state, "HOLD"); assert.equal(f.state.documents.get(`RENEW#${id}`).state, "PENDING"); }
   }
   const f = fixture(); f.env.REGISTRATION_ENABLED = "false";
   assert.equal((await register(f)).statusCode, 503); assert.equal(f.state.sends.length, 0); assert.equal(f.state.rates.size, 0);
@@ -185,7 +186,7 @@ test("AWS public legacy unsubscribe preserves original-key continuity and never 
   const token = "v1." + Buffer.concat([iv, cipher.getAuthTag(), bytes]).toString("base64url");
   const originalKey = f.keys.legacyV1Key; delete f.keys.legacyV1Key; delete f.keys.websiteKey;
   const event = request(f, "/unsubscribe", "POST", "List-Unsubscribe=One-Click", { rawQueryString: `token=${token}`, headers: { "content-type": "application/x-www-form-urlencoded" } });
-  assert.equal((await f.service.api(event)).statusCode, 503); assert.equal(f.state.documents.has(`SUB#${id}`), false);
+  assert.equal((await f.service.api(event)).statusCode, 410); assert.match((await f.service.api(event)).body, /cannot decrypt|cannot|unavailable/i); assert.equal(f.state.documents.has(`SUB#${id}`), false);
   f.keys.legacyV1Key = originalKey;
   assert.equal((await f.service.api(event)).statusCode, 200); assert.equal(f.state.documents.get(`SUB#${id}`).state, "SUPPRESSED");
   assert.equal(f.state.sends.length, 0);

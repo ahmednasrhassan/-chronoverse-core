@@ -135,7 +135,7 @@ async function verifyFeedRedirectAndQueryBoundary(): Promise<void> {
     "https://chronoversecapital.com/rss.xml",
   );
 
-  const rssSource = readSource("src/app/rss.xml/route.ts");
+  const rssSource = readSource("src/lib/seo/rss-response.ts");
   const feedSource = readSource("src/app/feed.xml/route.ts");
   assert.match(rssSource, /defined\(publishedAt\)/);
   assert.match(rssSource, /publishedAt <= now\(\)/);

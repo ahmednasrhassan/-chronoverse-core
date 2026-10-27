@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { buildArchiveMetadata } from "@/app/(site)/archive/page";
 import {
+  buildArchiveMetadata,
   buildCategoryMetadataV1,
   requirePopulatedCategoryV1,
-} from "@/app/(site)/category/[slug]/page";
+} from "@/lib/seo/collection-pages";
 import { metadata as reportsMetadata } from "@/app/(site)/reports/page";
 import type { CategoryPageContentV1, ContentItem } from "@/lib/content";
 

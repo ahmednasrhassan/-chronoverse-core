@@ -77,11 +77,11 @@ test("repeated requests with forged identity remain inert", async () => {
   }
 });
 
-test("newsletter clients keep their independent signup endpoint", () => {
+test("newsletter clients use AWS registration and do not revive website admission routes", () => {
   const root = new URL("../../../../../", import.meta.url);
   for (const path of ["src/components/NewsLetterForm.tsx", "src/app/newsletter/page.tsx"]) {
     const client = readFileSync(new URL(path, root), "utf8");
-    assert.match(client, /fetch\("\/api\/newsletter"/);
-    assert.doesNotMatch(client, /\/api\/amazon/);
+    assert.match(client, /AwsNewsletterRegistration/);
+    assert.doesNotMatch(client, /fetch\(|\/api\/amazon|\/api\/newsletter/);
   }
 });

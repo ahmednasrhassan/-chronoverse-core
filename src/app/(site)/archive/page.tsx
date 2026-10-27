@@ -1,36 +1,13 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+import { buildArchiveMetadata } from "@/lib/seo/collection-pages";
 import {
   getArchivePage,
   parseArchivePage,
   type ArchivePost,
 } from "@/lib/archive";
 import { DEFAULT_CATEGORY, DEFAULT_CATEGORY_SLUG } from "@/lib/content";
-
-export function buildArchiveMetadata(page: number): Metadata {
-  const metadata = buildPublicPageMetadata({
-    title: page > 1 ? `Archive — Page ${page}` : "Archive",
-    description:
-      "Directory of published Chronoverse research organized by editorial category.",
-    pathname: "/archive",
-  });
-  const canonical = `https://chronoversecapital.com/archive${page > 1 ? `?page=${page}` : ""}`;
-  return {
-    ...metadata,
-    alternates: { ...metadata.alternates, canonical },
-    openGraph: { ...metadata.openGraph, url: canonical },
-    robots: {
-      index: false,
-      follow: true,
-      googleBot: {
-        index: false,
-        follow: true,
-      },
-    },
-  };
-}
 
 export async function generateMetadata({
   searchParams,

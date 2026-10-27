@@ -191,7 +191,7 @@ async function verifyArchiveBoundary(): Promise<void> {
   assert.match(archiveSource, /← Previous/);
   assert.match(archiveSource, /Next →/);
   assert.match(
-    archiveSource,
+    readSource("src/lib/seo/collection-pages.ts"),
     /robots:\s*\{[\s\S]*?index:\s*false,[\s\S]*?follow:\s*true/,
   );
 

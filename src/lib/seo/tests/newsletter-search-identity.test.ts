@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { metadata } from "@/app/newsletter/layout";
 import { publicSocialImage } from "@/lib/seo/metadata";
+import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
 import {
   CANONICAL_NEWSLETTER_URL_V1,
   createChronoverseProxyV1,
@@ -32,7 +33,9 @@ function verifyNewsletterMetadata(): void {
   assert.equal(metadata.title, "Newsletter");
   assert.equal(
     metadata.description,
-    "Newsletter signups and delivery are temporarily paused. Read published Chronoverse Capital research on the website.",
+    NEWSLETTER_SIGNUPS_PAUSED
+      ? "Newsletter signups and delivery are temporarily paused. Read published Chronoverse Capital research on the website."
+      : "Subscribe to receive published market research and analytical updates, available free to readers.",
   );
   assert.equal(
     metadata.alternates?.canonical,

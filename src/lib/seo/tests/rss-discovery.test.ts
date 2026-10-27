@@ -2,7 +2,8 @@ import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { buildRssXml, type RssArticle } from "../rss";
-import { createRssResponse, GET } from "@/app/rss.xml/route";
+import { GET } from "@/app/rss.xml/route";
+import { createRssResponse } from "../rss-response";
 import { freshClient } from "@/sanity/client";
 
 const date = new Date("2026-10-24T12:00:00Z");

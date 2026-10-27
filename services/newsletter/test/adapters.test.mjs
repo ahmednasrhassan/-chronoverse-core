@@ -33,6 +33,9 @@ test("actual SESv2 adapter enforces gates even for direct internal calls and SDK
     f.state.documents.get(`SUB#${job.id}`).state = "PENDING";
     await deps.mail.send("reader@example.test", { subject: "Confirm", text: "Fixture", html: "Fixture" }, { kind: "confirmation", id: job.id });
     assert.equal(commands[1].input.ListManagementOptions, undefined);
+    const row = f.state.documents.get(`SUB#${job.id}`); row.state = "CONFIRMED"; delete row.confirmedPolicy;
+    await assert.rejects(() => deps.mail.send(row.email, { subject: "Synthetic", text: "Synthetic", html: "Synthetic" }, { kind: "digest", id: job.id }), /sending_paused/);
+    assert.equal(commands.length, 2);
   } finally { mock.restoreAll(); }
 });
 test("actual DynamoDB adapter uses atomic consent transactions, immutable first suppression and conditional delivery claims", async () => {

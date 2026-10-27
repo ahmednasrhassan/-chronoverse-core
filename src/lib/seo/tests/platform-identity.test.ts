@@ -145,7 +145,8 @@ test("policies describe actual storage and preserve purchase boundaries without 
     "Google Analytics",
   ])
     assert.ok(privacy.includes(provider));
-  assert.match(privacy, /replacement.*being prepared/);
+  assert.match(privacy, /Sanity supplies published research content/);
+  assert.match(privacy, /does not store newsletter addresses or use AWS subscriber credentials/);
   assert.match(privacy, /confirmation through the submitted mailbox/);
   assert.doesNotMatch(
     privacy,

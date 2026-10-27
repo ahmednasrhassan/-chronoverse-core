@@ -63,8 +63,9 @@ test("legacy held records and existing provider suppressions cannot be reactivat
     const f = fixture(); const email = "reader@example.test", id = subscriberId(email);
     if (mode === "provider") f.state.suppressed.add(email);
     else f.state.documents.set(`SUB#${id}`, { pk: `SUB#${id}`, id, email, state: mode });
-    assert.equal((await f.subscribe(email)).statusCode, 202); assert.equal(f.state.sends.length, 0);
+    assert.equal((await f.subscribe(email)).statusCode, 202); assert.equal(f.state.sends.length, mode === "HOLD" ? 1 : 0);
     assert.equal(f.state.documents.get(`SUB#${id}`).state, mode === "HOLD" ? "HOLD" : "SUPPRESSED");
+    if (mode === "HOLD") assert.equal(f.state.documents.get(`RENEW#${id}`).state, "PENDING");
   }
 });
 test("unsubscribe works while every mail gate is off; repeated opt-out preserves first suppression", async () => {
@@ -93,7 +94,7 @@ test("v1 encrypted opt-out decrypts only with original key; no guessed or replac
   const encrypted = Buffer.concat([cipher.update(email), cipher.final()]);
   const token = "v1." + Buffer.concat([iv, cipher.getAuthTag(), encrypted]).toString("base64url");
   const key = f.keys.legacyV1Key; delete f.keys.legacyV1Key;
-  assert.equal((await f.api("/unsubscribe", { token })).statusCode, 503); assert.equal(f.state.documents.has(`SUB#${subscriberId(email)}`), false);
+  assert.equal((await f.api("/unsubscribe", { token })).statusCode, 410); assert.equal(f.state.documents.has(`SUB#${subscriberId(email)}`), false);
   f.keys.legacyV1Key = key;
   assert.equal((await f.api("/unsubscribe", { token })).statusCode, 200);
   assert.equal(f.state.documents.get(`SUB#${subscriberId(email)}`).state, "SUPPRESSED"); assert.equal(f.state.sends.length, 0);
@@ -123,7 +124,8 @@ test("unsubscribe after claim and before SES handoff prevents dispatch", async (
 });
 test("a damaged subscriber record cannot receive mail with an unusable unsubscribe capability", async () => {
   const f = fixture(), job = f.confirmed(); delete f.state.documents.get(`SUB#${job.id}`).unsubscribeNonce;
-  await assert.rejects(() => f.service.deliver(job), /invalid_capability/); assert.equal(f.state.sends.length, 0);
+  await f.service.deliver(job); assert.equal(f.state.sends.length, 0);
+  assert.equal(f.state.documents.has(`MAIL#${job.campaign}#${job.id}`), false);
 });
 test("SES preference opt-out, account suppression and missing contact all fail closed", async () => {
   for (const mode of ["topic", "account", "missing"]) {

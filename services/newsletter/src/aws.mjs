@@ -3,7 +3,7 @@ import { DynamoDBDocumentClient, GetCommand, BatchGetCommand, PutCommand, Update
 import { SESv2Client, GetContactCommand, CreateContactCommand, UpdateContactCommand, GetSuppressedDestinationCommand, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { audienceKey, nonce, TOPIC, assertMailAllowed, assertConfirmationAllowed, readCapability, emailAddress, SEND_LEASE_MS, SEND_COOLDOWN_MS, SendCapacityUnavailable } from "./domain.mjs";
+import { audienceKey, nonce, TOPIC, ENROLLMENT_POLICY, FORWARD_ONLY_STATUS, CONSENT_VERSION, CONSENT_TEXT, pendingEnrollment, campaignEligible, assertMailAllowed, assertConfirmationAllowed, readCapability, emailAddress, SEND_LEASE_MS, SEND_COOLDOWN_MS, SendCapacityUnavailable } from "./domain.mjs";
 import { createContentSource } from "./content.mjs";
 import { articleKey, articleUrlKey } from "./discovery.mjs";
 import { assertPublicationCurrent } from "./publication.mjs";
@@ -93,7 +93,7 @@ export function createAwsDependencies(env) {
         ConditionExpression: previousNonce ? "#state = :pending AND confirmationNonce = :nonce" : "attribute_not_exists(pk)",
         ...(previousNonce ? { ExpressionAttributeNames: { "#state": "state" }, ExpressionAttributeValues: { ":pending": "PENDING", ":nonce": previousNonce } } : {}) } },
         { Put: { TableName, Item: { pk: `AUDIT#${item.id}#request#${item.confirmationNonce}`, kind: "requested", at: item.requestedAt,
-          consentVersion: item.consentVersion, consentText: item.consentText, source: item.source }, ConditionExpression: "attribute_not_exists(pk)" } }] }));
+          consentVersion: item.consentVersion, consentText: item.consentText, enrollmentPolicy: item.enrollmentPolicy, source: item.source }, ConditionExpression: "attribute_not_exists(pk)" } }] }));
     },
     async rateLimit(key, bucket, limit, expires) {
       return conditionalSend(new UpdateCommand({ TableName, Key: { pk: `RATE#${key}#${bucket}` },
@@ -120,15 +120,29 @@ export function createAwsDependencies(env) {
       const time = Date.now();
       const { id, nonce: tokenNonce } = readCapability(secret.capabilityKey, token, "confirm", time);
       assertConfirmationAllowed(env, control);
+      const renewal = await store.get(`RENEW#${id}`), original = await store.get(`SUB#${id}`);
+      const pending = renewal?.confirmationNonce === tokenNonce ? renewal : original;
+      if (!pendingEnrollment(pending) || pending.confirmationNonce !== tokenNonce || pending.requestedAt > time) return false;
+      const renewing = pending.pk === `RENEW#${id}`;
+      const proofCondition = "#state = :pending AND confirmationNonce = :nonce AND enrollmentPolicy = :policy AND consentVersion = :consentVersion AND consentText = :consentText AND requestedAt = :requestedAt";
+      const proofValues = { ":pending": "PENDING", ":nonce": tokenNonce, ":policy": ENROLLMENT_POLICY, ":consentVersion": CONSENT_VERSION, ":consentText": CONSENT_TEXT, ":requestedAt": pending.requestedAt };
+      // Bind the transaction to the exact reviewed initialization read above.
+      // Historical recovery is never falsely marked complete to admit new consent.
+      const initialized = control.migrationComplete === true
+        ? { condition: "migrationComplete = :approved", values: {} }
+        : { condition: "forwardOnlyReady = :approved AND forwardOnlyPolicy = :forwardPolicy AND historicalRecoveryStatus = :historyStatus AND forwardOnlyReceipt = :receipt",
+          values: { ":forwardPolicy": ENROLLMENT_POLICY, ":historyStatus": FORWARD_ONLY_STATUS, ":receipt": control.forwardOnlyReceipt } };
       try {
         await ddb.send(new TransactWriteCommand({ TransactItems: [
           { ConditionCheck: { TableName, Key: { pk: "CONTROL" },
-            ConditionExpression: "registrationEnabled = :approved AND confirmationEnabled = :approved AND legacyRetired = :approved AND complianceApproved = :approved AND migrationComplete = :approved",
-            ExpressionAttributeValues: { ":approved": true } } },
-          { Update: { TableName, Key: { pk: `SUB#${id}` }, UpdateExpression: "SET #state = :confirmed, confirmedAt = :now, unsubscribeNonce = :unsub, audienceKey = :audience REMOVE confirmationNonce",
-            ConditionExpression: "#state = :pending AND confirmationNonce = :nonce AND attribute_not_exists(suppressedAt) AND attribute_not_exists(suppressionReason)",
-            ExpressionAttributeNames: { "#state": "state" }, ExpressionAttributeValues: { ":pending": "PENDING", ":confirmed": "CONFIRMED", ":nonce": tokenNonce, ":now": time, ":unsub": nonce(), ":audience": audienceKey(id) } } },
-          { Put: { TableName, Item: { pk: `AUDIT#${id}#confirm#${tokenNonce}`, kind: "confirmed", at: time, consentVersion: "weekly-research-v1", source: "mailbox-capability" }, ConditionExpression: "attribute_not_exists(pk)" } },
+            ConditionExpression: "registrationEnabled = :approved AND confirmationEnabled = :approved AND legacyRetired = :approved AND complianceApproved = :approved AND " + initialized.condition,
+            ExpressionAttributeValues: { ":approved": true, ...initialized.values } } },
+          { Update: { TableName, Key: { pk: `SUB#${id}` }, UpdateExpression: "SET #state = :confirmed, confirmedAt = :now, unsubscribeNonce = " + (renewing ? "if_not_exists(unsubscribeNonce, :unsub)" : ":unsub") + ", audienceKey = :audience, confirmedPolicy = :policy, awsConsentVersion = :consentVersion, awsConsentText = :consentText, awsRequestedAt = :requestedAt, confirmedRequestNonce = :nonce" + (renewing ? "" : " REMOVE confirmationNonce"),
+            ConditionExpression: (renewing ? "attribute_exists(pk) AND (#state = :hold OR #state = :oldConfirmed OR #state = :pending)" : proofCondition) + " AND attribute_not_exists(suppressedAt) AND attribute_not_exists(suppressionReason)",
+            ExpressionAttributeNames: { "#state": "state" }, ExpressionAttributeValues: { ...proofValues, ":confirmed": "CONFIRMED", ":now": time, ":unsub": nonce(), ":audience": audienceKey(id), ...(renewing ? { ":hold": "HOLD", ":oldConfirmed": "CONFIRMED" } : {}) } } },
+          ...(renewing ? [{ Update: { TableName, Key: { pk: pending.pk }, UpdateExpression: "SET #state = :done REMOVE confirmationNonce",
+            ConditionExpression: proofCondition, ExpressionAttributeNames: { "#state": "state" }, ExpressionAttributeValues: { ...proofValues, ":done": "CONFIRMED" } } }] : []),
+          { Put: { TableName, Item: { pk: `AUDIT#${id}#confirm#${tokenNonce}`, kind: "confirmed", at: time, consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, enrollmentPolicy: ENROLLMENT_POLICY, requestedAt: pending.requestedAt, source: "mailbox-capability" }, ConditionExpression: "attribute_not_exists(pk)" } },
         ] }));
         return true;
       } catch (error) {
@@ -196,7 +210,9 @@ export function createAwsDependencies(env) {
         assertMailAllowed(env, await store.get("CONTROL"), tags.kind);
         if (!/^[a-f0-9]{64}$/.test(tags.id || "")) throw new Error("invalid_message");
         const record = await store.get(`SUB#${tags.id}`);
-        if (record?.email !== email || record.state !== (tags.kind === "digest" ? "CONFIRMED" : "PENDING") ||
+        const renewal = tags.kind === "confirmation" ? await store.get(`RENEW#${tags.id}`) : undefined;
+        if (record?.email !== email || record?.state === "SUPPRESSED" ||
+            (tags.kind === "digest" ? !campaignEligible(record) : !pendingEnrollment(renewal || record)) ||
             record.suppressedAt !== undefined || record.suppressionReason !== undefined || await mail.accountSuppressed(email)) throw new Error("sending_paused");
         const contact = await mail.contact(email);
         if (contact?.UnsubscribeAll === true || contact?.TopicPreferences?.some(p => p.TopicName === TOPIC && p.SubscriptionStatus === "OPT_OUT") ||

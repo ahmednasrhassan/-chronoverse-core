@@ -1,5 +1,5 @@
 import { createService } from "../src/service.mjs";
-import { capability, readCapability, assertConfirmationAllowed, subscriberId, audienceKey, CONSENT_TEXT, CONSENT_VERSION, TOPIC } from "../src/domain.mjs";
+import { capability, readCapability, assertConfirmationAllowed, subscriberId, audienceKey, CONSENT_TEXT, CONSENT_VERSION, ENROLLMENT_POLICY, pendingEnrollment, TOPIC } from "../src/domain.mjs";
 import { articleKey, articleUrlKey } from "../src/discovery.mjs";
 export function approvedFixtureArticle(article, time) {
   return { ...article, approvedAt: article.published,
@@ -40,10 +40,14 @@ export function fixture() {
     confirm: async token => {
       assertConfirmationAllowed(env, state.documents.get("CONTROL"));
       const { id, nonce } = readCapability(keys.capabilityKey, token, "confirm", state.time);
-      const record = state.documents.get(`SUB#${id}`);
-      if (record?.state !== "PENDING" || record.confirmationNonce !== nonce || record.suppressedAt !== undefined || record.suppressionReason !== undefined) return false;
-      Object.assign(record, { state: "CONFIRMED", confirmedAt: state.time, unsubscribeNonce: "u".repeat(32), audienceKey: audienceKey(id) });
-      delete record.confirmationNonce; return true;
+      const record = state.documents.get(`SUB#${id}`), renewal = state.documents.get(`RENEW#${id}`);
+      const pending = renewal?.confirmationNonce === nonce ? renewal : record;
+      if (!pendingEnrollment(pending) || pending.confirmationNonce !== nonce || pending.requestedAt > state.time || !record || record.state === "SUPPRESSED" || record.suppressedAt !== undefined || record.suppressionReason !== undefined) return false;
+      Object.assign(record, { state: "CONFIRMED", confirmedAt: state.time, unsubscribeNonce: record.unsubscribeNonce || "u".repeat(32), audienceKey: audienceKey(id), confirmedPolicy: ENROLLMENT_POLICY,
+        awsConsentVersion: CONSENT_VERSION, awsConsentText: CONSENT_TEXT, awsRequestedAt: pending.requestedAt, confirmedRequestNonce: nonce });
+      if (pending === record) delete record.confirmationNonce;
+      else { pending.state = "CONFIRMED"; delete pending.confirmationNonce; }
+      return true;
     },
     suppress: async (id, email, reason, eventId, at) => {
       const old = state.documents.get(`SUB#${id}`) || { id, email };
@@ -84,7 +88,9 @@ export function fixture() {
   const subscribe = email => api("/subscribe", { email, consent: true, consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, clientFingerprint: "f".repeat(64) });
   function confirmed(email = "reader@example.test") {
     const id = subscriberId(email);
-    state.documents.set(`SUB#${id}`, { pk: `SUB#${id}`, id, email, state: "CONFIRMED", confirmedAt: state.time - 7200000, unsubscribeNonce: "u".repeat(32), audienceKey: audienceKey(id) });
+    state.documents.set(`SUB#${id}`, { pk: `SUB#${id}`, id, email, state: "CONFIRMED", confirmedAt: state.time - 7200000, unsubscribeNonce: "u".repeat(32), audienceKey: audienceKey(id),
+      confirmedPolicy: ENROLLMENT_POLICY, awsConsentVersion: CONSENT_VERSION, awsConsentText: CONSENT_TEXT, awsRequestedAt: state.time - 10800000, confirmedRequestNonce: "p".repeat(32),
+      enrollmentPolicy: ENROLLMENT_POLICY, consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, requestedAt: state.time - 10800000, confirmationNonce: "p".repeat(32) });
     state.contacts.set(email, { UnsubscribeAll: false, TopicPreferences: [{ TopicName: TOPIC, SubscriptionStatus: "OPT_IN" }] });
     state.documents.set("CAMPAIGN#2026-10-26", { pk: "CAMPAIGN#2026-10-26", id: "2026-10-26", end: Date.parse("2026-10-26T09:00:00Z"), articles: [approvedFixtureArticle({ id: "urn:chronoverse:article:fixture", title: "Fixture", summary: "Fixture", url: "https://chronoversecapital.com/fixture", published: Date.parse("2026-10-25T08:00:00Z") }, state.time)] });
     return { id, campaign: "2026-10-26" };

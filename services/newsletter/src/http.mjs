@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { isIP } from "node:net";
-import { CONSENT_TEXT, CONSENT_VERSION, assertConfirmationAllowed, escapeHtml } from "./domain.mjs";
+import { CONSENT_TEXT, CONSENT_VERSION, SUPPORT_EMAIL, assertConfirmationAllowed, escapeHtml } from "./domain.mjs";
 
 export const securityHeaders = { "cache-control": "no-store", "referrer-policy": "no-referrer", "x-robots-tag": "noindex, nofollow",
   "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'" };
@@ -12,7 +12,8 @@ export function publicOrigin(env) {
 }
 const html = (statusCode, title, body) => ({ statusCode, headers: { ...securityHeaders, "content-type": "text/html; charset=utf-8" },
   body: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} | Chronoverse Capital</title></head><body><main><h1>${title}</h1>${body}</main></body></html>` });
-const failure = status => html(status, "Request unavailable", "<p>Your request could not be recorded. Please retry or use the subscription preferences link in your email.</p>");
+const help = `<p>For historical unsubscribe links, email <a href="mailto:${SUPPORT_EMAIL}?subject=Newsletter%20unsubscribe%20help">${SUPPORT_EMAIL}</a> from the subscribed mailbox. Support verifies mailbox ownership before recording an opt-out. Sending a support request does not itself confirm an unsubscribe.</p>`;
+const failure = status => html(status, "Request unavailable", "<p>Your request could not be recorded. Please retry or use the subscription preferences link in your email.</p>" + help);
 const tokenShape = (token, action) => typeof token === "string" && token.length <= 1024 &&
   (/^v2\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/.test(token) || (action === "unsubscribe" && /^v1\.[A-Za-z0-9_-]{40,500}$/.test(token)));
 
@@ -22,7 +23,9 @@ export function createPublicApi(internalApi, deps, env) {
   return async event => {
     const headers = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
     if (Object.hasOwn(headers, "x-newsletter-bridge")) return internalApi({ ...event, headers });
-    const path = ({ "/api/newsletter/confirm": "/confirm", "/api/newsletter/unsubscribe": "/unsubscribe" })[event.rawPath] || event.rawPath;
+    const aliases = { "/api/newsletter/confirm": "/confirm", "/api/newsletter/unsubscribe": "/unsubscribe" };
+    const legacyAlias = Object.hasOwn(aliases, event.rawPath);
+    const path = aliases[event.rawPath] || event.rawPath;
     const method = event.requestContext?.http?.method;
     if (!["/register", "/subscribe", "/confirm", "/unsubscribe"].includes(path)) return failure(404);
     if (!["GET", "POST"].includes(method) || (method === "GET" && path === "/subscribe")) return failure(405);
@@ -39,10 +42,14 @@ export function createPublicApi(internalApi, deps, env) {
         // No token echo, storage access or state mutation. A POST to the current
         // document retains its query string without embedding it in HTML.
         return html(200, action === "confirm" ? "Confirm subscription" : "Confirm unsubscribe",
-          `<p>Your request is recorded only after confirmation succeeds.</p><form method="post"><button type="submit" name="action" value="${action}">${action === "confirm" ? "Confirm subscription" : "Unsubscribe permanently"}</button></form>`);
+          `<p>Your request is recorded only after confirmation succeeds.</p><form method="post"><button type="submit" name="action" value="${action}">${action === "confirm" ? "Confirm subscription" : "Unsubscribe permanently"}</button></form>${action === "unsubscribe" ? help : ""}`);
       }
       if (event.isBase64Encoded || typeof event.body !== "string" || Buffer.byteLength(event.body) > 4096) return failure(400);
-      if (headers.origin !== undefined && headers.origin !== publicOrigin(env)) return failure(403);
+      // Historical website POSTs are redirected by the client, never proxied.
+      // Cross-origin redirects may serialize Origin as null. Only these two
+      // aliases accept it; a valid purpose/nonce-bound capability is still mandatory.
+      const redirectedOrigin = legacyAlias && ["https://chronoversecapital.com", "null"].includes(headers.origin);
+      if (headers.origin !== undefined && headers.origin !== publicOrigin(env) && !redirectedOrigin) return failure(403);
       const type = String(headers["content-type"] || "").split(";")[0].trim().toLowerCase();
       let body;
       if (type === "application/json") {
@@ -70,11 +77,12 @@ export function createPublicApi(internalApi, deps, env) {
         return result.statusCode === 202 ? html(202, "Check your inbox if eligible", "<p>If eligible, check your inbox and confirm your subscription. No subscription is activated by this request.</p>") : failure(result.statusCode);
       }
       const token = query.get("token") || body.token;
-      if (query.has("token") && body.token !== undefined) return failure(400);
+      if (query.has("token") && body.token !== undefined && (!legacyAlias || query.get("token") !== body.token)) return failure(400);
       if (!tokenShape(token, action)) return failure(400);
       const oneClick = action === "unsubscribe" && type === "application/x-www-form-urlencoded" && body["List-Unsubscribe"] === "One-Click";
-      if (type === "application/x-www-form-urlencoded" && !oneClick && body.action !== action) return failure(400);
+      if (type === "application/x-www-form-urlencoded" && !oneClick && body.action !== action && !(legacyAlias && body.action === undefined)) return failure(400);
       const result = await internalApi({ ...event, rawPath: path, body: JSON.stringify({ token }) }, { secret: await deps.secrets() });
+      if (result.statusCode === 410) return html(410, "Historical unsubscribe link unavailable", "<p>The signing key for this historical link is unavailable. We cannot decrypt it and have not recorded an unsubscribe.</p>" + help);
       return result.statusCode === 200 ? html(200, action === "confirm" ? "Subscription confirmed" : "Unsubscribe recorded", "<p>Your request has been recorded.</p>") : failure(result.statusCode);
     } catch (error) { deps.metric(error?.message === "sending_paused" ? "Paused" : "ApiFailure"); return failure(503); }
   };

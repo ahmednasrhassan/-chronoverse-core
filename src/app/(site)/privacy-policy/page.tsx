@@ -70,13 +70,15 @@ export default function PrivacyPolicyPage() {
       <InstitutionalSection title="3. Current service boundaries">
         <p>
           Supabase supports the current identity and passwordless authentication
-          flow. Sanity stores published content and historical newsletter
-          records. An AWS newsletter replacement using Amazon SES and a durable
-          consent and suppression ledger is being prepared.{" "}
+          flow. Sanity supplies published research content. Historical newsletter
+          records, if retained, are not an active mailing audience. New newsletter
+          registration, consent, confirmation and unsubscribe preferences are handled
+          on AWS using Amazon SES and a durable consent and suppression ledger.{" "}
           {NEWSLETTER_SIGNUPS_PAUSED ? "New newsletter signups and delivery remain paused. If an existing unsubscribe link cannot be processed, contact us for opt-out help. " : ""}
-          When approved and available, new subscriptions require an explicit
-          request and confirmation through the submitted mailbox.
-          Vercel hosts the website and its server routes. Credentials used by
+          New subscriptions require an explicit request and confirmation through
+          the submitted mailbox. Known opt-outs and suppressions remain excluded.
+          Vercel hosts the website and links to AWS registration; it does not store
+          newsletter addresses or use AWS subscriber credentials. Credentials used by
           these integrations remain server-side and are not fields users are
           asked to submit.
         </p>

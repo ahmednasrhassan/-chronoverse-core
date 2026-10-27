@@ -1,20 +1,8 @@
-"use client";
-
-import { useState } from "react";
 import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
 import { NewsletterSignupPause } from "@/components/NewsletterSignupPause";
+import { AwsNewsletterRegistration } from "@/components/AwsNewsletterRegistration";
 
-/**
- * Canonical landing page served at `chronoversecapital.com/newsletter`.
- * `src/proxy.ts` permanently redirects the known Newsletter host roots here
- * while retaining existing non-root rewrite behavior.
- *
- * New subscriptions are temporarily paused. The existing registration flow
- * remains below for a future reviewed reactivation.
- */
 export default function NewsletterPage() {
-  if (!NEWSLETTER_SIGNUPS_PAUSED) return <ActiveNewsletterPage />;
-
   return (
     <main className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-[#050506]">
       <div className="max-w-lg w-full bg-[#0D0D11] border border-border rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/40">
@@ -24,112 +12,7 @@ export default function NewsletterPage() {
         <h1 className="text-2xl md:text-3xl font-extrabold text-primary mt-4 mb-6 tracking-tight">
           Chronoverse Newsletter
         </h1>
-        <NewsletterSignupPause />
-      </div>
-    </main>
-  );
-}
-
-function ActiveNewsletterPage() {
-  const [email, setEmail] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [feedback, setFeedback] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim() || !consent || status === "loading") return;
-
-    setStatus("loading");
-    setFeedback("");
-
-    try {
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), consent }),
-      });
-
-      let data: { status?: string } = {};
-      try {
-        data = await res.json();
-      } catch {
-        // A non-JSON server error must not be mistaken for a subscription.
-      }
-
-      if (res.ok && data.status === "pending") {
-        setStatus("success");
-        setFeedback("If eligible, check your inbox and confirm your subscription.");
-        setEmail("");
-        setConsent(false);
-      } else {
-        setStatus("error");
-        setFeedback("Subscription could not be completed. Please try again.");
-      }
-    } catch {
-      setStatus("error");
-      setFeedback("Network error. Please try again shortly.");
-    }
-  }
-
-  return (
-    <main className="min-h-[70vh] flex items-center justify-center px-4 py-16 bg-[#050506]">
-      <div className="max-w-lg w-full bg-[#0D0D11] border border-border rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/40">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A7E8] bg-[#C8A7E8]/10 px-3 py-1.5 rounded-full border border-[#C8A7E8]/20">
-          Chronoverse Dispatch
-        </span>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-primary mt-4 mb-3 tracking-tight">
-          Published Research — Direct to Your Inbox
-        </h1>
-        <p className="text-sm text-muted leading-relaxed mb-8">
-          Receive published market research and analytical updates. Newsletter
-          content is available free through our research publication.
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="email"
-            aria-label="Email address"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-            className="w-full px-4 py-3 rounded-xl bg-raised border border-border text-primary placeholder:text-muted focus:outline-none focus:border-[#C8A7E8] transition-colors"
-          />
-        <label className="flex items-start gap-2 text-sm text-muted sm:col-span-2">
-          <input type="checkbox" required checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          I agree to receive the free weekly Chronoverse Capital research newsletter. I can unsubscribe at any time.
-        </label>
-          <button
-            type="submit"
-            disabled={status === "loading"}
-            className="w-full px-4 py-3 rounded-xl bg-[#C8A7E8] hover:bg-[#A77BD8] text-black font-bold text-sm uppercase tracking-wide transition-colors disabled:opacity-60"
-          >
-            {status === "loading" ? "Submitting…" : "Subscribe"}
-          </button>
-        </form>
-
-        {/* CLS fix: this feedback message is conditionally injected after
-            the form submits, previously with no reserved space — its
-            appearance pushed the card's bottom edge (and anything below
-            it) down by its own height, a classic dynamic-content shift.
-            Reserving a fixed-height `min-h` slot up front (present even
-            when empty) means the text simply appears in place with zero
-            layout movement. */}
-        <div className="mt-4 min-h-5">
-          {feedback && (
-            <p
-              role="status"
-              aria-live="polite"
-              className={`text-sm ${
-                status === "success" ? "text-emerald-400" : "text-red-400"
-              }`}
-            >
-              {feedback}
-            </p>
-          )}
-        </div>
-
+        {NEWSLETTER_SIGNUPS_PAUSED ? <NewsletterSignupPause /> : <AwsNewsletterRegistration />}
       </div>
     </main>
   );

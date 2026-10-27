@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { GET as getFeedRedirect } from "@/app/feed.xml/route";
-import { createRssResponse } from "@/app/rss.xml/route";
+import { createRssResponse } from "@/lib/seo/rss-response";
 import { buildSitemap, loadSitemapContent } from "@/app/sitemap";
 import {
   getSanityArticles,

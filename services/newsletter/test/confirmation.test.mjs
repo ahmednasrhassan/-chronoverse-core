@@ -5,16 +5,39 @@ import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand } from "@aws-s
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { createAwsDependencies } from "../src/aws.mjs";
 import { createService } from "../src/service.mjs";
-import { subscriberId } from "../src/domain.mjs";
+import { subscriberId, CONSENT_TEXT, CONSENT_VERSION, ENROLLMENT_POLICY, FORWARD_ONLY_STATUS, campaignEligible } from "../src/domain.mjs";
 import { fixture } from "./fixture.mjs";
 
 const flags = ["REGISTRATION_ENABLED", "CONFIRMATION_ENABLED", "LEGACY_DISPATCH_RETIRED", "COMPLIANCE_APPROVED"];
 const controls = ["registrationEnabled", "confirmationEnabled", "legacyRetired", "complianceApproved", "migrationComplete"];
 const malformed = [undefined, null, false, "false", "true", "TRUE", 0, 1, [], {}];
 
+test("DynamoDB forward-only confirmation binds the receipt atomically and preserves unresolved historical recovery", async () => {
+  const f = fixture(), p = pending(f);
+  Object.assign(f.state.documents.get("CONTROL"), { migrationComplete: false, forwardOnlyReady: true, forwardOnlyPolicy: ENROLLMENT_POLICY,
+    historicalRecoveryStatus: FORWARD_ONLY_STATUS, forwardOnlyReceipt: "a".repeat(64) });
+  await withAdapter(f, async (deps, commands) => {
+    assert.equal(await deps.store.confirm(p.token), true);
+    assert.equal(campaignEligible(f.state.documents.get(p.row.pk)), true);
+    const check = commands.find(c => c instanceof TransactWriteCommand).input.TransactItems[0].ConditionCheck;
+    assert.match(check.ConditionExpression, /forwardOnlyReceipt = :receipt/);
+    assert.equal(check.ExpressionAttributeValues[":receipt"], "a".repeat(64));
+    assert.equal(f.state.documents.get("CONTROL").migrationComplete, false);
+  });
+});
+for (const field of ["forwardOnlyReady", "forwardOnlyPolicy", "historicalRecoveryStatus", "forwardOnlyReceipt"]) test(`revoking forward-only ${field} between read and transaction prevents confirmation`, async () => {
+  const f = fixture(), p = pending(f), original = structuredClone(p.row);
+  Object.assign(f.state.documents.get("CONTROL"), { migrationComplete: false, forwardOnlyReady: true, forwardOnlyPolicy: ENROLLMENT_POLICY,
+    historicalRecoveryStatus: FORWARD_ONLY_STATUS, forwardOnlyReceipt: "a".repeat(64) });
+  await withAdapter(f, async deps => {
+    await assert.rejects(() => deps.store.confirm(p.token), /sending_paused/);
+    assert.deepEqual(f.state.documents.get(p.row.pk), original);
+  }, { beforeTransaction: () => { delete f.state.documents.get("CONTROL")[field]; } });
+});
+
 function pending(f) {
   const email = "pending@example.test", id = subscriberId(email);
-  const row = { pk: `SUB#${id}`, id, email, state: "PENDING", confirmationNonce: "p".repeat(32) };
+  const row = { pk: `SUB#${id}`, id, email, state: "PENDING", confirmationNonce: "p".repeat(32), enrollmentPolicy: ENROLLMENT_POLICY, consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, requestedAt: f.state.time - 1000 };
   f.state.documents.set(row.pk, row);
   return { id, row, token: f.token(id, "confirm", row.confirmationNonce, f.state.time + 60000) };
 }
@@ -23,6 +46,9 @@ function pending(f) {
 // are evaluated from the actual SDK command, before any transaction write.
 function matches(operation, row) {
   return operation.ConditionExpression.split(" AND ").every(atom => {
+    if (atom.startsWith("(") && atom.endsWith(")")) return atom.slice(1, -1).split(" OR ").some(part => matches({ ...operation, ConditionExpression: part }, row));
+    const exists = /^attribute_exists\((\w+)\)$/.exec(atom);
+    if (exists) return !!row && Object.hasOwn(row, exists[1]);
     const absent = /^attribute_not_exists\((\w+)\)$/.exec(atom);
     if (absent) return !row || !Object.hasOwn(row, absent[1]);
     const equals = /^(#?\w+) = (:\w+)$/.exec(atom);
@@ -58,11 +84,12 @@ async function withAdapter(f, run, hooks = {}) {
       if (!item.Update) continue;
       const update = item.Update, row = f.state.documents.get(update.Key.pk);
       const [set, remove] = update.UpdateExpression.slice(4).split(" REMOVE ");
-      for (const assignment of set.split(", ")) {
+      for (const assignment of set.split(/, (?![^()]*\))/)) {
         const [name, value] = assignment.split(" = ");
-        row[update.ExpressionAttributeNames?.[name] || name] = update.ExpressionAttributeValues[value];
+        const fallback = /^if_not_exists\((\w+), (:\w+)\)$/.exec(value);
+        row[update.ExpressionAttributeNames?.[name] || name] = fallback ? row[fallback[1]] ?? update.ExpressionAttributeValues[fallback[2]] : update.ExpressionAttributeValues[value];
       }
-      for (const name of remove.split(", ")) delete row[name];
+      for (const name of remove?.split(", ") || []) delete row[name];
     }
     return {};
   });
@@ -268,4 +295,36 @@ test("only API receives table-scoped ConditionCheckItem authorization; infrastru
   const statement = granted[0][1].Properties.Policies[0].PolicyDocument.Statement.find(statement => statement.Action?.includes("dynamodb:ConditionCheckItem"));
   assert.deepEqual(statement.Resource, { "Fn::GetAtt": ["Ledger", "Arn"] });
   for (const name of ["RegistrationEnabled", "ConfirmationEnabled", "DeliveryEnabled", "LegacyDispatchRetired", "ComplianceApproved"]) assert.equal(template.Parameters[name].Default, "false");
+});
+
+test("renewal atomically consumes fresh proof and preserves original consent and existing unsubscribe capability", async () => {
+  const f = fixture(), p = pending(f), oldNonce = "u".repeat(32);
+  const renewal = { ...p.row, pk: `RENEW#${p.id}` };
+  f.state.documents.set(renewal.pk, renewal);
+  Object.assign(p.row, { state: "HOLD", consentVersion: "historical", consentText: "original evidence", sources: ["legacy"], unsubscribeNonce: oldNonce });
+  delete p.row.enrollmentPolicy;
+  await withAdapter(f, async (deps, commands) => {
+    assert.equal(await deps.store.confirm(p.token), true);
+    assert.equal(campaignEligible(p.row), true); assert.equal(p.row.consentVersion, "historical"); assert.equal(p.row.consentText, "original evidence");
+    assert.deepEqual(p.row.sources, ["legacy"]); assert.equal(p.row.unsubscribeNonce, oldNonce);
+    assert.equal(renewal.state, "CONFIRMED"); assert.equal(renewal.confirmationNonce, undefined);
+    assert.equal(commands.find(command => command instanceof TransactWriteCommand).input.TransactItems.length, 4);
+    assert.equal(await deps.store.confirm(p.token), false);
+  });
+});
+for (const mode of ["suppression", "nonce", "consent", "policy", "control"]) test(`renewal transaction rejects racing ${mode} without partial consent changes`, async () => {
+  const f = fixture(), p = pending(f), renewal = { ...p.row, pk: `RENEW#${p.id}` };
+  f.state.documents.set(renewal.pk, renewal); p.row.state = "HOLD"; delete p.row.enrollmentPolicy;
+  await withAdapter(f, async deps => {
+    if (mode === "control") await assert.rejects(() => deps.store.confirm(p.token), /sending_paused/);
+    else assert.equal(await deps.store.confirm(p.token), false);
+    assert.equal(p.row.state, "HOLD"); assert.equal(p.row.confirmedPolicy, undefined); assert.equal(renewal.state, "PENDING");
+    assert.equal([...f.state.documents.keys()].some(key => key.includes("#confirm#")), false);
+  }, { beforeTransaction: () => {
+    if (mode === "suppression") p.row.suppressedAt = 0;
+    if (mode === "nonce") renewal.confirmationNonce = "r".repeat(32);
+    if (mode === "consent") renewal.consentText = "changed";
+    if (mode === "policy") delete renewal.enrollmentPolicy;
+    if (mode === "control") f.state.documents.get("CONTROL").confirmationEnabled = false;
+  } });
 });

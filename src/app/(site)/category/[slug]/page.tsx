@@ -1,13 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import {
-  type CategoryPageContentV1,
   getAllCategories,
   getSanityCategoryPageBySlugV1,
   stripHtml,
 } from "@/lib/content";
-import { buildPublicPageMetadata } from "@/lib/seo/metadata";
+import { buildCategoryMetadataV1, requirePopulatedCategoryV1 } from "@/lib/seo/collection-pages";
 import { Breadcrumbs } from "@/components/content/Breadcrumbs";
 import { buildCanonicalUrl } from "@/lib/seo/site-url";
 
@@ -33,28 +31,6 @@ export async function generateMetadata({
   );
 
   return buildCategoryMetadataV1(category);
-}
-
-export function buildCategoryMetadataV1(
-  category: CategoryPageContentV1,
-): Metadata {
-  const description = category.description || category.title;
-
-  return buildPublicPageMetadata({
-    title: category.title,
-    description,
-    pathname: `/category/${category.slug}`,
-  });
-}
-
-export function requirePopulatedCategoryV1(
-  category: CategoryPageContentV1 | null,
-): CategoryPageContentV1 {
-  if (category === null || category.articles.length === 0) {
-    notFound();
-  }
-
-  return category;
 }
 
 export default async function CategoryPage({ params }: PageProps) {

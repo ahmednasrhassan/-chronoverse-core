@@ -1,4 +1,4 @@
-import { CONSENT_VERSION, CONSENT_TEXT, TOPIC, emailAddress, subscriberId, nonce, hash, capability, readCapability, legacyOptout, assertMailAllowed, assertConfirmationAllowed, equalSecret, weeklyWindow, escapeHtml, SendCapacityUnavailable } from "./domain.mjs";
+import { CONSENT_VERSION, CONSENT_TEXT, ENROLLMENT_POLICY, pendingEnrollment, campaignEligible, TOPIC, emailAddress, subscriberId, nonce, hash, capability, readCapability, legacyOptout, assertMailAllowed, assertConfirmationAllowed, equalSecret, weeklyWindow, escapeHtml, SendCapacityUnavailable } from "./domain.mjs";
 import { digestMessage } from "./rss.mjs";
 import { discoverCampaign, initializeDiscovery } from "./discovery.mjs";
 import { createPublicApi, publicOrigin, securityHeaders } from "./http.mjs";
@@ -34,8 +34,10 @@ export function createService(deps, env) {
         if (body.consent !== true || body.consentVersion !== CONSENT_VERSION || body.consentText !== CONSENT_TEXT) return json(400, "explicit_consent_required");
         const email = emailAddress(body.email); const id = subscriberId(email);
         const existing = await store.get(`SUB#${id}`);
-        // Never reactivate imports, inactive states, previous opt-outs or bounces.
-        if (existing && existing.state !== "PENDING") return json(202, "check_inbox_if_eligible");
+        // Historical rows are preserved until a new mailbox confirmation. No
+        // opt-out, suppression marker or renewed confirmed address is reactivated.
+        if (existing && (existing.state === "SUPPRESSED" || existing.suppressedAt !== undefined || existing.suppressionReason !== undefined ||
+            campaignEligible(existing) || !["PENDING", "HOLD", "CONFIRMED"].includes(existing.state))) return json(202, "check_inbox_if_eligible");
         if (!await store.rateLimit(`EMAIL#${id}`, Math.floor(now() / 86400000), 1, now() + 172800000)) return json(202, "check_inbox_if_eligible");
         if (typeof body.clientFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(body.clientFingerprint) ||
             !await store.rateLimit(`CLIENT#${body.clientFingerprint}`, Math.floor(now() / 3600000), 10, now() + 7200000)) return json(202, "check_inbox_if_eligible");
@@ -43,9 +45,11 @@ export function createService(deps, env) {
         const contact = await mail.contact(email);
         if (contactOptout(contact)) { await suppress(id, email, "ses-optout", `ses:${id}`); return json(202, "check_inbox_if_eligible"); }
         const tokenNonce = nonce();
-        const pending = { pk: `SUB#${id}`, id, email, state: "PENDING", confirmationNonce: tokenNonce,
+        const renewal = existing && !pendingEnrollment(existing);
+        const previous = renewal ? await store.get(`RENEW#${id}`) : existing;
+        const pending = { pk: `${renewal ? "RENEW" : "SUB"}#${id}`, id, email, state: "PENDING", confirmationNonce: tokenNonce, enrollmentPolicy: ENROLLMENT_POLICY,
           requestedAt: now(), consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, source: `${origin}/register` };
-        if (!await store.pending(pending, existing?.confirmationNonce)) return json(202, "check_inbox_if_eligible");
+        if (!await store.pending(pending, previous?.confirmationNonce)) return json(202, "check_inbox_if_eligible");
         const token = capability(secret.capabilityKey, "confirm", id, tokenNonce, now() + 86400000);
         const url = `${origin}/confirm?token=${token}`;
         // Claim before SES; uncertain outcomes are held, never automatically resent.
@@ -58,19 +62,24 @@ export function createService(deps, env) {
           const result = await mail.send(email, { subject: "Confirm your Chronoverse Capital newsletter subscription",
             text: `Confirm only if you requested our weekly research newsletter: ${url}\nThis link expires in 24 hours. Ignore it if you did not request this.\n${env.POSTAL_ADDRESS}`,
             html: `<html lang="en"><body><p>Confirm your weekly research subscription using the link below. If you did not request this, ignore this message.</p><p><a href="${url}">Review and confirm subscription</a></p><footer><p>${escapeHtml(env.POSTAL_ADDRESS)}</p></footer></body></html>` }, { kind: "confirmation", id });
-          await store.deliveryResult(claim, "ACCEPTED", result, now()); metric("Accepted");
+          if (!await store.deliveryResult(claim, "ACCEPTED", result, now())) throw new Error("confirmation_acknowledgement_uncertain");
+          metric("Accepted");
         } catch (error) {
           const deferred = error instanceof SendCapacityUnavailable;
           await store.deliveryResult(claim, deferred ? "NOT_SENT" : "UNKNOWN", undefined, now()); metric(deferred ? "Throttled" : "Held");
-          if (deferred) return json(503, "temporarily_unavailable");
+          // A timeout may already have handed mail to SES. Keep the claim held,
+          // but never tell the requester to check their inbox after a failure.
+          return json(503, "temporarily_unavailable");
         }
         return json(202, "check_inbox_if_eligible");
       }
       if (path === "/confirm") {
         assertConfirmationAllowed(env, await store.get("CONTROL"));
         const data = readCapability(secret.capabilityKey, body.token, "confirm", now());
-        const record = await store.get(`SUB#${data.id}`);
-        if (record?.state !== "PENDING" || record.confirmationNonce !== data.nonce) return json(400, "invalid_link");
+        const renewal = await store.get(`RENEW#${data.id}`), original = await store.get(`SUB#${data.id}`);
+        const record = renewal?.confirmationNonce === data.nonce ? renewal : original;
+        if (!pendingEnrollment(record) || record.confirmationNonce !== data.nonce || original?.state === "SUPPRESSED" ||
+            original?.suppressedAt !== undefined || original?.suppressionReason !== undefined) return json(400, "invalid_link");
         if (await mail.accountSuppressed(record.email) || contactOptout(await mail.contact(record.email))) {
           await suppress(data.id, record.email, "provider-suppression", `confirm:${data.id}`); return json(400, "invalid_link");
         }
@@ -80,6 +89,7 @@ export function createService(deps, env) {
       if (path === "/unsubscribe") {
         let id, email;
         if (typeof body.token === "string" && body.token.startsWith("v1.")) {
+          if (!secret.legacyV1Key) return json(410, "legacy_link_unavailable");
           email = legacyOptout(secret.legacyV1Key, body.token); id = subscriberId(email);
         } else {
           const data = readCapability(secret.capabilityKey, body.token, "unsubscribe", now());
@@ -127,7 +137,7 @@ export function createService(deps, env) {
     await assertPublicationCurrent(store, campaign.articles, now(), campaign.end);
     const page = await store.audience(work.shard, work.cursor);
     for (const record of page.items) {
-      if (record.state === "CONFIRMED" && record.confirmedAt <= campaign.end) await queue.digest({ campaign: campaign.id, id: record.id });
+      if (campaignEligible(record) && record.confirmedAt <= campaign.end) await queue.digest({ campaign: campaign.id, id: record.id });
       if (context.getRemainingTimeInMillis?.() < 15000) throw new Error("planner_retry_required");
     }
     if (page.cursor) await queue.plan({ ...work, cursor: page.cursor });
@@ -140,7 +150,7 @@ export function createService(deps, env) {
     if (!/^[a-f0-9]{64}$/.test(job.id) || !/^\d{4}-\d{2}-\d{2}$/.test(job.campaign)) throw new Error("invalid_job");
     const campaign = await store.get(`CAMPAIGN#${job.campaign}`);
     let record = await store.get(`SUB#${job.id}`);
-    if (expiredCampaign(campaign, now()) || !record || record.state !== "CONFIRMED" || record.confirmedAt > campaign.end) return;
+    if (expiredCampaign(campaign, now()) || !campaignEligible(record) || record.confirmedAt > campaign.end) return;
     if (!campaign.articles?.length || campaign.articles.some(a => !approvedArticle(a, now(), campaign.end))) { metric("Held"); return; }
     await assertPublicationCurrent(store, campaign.articles, now(), campaign.end);
     const contact = await mail.contact(record.email);
@@ -158,7 +168,7 @@ export function createService(deps, env) {
     await deps.wait(); // Local pacing only; the shared SES lease enforces the cross-invocation limit.
     await allowed("digest");
     record = await store.get(`SUB#${job.id}`);
-    if (record?.state !== "CONFIRMED") { await store.deliveryResult(claim, "SUPPRESSED", undefined, now()); return; }
+    if (!campaignEligible(record)) { await store.deliveryResult(claim, "SUPPRESSED", undefined, now()); return; }
     try {
       const messageId = await mail.send(record.email, message, { kind: "digest", id: job.id, campaign: job.campaign });
       await store.deliveryResult(claim, "ACCEPTED", messageId, now()); metric("Accepted");
@@ -180,6 +190,7 @@ export function createService(deps, env) {
     if (!record?.email || !["CONFIRMED", "SUPPRESSED"].includes(record.state)) return;
     const contact = await mail.contact(record.email);
     if (record.state === "SUPPRESSED") { if (contact) await mail.optout(record.email); return; }
+    if (!campaignEligible(record)) return; // Historical consent cannot create an SES opt-in.
     if (contactOptout(contact) || await mail.accountSuppressed(record.email)) { await suppress(id, record.email, "provider-suppression", `sync:${id}`); return; }
     if (!contact) await mail.createContact(record.email);
     // An unsubscribe racing contact creation wins in both stores.
