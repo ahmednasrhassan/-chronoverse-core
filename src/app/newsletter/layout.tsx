@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 
 import { buildPublicPageMetadata } from "@/lib/seo/metadata";
 import { NEWSLETTER_SIGNUPS_PAUSED } from "@/config/newsletterAvailability";
+import SiteLayout from "@/app/(site)/layout";
 
 export const metadata: Metadata = buildPublicPageMetadata({
-  title: "Newsletter",
+  title: "Chronoverse Capital Weekly",
   description: NEWSLETTER_SIGNUPS_PAUSED
-    ? "Newsletter signups and delivery are temporarily paused. Read published Chronoverse Capital research on the website."
-    : "Subscribe to receive published market research and analytical updates, available free to readers.",
+    ? "Independent research and market insights from Chronoverse Capital. Newsletter subscriptions are temporarily unavailable; explore our published research."
+    : "Independent research and market insights, delivered to your inbox. Subscribe to Chronoverse Capital Weekly, free to readers with email confirmation.",
   pathname: "/newsletter",
 });
 
@@ -16,5 +17,5 @@ export default function NewsletterLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return children;
+  return <SiteLayout>{children}</SiteLayout>;
 }

@@ -4,6 +4,7 @@ import { registrationHandler, CONSENT_TEXT, CONSENT_VERSION } from "../registrat
 import { signedRegistration } from "../signedRegistration";
 import { fixture } from "../../../../services/newsletter/test/fixture.mjs";
 import { CONSENT_TEXT as SERVICE_TEXT, CONSENT_VERSION as SERVICE_VERSION } from "../../../../services/newsletter/src/domain.mjs";
+import { POST } from "@/app/api/newsletter/route";
 
 const body = { email: "  Reader@Example.test  ", consent: true as const, consentText: CONSENT_TEXT, consentVersion: CONSENT_VERSION };
 const request = (input: unknown = body, origin = "https://chronoversecapital.com") => new Request("https://chronoversecapital.com/api/newsletter", {
@@ -15,6 +16,15 @@ test("website consent matches the service; pause performs no body read or transp
   const req = request();
   const response = await registrationHandler(true, async () => { calls++; return 202; })(req);
   assert.equal(response.status, 503); assert.equal(req.bodyUsed, false); assert.equal(calls, 0);
+});
+
+test("the actual paused API export rejects a valid consent request before reading its body", async () => {
+  const req = request();
+  const response = await POST(req);
+  assert.equal(response.status, 503);
+  assert.equal(req.bodyUsed, false);
+  assert.deepEqual(await response.json(), { code: "registration_paused" });
+  assert.equal(response.headers.get("cache-control"), "no-store");
 });
 test("hostile origins, missing consent, custom target fields and oversized streams never reach AWS", async () => {
   let calls = 0;

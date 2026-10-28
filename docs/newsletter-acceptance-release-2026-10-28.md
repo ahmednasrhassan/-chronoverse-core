@@ -10,6 +10,66 @@ email, consent-gate opening or subscriber mutation was performed during this wor
 The single unsubscribe-page source correction below is not deployed; targeted
 unsubscribe remains executor-blocked, with the dedicated identity CONFIRMED.
 
+Latest source refinement: the subscription-page work described below builds on
+this verified release. It is complete and locally validated, but **has not been
+deployed**. The live production website still uses commit `140ce8859`.
+
+## Completed subscription-page refinement
+
+The existing `/newsletter` route now presents **Chronoverse Capital Weekly** in
+the site's established charcoal, cream and mauve palette and Geist typography.
+It reuses the existing site layout, header, footer, skip link and newsletter
+entry points. The responsive page stacks on small screens and uses two columns
+on desktop. No new route, subscription store, design package or AWS resource was
+introduced. Existing SEO helpers retain the canonical `/newsletter` URL, English
+locale, social metadata and RSS identity.
+
+The primary CTA is exactly **Subscribe**. While the code pause is true, it is
+disabled and no email input, consent input or form is rendered. The pause notice
+reads: "Newsletter subscriptions are temporarily unavailable. Please check back
+soon." Both the reusable form and its submit handler independently enforce the
+code pause; the existing API still returns before reading the body or loading
+credentials. `NEWSLETTER_SIGNUPS_PAUSED` remains true.
+
+The prepared form has required email validation, an unchecked required consent
+checkbox, accessible labels, validation/status announcements, visible focus
+styles, an email keyboard hint, a loading state, and immediate duplicate-submit
+protection. The exact deployed consent text/version are unchanged. Accepted
+requests only instruct eligible readers to check for a confirmation link;
+uncertain results stay generic and cannot be retried from that form instance.
+The page explains double opt-in and secure email unsubscribe links, and links to
+the existing privacy policy. No tokenless unsubscribe URL was added.
+
+Validation for this refinement:
+
+- 14 focused component, API, consent, pause and newsletter SEO tests passed with
+  inherited service credentials removed and networking blocked. Real React DOM
+  tests cover invalid email/missing consent, loading, duplicates, accepted,
+  unavailable and uncertain outcomes, and a stale form encountering the pause.
+  No live subscriber or email was used.
+- `npm run typecheck` passed (`next typegen` and `tsc --noEmit`).
+- Targeted ESLint passed for all eight changed source/test files.
+- `npm run build -- --webpack` exited 0 after compilation, TypeScript, all 117
+  static pages, optimization and build traces. This is a complete build result.
+- The resulting local production server returned GET /newsletter=200 with the
+  site header/footer, one main landmark, correct canonical, English document,
+  disabled Subscribe button and no admission inputs. Empty JSON POST
+  /api/newsletter returned 503 registration_paused with no-store; the privacy
+  policy returned 200. The local server was stopped after verification.
+- Fresh read-only AWS results during this refinement confirmed all three
+  CONTROL values strictly Boolean false and both recurring schedules DISABLED.
+  No AWS code, IAM, SES policy, schedule, subscriber or claim was modified.
+
+`vercel.json` retains only `git.deploymentEnabled.master=false` and an empty cron
+list; no GitHub Actions deployment workflow exists in this checkout. Before this
+source push, Vercel still listed the approved `140ce8859` production deployment
+as latest, with no deployment for the prior documentation-only push. This page
+refinement needs separate owner approval for a manual **paused** website
+deployment and live page checks. Public activation still requires completed
+unsubscribe acceptance, its approved browser correction, explicit SES recipient
+policy approval and separately approved website/AWS activation. Weekly delivery
+and recurring scheduling require their own approval. None is enabled here.
+
 ## Live reconciliation
 
 The dedicated owner-approved test identity remains CONFIRMED, with no suppression
