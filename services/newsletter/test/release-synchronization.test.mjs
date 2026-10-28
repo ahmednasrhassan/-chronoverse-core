@@ -5,12 +5,19 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-test("Git runtime source is the reviewed PATCHED API source and does not claim consent completion", () => {
+test("Git retains exact deployed PATCHED/BASE source separately from explicitly undeployed source deltas", () => {
   const manifest = JSON.parse(readFileSync(new URL("../deployments/deployment-reviewed-2026-10-28.json", import.meta.url)));
   assert.equal(manifest.aws.functions.ApiFunction.archiveSha256, "638f813fa3682caf7ccdbac556e557b65928c036836ce5221337b65bdacca150");
   for (const [name, expected] of Object.entries(manifest.gitSource.runtimeSourceSha256)) {
-    const bytes = readFileSync(new URL(`../${name}`, import.meta.url));
+    const source = manifest.gitSource.patchedSourceOverrides?.[name] || name;
+    const bytes = readFileSync(new URL(`../${source}`, import.meta.url));
     assert.equal(createHash("sha256").update(bytes).digest("hex"), expected, name);
+  }
+  assert.deepEqual(Object.keys(manifest.gitSource.currentSourceDelta), ["src/http.mjs"]);
+  for (const [name, delta] of Object.entries(manifest.gitSource.currentSourceDelta)) {
+    assert.equal(delta.status, "SOURCE_ONLY_NOT_DEPLOYED");
+    const bytes = readFileSync(new URL(`../${name}`, import.meta.url));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), delta.sha256);
   }
   for (const [name, expected] of Object.entries(manifest.gitSource.baseRuntimeSourceSha256)) {
     const source = manifest.gitSource.baseSourceOverrides[name] || name;

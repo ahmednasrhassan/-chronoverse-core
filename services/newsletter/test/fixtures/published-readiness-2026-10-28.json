@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-10-28T17:45:53.100Z",
+  "config": {
+    "project": "xfs4j01p",
+    "dataset": "production",
+    "origin": "https://chronoversecapital.com"
+  },
+  "cutover": "2026-10-24T21:00:00.000Z",
+  "documents": [
+    {
+      "_createdAt": "2026-07-28T12:12:12Z",
+      "_id": "post-99-1785240729810",
+      "_rev": "zPeEzi94do5iTpmzdpt4T0",
+      "_type": "post",
+      "_updatedAt": "2026-10-26T17:18:48Z",
+      "bodyPlainText": null,
+      "excerpt": "Beyond the battlefields, Alexander the Great executed one of history’s most sweeping economic blueprints. By unlocking the Persian Empire's hoarded treasures, founding over twenty cities, and introducing a single monetary standard—the silver tetradrachm—he engineered a vast, hyper-connected Hellenistic marketplace. A strategic deconstruction of the ancient world's most enduring economic empire.\n",
+      "publishedAt": "2026-10-26T01:30:00.000Z",
+      "seoDescription": "How Alexander the Great's economic blueprint, from standardising silver to founding Alexandria, shaped global trade networks for centuries.\n",
+      "slug": "the-alexandrian-blueprint-intel-dossier",
+      "title": "The Alexandrian Blueprint intel dossier"
+    }
+  ]
+}

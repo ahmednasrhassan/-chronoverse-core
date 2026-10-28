@@ -1,0 +1,31 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Source-only website registration ingress. Requires an existing reviewed team OIDC provider. Does not change newsletter resources or gates.",
+  "Parameters": {
+    "TeamSlug": { "Type": "String", "AllowedPattern": "[a-z0-9]+(?:-[a-z0-9]+)*", "MaxLength": 64 },
+    "ProjectName": { "Type": "String", "AllowedPattern": "[a-z0-9]+(?:-[a-z0-9]+)*", "MaxLength": 64 }
+  },
+  "Resources": {
+    "WebsiteRegistrationRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "MaxSessionDuration": 3600,
+        "AssumeRolePolicyDocument": {
+          "Fn::Sub": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"arn:aws:iam::957261948953:oidc-provider/oidc.vercel.com/${TeamSlug}\"},\"Action\":\"sts:AssumeRoleWithWebIdentity\",\"Condition\":{\"StringEquals\":{\"oidc.vercel.com/${TeamSlug}:aud\":\"https://vercel.com/${TeamSlug}\",\"oidc.vercel.com/${TeamSlug}:sub\":\"owner:${TeamSlug}:project:${ProjectName}:environment:production\"}}}]}"
+        },
+        "Policies": [{
+          "PolicyName": "only-newsletter-registration",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": "execute-api:Invoke",
+              "Resource": "arn:aws:execute-api:eu-north-1:957261948953:lh71lvbqi8/$default/POST/register"
+            }]
+          }
+        }]
+      }
+    }
+  },
+  "Outputs": { "RoleArn": { "Value": { "Fn::GetAtt": ["WebsiteRegistrationRole", "Arn"] } } }
+}

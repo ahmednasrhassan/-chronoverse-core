@@ -94,7 +94,7 @@ export function createPublicApi(internalApi, deps, env) {
           `<p>Your request is recorded only after confirmation succeeds.</p><form method="post"><button type="submit" name="action" value="${action}">${action === "confirm" ? "Confirm subscription" : "Unsubscribe permanently"}</button></form>${action === "unsubscribe" ? help : ""}`);
         // Native form navigations under no-referrer serialize Origin as null.
         // strict-origin retains the HTTPS origin while omitting every path/query.
-        if (action === "confirm") page.headers["referrer-policy"] = "strict-origin";
+        page.headers["referrer-policy"] = "strict-origin";
         return page;
       }
       phase = "body_decode";

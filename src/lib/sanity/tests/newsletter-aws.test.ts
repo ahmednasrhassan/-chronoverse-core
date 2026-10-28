@@ -121,10 +121,10 @@ test("legacy aliases reject conflicting tokens, hostile origins and invalid cont
   assert.equal(confirmGet(new Request(`https://chronoversecapital.com/api/newsletter/confirm?token=${v1}`)).status, 400);
   assert.equal(optoutGet(new Request(`${path}?token=%22%3E%3Cscript%3E`)).status, 400);
 });
-test("website registration is permanently retired; no Vercel bridge, secrets or dispatch routes remain", async () => {
+test("website registration stays code-paused; old bridge and dispatch remain retired", async () => {
   assert.equal(existsSync("src/lib/newsletterAws/bridge.ts"), false);
   for (const file of ["src/lib/newsletterAws/redirect.ts", "src/app/api/newsletter/route.ts"]) assert.doesNotMatch(readFileSync(file, "utf8"), /fetch\(|process\.env|createHash|secretsmanager|sanity/);
-  assert.equal((await signup()).status, 503);
+  assert.equal((await signup(new Request("https://chronoversecapital.com/api/newsletter", { method: "POST" }))).status, 503);
   for (const handler of [cronGet, cronPost, publication]) assert.equal((await handler()).status, 410);
   assert.equal((await oldFeedback()).status, 503);
   assert.deepEqual(JSON.parse(readFileSync("vercel.json", "utf8")).crons, []);

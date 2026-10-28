@@ -12,7 +12,7 @@
   },
   "gitSource": {
     "baseCommit": "df57410cdd96e3922cc0c22d25613a867f44eb9e",
-    "releaseCommit": "The Git commit containing this file; no new commit exists before approval",
+    "releaseCommit": "dea5c97b6aa9d447fceee4d5dfb2a7d7725bd50e",
     "historicalPackagingIncludedUncommittedSource": true,
     "runtimeSourceSha256": {
       "src/aws.mjs": "23868414a5b59f481c421cd4bcba54e1c49dd9a0f87c16de964d10d190686026",
@@ -53,7 +53,17 @@
       "src/http.mjs": "deployments/base-runtime-source/src/http.mjs",
       "src/service.mjs": "deployments/base-runtime-source/src/service.mjs"
     },
-    "baseSourceRelationship": "The other 11 files share the PATCHED source bytes; these three read-only source overrides reconstruct the BASE source set for the four unchanged Lambdas, without rebuilding a package."
+    "baseSourceRelationship": "The other 11 files share the PATCHED source bytes; these three read-only source overrides reconstruct the BASE source set for the four unchanged Lambdas, without rebuilding a package.",
+    "patchedSourceOverrides": {
+      "src/http.mjs": "deployments/patched-runtime-source/src/http.mjs"
+    },
+    "currentSourceDelta": {
+      "src/http.mjs": {
+        "status": "SOURCE_ONLY_NOT_DEPLOYED",
+        "sha256": "5cdf5812e4c161c53e072c337c0ce00b362b1a762a56d6c22bcfac97ab7fd8be",
+        "reason": "Preserve a token-free HTTPS origin on native unsubscribe review forms; no change to origin validation, capability checks or live API."
+      }
+    }
   },
   "aws": {
     "region": "eu-north-1",

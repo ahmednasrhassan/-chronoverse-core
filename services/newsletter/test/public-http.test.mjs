@@ -78,7 +78,7 @@ test("GET management pages do not read secrets, change consent or echo capabilit
     const cap = action === "confirm" ? f.token(job.id, "confirm", "c".repeat(32), f.state.time + 60000) : token;
     const result = await f.service.api(request(f, `/${action}`, "GET", "", { rawQueryString: `token=${cap}` }));
     assert.equal(result.statusCode, 200); assert.match(result.body, /method="post"/); assert.ok(!result.body.includes(cap));
-    assert.equal(result.headers["referrer-policy"], action === "confirm" ? "strict-origin" : "no-referrer"); assert.equal(result.headers["x-content-type-options"], "nosniff");
+    assert.equal(result.headers["referrer-policy"], "strict-origin"); assert.equal(result.headers["x-content-type-options"], "nosniff");
   }
   f.deps.secrets = secretReader; assert.deepEqual(f.state.documents, documents); assert.equal(f.state.sends.length, 0);
 });

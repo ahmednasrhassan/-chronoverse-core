@@ -1,5 +1,10 @@
 # Newsletter follow-up and release decisions
 
+**Current AWS acceptance/release status:** see
+[28 October independent newsletter release](newsletter-acceptance-release-2026-10-28.md).
+The older Sanity subscriber/dispatch descriptions below are historical and do
+not describe the current independent AWS runtime or prepared website ingress.
+
 Release status: **NO-GO**. This document records repository work and outstanding
 owner decisions. It is not a legal policy, an effective date, or authorization
 to configure production, send mail, commit, push or deploy.
