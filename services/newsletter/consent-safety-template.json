@@ -1,0 +1,561 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Close-only newsletter consent safety companion; no Lambda, mail, subscriber writes or gate opening.",
+  "Parameters": {
+    "ApiRoleName": {
+      "Type": "String",
+      "AllowedPattern": "[A-Za-z0-9+=,.@_-]{1,64}"
+    },
+    "AdditionalTestRecipient": {
+      "Type": "String",
+      "NoEcho": true,
+      "AllowedPattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$"
+    },
+    "SenderEmail": {
+      "Type": "String",
+      "Default": "info@chronoversecapital.com",
+      "AllowedValues": [
+        "info@chronoversecapital.com"
+      ]
+    },
+    "LedgerTableName": {
+      "Type": "String",
+      "AllowedPattern": "[A-Za-z0-9_.-]{3,255}"
+    },
+    "IdentityArn": {
+      "Type": "String",
+      "AllowedPattern": "arn:aws:ses:eu-north-1:[0-9]{12}:identity/chronoversecapital.com"
+    },
+    "ConfigurationSetArn": {
+      "Type": "String",
+      "AllowedPattern": "arn:aws:ses:eu-north-1:[0-9]{12}:configuration-set/[A-Za-z0-9_-]+"
+    },
+    "AdditionalRecipientPermissionEnabled": {
+      "Type": "String",
+      "Default": "true",
+      "AllowedValues": [
+        "true",
+        "false"
+      ]
+    }
+  },
+  "Rules": {
+    "StockholmOnly": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Equals": [
+              {
+                "Ref": "AWS::Region"
+              },
+              "eu-north-1"
+            ]
+          },
+          "AssertDescription": "Consent safety is restricted to the existing Stockholm newsletter."
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "AdditionalRecipientPermission": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "newsletter-controlled-test-recipient",
+        "Roles": [
+          {
+            "Ref": "ApiRoleName"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ses:SendEmail"
+              ],
+              "Resource": [
+                {
+                  "Ref": "IdentityArn"
+                },
+                {
+                  "Ref": "ConfigurationSetArn"
+                }
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "ses:FromAddress": {
+                    "Ref": "SenderEmail"
+                  }
+                },
+                "Null": {
+                  "ses:Recipients": "false"
+                },
+                "ForAllValues:StringEquals": {
+                  "ses:Recipients": [
+                    {
+                      "Ref": "AdditionalTestRecipient"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "Condition": "AllowAdditionalRecipient"
+    },
+    "SafetyGroup": {
+      "Type": "AWS::Scheduler::ScheduleGroup",
+      "Properties": {
+        "Name": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    },
+    "FailureQueue": {
+      "Type": "AWS::SQS::Queue",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "QueueName": {
+          "Fn::Sub": "${AWS::StackName}-failures"
+        },
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    "CloserRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "states.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-close"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "close-only-control",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${LedgerTableName}"
+                  },
+                  "Condition": {
+                    "ForAllValues:StringEquals": {
+                      "dynamodb:LeadingKeys": [
+                        "CONTROL"
+                      ],
+                      "dynamodb:Attributes": [
+                        "pk",
+                        "registrationEnabled",
+                        "confirmationEnabled"
+                      ]
+                    },
+                    "StringEquals": {
+                      "dynamodb:ReturnValues": "NONE"
+                    },
+                    "Null": {
+                      "dynamodb:LeadingKeys": "false",
+                      "dynamodb:Attributes": "false"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Closer": {
+      "Type": "AWS::StepFunctions::StateMachine",
+      "Properties": {
+        "StateMachineName": {
+          "Fn::Sub": "${AWS::StackName}-close"
+        },
+        "StateMachineType": "STANDARD",
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CloserRole",
+            "Arn"
+          ]
+        },
+        "TracingConfiguration": {
+          "Enabled": false
+        },
+        "DefinitionString": {
+          "Fn::Sub": "{\"StartAt\":\"CloseConsent\",\"TimeoutSeconds\":90,\"States\":{\"CloseConsent\":{\"Type\":\"Task\",\"Resource\":\"arn:${AWS::Partition}:states:::dynamodb:updateItem\",\"InputPath\":null,\"Parameters\":{\"TableName\":\"${LedgerTableName}\",\"Key\":{\"pk\":{\"S\":\"CONTROL\"}},\"UpdateExpression\":\"SET #registration = :closed, #confirmation = :closed\",\"ConditionExpression\":\"attribute_exists(#pk)\",\"ExpressionAttributeNames\":{\"#pk\":\"pk\",\"#registration\":\"registrationEnabled\",\"#confirmation\":\"confirmationEnabled\"},\"ExpressionAttributeValues\":{\":closed\":{\"BOOL\":false}},\"ReturnValues\":\"NONE\"},\"ResultPath\":null,\"TimeoutSeconds\":15,\"Retry\":[{\"ErrorEquals\":[\"States.TaskFailed\"],\"IntervalSeconds\":2,\"BackoffRate\":2,\"MaxAttempts\":3}],\"End\":true}}}"
+        }
+      }
+    },
+    "SchedulerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "scheduler.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::GetAtt": [
+                      "SafetyGroup",
+                      "Arn"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "invoke-closer-and-report-failure",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "states:StartExecution"
+                  ],
+                  "Resource": {
+                    "Ref": "Closer"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "FailureQueue",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "DeadlineSchedule": {
+      "Type": "AWS::Scheduler::Schedule",
+      "Properties": {
+        "Name": "consent-window-close",
+        "GroupName": {
+          "Ref": "SafetyGroup"
+        },
+        "Description": "Close-only one-time consent deadline. Disabled until a separately approved bounded test.",
+        "ScheduleExpression": "at(2099-01-01T00:00:00)",
+        "ScheduleExpressionTimezone": "UTC",
+        "State": "DISABLED",
+        "FlexibleTimeWindow": {
+          "Mode": "OFF"
+        },
+        "Target": {
+          "Arn": {
+            "Ref": "Closer"
+          },
+          "RoleArn": {
+            "Fn::GetAtt": [
+              "SchedulerRole",
+              "Arn"
+            ]
+          },
+          "Input": "{}",
+          "RetryPolicy": {
+            "MaximumEventAgeInSeconds": 60,
+            "MaximumRetryAttempts": 1
+          },
+          "DeadLetterConfig": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "Arn"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ClosureFailureAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Close-only workflow failed, timed out or was aborted. Inspect Standard execution history; no notification subscription is created.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Threshold": 1,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "TreatMissingData": "notBreaching",
+        "Metrics": [
+          {
+            "Id": "c0",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/States",
+                "MetricName": "ExecutionsFailed",
+                "Dimensions": [
+                  {
+                    "Name": "StateMachineArn",
+                    "Value": {
+                      "Ref": "Closer"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "c1",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/States",
+                "MetricName": "ExecutionsTimedOut",
+                "Dimensions": [
+                  {
+                    "Name": "StateMachineArn",
+                    "Value": {
+                      "Ref": "Closer"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "c2",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/States",
+                "MetricName": "ExecutionsAborted",
+                "Dimensions": [
+                  {
+                    "Name": "StateMachineArn",
+                    "Value": {
+                      "Ref": "Closer"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "failure",
+            "Expression": "SUM(METRICS())",
+            "ReturnData": true
+          }
+        ],
+        "ActionsEnabled": false
+      }
+    },
+    "SchedulerFailureAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Independent consent closer scheduler delivery failed. Inspect the dedicated failure queue.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Threshold": 1,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "TreatMissingData": "notBreaching",
+        "Metrics": [
+          {
+            "Id": "s0",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/Scheduler",
+                "MetricName": "TargetErrorCount",
+                "Dimensions": [
+                  {
+                    "Name": "ScheduleGroup",
+                    "Value": {
+                      "Ref": "SafetyGroup"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "s1",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/Scheduler",
+                "MetricName": "InvocationDroppedCount",
+                "Dimensions": [
+                  {
+                    "Name": "ScheduleGroup",
+                    "Value": {
+                      "Ref": "SafetyGroup"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "s2",
+            "MetricStat": {
+              "Metric": {
+                "Namespace": "AWS/Scheduler",
+                "MetricName": "InvocationsFailedToBeSentToDeadLetterCount",
+                "Dimensions": [
+                  {
+                    "Name": "ScheduleGroup",
+                    "Value": {
+                      "Ref": "SafetyGroup"
+                    }
+                  }
+                ]
+              },
+              "Period": 60,
+              "Stat": "Sum"
+            },
+            "ReturnData": false
+          },
+          {
+            "Id": "failure",
+            "Expression": "SUM(METRICS())",
+            "ReturnData": true
+          }
+        ],
+        "ActionsEnabled": false
+      }
+    },
+    "FailureQueueAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Consent closer delivery failure evidence is waiting in its dedicated queue.",
+        "Namespace": "AWS/SQS",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "FailureQueue",
+                "QueueName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "ActionsEnabled": false
+      }
+    }
+  },
+  "Outputs": {
+    "CloserArn": {
+      "Value": {
+        "Ref": "Closer"
+      }
+    },
+    "CloserRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CloserRole",
+          "Arn"
+        ]
+      }
+    },
+    "SchedulerRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SchedulerRole",
+          "Arn"
+        ]
+      }
+    },
+    "ScheduleGroup": {
+      "Value": {
+        "Ref": "SafetyGroup"
+      }
+    },
+    "ScheduleName": {
+      "Value": {
+        "Ref": "DeadlineSchedule"
+      }
+    },
+    "FailureQueueUrl": {
+      "Value": {
+        "Ref": "FailureQueue"
+      }
+    },
+    "FailureQueueArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "FailureQueue",
+          "Arn"
+        ]
+      }
+    }
+  },
+  "Conditions": {
+    "AllowAdditionalRecipient": {
+      "Fn::Equals": [
+        {
+          "Ref": "AdditionalRecipientPermissionEnabled"
+        },
+        "true"
+      ]
+    }
+  }
+}
