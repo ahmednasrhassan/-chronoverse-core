@@ -1,0 +1,32 @@
+{
+  "source": "Authenticated read-only API Gateway V2 GetRoutes and GetIntegrations",
+  "region": "eu-north-1",
+  "apiId": "lh71lvbqi8",
+  "lambdaArn": "arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api",
+  "routes": [
+    {"RouteKey":"GET /register","Target":"integrations/w54xrzc","AuthorizationType":"AWS_IAM"},
+    {"RouteKey":"POST /api/newsletter/confirm","Target":"integrations/0qx0uxf","AuthorizationType":"NONE"},
+    {"RouteKey":"POST /unsubscribe","Target":"integrations/rk28ehb","AuthorizationType":"NONE"},
+    {"RouteKey":"GET /api/newsletter/confirm","Target":"integrations/o7g7qlh","AuthorizationType":"NONE"},
+    {"RouteKey":"POST /confirm","Target":"integrations/wumvx7m","AuthorizationType":"NONE"},
+    {"RouteKey":"POST /api/newsletter/unsubscribe","Target":"integrations/4f1c9m5","AuthorizationType":"NONE"},
+    {"RouteKey":"GET /api/newsletter/unsubscribe","Target":"integrations/6genyjr","AuthorizationType":"NONE"},
+    {"RouteKey":"GET /confirm","Target":"integrations/qjb6uwr","AuthorizationType":"NONE"},
+    {"RouteKey":"POST /subscribe","Target":"integrations/3m681pj","AuthorizationType":"AWS_IAM"},
+    {"RouteKey":"POST /register","Target":"integrations/t0ndnxn","AuthorizationType":"AWS_IAM"},
+    {"RouteKey":"GET /unsubscribe","Target":"integrations/12dxihs","AuthorizationType":"NONE"}
+  ],
+  "integrations": [
+    {"IntegrationId":"0qx0uxf","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"12dxihs","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"3m681pj","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"4f1c9m5","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"6genyjr","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"o7g7qlh","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"qjb6uwr","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"rk28ehb","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"t0ndnxn","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"w54xrzc","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"},
+    {"IntegrationId":"wumvx7m","IntegrationUri":"arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations","IntegrationType":"AWS_PROXY","IntegrationMethod":"POST","PayloadFormatVersion":"2.0"}
+  ]
+}

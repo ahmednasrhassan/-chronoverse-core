@@ -78,6 +78,57 @@ and recurring scheduling require their own approval. None is enabled here.
 
 ## Final completion review, 29 October
 
+### Investigated preflight STOP; original command retired
+
+The owner executed the pinned `3d985a4baea0fcbfe8609dacd36b373027be1d38`
+operation exactly once. It stopped in preflight with SafetyStop,
+check=unqualified_proxy_target and changeSetId=null. Evaluation had not reached
+deploy() or acceptance(): no runtime upload, change set, deployment or unsubscribe
+occurred. Do not replay that original command or its script SHA256
+`6c3c506e02c179b5694f09508ad1f8fdfb14245dfdac5047b96df2ac0634efc8`.
+
+Authenticated read-only GetRoutes/GetIntegrations returned exactly 11 routes and
+11 used integrations on lh71lvbqi8. Every IntegrationUri is the API Gateway Lambda
+Invoke URI:
+
+`arn:aws:apigateway:eu-north-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-north-1:957261948953:function:chronoverse-newsletter-v2-api/invocations`
+
+The wrapped function ARN is exact and unqualified. All integrations report
+AWS_PROXY, integration method POST, payload version 2.0 and no CredentialsArn.
+The three registration routes retain AWS_IAM; all eight management routes retain
+their expected authorization. Only the old URI==bare-function-ARN condition
+failed. This is a script assumption defect, not an API Gateway configuration
+defect. AWS documents the
+[Lambda invocation URI format](https://docs.aws.amazon.com/apigateway/latest/developerguide/integration-request-basic-setup.html)
+and [integration credentials behavior](https://docs.aws.amazon.com/apigatewayv2/latest/api-reference/apis-apiid-integrations.html).
+
+The corrected preflight accepts only two exact strings: the already accepted
+unqualified function ARN and its exact eu-north-1 invocation wrapper. It does not
+strip qualifiers, decode arbitrary URIs or use substring/suffix matching. All
+proxy/method/payload/credential/authorization checks remain intact. Inventory
+checks also reject duplicate routes/IDs, missing targets and unused/orphaned
+integrations. Sanitized live metadata is retained as the focused regression
+fixture `services/newsletter/test/fixtures/api-gateway-integrations-2026-10-29.json`;
+it contains infrastructure metadata only, with no credentials or subscriber data.
+
+The remainder was reviewed without changing deployment or acceptance logic.
+Read-only AWS evidence confirms UPDATE_COMPLETE, a 29,002-byte JSON source
+template below the inline limit, the expected SAM ApiFunction/CodeUri shape,
+versioned artifact bucket, exact PATCHED API and four BASE hashes, and all five
+functions Active/Successful. All three CONTROL values remain Boolean false and
+both recurring schedules remain DISABLED. Historical/claim checks had already
+passed before routes() failed. No keys, capabilities or subscriber contents were
+read for this diagnosis. Runtime assembly, actual future change-set scope,
+permissions, timing and post-execution outcomes remain mandatory fail-closed
+checks; they are not proven by this review. A replacement commit/SHA256-pinned
+command is prepared only after the regression checks pass. It has not executed.
+Validation completed: 96 focused tests passed with networking blocked, including
+the actual 11-route/integration fixture, bare-ARN compatibility, rejection of
+foreign/qualified targets and credentials, inventory anomalies and pagination.
+Targeted ESLint, Python syntax and fixture JSON validation passed. Every script
+AST node outside Operation.routes() remains identical to the retired pinned
+source; deployment, signing, unsubscribe and recovery logic were not changed.
+
 The API still reports the previously verified PATCHED runtime SHA256, not the
 pending unsubscribe correction. A read-only live GET using a synthetic,
 non-authorizing review capability returned 200 with no-referrer and no capability
@@ -135,7 +186,8 @@ no local checkpoint, receipt or ZIP file. Its authorized sequence is:
    and claims, closed gates and disabled schedules. Output sanitized result,
    runtime SHA/version and change-set identity only. No emails are sent.
 
-**The operation has not executed.** An uncertain provider result stops immediately
+**The original operation stopped once in preflight; the corrected revision has
+not executed.** An uncertain provider result stops immediately
 without execution retry, rollback, new change set or unsubscribe retry. On STOP,
 return only its sanitized JSON for independent read-only reconciliation; do not
 rerun it. An already corrected runtime also stops for reconciliation rather than

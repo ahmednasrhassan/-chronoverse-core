@@ -9,11 +9,92 @@ const path = fileURLToPath(new URL("../scripts/complete-unsubscribe-acceptance.p
 const setup = `import importlib.util, copy, io, json, zipfile, types, contextlib, sys
 s=importlib.util.spec_from_file_location('completion',${JSON.stringify(path)});m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 `;
+const routeFixturePath = fileURLToPath(new URL("./fixtures/api-gateway-integrations-2026-10-29.json", import.meta.url));
+const routeSetup = `with open(${JSON.stringify(routeFixturePath)},encoding='utf-8') as f: fixture=json.load(f)
+op=object.__new__(m.Operation);op.arn=fixture['lambdaArn']
+routes=copy.deepcopy(fixture['routes']);integrations=copy.deepcopy(fixture['integrations']);requests=[]
+def get_routes(**kw):
+ assert kw['ApiId']==fixture['apiId'];requests.append(('routes',kw))
+ return {'Items':routes}
+def get_integrations(**kw):
+ assert kw['ApiId']==fixture['apiId'];requests.append(('integrations',kw))
+ return {'Items':integrations}
+op.clients={'apigatewayv2':types.SimpleNamespace(get_routes=get_routes,get_integrations=get_integrations)}
+`;
 function python(code) {
   const result = spawnSync(process.platform === "win32" ? "python" : "python3", ["-B", "-c", setup + code], { encoding: "utf8", windowsHide: true });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return result.stdout.trim();
 }
+
+test("live AWS invocation URI shape passes with all 11 exact routes, proxy settings and IAM restrictions", () => {
+  python(routeSetup + `assert len(routes)==len(integrations)==11
+assert all(i['IntegrationUri']!=op.arn for i in integrations), 'Reproduce the old incorrect equality'
+result=op.routes()
+assert len(result)==11 and {key for key,value in result.items() if value['AuthorizationType']=='AWS_IAM'}==m.PRIVATE
+assert [r[0] for r in requests]==['routes','integrations']
+assert set(result)==m.ROUTES
+`);
+});
+
+test("bare unqualified Lambda ARN compatibility remains exact; neither representation permits a qualifier or foreign identity", () => {
+  python(routeSetup + `for i in integrations:i['IntegrationUri']=op.arn
+op.routes()
+variants=[op.arn+':prod',op.arn+':7',op.arn.replace('957261948953','111111111111'),op.arn.replace('eu-north-1','us-east-1'),op.arn+'-foreign',
+fixture['integrations'][0]['IntegrationUri'].replace('/invocations',':prod/invocations'),
+fixture['integrations'][0]['IntegrationUri'].replace('arn:aws:apigateway:eu-north-1','arn:aws:apigateway:us-east-1'),
+fixture['integrations'][0]['IntegrationUri']+'?unexpected=true',
+fixture['integrations'][0]['IntegrationUri'].replace('/invocations','/other')]
+for value in variants:
+ integrations[0]['IntegrationUri']=value
+ try:op.routes()
+ except m.SafetyStop as error:assert str(error)=='unqualified_proxy_target'
+ else:raise AssertionError('unreviewed invocation target accepted')
+`);
+});
+
+test("observed wrapped URI cannot bypass proxy, payload, method, credentials or authorization checks", () => {
+  python(routeSetup + `original=copy.deepcopy(integrations)
+for field,value in [('IntegrationType','HTTP_PROXY'),('IntegrationMethod','GET'),('PayloadFormatVersion','1.0'),
+('CredentialsArn','arn:aws:iam::957261948953:role/unapproved'),('CredentialsArn','arn:aws:iam::*:user/*')]:
+ integrations=copy.deepcopy(original);integrations[0][field]=value
+ try:op.routes()
+ except m.SafetyStop as error:assert str(error)=='unqualified_proxy_target'
+ else:raise AssertionError('proxy security invariant bypassed')
+integrations=copy.deepcopy(original);routes[0]['AuthorizationType']='NONE'
+try:op.routes()
+except m.SafetyStop as error:assert str(error)=='route_authorization'
+else:raise AssertionError('private route opened')
+`);
+});
+
+test("route inventory rejects extra, duplicate, missing, orphaned and foreign integration bindings", () => {
+  python(routeSetup + `baseline_routes=copy.deepcopy(routes);baseline_integrations=copy.deepcopy(integrations)
+cases=[]
+x=copy.deepcopy(routes);x.append(copy.deepcopy(x[0]));cases.append((x,integrations))
+x=copy.deepcopy(routes);x[0]['RouteKey']='GET /unexpected';cases.append((x,integrations))
+x=copy.deepcopy(integrations);x.append({**x[0],'IntegrationId':'orphan'});cases.append((routes,x))
+x=copy.deepcopy(integrations);x.append(copy.deepcopy(x[0]));cases.append((routes,x))
+cases.append((routes,integrations[1:]))
+x=copy.deepcopy(routes);x[0]['Target']='integrations/foreign';cases.append((x,integrations))
+x=copy.deepcopy(routes);x[0]['Target']='foreign/'+x[0]['Target'];cases.append((x,integrations))
+for routes,integrations in cases:
+ try:op.routes()
+ except m.SafetyStop:pass
+ else:raise AssertionError('unexpected inventory accepted')
+`);
+});
+
+test("live-shape route inventory retains complete checks across pagination and response ordering", () => {
+  python(routeSetup + `routes.reverse();integrations.reverse()
+def page(items,kw):
+ if 'NextToken' not in kw:return {'Items':items[:4],'NextToken':'next-page'}
+ assert kw['NextToken']=='next-page' and kw['ApiId']==m.API
+ return {'Items':items[4:]}
+op.clients={'apigatewayv2':types.SimpleNamespace(get_routes=lambda **kw:page(routes,kw),get_integrations=lambda **kw:page(integrations,kw))}
+assert len(op.routes())==11
+`);
+});
 
 test("one-file runtime correction preserves every other archive member and rejects uncertain input", () => {
   python(`old=b'prefix; if (action === "confirm") page.headers["referrer-policy"] = "strict-origin"; suffix'

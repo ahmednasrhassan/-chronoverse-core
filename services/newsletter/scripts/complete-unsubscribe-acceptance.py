@@ -161,13 +161,20 @@ class Operation:
                 if not response.get('NextToken'):
                     break
                 args['NextToken'] = response['NextToken']
-        require({r['RouteKey'] for r in routes} == ROUTES, 'exact_routes')
+        require(len(routes) == len(ROUTES) and {r['RouteKey'] for r in routes} == ROUTES, 'exact_routes')
         index = {i['IntegrationId']: i for i in integrations}
+        require(len(index) == len(integrations) and all(isinstance(r.get('Target'), str)
+                and r['Target'].startswith('integrations/') for r in routes), 'integration_inventory')
+        require({r['Target'].removeprefix('integrations/') for r in routes} == set(index), 'integration_inventory')
+        # SAM's OpenAPI integration uses the Lambda Invoke URI, not a bare ARN.
+        # Accept only these two exact representations of the same unqualified
+        # function. Never use suffix/substring matching or strip a qualifier.
+        invoke_uri = 'arn:aws:apigateway:' + REGION + ':lambda:path/2015-03-31/functions/' + self.arn + '/invocations'
         result = {}
         for r in routes:
             require(r.get('AuthorizationType') == ('AWS_IAM' if r['RouteKey'] in PRIVATE else 'NONE'), 'route_authorization')
             i = index[r['Target'].removeprefix('integrations/')]
-            require(i.get('IntegrationUri') == self.arn and i.get('IntegrationType') == 'AWS_PROXY'
+            require(i.get('IntegrationUri') in [self.arn, invoke_uri] and i.get('IntegrationType') == 'AWS_PROXY'
                     and i.get('IntegrationMethod') == 'POST' and i.get('PayloadFormatVersion') == '2.0'
                     and not i.get('CredentialsArn'), 'unqualified_proxy_target')
             result[r['RouteKey']] = {k: r.get(k) for k in ['Target', 'AuthorizationType', 'AuthorizationScopes', 'AuthorizerId']}
