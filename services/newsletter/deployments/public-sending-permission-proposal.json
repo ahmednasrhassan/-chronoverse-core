@@ -1,0 +1,37 @@
+{
+  "documentType": "APPROVAL_REQUIRED_PERMISSION_PROPOSAL",
+  "deploymentAuthorized": false,
+  "applied": false,
+  "account": "957261948953",
+  "region": "eu-north-1",
+  "policyName": "newsletter-confirmed-audience-send",
+  "roles": [
+    "chronoverse-newsletter-v2-ApiRole-iVVuu5uGbHpU",
+    "chronoverse-newsletter-v2-WorkerRole-RMlreqzArmtX"
+  ],
+  "operationAfterSeparateApproval": "Add this one inline policy to each exact existing role; preserve every existing policy. Do not change permissions, gates or schedules as part of this proposal review.",
+  "rollbackAfterSeparateApproval": "Delete only newsletter-confirmed-audience-send from these two roles after closing all gates. Preserve the existing exact-recipient test policies.",
+  "recipientScope": "Any recipient accepted by the existing consent workflow. IAM cannot inspect DynamoDB consent state: the API limits confirmation invitations; the worker independently requires fresh confirmed consent, audience membership and current suppression/SES opt-in checks. This is broader recipient permission and requires explicit owner approval.",
+  "policy": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "ses:SendEmail",
+        "Resource": [
+          "arn:aws:ses:eu-north-1:957261948953:identity/chronoversecapital.com",
+          "arn:aws:ses:eu-north-1:957261948953:configuration-set/chronoverse-newsletter-v2-events"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "ses:FromAddress": "info@chronoversecapital.com",
+            "aws:RequestedRegion": "eu-north-1"
+          },
+          "Null": {
+            "ses:Recipients": "false"
+          }
+        }
+      }
+    ]
+  }
+}

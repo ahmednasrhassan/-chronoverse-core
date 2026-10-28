@@ -10,9 +10,15 @@ email, consent-gate opening or subscriber mutation was performed during this wor
 The single unsubscribe-page source correction below is not deployed; targeted
 unsubscribe remains executor-blocked, with the dedicated identity CONFIRMED.
 
-Latest source refinement: the subscription-page work described below builds on
-this verified release. It is complete and locally validated, but **has not been
-deployed**. The live production website still uses commit `140ce8859`.
+Latest release, 29 October: the separately approved paused subscription-page
+refinement is **deployed and verified** on commit
+`dc51a59a02dca96287fce82439a0f0b3ac7d82c7`. Production deployment
+`dpl_9P4oj9FxqBrfim66Ek1xaDdUnGHz` is READY with the canonical domains assigned
+and no alias error. The page displays Chronoverse Capital Weekly, disabled
+Subscribe, privacy information, English content and the unavailable notice,
+with no admission form/inputs. The website API returns 503 registration_paused.
+Public signup and delivery remain disabled. The previous `140ce8859` production
+deployment remains available as the rollback target for this refinement.
 
 ## Completed subscription-page refinement
 
@@ -63,12 +69,112 @@ Validation for this refinement:
 `vercel.json` retains only `git.deploymentEnabled.master=false` and an empty cron
 list; no GitHub Actions deployment workflow exists in this checkout. Before this
 source push, Vercel still listed the approved `140ce8859` production deployment
-as latest, with no deployment for the prior documentation-only push. This page
-refinement needs separate owner approval for a manual **paused** website
-deployment and live page checks. Public activation still requires completed
+as latest, with no deployment for the prior documentation-only push. Subsequent
+owner approval authorized the manual **paused** deployment; its live checks have
+now passed as recorded above. Public activation still requires completed
 unsubscribe acceptance, its approved browser correction, explicit SES recipient
 policy approval and separately approved website/AWS activation. Weekly delivery
 and recurring scheduling require their own approval. None is enabled here.
+
+## Final completion review, 29 October
+
+The API still reports the previously verified PATCHED runtime SHA256, not the
+pending unsubscribe correction. A read-only live GET using a synthetic,
+non-authorizing review capability returned 200 with no-referrer and no capability
+echo. This independently confirms that the one-line strict-origin correction is
+still appropriate. The exact immutable deployed archive was checked read-only:
+replacing only that conditional produces the already reviewed HTTP module hash.
+No new archive was created locally and the original artifact was not modified.
+
+No targeted subscriber write has occurred during this review. The dedicated
+identity's last authoritative state remains CONFIRMED with SES OPT_IN; SUPPRESSED,
+SES opt-out, audience removal and live idempotency are **not claimed**. Two later
+attempts at a fresh read-back failed at the connector transport with
+`Transport send error / HTTP request failed` for the ChatGPT MCP backend. Earlier
+AWS policy/account/control reads in this same review succeeded; do not infer an
+application fault or request another authorization from that transport error.
+All successful current-review CONTROL reads were strictly false and both
+recurring schedules were DISABLED. Nothing in this work opened or changed them.
+
+Available execution paths were checked without retrying blocked crypto imports.
+The local process has no AWS credential/profile files or credential environment;
+the browser connection has no attached browser. The connected AWS SDK does not
+support the required signing/archive libraries. No secret was retrieved and no
+capability was minted through these limited executors. No credential transfer,
+direct ledger suppression, SES update, new minting endpoint or new infrastructure
+was used to bypass the limitation.
+
+The owner's permitted fallback is one pinned CloudShell operation:
+`services/newsletter/scripts/complete-unsubscribe-acceptance.py`. It is an actual
+completion operation, not a deployment of the old launcher or activation flow.
+It requires explicit distinct recipient/preserved-identity arguments. The exact
+operator command must pin both its Git commit and SHA256, fetch it into memory,
+verify it, and execute it once in authenticated eu-north-1 CloudShell. It writes
+no local checkpoint, receipt or ZIP file. Its authorized sequence is:
+
+1. Verify account, exact resources, strict closed gates, disabled schedules,
+   all 11 IAM/proxy routes, historical row and existing confirmation claims.
+2. Read the live versioned PATCHED artifact. Verify its pinned archive/source
+   hashes; produce one necessary corrected runtime in memory; compare every
+   member to prove only src/http.mjs changed. Upload under a new immutable,
+   content-addressed S3 key, preserving every existing object/version.
+3. Copy the current live source template, changing only ApiFunction.CodeUri.
+   Require one non-replacing ApiFunction Code change and an otherwise identical
+   processed template. Keep all parameter values, IAM and other four runtimes.
+   Freshly recheck isolation before executing once. Reconcile exact stack
+   ChangeSetId, UPDATE_COMPLETE, processed template, Lambda hashes/version and
+   routes; never require a consumed change set to remain retrievable afterward.
+4. Obtain the existing signing secret only inside that authenticated process.
+   Mint the existing purpose/nonce-bound unsubscribe format in memory. Use the
+   genuine HTTPS unsubscribe endpoint: read-only review/cancel first, then one
+   deliberate unsubscribe POST, followed by repeat and RFC8058 one-click checks.
+   Require authoritative SUPPRESSED and preserved other subscriber fields;
+   observe the existing stream's SES OPT_OUT/UnsubscribeAll synchronization and
+   absence from the Audience index using both exact index keys.
+5. Require stable suppression/audit on repeated calls, unchanged historical row
+   and claims, closed gates and disabled schedules. Output sanitized result,
+   runtime SHA/version and change-set identity only. No emails are sent.
+
+**The operation has not executed.** An uncertain provider result stops immediately
+without execution retry, rollback, new change set or unsubscribe retry. On STOP,
+return only its sanitized JSON for independent read-only reconciliation; do not
+rerun it. An already corrected runtime also stops for reconciliation rather than
+adopting an uncertain previous execution. Native browser automation is unavailable;
+the operation explicitly reports NOT_EXERCISED for that part instead of claiming
+a browser test. The source correction, real HTTP Origin path and existing
+isolated regression tests do not falsely become browser acceptance evidence.
+
+Validation: the focused service/public HTTP/confirmation/closer/published Sanity
+readiness/completion run passed 90 tests. An added regression for an uncertain
+CloudFormation execution then passed in the 11-test completion subset. Targeted
+ESLint and Python syntax passed. The 14 website tests, TypeScript and complete
+local production build were accepted from dc51a59; its new Vercel production
+build also completed successfully. No website source changed again, so those
+checks were not repeated as a broad suite.
+
+SES account production access and sending are enabled, enforcement is HEALTHY,
+the domain is verified and DKIM is SUCCESS. HTTPS DNS read-back found all three
+SES DKIM CNAMEs correct and a DMARC monitoring policy (p=none). The initial local
+DNS resolver could not resolve these records; the HTTPS resolver succeeded.
+Account bounce/complaint suppression is enabled. These are readiness checks,
+not a new email or a guarantee of inbox placement.
+
+Live IAM review confirms two API inline policies retaining exact test-recipient
+grants and the exact sender/identity/configuration set. The worker has no
+ses:SendEmail grant and no attached managed policy while delivery is disabled.
+Do not claim either role can serve the public audience yet.
+`services/newsletter/deployments/public-sending-permission-proposal.json` records
+the **unapplied, approval-required** scope: add one narrowly bounded SendEmail
+inline policy to each of the existing API and worker roles, only for
+info@chronoversecapital.com, eu-north-1 and the existing SES identity/configuration
+set. Preserve all existing grants; rollback removes only the two new inline
+policies after closure. IAM cannot inspect DynamoDB confirmation state: public
+recipient access is broader and needs explicit owner approval. The existing
+application enforces double opt-in, current confirmed eligibility, SES opt-in,
+ledger/provider suppression, claims and feedback checks. The proposal's read-only
+IAM simulations allowed the intended sender/public recipient and denied a wrong
+sender, wrong region and missing recipient context. No policy was applied, and
+no gate/schedule activation is bundled with this proposal.
 
 ## Live reconciliation
 
