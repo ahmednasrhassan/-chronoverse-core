@@ -1,13 +1,14 @@
 # Independent newsletter acceptance and website release
 
-Status: **public release NO-GO**. Source preparation and isolated acceptance are
-complete for the scope below; live unsubscribe and production ingress acceptance
-are not complete. No AWS deployment, registration, email or activation was
-performed during this work. Vercel master automatic deployment remains false.
-The single unsubscribe-page source correction below is not deployed.
-Follow-up: the full Webpack production build and local production-server checks
-have now passed. The new provider/role and paused production website deployment
-still require separate owner approval; live unsubscribe remains executor-blocked.
+Status: **paused production website released; public activation NO-GO**.
+After separate owner approval, the exact OIDC provider/invocation role and paused
+website commit `140ce8859fed4a96ee42c78530383cc137f272b9` were deployed and verified.
+The real production build passed, the single production-workload signed empty
+request reached the closed AWS registration guard (503), and the live website
+remains paused. Vercel master automatic deployment remains false. No registration,
+email, consent-gate opening or subscriber mutation was performed during this work.
+The single unsubscribe-page source correction below is not deployed; targeted
+unsubscribe remains executor-blocked, with the dedicated identity CONFIRMED.
 
 ## Live reconciliation
 
@@ -69,9 +70,11 @@ reference is [Vercel AWS OIDC federation](https://vercel.com/docs/oidc/aws).
 key and must never be prefixed NEXT_PUBLIC_. Vercel supplies the workload OIDC
 token. Do not put an owner's personal AWS credentials in website settings.
 
-`services/newsletter/website-registration-role-template.json` is **source only,
-not deployed**. Live IAM inventory found no OIDC providers, so the reviewed scope
-now creates exactly one provider and one invocation role, under separate approval.
+`services/newsletter/website-registration-role-template.json` is **deployed** in
+the companion stack `chronoverse-newsletter-website-access` (CREATE_COMPLETE).
+Fresh inventory established that neither provider nor role existed before this
+separately approved creation; no existing resources were adopted or overwritten.
+The stack creates exactly one provider and one invocation role.
 Team/project parameters are pinned to `chronoverse-capital`. It trusts
 exact audience and production project subject values through StringEquals. Its
 only grant is execute-api:Invoke on the existing account/API's
@@ -174,16 +177,16 @@ source changes are the IAM template, its test and this operational documentation
    deployment or old launchers, or export credentials to chat/command arguments.
    Until that correction is deployed and browser-verified, direct canonical
    unsubscribe browser acceptance remains incomplete.
-3. Approve the exact new OIDC provider and invocation-only role below, then
-   configure the production-only server role ARN under that separate approval.
-   Verify a signed closed-guard request from the actual website runtime with no
-   consent/email before considering public release.
+3. Completed under separate approval: exact OIDC provider/invocation-only role,
+   production-only role ARN, paused production website release and one signed
+   closed-guard request from the production build workload. This proves production
+   workload federation and reachability; the paused public handler intentionally
+   does not load credentials. No browser consent or email test was repeated.
 4. SES production account eligibility is verified; a separate decision is still
    required for the exact-recipient sending restrictions. Test permission is not authorization
    for arbitrary public addresses. Do not broaden recipient permissions silently.
-5. Review the website build and deployment target for this Git source while
-   preserving `git.deploymentEnabled.master=false`. A separately approved website
-   release may deploy paused first. Public activation requires an explicit code
+5. The separately approved paused website release is verified below; preserve
+   `git.deploymentEnabled.master=false`. Public activation requires an explicit code
    change to NEWSLETTER_SIGNUPS_PAUSED plus independently approved AWS gates.
 6. Weekly production sending and recurring schedule activation require separate
    approval after the above evidence and final content/compliance review. Keep
@@ -200,10 +203,11 @@ deployed API artifact.
 The Vercel connection successfully read the existing team/project and production
 deployment. Team `team_GmY2uikxuEpKNIcvxfufKta6`, project
 `prj_eaR0kIu4T56IlK1nLyCCxkYsvFHk`, both named `chronoverse-capital`.
-Production is READY at deployment `dpl_4yxazgLBXmzRSet1ZcVaFg1RYoDL`, commit
-`df57410cdd96e3922cc0c22d25613a867f44eb9e`; retain that exact rollback target.
+The retained prior production rollback target is deployment
+`dpl_4yxazgLBXmzRSet1ZcVaFg1RYoDL`, commit
+`df57410cdd96e3922cc0c22d25613a867f44eb9e`.
 
-Separate approval is required for these concrete operations:
+The owner separately approved, and execution completed, these exact operations:
 
 - Create companion stack `chronoverse-newsletter-website-access` containing only
   OIDC provider `https://oidc.vercel.com/chronoverse-capital` with audience
@@ -234,8 +238,40 @@ is added. The paused public endpoint continues to return before loading AWS
 credentials. Label this as production-workload SigV4 reachability, not a completed
 browser registration or live email test.
 
-After approval, independently verify provider/role trust and allowed registration
-invocation, with unrelated paths/actions denied. No production deployment or new
-IAM resource was created in this review. All CONTROL gates remain false, both
-recurring schedules remain disabled, and the live API retains the original
-reviewed PATCHED package SHA256.
+## Verified paused production release
+
+- Companion stack: `chronoverse-newsletter-website-access`, CREATE_COMPLETE.
+  Its provider URL/audience, production-only subject and sole inline invocation
+  policy match the committed template. No managed policies are attached and no
+  other inline policy exists. IAM simulation allows only POST /register; GET
+  /register, POST /subscribe, /confirm and /unsubscribe are implicitly denied,
+  as are SES sending, secret reads, DynamoDB updates and Lambda invocation.
+- Vercel team issuer was enabled and the exact public role ARN was configured
+  only for production. No static credentials or new secret values were used.
+- Deployment `dpl_DYLzpYmoV9T1XnkJaptNALKZrBn3` is READY on Git commit
+  `140ce8859fed4a96ee42c78530383cc137f272b9`, target production, without alias
+  errors. Its aliases include `chronoversecapital.com` and
+  `www.chronoversecapital.com`.
+- The full Vercel Webpack build, TypeScript, 117 static pages and build traces
+  completed. The existing server signer ran once in that production build
+  workload, using short-lived OIDC credentials and the literal body `{}`;
+  the only probe output was `503`. No address/consent was supplied. This is
+  production-workload SigV4 reachability, not a browser registration or email test.
+- After READY, the project build command was reset successfully to
+  `npm run build -- --webpack`, removing the one-time probe from future builds.
+  No public probe endpoint or probe source file was added.
+- Live `https://chronoversecapital.com/newsletter` returned 200, contained the
+  paused notice and no email input. One same-origin empty JSON POST to the
+  website `/api/newsletter` returned 503 with code `registration_paused`, before
+  the AWS transport. This request cannot register or send mail.
+- Final independent AWS reads found all three CONTROL values Boolean false,
+  both recurring schedules DISABLED, API Active/Successful with the original
+  reviewed PATCHED package SHA256, and the dedicated identity still CONFIRMED.
+  No subscriber, historical claim, SES permission or deployed API code changed.
+
+The owner selected connection of the existing authenticated AWS browser, but the
+browser connection still reported no attached browsers. This is not an expired
+AWS connector authorization: the SDK reads above succeeded. Until a trusted
+signing/archive-capable executor is actually connected, the already approved
+unsubscribe and one-line API correction cannot safely execute. No cryptographic
+restriction was bypassed and no substitute direct suppression was performed.
