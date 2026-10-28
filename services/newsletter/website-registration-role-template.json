@@ -1,14 +1,23 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Source-only website registration ingress. Requires an existing reviewed team OIDC provider. Does not change newsletter resources or gates.",
+  "Description": "Source-only website registration ingress with exact team OIDC provider and production project role. Separate owner approval required; does not change newsletter resources or gates.",
   "Parameters": {
-    "TeamSlug": { "Type": "String", "AllowedPattern": "[a-z0-9]+(?:-[a-z0-9]+)*", "MaxLength": 64 },
-    "ProjectName": { "Type": "String", "AllowedPattern": "[a-z0-9]+(?:-[a-z0-9]+)*", "MaxLength": 64 }
+    "TeamSlug": { "Type": "String", "Default": "chronoverse-capital", "AllowedValues": ["chronoverse-capital"] },
+    "ProjectName": { "Type": "String", "Default": "chronoverse-capital", "AllowedValues": ["chronoverse-capital"] }
   },
   "Resources": {
+    "WebsiteOidcProvider": {
+      "Type": "AWS::IAM::OIDCProvider",
+      "Properties": {
+        "Url": { "Fn::Sub": "https://oidc.vercel.com/${TeamSlug}" },
+        "ClientIdList": [{ "Fn::Sub": "https://vercel.com/${TeamSlug}" }]
+      }
+    },
     "WebsiteRegistrationRole": {
       "Type": "AWS::IAM::Role",
+      "DependsOn": "WebsiteOidcProvider",
       "Properties": {
+        "RoleName": "chronoverse-newsletter-website-registration",
         "MaxSessionDuration": 3600,
         "AssumeRolePolicyDocument": {
           "Fn::Sub": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"arn:aws:iam::957261948953:oidc-provider/oidc.vercel.com/${TeamSlug}\"},\"Action\":\"sts:AssumeRoleWithWebIdentity\",\"Condition\":{\"StringEquals\":{\"oidc.vercel.com/${TeamSlug}:aud\":\"https://vercel.com/${TeamSlug}\",\"oidc.vercel.com/${TeamSlug}:sub\":\"owner:${TeamSlug}:project:${ProjectName}:environment:production\"}}}]}"
@@ -27,5 +36,8 @@
       }
     }
   },
-  "Outputs": { "RoleArn": { "Value": { "Fn::GetAtt": ["WebsiteRegistrationRole", "Arn"] } } }
+  "Outputs": {
+    "RoleArn": { "Value": { "Fn::GetAtt": ["WebsiteRegistrationRole", "Arn"] } },
+    "ProviderArn": { "Value": { "Ref": "WebsiteOidcProvider" } }
+  }
 }

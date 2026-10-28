@@ -5,6 +5,9 @@ complete for the scope below; live unsubscribe and production ingress acceptance
 are not complete. No AWS deployment, registration, email or activation was
 performed during this work. Vercel master automatic deployment remains false.
 The single unsubscribe-page source correction below is not deployed.
+Follow-up: the full Webpack production build and local production-server checks
+have now passed. The new provider/role and paused production website deployment
+still require separate owner approval; live unsubscribe remains executor-blocked.
 
 ## Live reconciliation
 
@@ -67,13 +70,18 @@ key and must never be prefixed NEXT_PUBLIC_. Vercel supplies the workload OIDC
 token. Do not put an owner's personal AWS credentials in website settings.
 
 `services/newsletter/website-registration-role-template.json` is **source only,
-not deployed**. It references an existing reviewed team OIDC provider and trusts
+not deployed**. Live IAM inventory found no OIDC providers, so the reviewed scope
+now creates exactly one provider and one invocation role, under separate approval.
+Team/project parameters are pinned to `chronoverse-capital`. It trusts
 exact audience and production project subject values through StringEquals. Its
 only grant is execute-api:Invoke on the existing account/API's
 `$default/POST/register`; it cannot invoke other paths, send SES mail, read secrets,
-change gates or access DynamoDB. Exact team/project/provider binding and AWS stage
-must be reviewed before any separately approved role creation. The template does
-not create the provider or update existing newsletter resources.
+change gates or access DynamoDB. The account/API stage is `$default`; the team and
+project were independently read from the Vercel connection. CloudFormation's
+read-only ValidateTemplate passed with CAPABILITY_NAMED_IAM. The template does not
+update existing newsletter resources. AWS retrieves the provider CA thumbprint
+when ThumbprintList is omitted, as documented in the
+[CloudFormation OIDC reference](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-iam-oidcprovider.html).
 
 The generic validation and SigV4 transport take an injected temporary-credential
 provider; only `vercelRegistration.ts` imports a Vercel package. A Cloudflare move
@@ -83,9 +91,20 @@ tests. A Cloudflare adapter/deployment is not claimed to exist. The newsletter's
 content links, Lambda execution, storage, suppression and schedules stay in AWS
 and have no dependency on a website cron or publication webhook.
 
-The existing AWS sourceIp rate limit sees the server's egress address: its
-conservative shared ten-requests/hour bucket remains in effect. Do not forward
-an untrusted client fingerprint or weaken this guard to improve throughput.
+The existing AWS sourceIp rate limit sees the server's egress address: visitors
+sharing one egress IP share its ten-requests/hour bucket. Rotating egress IPs can
+have separate buckets; this is not a global ten/hour website limit. The focused
+spoofed-forwarding-header regression passed. No live load or email test was run.
+Do not forward an untrusted client fingerprint or weaken this guard.
+
+Live SES GetAccount reports production access, sending enabled and HEALTHY
+enforcement. IAM simulation, with sender/recipient and eu-north-1 region context,
+allowed the approved test identity but implicitly denied an arbitrary public
+recipient and an unexpected sender, for both the identity and configuration-set
+resources. All simulations had no missing context. Current API sending policies
+retain exact-recipient conditions without wildcard recipients. Public eligibility
+is therefore blocked by these permissions despite SES account production access;
+no policy was broadened and no email was sent.
 
 ## Weekly readiness and postal-address finding
 
@@ -134,25 +153,33 @@ modules and all BASE reference modules remain unchanged.
 
 Validation: 58 focused service/provenance/role tests and 17 focused website,
 registration and search-identity tests passed, with networking blocked. The
-website TypeScript check passed. The
-default Next.js production build did not finish its compile stage within ten
-minutes and was stopped; this is not a passing build or a diagnosed application
-failure. A completed production build remains required before release.
+website TypeScript check passed. The earlier default Turbopack attempt remains a
+timeout, not a pass. The follow-up full `npm run build -- --webpack` exited 0:
+compilation, TypeScript, all 117 static pages, optimization and build traces
+completed. Running that production build locally verified GET /newsletter=200,
+pause notice present, email input absent, and POST /api/newsletter with empty JSON
+returned 503 registration_paused. This proves the built pause; it is not a live
+Vercel SigV4 result. No application source changed after that build; the follow-up
+source changes are the IAM template, its test and this operational documentation.
 
 1. Finish and evidence the already approved targeted live unsubscribe through a
    secure executor. Require SUPPRESSED, SES opt-out, no audience entry, stable
    repeat/one-click results and historical preservation.
-2. Separately review/approve the one-line unsubscribe browser correction for a
-   future API release, preserving the current infrastructure and all ledger
-   state. Do not rerun the completed confirmation deployment or old launchers.
+2. The owner has now approved deployment of the one-line browser correction;
+   execution remains blocked by the lack of a trusted authenticated executor
+   supporting the required signing/archive operations. The local SDK reports
+   CredentialsProviderError; the browser runtime lists no connected browser;
+   the AWS connector rejects hmac/hashlib/base64/zipfile imports. No capability,
+   new ZIP or update was created. Do not rerun the completed confirmation
+   deployment or old launchers, or export credentials to chat/command arguments.
    Until that correction is deployed and browser-verified, direct canonical
    unsubscribe browser acceptance remains incomplete.
-3. Review the exact OIDC issuer/audience/subject, existing provider and stage;
-   separately approve/configure the invocation-only role and server role ARN.
+3. Approve the exact new OIDC provider and invocation-only role below, then
+   configure the production-only server role ARN under that separate approval.
    Verify a signed closed-guard request from the actual website runtime with no
    consent/email before considering public release.
-4. Review SES account production eligibility and the existing exact-recipient
-   sending restrictions. Current test-recipient permission is not authorization
+4. SES production account eligibility is verified; a separate decision is still
+   required for the exact-recipient sending restrictions. Test permission is not authorization
    for arbitrary public addresses. Do not broaden recipient permissions silently.
 5. Review the website build and deployment target for this Git source while
    preserving `git.deploymentEnabled.master=false`. A separately approved website
@@ -167,3 +194,48 @@ rewritten by this Git release. Existing provenance remains in
 `services/newsletter/deployments/deployment-reviewed-2026-10-28.json`; these website
 sources and the pending browser correction do not claim to change the already
 deployed API artifact.
+
+## Concrete paused-release approval scope
+
+The Vercel connection successfully read the existing team/project and production
+deployment. Team `team_GmY2uikxuEpKNIcvxfufKta6`, project
+`prj_eaR0kIu4T56IlK1nLyCCxkYsvFHk`, both named `chronoverse-capital`.
+Production is READY at deployment `dpl_4yxazgLBXmzRSet1ZcVaFg1RYoDL`, commit
+`df57410cdd96e3922cc0c22d25613a867f44eb9e`; retain that exact rollback target.
+
+Separate approval is required for these concrete operations:
+
+- Create companion stack `chronoverse-newsletter-website-access` containing only
+  OIDC provider `https://oidc.vercel.com/chronoverse-capital` with audience
+  `https://vercel.com/chronoverse-capital`, and role
+  `arn:aws:iam::957261948953:role/chronoverse-newsletter-website-registration`.
+  Trust only subject
+  `owner:chronoverse-capital:project:chronoverse-capital:environment:production`.
+  The sole permission is execute-api:Invoke on
+  `arn:aws:execute-api:eu-north-1:957261948953:lh71lvbqi8/$default/POST/register`.
+  Stop on an unexpected pre-existing provider/role; do not adopt or overwrite it.
+- Configure that role ARN in production-only NEWSLETTER_REGISTRATION_ROLE_ARN and
+  confirm the project's OIDC team issuer is enabled. No static credentials,
+  newsletter keys, preview trust, SES grants or existing AWS role changes.
+- Manually deploy the reviewed Git SHA to the existing Vercel production project
+  with the verified Webpack build command and code signup pause intact. Keep
+  git.deploymentEnabled.master=false. Verify the actual resulting commit, READY
+  status, live pause and closed website admission; retain the previous deployment
+  for rollback. This approves paused release only, not public registration.
+
+Before requesting that production deployment, independently read strict-false
+CONTROL and disabled schedules. A private production-workload assertion can run
+after the Webpack build, using the existing official credential provider and
+SigV4 libraries: sign exactly one POST /register with the literal body `{}` and
+the AWS origin; require HTTP 503 and fail the release on any other result or
+uncertainty. No address or consent is supplied, so even unexpectedly open gates
+cannot create a subscriber or email. Do not retry. No public health/probe endpoint
+is added. The paused public endpoint continues to return before loading AWS
+credentials. Label this as production-workload SigV4 reachability, not a completed
+browser registration or live email test.
+
+After approval, independently verify provider/role trust and allowed registration
+invocation, with unrelated paths/actions denied. No production deployment or new
+IAM resource was created in this review. All CONTROL gates remain false, both
+recurring schedules remain disabled, and the live API retains the original
+reviewed PATCHED package SHA256.

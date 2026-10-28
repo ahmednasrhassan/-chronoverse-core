@@ -3,8 +3,19 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 test("website role trusts only one production OIDC subject and invokes only the existing POST register route", () => {
   const template = JSON.parse(readFileSync(new URL("../website-registration-role-template.json", import.meta.url)));
-  assert.deepEqual(Object.keys(template.Resources), ["WebsiteRegistrationRole"]);
+  for (const name of ["TeamSlug", "ProjectName"]) {
+    assert.equal(template.Parameters[name].Default, "chronoverse-capital");
+    assert.deepEqual(template.Parameters[name].AllowedValues, ["chronoverse-capital"]);
+  }
+  assert.deepEqual(Object.keys(template.Resources), ["WebsiteOidcProvider", "WebsiteRegistrationRole"]);
+  assert.equal(template.Resources.WebsiteOidcProvider.Type, "AWS::IAM::OIDCProvider");
+  assert.deepEqual(template.Resources.WebsiteOidcProvider.Properties, {
+    Url: { "Fn::Sub": "https://oidc.vercel.com/${TeamSlug}" },
+    ClientIdList: [{ "Fn::Sub": "https://vercel.com/${TeamSlug}" }],
+  });
+  assert.equal(template.Resources.WebsiteRegistrationRole.DependsOn, "WebsiteOidcProvider");
   const p = template.Resources.WebsiteRegistrationRole.Properties;
+  assert.equal(p.RoleName, "chronoverse-newsletter-website-registration");
   const trust = JSON.parse(p.AssumeRolePolicyDocument["Fn::Sub"].replaceAll("${TeamSlug}", "synthetic-team").replaceAll("${ProjectName}", "synthetic-project"));
   assert.deepEqual(trust.Statement, [{ Effect: "Allow", Principal: { Federated: "arn:aws:iam::957261948953:oidc-provider/oidc.vercel.com/synthetic-team" },
     Action: "sts:AssumeRoleWithWebIdentity", Condition: { StringEquals: {
