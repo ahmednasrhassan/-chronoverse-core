@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "documentType": "SANITIZED_SOURCE_PROVENANCE",
+  "isExecutionReceipt": false,
+  "synchronizationIdentity": "newsletter-source-sync-2026-10-28",
+  "verificationDate": "2026-10-28",
+  "evidenceProvenance": {
+    "source": "User-confirmed completed live post-execution reconciliation",
+    "awsReadsRepeatedForGitAudit": false,
+    "sourcePackageComparison": "Existing reviewed archive reconstructed in memory only; all 14 included runtime source files match exactly",
+    "historicalAssertionCaller": "UNRESOLVED: raw route snapshot and source-template assertions share require line 15"
+  },
+  "gitSource": {
+    "baseCommit": "df57410cdd96e3922cc0c22d25613a867f44eb9e",
+    "releaseCommit": "The Git commit containing this file; no new commit exists before approval",
+    "historicalPackagingIncludedUncommittedSource": true,
+    "runtimeSourceSha256": {
+      "src/aws.mjs": "23868414a5b59f481c421cd4bcba54e1c49dd9a0f87c16de964d10d190686026",
+      "src/content.mjs": "f3c2968cea097133c51698e8f4f80fcb69a28b56b67ba12e609be26e47601121",
+      "src/discovery-handler.mjs": "1de73498badfa29ec3adcd49b4fe2ca018f5999c58bf7cfe08d9f5a65ccc88e6",
+      "src/discovery.mjs": "beb97842e3d916abcc96447dc4f1390426648f55c06c33c18562694e5f225f4e",
+      "src/domain.mjs": "c29c0995d82ed6a4515e7d7b02f9da26e7d23752ea8364561397b252c4f09630",
+      "src/handlers.mjs": "9d3d95bc09dae8bf0e4c65badf9e60afa457bf2df7f46b88f14e222dab0590eb",
+      "src/http.mjs": "56ed52d8bd33cfefb21f65d5035c528316c260845a1081a63de5518cd1b6e637",
+      "src/legacy-exclusions.mjs": "da6c3af515a0805d62f87ca19af5166196a935cfcd450121595341884024fadf",
+      "src/legacy-publication-exclusions.json": "25bb03a09769f53ff429b82000cf3cab738d42b9daccdb36f54a50675d7ac6d5",
+      "src/publication-aws.mjs": "4294a626974cfe16f8131b57b7adb43ff3b34ebe938d899b6cf131aae13c2e19",
+      "src/publication.mjs": "81a90fd1a4f4d7873318acfb816410bd6bcca4a056f264b67e22268ecfda44ea",
+      "src/rss.mjs": "3efc3313218bc8032fcec69cf99680284a0340f7aa8caaee94bcf35f26260e10",
+      "src/sanity-discovery.mjs": "0825ab86562259c43286e44aa2e6b62d1be49b995ec74c6c8bf8c01081901d2e",
+      "src/service.mjs": "432ec245d57580c804e72bf54b1a0ae99f8de1c72ea615d2cb4bfdf83c310fca"
+    },
+    "dependencyLockBinding": "Tracked services/newsletter/package-lock.json; canonical Git LF hash, separate from the retained historical archive bytes",
+    "dependencyLockCanonicalSha256": "71566e733d36a84665caaf1bb0b80cfbd8e48ca9d4e2ee4a9551cee8ef3a65c2",
+    "baseRuntimeSourceSha256": {
+      "src/aws.mjs": "a5bf1cf1b30dec02f99861dc0061d6ce6b16f50f31f4959d529908e34f1a5936",
+      "src/content.mjs": "f3c2968cea097133c51698e8f4f80fcb69a28b56b67ba12e609be26e47601121",
+      "src/discovery-handler.mjs": "1de73498badfa29ec3adcd49b4fe2ca018f5999c58bf7cfe08d9f5a65ccc88e6",
+      "src/discovery.mjs": "beb97842e3d916abcc96447dc4f1390426648f55c06c33c18562694e5f225f4e",
+      "src/domain.mjs": "c29c0995d82ed6a4515e7d7b02f9da26e7d23752ea8364561397b252c4f09630",
+      "src/handlers.mjs": "9d3d95bc09dae8bf0e4c65badf9e60afa457bf2df7f46b88f14e222dab0590eb",
+      "src/http.mjs": "5dc1f753a08ad67be58453c0bc87073053c97d38dfcd03a724183845a5a8abe6",
+      "src/legacy-exclusions.mjs": "da6c3af515a0805d62f87ca19af5166196a935cfcd450121595341884024fadf",
+      "src/legacy-publication-exclusions.json": "25bb03a09769f53ff429b82000cf3cab738d42b9daccdb36f54a50675d7ac6d5",
+      "src/publication-aws.mjs": "4294a626974cfe16f8131b57b7adb43ff3b34ebe938d899b6cf131aae13c2e19",
+      "src/publication.mjs": "81a90fd1a4f4d7873318acfb816410bd6bcca4a056f264b67e22268ecfda44ea",
+      "src/rss.mjs": "3efc3313218bc8032fcec69cf99680284a0340f7aa8caaee94bcf35f26260e10",
+      "src/sanity-discovery.mjs": "0825ab86562259c43286e44aa2e6b62d1be49b995ec74c6c8bf8c01081901d2e",
+      "src/service.mjs": "e80f9f6c4dd657ab77ecd3dbe366bee8516b3fb81fb312afa5b507b2e7259b8c"
+    },
+    "baseSourceOverrides": {
+      "src/aws.mjs": "deployments/base-runtime-source/src/aws.mjs",
+      "src/http.mjs": "deployments/base-runtime-source/src/http.mjs",
+      "src/service.mjs": "deployments/base-runtime-source/src/service.mjs"
+    },
+    "baseSourceRelationship": "The other 11 files share the PATCHED source bytes; these three read-only source overrides reconstruct the BASE source set for the four unchanged Lambdas, without rebuilding a package."
+  },
+  "aws": {
+    "region": "eu-north-1",
+    "stack": "chronoverse-newsletter-v2",
+    "httpApiId": "lh71lvbqi8",
+    "stackStatus": "UPDATE_COMPLETE",
+    "changeSet": {
+      "executionStatus": "EXECUTE_COMPLETE",
+      "exactIdMatchesCheckpointAndStack": true,
+      "exactIdPublication": "Retained privately with execution evidence; not invented in Git",
+      "reviewedScope": {
+        "ApiFunction": {
+          "action": "Modify",
+          "replacement": false,
+          "property": "Code"
+        },
+        "HttpApi": {
+          "action": "Modify",
+          "replacement": false,
+          "property": "Body"
+        }
+      }
+    },
+    "functions": {
+      "ApiFunction": {
+        "runtime": "PATCHED",
+        "archiveSha256": "638f813fa3682caf7ccdbac556e557b65928c036836ce5221337b65bdacca150",
+        "state": "Active",
+        "lastUpdateStatus": "Successful",
+        "gitSourceSet": "patchedRuntimeSource"
+      },
+      "PlannerFunction": {
+        "runtime": "BASE",
+        "archiveSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+        "state": "Active",
+        "lastUpdateStatus": "Successful",
+        "gitSourceSet": "baseRuntimeSource"
+      },
+      "WorkerFunction": {
+        "runtime": "BASE",
+        "archiveSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+        "state": "Active",
+        "lastUpdateStatus": "Successful",
+        "gitSourceSet": "baseRuntimeSource"
+      },
+      "FeedbackFunction": {
+        "runtime": "BASE",
+        "archiveSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+        "state": "Active",
+        "lastUpdateStatus": "Successful",
+        "gitSourceSet": "baseRuntimeSource"
+      },
+      "ContactSyncFunction": {
+        "runtime": "BASE",
+        "archiveSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+        "state": "Active",
+        "lastUpdateStatus": "Successful",
+        "gitSourceSet": "baseRuntimeSource"
+      }
+    },
+    "routes": {
+      "GET /api/newsletter/confirm": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "GET /api/newsletter/unsubscribe": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "GET /confirm": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "GET /register": {
+        "authorizationType": "AWS_IAM",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "GET /unsubscribe": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /api/newsletter/confirm": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /api/newsletter/unsubscribe": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /confirm": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /register": {
+        "authorizationType": "AWS_IAM",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /subscribe": {
+        "authorizationType": "AWS_IAM",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      },
+      "POST /unsubscribe": {
+        "authorizationType": "NONE",
+        "target": "ApiFunction, exact unqualified ARN",
+        "integrationType": "AWS_PROXY",
+        "integrationMethod": "POST",
+        "payloadFormatVersion": "2.0",
+        "credentialsRolePresent": false
+      }
+    },
+    "control": {
+      "registrationEnabled": false,
+      "confirmationEnabled": false,
+      "deliveryEnabled": false
+    },
+    "apiEnvironment": {
+      "REGISTRATION_ENABLED": "true",
+      "CONFIRMATION_ENABLED": "true",
+      "effectiveControlEnforcement": "Strict durable CONTROL checks including the atomic confirmation transaction remain mandatory"
+    },
+    "schedules": {
+      "verifiedCount": 2,
+      "weekly": "DISABLED",
+      "discovery": "DISABLED"
+    },
+    "templates": {
+      "originalMatchesReviewedOverlay": true,
+      "processedMatchesReviewedReferences": true,
+      "definitionRelationship": "services/newsletter/template.json is the disabled-default source. The executed private overlay additionally pins IAM authorization and the existing immutable API artifact; see private-confirmation-overlay.json. Never deploy the base template over the live patch."
+    }
+  },
+  "artifacts": {
+    "originalReleaseId": "private-signup-repair-20261027-739404fe3d61",
+    "confirmationPatchId": "confirmation-post-fix-6ee620a8c933",
+    "reviewedPatchArchiveSha256": "166570b29558cee76af22e5d9e420108527f0f4a1247c1b403126ad553fb5852",
+    "baseRuntimeSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+    "patchedRuntimeSha256": "638f813fa3682caf7ccdbac556e557b65928c036836ce5221337b65bdacca150",
+    "originalManifestSha256": "cc6a955a895e59787039dd6bf24dea6c9c37eb7270aa477f0fa783972d77bd00",
+    "packagedLauncherSha256": "887dfaddfb2ba9a2834c4fafa87b8a90b9a8852f78583d2fd7069d5bef4ec4e6",
+    "correctedStandaloneLauncherSha256": "59d8e91cf905c716160d225443ee04916005ad9d3abdaecf7a0e332dc2af30bc",
+    "standaloneFinalizerSha256": "608485c15ccec1997f03179160c32a685064be4aa628596614e8b03e49edc125",
+    "immutableArchivesAndPrivateState": "Retained locally/CloudShell; never committed or recreated by synchronization",
+    "reproducibility": "Git reproduces application source, dependency graph, structural references and offline tests. Exact deployed ZIP bytes remain pinned to the retained reviewed artifact; fresh recompression is not claimed byte-identical."
+  },
+  "incomplete": {
+    "workingExecutionStarted": true,
+    "workingDeployedField": "ABSENT_OR_NOT_BOOLEAN",
+    "deploymentReceipt": "ABSENT_AT_LAST_VERIFIED_RECONCILIATION",
+    "receiptWriteApproved": false,
+    "freshConsentEndToEnd": "NOT_RUN",
+    "unsubscribeEndToEnd": "NOT_RUN",
+    "oldActivation": "DISABLED_IN_GIT; immutable originals must never be resumed",
+    "oldExposedToken": "NEVER_REUSE"
+  },
+  "website": {
+    "lastVerifiedProductionCommit": "df57410cdd96e3922cc0c22d25613a867f44eb9e",
+    "provider": "Vercel",
+    "futureMigration": "Cloudflare independently of newsletter delivery",
+    "signupPauseRemainsTrue": true,
+    "masterAutoDeploymentInProposedCommit": false,
+    "providerSettingsRead": "Project details returned 403; no provider settings were changed"
+  },
+  "authorization": {
+    "thisRelease": "Git source synchronization review only; commit/push require approval",
+    "awsDeploymentReplay": false,
+    "publicRegistration": false,
+    "weeklyDelivery": false,
+    "emailSend": false,
+    "subscriberOrCheckpointChanges": false
+  }
+}

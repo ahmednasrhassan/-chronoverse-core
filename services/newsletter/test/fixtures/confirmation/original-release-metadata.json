@@ -1,0 +1,46 @@
+{
+  "releaseId": "private-signup-repair-20261027-739404fe3d61",
+  "region": "eu-north-1",
+  "account": "957261948953",
+  "stack": "chronoverse-newsletter-v2",
+  "origin": "https://lh71lvbqi8.execute-api.eu-north-1.amazonaws.com",
+  "bucket": "chronoverse-nl-artifacts-957261948953-eun1",
+  "artifactKey": "newsletter-releases/private-signup-repair-20261027-739404fe3d61/89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8/newsletter-runtime.zip",
+  "runtimeSha256": "89636d5a22d004e9274a0a6190a46de1904a2c7516cfa70624f62845a3f258c8",
+  "modules": [
+    "src/aws.mjs",
+    "src/content.mjs",
+    "src/discovery-handler.mjs",
+    "src/discovery.mjs",
+    "src/domain.mjs",
+    "src/handlers.mjs",
+    "src/http.mjs",
+    "src/legacy-exclusions.mjs",
+    "src/legacy-publication-exclusions.json",
+    "src/publication-aws.mjs",
+    "src/publication.mjs",
+    "src/rss.mjs",
+    "src/sanity-discovery.mjs",
+    "src/service.mjs"
+  ],
+  "lockedPackages": 43,
+  "compressedBytes": 4198364,
+  "expandedBytes": 12500271,
+  "sourceHead": "df57410cdd96e3922cc0c22d25613a867f44eb9e",
+  "privateSignupRepair": true,
+  "sourceWorkingTreeIncluded": true,
+  "enrollmentPolicy": "aws-fresh-double-opt-in-2026-10-27-v1",
+  "legacyKey": "Unavailable; no recovery or replacement. Historical consent excluded pending fresh AWS double opt-in; manual verified support opt-out.",
+  "audienceMode": "FORWARD_ONLY_ZERO_CONFIRMED",
+  "historicalRecoveryStatus": "HISTORICAL_RECOVERY_UNRESOLVED",
+  "publicSignup": "BLOCKED_PENDING_CONTROLLED_LIVE_TEST",
+  "blockers": [
+    "Actual SES confirmation, unsubscribe and feedback require the owner CloudShell/inbox run before public activation"
+  ],
+  "dependencies": {
+    "mode": "Exact-lock, SHA-256 verified dependency cache only; all runtime source/templates freshly read",
+    "cacheSha256": "a4414c220392ab4e6a4121cb57b3cacfb90261cb49bfab67318cbda9867094dc",
+    "lockSha256": "8a09b3b12bc239bc838ccc569d819efc7c99ea2119f1244f6a61d4fd7e6578d9"
+  },
+  "companion": "Private repair first; run-verified-activation.py requires separate public/weekly approval after durable live tests. Website patch and marker require an independently approved deployment; no Git operation is performed."
+}

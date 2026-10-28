@@ -12,7 +12,7 @@ export function createHandlers(service, env) {
     return { batchItemFailures: failures };
   }
   return {
-    api: event => service.api(event),
+    api: (event, context) => service.api(event, context),
     planner: (event, context) => event.Records ? batch(event, env.PLAN_QUEUE_ARN, job => service.plan(job, context)) :
       (event.kind === "weekly" ? service.plan(event, context) : Promise.reject(new Error("invalid_event"))),
     worker: event => batch(event, env.DIGEST_QUEUE_ARN, job => service.deliver(job)),
@@ -32,7 +32,7 @@ export function createHandlers(service, env) {
 }
 let runtime;
 function getRuntime() { return runtime ??= createHandlers(createService(createAwsDependencies(process.env), process.env), process.env); }
-export const api = event => getRuntime().api(event);
+export const api = (event, context) => getRuntime().api(event, context);
 export const planner = (event, context) => getRuntime().planner(event, context);
 export const worker = event => getRuntime().worker(event);
 export const feedback = event => getRuntime().feedback(event);

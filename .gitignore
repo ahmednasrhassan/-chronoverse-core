@@ -79,3 +79,17 @@ cleanup-*.log
 *.pfx
 *.p12
 *.key
+
+# Newsletter operational state is local evidence, never source or a Git release.
+**/.cloudshell-release-state.json*
+**/.confirmation-fix-state*
+**/*-RECEIPT.json
+**/checkpoints/
+**/subscriber-data/
+**/claims/
+**/suppression-state/
+**/__pycache__/
+*.pyc
+**/runtime.delta
+**/change-set-review.json
+**/weekly-change-set-review.json

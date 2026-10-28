@@ -7,7 +7,7 @@ import argparse, base64, datetime, decimal, fnmatch, hashlib, hmac, importlib.ut
 
 HERE = pathlib.Path(__file__).resolve().parent
 FLAGS = ['DeliveryEnabled', 'RegistrationEnabled', 'ConfirmationEnabled', 'LegacyDispatchRetired', 'ComplianceApproved']
-TEST_MAILBOX = 'ahmednasr2376@gmail.com'
+TEST_MAILBOX = os.environ.get('NEWSLETTER_TEST_MAILBOX', '')
 OLD_CHANGESET = 'aws-register-origin-20261026'
 ENROLLMENT_POLICY = 'aws-fresh-double-opt-in-2026-10-27-v1'
 CONSENT_VERSION = 'weekly-research-v1'
@@ -56,6 +56,7 @@ def token(key, purpose, identifier, nonce, expiry=None):
 
 class Release:
     def __init__(self):
+        require(re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', TEST_MAILBOX), 'Set private NEWSLETTER_TEST_MAILBOX explicitly; no default recipient')
         # CloudShell's own execution identity only. No access keys are packaged.
         import boto3
         self.meta = load(HERE / 'release.json')
@@ -144,7 +145,14 @@ class Release:
                     'Historical subscriber eligibility lacks new atomic mailbox confirmation evidence')
         self.state['isolationVerified'] = True; self.save()
         print('HISTORICAL ISOLATION PASS: ' + str(len(baseline)) + ' preserved baseline records; fresh confirmation required')
+    def activation_allowed(self):
+        if not getattr(self, 'meta', {}).get('privateSignupRepair'): return True
+        state = getattr(self, 'state', {})
+        return bool(state.get('testPassed') is True and state.get('unsubscribeObserved') is True and
+                    state.get('feedbackMessageId') and state.get('bounceFeedbackMessageId') and state.get('activationApprovedRuntime') == self.meta.get('runtimeSha256') and
+                    self.meta.get('runtimeSha256'))
     def prepare(self, phase, approved):
+        require(phase in ['disabled', 'test'] or self.activation_allowed(), 'Private repair requires verified tests and separate public activation approval')
         require(approved, 'Upload/change-set preparation requires --approve')
         self.paused(); self.schedules_off()
         self.capture_baseline()
@@ -262,6 +270,7 @@ class Release:
     def routes(self):
         return [r for page in self.client('apigatewayv2').get_paginator('get_routes').paginate(ApiId='lh71lvbqi8') for r in page['Items']]
     def arm(self, public, approved):
+        require(not public or self.activation_allowed(), 'Private repair requires verified tests and separate public activation approval')
         require(approved, 'Enrollment mutation requires --approve (including retirement/compliance attestation)'); self.paused(); self.readiness(False, False)
         phase = 'public' if public else 'test'; require(self.state.get('deployedPhase') == phase, 'Deploy the corresponding reviewed change set first')
         if public: require(self.state.get('testPassed'), 'Controlled test incomplete')
@@ -293,28 +302,58 @@ class Release:
         require(len(found) == 3, 'Admission route inventory mismatch')
         self.set_enrollment(True); self.save()
         print('PUBLIC SIGNUP OPEN; digest/discovery OFF' if public else 'PRIVATE SIGNUP TEST ARMED: only SigV4 operator enrollment; exact recipient restriction retained')
-    def http(self, method, path, data=None, signed=False):
+    def http(self, method, path, data=None, signed=False, origin=True):
         body = urllib.parse.urlencode(data).encode() if data is not None else None
-        url = self.meta['origin'] + path; headers = {'Origin': self.meta['origin'], 'Content-Type': 'application/x-www-form-urlencoded'}
+        url = self.meta['origin'] + path; headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        if origin: headers['Origin'] = self.meta['origin']
         if signed:
             from botocore.auth import SigV4Auth
             from botocore.awsrequest import AWSRequest
             req = AWSRequest(method=method, url=url, data=body, headers=headers)
             SigV4Auth(self.session.get_credentials().get_frozen_credentials(), 'execute-api', self.meta['region']).add_auth(req); headers = dict(req.headers)
         request = urllib.request.Request(url, data=body, headers=headers, method=method)
+        # Never forward a signature or capability to a redirect destination.
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+        def observed(status, response_headers):
+            result = response_headers.get('x-newsletter-result', '')
+            safe_results = ['bad_request', 'origin_denied', 'context_denied', 'unsupported_media', 'internal_failure', 'gate_closed', 'configuration', 'permission_denied', 'dependency_throttled', 'provider_rejected', 'dependency_failure', 'outcome_uncertain']
+            self.state['lastHttp'] = {'method': method, 'status': status, 'signed': signed,
+                'at': int(time.time() * 1000), 'result': result if result in safe_results else 'unspecified'}
+            request_id = response_headers.get('apigw-requestid', '')
+            if re.fullmatch(r'[A-Za-z0-9_+=/-]{8,100}', request_id): self.state['lastHttp']['gatewayRequestId'] = request_id
+            self.save()
+            print('HTTP ' + method + ' status=' + str(status) + ' signed=' + str(signed) + ' result=' + self.state['lastHttp']['result'])
+            return status
         try:
-            with urllib.request.urlopen(request, timeout=25) as response: response.read(16384); return response.status
-        except urllib.error.HTTPError as e: e.read(16384); return e.code
+            with urllib.request.build_opener(NoRedirect()).open(request, timeout=25) as response:
+                return observed(response.status, response.headers)
+        except urllib.error.HTTPError as e:
+            try: return observed(e.code, e.headers)
+            finally: e.close()
+        except (urllib.error.URLError, TimeoutError, OSError):
+            self.state['lastHttp'] = {'method': method, 'status': None, 'signed': signed, 'at': int(time.time() * 1000), 'result': 'transport_uncertain'}
+            self.save()
+            raise RuntimeError('HTTP transport outcome uncertain; no automatic retry. Inspect durable evidence.') from None
     def signup(self, approved):
         require(approved, 'One controlled email requires --approve'); require(self.state.get('deployedPhase') == 'test', 'Not in test phase')
         row = self.subscriber()
-        require(not self.state.get('signupAttempted'), 'Mailbox already attempted; never automatically resend')
+        recovering = self.state.get('signupAttempted') is True
+        require(not recovering or self.state.get('recoveryAuthorized') is True, 'Mailbox already attempted; use explicit verified recovery, never automatically resend')
+        if self.meta.get('privateSignupRepair'):
+            require(self.state.get('importedCheckpoint'), 'Import the original failed release checkpoint first; a new directory is not a new attempt')
         require(not row or (row.get('state') in ['HOLD', 'CONFIRMED', 'PENDING'] and not eligible(row) and 'suppressedAt' not in row and 'suppressionReason' not in row), 'Authorized mailbox suppressed/already eligible; never reset it')
         require(not row or row.get('enrollmentPolicy') != ENROLLMENT_POLICY, 'Existing fresh pending test; inspect original claim instead of resending')
         require(self.http('GET', '/register') in [401, 403], 'Registration is not private')
         require(self.http('GET', '/register', signed=True) == 200, 'Signed AWS registration page failed')
+        if recovering:
+            spec = importlib.util.spec_from_file_location('signup_recovery', HERE / 'recover-private-signup.py')
+            recovery = importlib.util.module_from_spec(spec); spec.loader.exec_module(recovery)
+            recovery.consume(self)
         self.state['signupAttempted'] = True; self.save()
-        require(self.http('POST', '/register', {'email': TEST_MAILBOX, 'consent': 'yes'}, signed=True) == 202, 'Registration failed/uncertain: inspect, NEVER automatically retry')
+        status = self.http('POST', '/register', {'email': TEST_MAILBOX, 'consent': 'yes'}, signed=True)
+        self.state['signupHttpStatus'] = status; self.save()
+        require(status == 202, 'Signed POST /register returned HTTP ' + str(status) + '; inspect newsletter_gateway/newsletter_http in chronoverse-newsletter-v2-api. NEVER automatically retry')
         latest = self.subscriber()
         pending = self.table.get_item(Key={'pk': 'RENEW#' + sha(TEST_MAILBOX.encode())}, ConsistentRead=True).get('Item') if row else latest
         require(pending and pending['state'] == 'PENDING' and pending.get('enrollmentPolicy') == ENROLLMENT_POLICY and not eligible(latest), 'Fresh pending request not preserved')
@@ -332,12 +371,15 @@ class Release:
         self.state['confirmedObserved'] = True; self.state['providerMessageId'] = claim['messageId']; self.save(); print('CONFIRMATION VERIFIED against Ledger; owner attested inbox/interaction')
     def feedback_test(self, approved):
         require(approved and self.state.get('confirmedObserved'), 'Synthetic managed suppression requires confirmation evidence and --approve')
-        require(not self.state.get('feedbackMessageId'), 'Feedback test already published; inspect existing result')
         require(self.state.get('unsubscribeObserved') and self.subscriber()['state'] == 'SUPPRESSED', 'First verify genuine unsubscribe transition; do not reset subscriber')
-        event = {'eventType': 'Complaint', 'mail': {'destination': [TEST_MAILBOX], 'messageId': self.state['providerMessageId'], 'tags': {'id': [sha(TEST_MAILBOX.encode())]}},
-                 'complaint': {'complainedRecipients': [{'emailAddress': TEST_MAILBOX}]}, 'releaseTest': 'SYNTHETIC; not a genuine SES complaint'}
-        result = self.client('sns').publish(TopicArn=self.configuration()['FEEDBACK_TOPIC_ARN'], Message=json.dumps(event))
-        self.state['feedbackMessageId'] = result['MessageId']; self.save(); print('Synthetic authorized-mailbox complaint published through SNS; verify consumption next. No email sent.')
+        for kind, key in [('Complaint', 'feedbackMessageId'), ('Bounce', 'bounceFeedbackMessageId')]:
+            if self.state.get(key): continue
+            event = {'eventType': kind, 'mail': {'destination': [TEST_MAILBOX], 'messageId': self.state['providerMessageId'], 'tags': {'id': [sha(TEST_MAILBOX.encode())]}},
+                     'releaseTest': 'SYNTHETIC; not genuine SES feedback'}
+            if kind == 'Complaint': event['complaint'] = {'complainedRecipients': [{'emailAddress': TEST_MAILBOX}]}
+            else: event['bounce'] = {'bounceType': 'Permanent', 'bouncedRecipients': [{'emailAddress': TEST_MAILBOX}]}
+            result = self.client('sns').publish(TopicArn=self.configuration()['FEEDBACK_TOPIC_ARN'], Message=json.dumps(event))
+            self.state[key] = result['MessageId']; self.save(); print('Synthetic ' + kind + ' published through managed SNS/SQS; verify consumption next. No email sent.')
     def unsubscribe(self, approved):
         require(approved and self.state.get('confirmedObserved'), 'Authorized test unsubscribe requires --approve and confirmation evidence')
         row = self.subscriber(); require(row and (eligible(row) or (self.state.get('unsubscribeAttempted') and row['state'] == 'SUPPRESSED')), 'Need confirmed authorized record or a previous uncertain unsubscribe; never reset')
@@ -348,6 +390,7 @@ class Release:
         require(self.http('POST', path, {'action': 'unsubscribe'}) == 200, 'Test unsubscribe failed')
         row = self.subscriber(); require(row['state'] == 'SUPPRESSED' and row.get('suppressionReason') == 'unsubscribe' and 'audienceKey' not in row, 'Unsubscribe did not durably suppress')
         require(self.http('POST', path, {'action': 'unsubscribe'}) == 200, 'Repeated unsubscribe failed')
+        require(self.http('POST', path, {'List-Unsubscribe': 'One-Click'}, origin=False) == 200 and self.subscriber() == row, 'Email-client one-click unsubscribe failed or changed original suppression')
         bad = token(secret['capabilityKey'], 'unsubscribe', row['id'], 'x' * 32)
         require(self.http('POST', '/unsubscribe?token=' + bad, {'action': 'unsubscribe'}) == 400 and self.subscriber() == row, 'Invalid unsubscribe changed data')
         self.state['unsubscribeObserved'] = True; self.save(); print('UNSUBSCRIBE VERIFIED, including nonmutating GET, repeated POST and wrong nonce. Subscriber remains suppressed.')
@@ -358,6 +401,12 @@ class Release:
         row = self.subscriber(); require(row['state'] == 'SUPPRESSED' and row.get('suppressionReason') == 'unsubscribe' and 'audienceKey' not in row, 'Feedback must preserve original unsubscribe suppression')
         audit_pk = 'AUDIT#' + row['id'] + '#suppress#' + sha(event_pk.removeprefix('EVENT#').encode())
         require(self.table.get_item(Key={'pk': audit_pk}, ConsistentRead=True).get('Item', {}).get('reason') == 'complaint', 'Synthetic complaint did not pass through suppression writer')
+        if self.meta.get('privateSignupRepair') or self.state.get('bounceFeedbackMessageId'):
+            require(self.state.get('bounceFeedbackMessageId'), 'Managed synthetic permanent-bounce verification is incomplete')
+            bounce_pk = 'EVENT#' + sha((self.state['bounceFeedbackMessageId'] + ':Bounce').encode())
+            require(self.table.get_item(Key={'pk': bounce_pk}, ConsistentRead=True).get('Item'), 'Managed SNS/SQS synthetic permanent bounce not processed')
+            bounce_audit = 'AUDIT#' + row['id'] + '#suppress#' + sha(bounce_pk.removeprefix('EVENT#').encode())
+            require(self.table.get_item(Key={'pk': bounce_audit}, ConsistentRead=True).get('Item', {}).get('reason') == 'hard-bounce', 'Synthetic bounce did not pass through suppression writer')
         contact = self.client('sesv2').get_contact(ContactListName=self.configuration()['CONTACT_LIST'], EmailAddress=TEST_MAILBOX)
         require(contact.get('UnsubscribeAll') is True, 'Contact suppression outbox not complete')
         # Read only this test's event metadata. Do not expose other subscribers.
@@ -411,6 +460,7 @@ class Release:
             require(all(int(v) == 0 for v in attrs.values()), 'Nonempty ' + name + '; never purge or replay it')
         return head
     def prepare_weekly(self, website_sha, approved):
+        require(self.activation_allowed(), 'Private repair requires verified tests and separate public activation approval')
         require(approved, 'Weekly release requires --approve only after the verified website deployment')
         require(re.fullmatch(r'[a-f0-9]{40}', website_sha or ''), 'Owner must supply verified live website commit SHA')
         require(self.state.get('deployedPhase') == 'public', 'Public enrollment stage not verified')
@@ -466,6 +516,7 @@ class Release:
         (HERE/'weekly-change-set-review.json').write_text(json.dumps(prepared, indent=2, default=str)+'\n')
         print('REVIEW BOTH new weekly change sets. Enrollment/delivery remain durably OFF. No schedule changed or function invoked.')
     def execute_weekly(self, approved):
+        require(self.activation_allowed(), 'Private repair requires verified tests and separate public activation approval')
         require(approved, 'Both exact weekly change sets require explicit review and --approve')
         self.paused(); self.schedules_off(); self.weekly_preflight()
         prepared = self.state.get('weeklyPrepared', [])

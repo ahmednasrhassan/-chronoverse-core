@@ -128,5 +128,6 @@ test("website registration is permanently retired; no Vercel bridge, secrets or 
   for (const handler of [cronGet, cronPost, publication]) assert.equal((await handler()).status, 410);
   assert.equal((await oldFeedback()).status, 503);
   assert.deepEqual(JSON.parse(readFileSync("vercel.json", "utf8")).crons, []);
-  assert.equal(JSON.parse(readFileSync("vercel.json", "utf8")).git.deploymentEnabled.master, true);
+  // Git synchronization keeps the deployed website pinned until separate approval.
+  assert.equal(JSON.parse(readFileSync("vercel.json", "utf8")).git.deploymentEnabled.master, false);
 });

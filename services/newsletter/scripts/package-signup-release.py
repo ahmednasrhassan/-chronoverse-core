@@ -1,5 +1,5 @@
 """Offline, deterministic AWS-only signup release. Refuses to overwrite output."""
-import argparse, copy, hashlib, io, json, pathlib, re, zipfile
+import argparse, copy, difflib, hashlib, io, json, pathlib, re, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 SERVICE = ROOT / 'services/newsletter'
@@ -10,7 +10,7 @@ def digest(data): return hashlib.sha256(data).hexdigest()
 def load(path): return json.loads(path.read_text(encoding='utf-8-sig'))
 def write(path, value): path.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8', newline='\n')
 
-def package(destination, dependency_archive=None, dependency_lock=None, dependency_sha256=None):
+def package(destination, dependency_archive=None, dependency_lock=None, dependency_sha256=None, private_signup_repair=False):
     assert not destination.exists(), 'Immutable destination already exists; choose a new version'
     lock = load(SERVICE / 'package-lock.json')
     package_json = load(SERVICE / 'package.json')
@@ -77,9 +77,13 @@ def package(destination, dependency_archive=None, dependency_lock=None, dependen
     assert len(blob) < 50 * 1024**2 and sum(map(len, files.values())) < 250 * 1024**2
     # Launcher changes must also create a different release identity even when
     # the runtime is unchanged; previous immutable ZIPs must never be confused.
-    procedure = b''.join((SERVICE / 'scripts' / name).read_bytes() for name in ['cloudshell-signup-release.py', 'initialize-forward-audience.py', 'run-forward-optin-release.py', 'publish-verified-website.py'])
+    procedure_names = ['cloudshell-signup-release.py', 'initialize-forward-audience.py'] + (['run-private-signup-repair.py', 'recover-private-signup.py', 'run-verified-activation.py'] if private_signup_repair else ['run-forward-optin-release.py', 'publish-verified-website.py'])
+    procedure = b''.join((SERVICE / 'scripts' / name).read_bytes() for name in procedure_names)
     source_head = __import__('subprocess').check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    release_id = 'forward-optin-20261027-' + digest(blob + procedure + source_head.encode())[:12]
+    runbook = ROOT / ('docs/newsletter-private-signup-repair-2026-10-27.md' if private_signup_repair else 'docs/newsletter-forward-optin-release-2026-10-27.md')
+    release_inputs = b''.join(path.read_bytes() for path in [SERVICE / 'template.json', SERVICE / 'discovery-template.json',
+        SERVICE / 'package-lock.json', runbook, ROOT / 'src/config/newsletterAvailability.ts'])
+    release_id = ('private-signup-repair-20261027-' if private_signup_repair else 'forward-optin-20261027-') + digest(blob + procedure + release_inputs + source_head.encode())[:12]
     key = 'newsletter-releases/' + release_id + '/' + digest(blob) + '/newsletter-runtime.zip'
     destination.mkdir(parents=True)
     (destination / 'newsletter-runtime.zip').write_bytes(blob)
@@ -123,29 +127,35 @@ def package(destination, dependency_archive=None, dependency_lock=None, dependen
         write(destination / filename, t)
         write(destination / (kind + '-disabled-overlay.json'), [{'ParameterKey': k, 'ParameterValue': v} for k, v in overlay.items()])
     (destination / 'package-lock.json').write_bytes((SERVICE / 'package-lock.json').read_bytes())
-    (destination / 'cloudshell-release.py').write_bytes((SERVICE / 'scripts/cloudshell-signup-release.py').read_bytes())
-    (destination / 'run-forward-optin-release.py').write_bytes((SERVICE / 'scripts/run-forward-optin-release.py').read_bytes())
-    (destination / 'initialize-forward-audience.py').write_bytes((SERVICE / 'scripts/initialize-forward-audience.py').read_bytes())
-    (destination / 'publish-verified-website.py').write_bytes((SERVICE / 'scripts/publish-verified-website.py').read_bytes())
-    (destination / 'RUNBOOK.md').write_bytes((ROOT / 'docs/newsletter-forward-optin-release-2026-10-27.md').read_bytes())
+    for name in procedure_names:
+        (destination / ('cloudshell-release.py' if name == 'cloudshell-signup-release.py' else name)).write_bytes((SERVICE / 'scripts' / name).read_bytes())
+    if private_signup_repair:
+        website_path = 'src/config/newsletterAvailability.ts'
+        before = (ROOT / website_path).read_text(encoding='utf-8')
+        assert before.count('NEWSLETTER_SIGNUPS_PAUSED = true;') == 1
+        after = before.replace('NEWSLETTER_SIGNUPS_PAUSED = true;', 'NEWSLETTER_SIGNUPS_PAUSED = false;')
+        (destination / 'website-activation.patch').write_text(''.join(difflib.unified_diff(before.splitlines(True), after.splitlines(True),
+            fromfile='a/' + website_path, tofile='b/' + website_path)), encoding='utf-8', newline='\n')
+    (destination / 'RUNBOOK.md').write_bytes((ROOT / ('docs/newsletter-private-signup-repair-2026-10-27.md' if private_signup_repair else 'docs/newsletter-forward-optin-release-2026-10-27.md')).read_bytes())
     write(destination / 'runtime-files.json', {name: digest(data) for name, data in sorted(files.items())})
     write(destination / 'release.json', {'releaseId': release_id, 'region': 'eu-north-1', 'account': '957261948953', 'stack': 'chronoverse-newsletter-v2', 'origin': ORIGIN,
         'bucket': BUCKET, 'artifactKey': key, 'runtimeSha256': digest(blob), 'modules': [name for name in files if name.startswith('src/')],
         'lockedPackages': len(lock['packages']) - 1, 'compressedBytes': len(blob), 'expandedBytes': sum(map(len, files.values())),
-        'sourceHead': source_head,
+        'sourceHead': source_head, 'privateSignupRepair': private_signup_repair,
         'sourceWorkingTreeIncluded': bool(__import__('subprocess').check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip()),
-        'websiteCommitIdentity': {key: __import__('subprocess').check_output(['git', 'config', 'user.' + key], cwd=ROOT, text=True).strip() for key in ['name', 'email']},
+        **({'websiteCommitIdentity': {key: __import__('subprocess').check_output(['git', 'config', 'user.' + key], cwd=ROOT, text=True).strip() for key in ['name', 'email']}} if not private_signup_repair else {}),
         'enrollmentPolicy': 'aws-fresh-double-opt-in-2026-10-27-v1',
         'legacyKey': 'Unavailable; no recovery or replacement. Historical consent excluded pending fresh AWS double opt-in; manual verified support opt-out.',
         'audienceMode': 'FORWARD_ONLY_ZERO_CONFIRMED', 'historicalRecoveryStatus': 'HISTORICAL_RECOVERY_UNRESOLVED',
         'publicSignup': 'BLOCKED_PENDING_CONTROLLED_LIVE_TEST', 'blockers': ['Actual SES confirmation, unsubscribe and feedback require the owner CloudShell/inbox run before public activation'],
         'dependencies': {'mode': 'Exact-lock, SHA-256 verified dependency cache only; all runtime source/templates freshly read' if dependency_archive else 'Installed exact-lock packages', 'cacheSha256': dependency_sha256, 'lockSha256': digest((SERVICE / 'package-lock.json').read_bytes())},
-        'companion': 'The existing discovery companion is updated only after controlled consent/suppression tests, verified website deployment and review of both future schedule change sets. No discovery is invoked.'})
+        'companion': 'Private repair first; run-verified-activation.py requires separate public/weekly approval after durable live tests. Website patch and marker require an independently approved deployment; no Git operation is performed.' if private_signup_repair else 'The existing discovery companion is updated only after controlled consent/suppression tests, verified website deployment and review of both future schedule change sets. No discovery is invoked.'})
     (destination / 'SHA256SUMS').write_text(''.join(digest(p.read_bytes()) + '  ' + p.name + '\n' for p in sorted(destination.iterdir()) if p.is_file()), encoding='utf-8', newline='\n')
     print(json.dumps({'directory': str(destination), 'releaseId': release_id, 'runtimeSha256': digest(blob), 'files': len(files)}))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('--out', required=True, type=pathlib.Path)
     parser.add_argument('--dependency-archive', type=pathlib.Path); parser.add_argument('--dependency-lock', type=pathlib.Path); parser.add_argument('--dependency-sha256')
+    parser.add_argument('--private-signup-repair', action='store_true')
     args = parser.parse_args()
-    package(args.out.resolve(), args.dependency_archive, args.dependency_lock, args.dependency_sha256)
+    package(args.out.resolve(), args.dependency_archive, args.dependency_lock, args.dependency_sha256, args.private_signup_repair)

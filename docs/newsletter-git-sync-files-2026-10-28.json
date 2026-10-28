@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "df57410cdd96e3922cc0c22d25613a867f44eb9e",
+  "plannedCommitTitle": "chore(newsletter): synchronize verified AWS source and hold Vercel master",
+  "contentHashEncoding": "SHA256 of UTF-8 file bytes with CRLF normalized to LF; deployment artifact hashes remain raw-byte hashes",
+  "include": [
+    {
+      "path": ".gitignore",
+      "change": "modify",
+      "purpose": "Exclude private operational state and preserve canonical source bytes",
+      "sha256CanonicalLf": "fad71a1a45333a974a2fba3c5cedf2f88d373fb8c95682c2b0cf940b9ed9da49"
+    },
+    {
+      "path": "services/newsletter/README.md",
+      "change": "modify",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "624304397ec11563454c129b3f285bc0f459950e21787863afa7a316954e3ab6"
+    },
+    {
+      "path": "services/newsletter/scripts/cloudshell-signup-release.py",
+      "change": "modify",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "981cf1ed7ce5567d26585b0618de7c94a1ed88fc74ac1dea137f0e32ab8ce926"
+    },
+    {
+      "path": "services/newsletter/scripts/package-signup-release.py",
+      "change": "modify",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "3e5cd370d3b9005318396fe860adf68e73cb4ab0d3388604dcc48dfa8fc172bd"
+    },
+    {
+      "path": "services/newsletter/src/aws.mjs",
+      "change": "modify",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match",
+      "sha256CanonicalLf": "23868414a5b59f481c421cd4bcba54e1c49dd9a0f87c16de964d10d190686026"
+    },
+    {
+      "path": "services/newsletter/src/handlers.mjs",
+      "change": "modify",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match",
+      "sha256CanonicalLf": "9d3d95bc09dae8bf0e4c65badf9e60afa457bf2df7f46b88f14e222dab0590eb"
+    },
+    {
+      "path": "services/newsletter/src/http.mjs",
+      "change": "modify",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match",
+      "sha256CanonicalLf": "56ed52d8bd33cfefb21f65d5035c528316c260845a1081a63de5518cd1b6e637"
+    },
+    {
+      "path": "services/newsletter/src/service.mjs",
+      "change": "modify",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match",
+      "sha256CanonicalLf": "432ec245d57580c804e72bf54b1a0ae99f8de1c72ea615d2cb4bfdf83c310fca"
+    },
+    {
+      "path": "services/newsletter/template.json",
+      "change": "modify",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "43a57ba5e6d2e04104d285bd1f4487db2e72fe84276721112f49f2eb98a18010"
+    },
+    {
+      "path": "services/newsletter/test/confirmation.test.mjs",
+      "change": "modify",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "7094c2b487297b2de9a1f4b890cc1cbdaa63414c8c810c1cbbbd9a552bafa727"
+    },
+    {
+      "path": "services/newsletter/test/public-http.test.mjs",
+      "change": "modify",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "bba9f45dbb7334279ea80d45e8e3e0eb2104b740188b41999da2041bd0520617"
+    },
+    {
+      "path": "services/newsletter/test/release-preparation.test.mjs",
+      "change": "modify",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "2894b3f21f2280b56d9162682967e659e087e57173ba1deadf7eaee79c24b72d"
+    },
+    {
+      "path": "src/lib/sanity/tests/newsletter-aws.test.ts",
+      "change": "modify",
+      "purpose": "Existing website test aligned with the approved master deployment hold",
+      "sha256CanonicalLf": "e6e7f997d088a68367593aeb0a67f14c0de92071edb330f628e03e2dd222313d"
+    },
+    {
+      "path": "vercel.json",
+      "change": "modify",
+      "purpose": "Approved master auto-deployment hold; existing website remains pinned",
+      "sha256CanonicalLf": "ca3945e33b3f15962032930c0921ef15aa6497a7ef5d05e461a0233ac382ec13"
+    },
+    {
+      "path": ".gitattributes",
+      "change": "add",
+      "purpose": "Exclude private operational state and preserve canonical source bytes",
+      "sha256CanonicalLf": "400ca1f1110461c169d3da3077eaa2f08cd0c67facdbc0a548367666f3068ffa"
+    },
+    {
+      "path": "docs/newsletter-confirmation-post-fix-2026-10-27.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "aaeb37047ca6ef5d631de70d7b856ba2ae3a84856b04a4e07b88fadadc1a57af"
+    },
+    {
+      "path": "docs/newsletter-confirmation-post-fix-results-2026-10-27.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "9de2d9ca725d838e12fc72adeb9fc102e135630dfcea0c9e60bf08257fb99d59"
+    },
+    {
+      "path": "docs/newsletter-confirmation-runtime-assembly-fix-2026-10-27.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "90b3972cf02638e83aa37ccddd5ee2a5906ef9a4d6aecad990e7dec5bba308c8"
+    },
+    {
+      "path": "docs/newsletter-git-sync-2026-10-28.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "a3b436a97c4a6435a6313ce7e022d9170cd6ca0e6a48aff33afd968948551632"
+    },
+    {
+      "path": "docs/newsletter-git-sync-files-2026-10-28.json",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": null
+    },
+    {
+      "path": "docs/newsletter-private-signup-repair-2026-10-27.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "38ba0e9565fd8ec984e1f05de07465af91338cbffd32fe0dad26c0343b268df0"
+    },
+    {
+      "path": "docs/newsletter-recovery-completion-2026-10-27.md",
+      "change": "add",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory",
+      "sha256CanonicalLf": "884bc25fa35912859223a353a4496eccd967697a16f0ac287ac058306f43ff1d"
+    },
+    {
+      "path": "services/newsletter/deployments/base-runtime-source/README.md",
+      "change": "add",
+      "purpose": "BASE source reference for the four unchanged Lambdas; never a deployment payload",
+      "sha256CanonicalLf": "f3544f3d00fadb010fc457ff6ce48c23003b55580ca1cae1105825b897559c0b"
+    },
+    {
+      "path": "services/newsletter/deployments/base-runtime-source/src/aws.mjs",
+      "change": "add",
+      "purpose": "BASE source reference for the four unchanged Lambdas; never a deployment payload",
+      "sha256CanonicalLf": "a5bf1cf1b30dec02f99861dc0061d6ce6b16f50f31f4959d529908e34f1a5936"
+    },
+    {
+      "path": "services/newsletter/deployments/base-runtime-source/src/http.mjs",
+      "change": "add",
+      "purpose": "BASE source reference for the four unchanged Lambdas; never a deployment payload",
+      "sha256CanonicalLf": "5dc1f753a08ad67be58453c0bc87073053c97d38dfcd03a724183845a5a8abe6"
+    },
+    {
+      "path": "services/newsletter/deployments/base-runtime-source/src/service.mjs",
+      "change": "add",
+      "purpose": "BASE source reference for the four unchanged Lambdas; never a deployment payload",
+      "sha256CanonicalLf": "e80f9f6c4dd657ab77ecd3dbe366bee8516b3fb81fb312afa5b507b2e7259b8c"
+    },
+    {
+      "path": "services/newsletter/deployments/deployment-reviewed-2026-10-28.json",
+      "change": "add",
+      "purpose": "Sanitized source/deployment provenance or reference-only infrastructure overlay",
+      "sha256CanonicalLf": "82a25ee9687a084fe0f4656ebeb35993f9f7bbcb82eb6e0febd8897ba740f2c0"
+    },
+    {
+      "path": "services/newsletter/deployments/private-confirmation-overlay.json",
+      "change": "add",
+      "purpose": "Sanitized source/deployment provenance or reference-only infrastructure overlay",
+      "sha256CanonicalLf": "747324f745cea09830de9715dc30a9957643f4707dce3eb8dc687e4335aada69"
+    },
+    {
+      "path": "services/newsletter/ops/README.md",
+      "change": "add",
+      "purpose": "Canonical post-execution operational source/documentation; no execution approval",
+      "sha256CanonicalLf": "2f47fbc1a80a090083f7987f4c7b9331affafb5fed4982edb36cc8554925620f"
+    },
+    {
+      "path": "services/newsletter/ops/finalize_deployment.py",
+      "change": "add",
+      "purpose": "Canonical post-execution operational source/documentation; no execution approval",
+      "sha256CanonicalLf": "608485c15ccec1997f03179160c32a685064be4aa628596614e8b03e49edc125"
+    },
+    {
+      "path": "services/newsletter/ops/preview_deployment.py",
+      "change": "add",
+      "purpose": "Canonical post-execution operational source/documentation; no execution approval",
+      "sha256CanonicalLf": "20d4de5831df64d96b45bdaaf2f08341a4fd9e2529c9f9b7b8ea0d3fbf5b3a10"
+    },
+    {
+      "path": "services/newsletter/ops/reconcile_read_only.py",
+      "change": "add",
+      "purpose": "Canonical post-execution operational source/documentation; no execution approval",
+      "sha256CanonicalLf": "f158eefe2cb03152247722100f6dff8d0ded5fb661edcdba8bdec9fc463d24f4"
+    },
+    {
+      "path": "services/newsletter/scripts/audit-git-release.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "759ed689b608164cbd8e756eb62639603d2c8e823cf9b03d921436af92257300"
+    },
+    {
+      "path": "services/newsletter/scripts/cloudshell-confirmation-fix.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "59d8e91cf905c716160d225443ee04916005ad9d3abdaecf7a0e332dc2af30bc"
+    },
+    {
+      "path": "services/newsletter/scripts/inspect-confirmation-template.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "589d92525a01216fa64a41185fd1ec49a0ab5a62eeab82bf51365164ff101826"
+    },
+    {
+      "path": "services/newsletter/scripts/package-confirmation-fix.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "a747e9cdd474ecaf11c3801c1cbc705830331f05a13e37d2e498e092d341282e"
+    },
+    {
+      "path": "services/newsletter/scripts/recover-private-signup.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "9a2127e1eed8ad7f1dfac499d412d3829c21fc6eef0a522044e6dd83cc23d4b2"
+    },
+    {
+      "path": "services/newsletter/scripts/run-private-signup-repair.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "5c6f5bafe86d309267f693ebab45b917745d1da6d84df6c213e6aa80bc5d2a4e"
+    },
+    {
+      "path": "services/newsletter/scripts/run-verified-activation.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "7de9d400db0aba155fe69065533f51e36ca052190495ebdbe36201a0ca8cf7e8"
+    },
+    {
+      "path": "services/newsletter/scripts/seal-signup-release.py",
+      "change": "add",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority",
+      "sha256CanonicalLf": "121dd1d28b6fd15bb47aaf80a9179c27f6be8a3498588a10e2a1b3a2c17948dd"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-changeset.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "00518d0053fe20d17c1f6a3d0fd8fdfa8f791eb070fb81a3fe9a76971bf8a029"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-deployment.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "08b3c2fc2ce412b8a3cead27bfe45999108827b054e99d71b5a8f4a080d77978"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-runtime-assembly.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "dfcd10f57c2ef42b1075218470288c232699d7834f7e6e938149e954fe64df75"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-template-inspection.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "5b03b506675309bd09fb127a99229be4cacab755146b4470068bb5ce47992f8e"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/README.md",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "2ae831398e1382e7ac88c9439743488e15d31bcd35ae3aedb2882c5b54afcae5"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/before-processed.json",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "4ed3a0a20151c20a64e8bdd4b3a232a63f20849fe8f805dfc86a23274d965bc7"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/expected-processed.json",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "42f3abae133e11899d8af148647875422ae2f20bb926625deb3291d6afdf4ef4"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/initialize-forward-audience.py",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "f1db0687eef469b04c38d97ed19c9306ae4705c72a2e85d391917da13c4825f8"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/legacy-confirmation-launcher.py",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "0af4e87c08f7d2aa99d12533e5afaebed4c14cd5c108189d7d70ebab5bccc940"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/legacy-release-helper.py",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "0480b98ca825845c854369fcf17f2ed7b84fc67dcf864daa008adae9fde43efb"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/legacy-template-diff.py",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "7caab870c8cc365fe372a78a62b040c4507ca616e3ca059304bff780b1d05f43"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/original-manifest.txt",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "cc6a955a895e59787039dd6bf24dea6c9c37eb7270aa477f0fa783972d77bd00"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/original-release-metadata.json",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "dae38249e573a53be5b4bc96dd854206615305b0dfbd6a93bc8bf73ccb18fef4"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/original-template.json",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "be56ef6af3c2b87df7e1c3171eb6ae8dda4897ea9801311c7932d3a990f68aef"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/template-diagnostic.py",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "f3b677658ccbbec693fca253cfcf15cb64e5546c207a462c03b7dfdcf69586fb"
+    },
+    {
+      "path": "services/newsletter/test/fixtures/confirmation/working-manifest.txt",
+      "change": "add",
+      "purpose": "Safe structural/historical regression fixture; no private state",
+      "sha256CanonicalLf": "f0ce40c8b9b8f72d5fc8881467f7a47dee1a01ec0f31d7423a70b18d9baac7e8"
+    },
+    {
+      "path": "services/newsletter/test/operations.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "ff96475c41c17e2be4cd873a99c912aaa9230f8a96b12b817e909487fa4395e9"
+    },
+    {
+      "path": "services/newsletter/test/private-signup-repair.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "e54d1870cb4abbff3ad500ca51ad3daf0c8bd7c89daba3bd01c242e7272e4559"
+    },
+    {
+      "path": "services/newsletter/test/release-synchronization.test.mjs",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "e5a65e5eca234de4d8bc9078eaf585bc8cd0e173bf465254f10822757c0c7081"
+    },
+    {
+      "path": "services/newsletter/test/test_finalization.py",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "c3a198da208756546ec432c2c90e617701b5aa4bbdc46c121cb601b2b64c6eb0"
+    },
+    {
+      "path": "services/newsletter/test/test_preview.py",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "3a84ee4e6b4bac03e14f8f04a247414c9399ac475240c7265360f0e582ec0814"
+    },
+    {
+      "path": "services/newsletter/test/test_reconciliation.py",
+      "change": "add",
+      "purpose": "Offline application or operational regression coverage",
+      "sha256CanonicalLf": "b30424b8225e7666abaa5af2823a94eb50f796603bb3d090d46f6e72b61906ab"
+    }
+  ],
+  "original26Audit": [
+    {
+      "path": "services/newsletter/scripts/cloudshell-signup-release.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/package-signup-release.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/src/aws.mjs",
+      "decision": "include",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match"
+    },
+    {
+      "path": "services/newsletter/src/handlers.mjs",
+      "decision": "include",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match"
+    },
+    {
+      "path": "services/newsletter/src/http.mjs",
+      "decision": "include",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match"
+    },
+    {
+      "path": "services/newsletter/src/service.mjs",
+      "decision": "include",
+      "purpose": "Completed PATCHED runtime application change; reviewed archive bytes match"
+    },
+    {
+      "path": "services/newsletter/template.json",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "services/newsletter/test/confirmation.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "services/newsletter/test/public-http.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "docs/newsletter-confirmation-post-fix-2026-10-27.md",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "docs/newsletter-confirmation-post-fix-results-2026-10-27.md",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "docs/newsletter-confirmation-runtime-assembly-fix-2026-10-27.md",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "docs/newsletter-private-signup-repair-2026-10-27.md",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "docs/newsletter-recovery-completion-2026-10-27.md",
+      "decision": "include",
+      "purpose": "Current or explicitly historical operational documentation and synchronization inventory"
+    },
+    {
+      "path": "services/newsletter/scripts/cloudshell-confirmation-fix.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/inspect-confirmation-template.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/package-confirmation-fix.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/recover-private-signup.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/run-private-signup-repair.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/run-verified-activation.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/scripts/seal-signup-release.py",
+      "decision": "include",
+      "purpose": "Reviewed historical deployment/recovery tooling; no current deployment authority"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-changeset.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-deployment.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-runtime-assembly.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "services/newsletter/test/confirmation-template-inspection.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    },
+    {
+      "path": "services/newsletter/test/private-signup-repair.test.mjs",
+      "decision": "include",
+      "purpose": "Offline application or operational regression coverage"
+    }
+  ],
+  "excludeAndPreserve": [
+    "releases/",
+    "release/",
+    ".verification/",
+    ".env*",
+    ".aws/",
+    ".vercel/",
+    ".newsletter-private/",
+    ".newsletter-backup-private/",
+    "private checkpoints",
+    "*-RECEIPT.json",
+    "subscriber/claim/suppression data",
+    "credentials/signing keys/tokens",
+    "archives/runtime.delta",
+    "node_modules/",
+    "build/cache/bytecode output"
+  ]
+}

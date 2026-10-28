@@ -1484,6 +1484,10 @@
       "Type": "AWS::Serverless::HttpApi",
       "Properties": {
         "StageName": "$default",
+        "AccessLogSettings": {
+          "DestinationArn": { "Fn::GetAtt": ["ApiLogs", "Arn"] },
+          "Format": "{\"event\":\"newsletter_gateway\",\"requestId\":\"$context.requestId\",\"status\":\"$context.status\",\"lambdaServiceStatus\":\"$context.integrationStatus\",\"integrationStatus\":\"$context.integration.status\"}"
+        },
         "DefaultRouteSettings": {
           "ThrottlingBurstLimit": 5,
           "ThrottlingRateLimit": 2

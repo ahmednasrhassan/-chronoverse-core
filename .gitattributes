@@ -1,0 +1,8 @@
+# Reviewed Lambda source and operational code must survive checkout byte-for-byte.
+services/newsletter/src/** text eol=lf
+services/newsletter/scripts/** text eol=lf
+services/newsletter/ops/** text eol=lf
+services/newsletter/deployments/** text eol=lf
+services/newsletter/test/** text eol=lf
+# Historical reference manifests/templates are integrity fixtures, not deployment state.
+services/newsletter/test/fixtures/confirmation/** -text

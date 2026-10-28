@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
-import { createAwsDependencies } from "../src/aws.mjs";
+import { createAwsDependencies, emitNewsletterDiagnostic } from "../src/aws.mjs";
 import { createService } from "../src/service.mjs";
 import { subscriberId, CONSENT_TEXT, CONSENT_VERSION, ENROLLMENT_POLICY, FORWARD_ONLY_STATUS, campaignEligible } from "../src/domain.mjs";
 import { fixture } from "./fixture.mjs";
@@ -98,6 +98,63 @@ async function withAdapter(f, run, hooks = {}) {
     await run(createAwsDependencies(env), commands, env);
   } finally { mock.restoreAll(); }
 }
+
+function browserPost(f, token, encoded) {
+  const body = new URLSearchParams({ action: "confirm" }).toString();
+  return { version: "2.0", routeKey: "POST /confirm", rawPath: "/confirm", rawQueryString: new URLSearchParams({ token }).toString(),
+    headers: { origin: f.env.PUBLIC_ORIGIN, "content-type": "application/x-www-form-urlencoded" },
+    requestContext: { http: { method: "POST", sourceIp: "192.0.2.10" } }, isBase64Encoded: encoded,
+    body: encoded ? Buffer.from(body).toString("base64") : body };
+}
+
+for (const encoded of [false, true]) test(`native browser confirmation form, base64=${encoded}, commits real adapter consent transaction once with delivery off`, async () => {
+  const f = fixture(), p = pending(f);
+  f.env.DELIVERY_ENABLED = "false";
+  Object.assign(f.state.documents.get("CONTROL"), { deliveryEnabled: false, migrationComplete: false, forwardOnlyReady: true,
+    forwardOnlyPolicy: ENROLLMENT_POLICY, historicalRecoveryStatus: FORWARD_ONLY_STATUS, forwardOnlyReceipt: "a".repeat(64) });
+  await withAdapter(f, async (deps, commands, env) => {
+    const service = createService({ ...f.deps, store: { ...f.deps.store, confirm: deps.store.confirm } }, env);
+    const post = browserPost(f, p.token, encoded), before = structuredClone(f.state.documents);
+    const get = await service.api({ ...post, routeKey: "GET /confirm", body: "", requestContext: { http: { method: "GET" } } });
+    assert.equal(get.statusCode, 200); assert.equal(get.headers["referrer-policy"], "strict-origin");
+    assert.match(get.body, /<form method="post"><button type="submit" name="action" value="confirm">/);
+    assert.ok(!get.body.includes(p.token)); assert.deepEqual(f.state.documents, before);
+    // Actual old-page browser navigation under no-referrer: Origin is serialized as null.
+    const rejected = await service.api({ ...post, headers: { ...post.headers, origin: "null" } });
+    assert.equal(rejected.statusCode, 403); assert.equal(rejected.headers["x-newsletter-phase"], "origin");
+    assert.equal(rejected.headers["x-newsletter-result"], "origin_denied"); assert.deepEqual(f.state.documents, before);
+    assert.match(rejected.body, /HTTP 403/); assert.ok(!rejected.body.includes(p.token));
+    const accepted = await service.api(post);
+    assert.equal(accepted.statusCode, 200); assert.match(accepted.body, /Subscription confirmed/);
+    assert.equal(campaignEligible(f.state.documents.get(p.row.pk)), true);
+    assert.equal(f.state.documents.get("CONTROL").deliveryEnabled, false);
+    assert.equal(commands.filter(c => c instanceof TransactWriteCommand).length, 1);
+    assert.equal([...f.state.documents.values()].filter(x => x.kind === "confirmed").length, 1);
+    assert.equal((await service.api(post)).statusCode, 400); assert.equal(f.state.sends.length, 0);
+  });
+});
+
+for (const [mode, phase, reason, status] of [
+  ["gate", "confirm_control", "gate_closed", 503], ["expiry", "confirm_token", "bad_request", 400],
+  ["pending", "confirm_pending", "confirmation_ineligible", 400], ["provider", "confirm_suppression", "permission_denied", 503],
+  ["validation", "confirm_transaction", "dependency_validation", 503], ["conflict", "confirm_transaction", "confirmation_conflict", 400],
+]) test(`confirmation ${mode} reports only HTTP status, phase and bounded category`, async () => {
+  const f = fixture(), p = pending(f), logs = [], before = structuredClone(p.row);
+  if (mode === "gate") f.state.documents.get("CONTROL").confirmationEnabled = false;
+  if (mode === "expiry") f.state.time += 60001;
+  if (mode === "pending") p.row.confirmationNonce = "r".repeat(32);
+  if (mode === "provider") f.deps.mail.accountSuppressed = async () => { throw Object.assign(new Error("private email and raw SDK message"), { name: "AccessDeniedException" }); };
+  if (mode === "validation") f.deps.store.confirm = async () => { throw Object.assign(new Error("private DynamoDB values"), { name: "ValidationException" }); };
+  if (mode === "conflict") f.deps.store.confirm = async () => false;
+  f.deps.diagnostic = entry => emitNewsletterDiagnostic(entry, line => logs.push(JSON.parse(line)));
+  const response = await f.service.api(browserPost(f, p.token, true));
+  assert.equal(response.statusCode, status); assert.equal(response.headers["x-newsletter-phase"], phase);
+  assert.equal(response.headers["x-newsletter-result"], reason); assert.match(response.body, new RegExp(`HTTP ${status}`));
+  assert.ok(logs.some(x => x.phase === phase && x.reason === reason && x.status === status && x.encoded));
+  assert.ok(!response.body.includes(p.token)); assert.doesNotMatch(response.body + JSON.stringify(logs), /pending@|private|raw SDK|DynamoDB values|v2\./);
+  assert.equal(p.row.state, "PENDING"); assert.equal(p.row.confirmationNonce, mode === "pending" ? "r".repeat(32) : before.confirmationNonce);
+  assert.equal(f.state.sends.length, 0);
+});
 
 for (const flag of flags) test(`confirmation service denies missing, false and malformed ${flag}`, async () => {
   for (const value of malformed.filter(value => value !== "true")) {

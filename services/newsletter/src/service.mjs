@@ -1,7 +1,7 @@
 import { CONSENT_VERSION, CONSENT_TEXT, ENROLLMENT_POLICY, pendingEnrollment, campaignEligible, TOPIC, emailAddress, subscriberId, nonce, hash, capability, readCapability, legacyOptout, assertMailAllowed, assertConfirmationAllowed, equalSecret, weeklyWindow, escapeHtml, SendCapacityUnavailable } from "./domain.mjs";
 import { digestMessage } from "./rss.mjs";
 import { discoverCampaign, initializeDiscovery } from "./discovery.mjs";
-import { createPublicApi, publicOrigin, securityHeaders } from "./http.mjs";
+import { createPublicApi, diagnosticFault, publicOrigin, securityHeaders } from "./http.mjs";
 import { approvedArticle } from "./content.mjs";
 import { assertPublicationCurrent, isPublicationArticle } from "./publication.mjs";
 
@@ -19,6 +19,7 @@ export function createService(deps, env) {
     metric("Suppressed");
   }
   async function api(event, publicContext) {
+    let phase = "internal";
     try {
       if (event.requestContext?.http?.method !== "POST") return json(405, "method_not_allowed");
       if (event.isBase64Encoded || typeof event.body !== "string" || Buffer.byteLength(event.body) > 4096) return json(400, "invalid_request");
@@ -29,19 +30,25 @@ export function createService(deps, env) {
       const path = event.rawPath;
       if (path === "/subscribe") {
         // Check all gates before even parsing an address or touching an audience.
-        await allowed("confirmation");
+        phase = "control"; await allowed("confirmation");
         const origin = publicOrigin(env);
         if (body.consent !== true || body.consentVersion !== CONSENT_VERSION || body.consentText !== CONSENT_TEXT) return json(400, "explicit_consent_required");
+        phase = "identity";
         const email = emailAddress(body.email); const id = subscriberId(email);
+        phase = "subscriber_read";
         const existing = await store.get(`SUB#${id}`);
         // Historical rows are preserved until a new mailbox confirmation. No
         // opt-out, suppression marker or renewed confirmed address is reactivated.
         if (existing && (existing.state === "SUPPRESSED" || existing.suppressedAt !== undefined || existing.suppressionReason !== undefined ||
             campaignEligible(existing) || !["PENDING", "HOLD", "CONFIRMED"].includes(existing.state))) return json(202, "check_inbox_if_eligible");
+        phase = "rate_email";
         if (!await store.rateLimit(`EMAIL#${id}`, Math.floor(now() / 86400000), 1, now() + 172800000)) return json(202, "check_inbox_if_eligible");
+        phase = "rate_client";
         if (typeof body.clientFingerprint !== "string" || !/^[a-f0-9]{64}$/.test(body.clientFingerprint) ||
             !await store.rateLimit(`CLIENT#${body.clientFingerprint}`, Math.floor(now() / 3600000), 10, now() + 7200000)) return json(202, "check_inbox_if_eligible");
+        phase = "provider_suppression";
         if (await mail.accountSuppressed(email)) { await suppress(id, email, "provider-suppression", `provider:${id}`); return json(202, "check_inbox_if_eligible"); }
+        phase = "contact_read";
         const contact = await mail.contact(email);
         if (contactOptout(contact)) { await suppress(id, email, "ses-optout", `ses:${id}`); return json(202, "check_inbox_if_eligible"); }
         const tokenNonce = nonce();
@@ -49,22 +56,28 @@ export function createService(deps, env) {
         const previous = renewal ? await store.get(`RENEW#${id}`) : existing;
         const pending = { pk: `${renewal ? "RENEW" : "SUB"}#${id}`, id, email, state: "PENDING", confirmationNonce: tokenNonce, enrollmentPolicy: ENROLLMENT_POLICY,
           requestedAt: now(), consentVersion: CONSENT_VERSION, consentText: CONSENT_TEXT, source: `${origin}/register` };
+        phase = "pending_write";
         if (!await store.pending(pending, previous?.confirmationNonce)) return json(202, "check_inbox_if_eligible");
         const token = capability(secret.capabilityKey, "confirm", id, tokenNonce, now() + 86400000);
         const url = `${origin}/confirm?token=${token}`;
         // Claim before SES; uncertain outcomes are held, never automatically resent.
         const claim = `MAIL#confirmation#${id}#${tokenNonce}`;
+        phase = "claim_write";
         if (!await store.claim(claim, now())) return json(202, "check_inbox_if_eligible");
+        phase = "send_recheck";
         await allowed("confirmation");
         const latest = await store.get(pending.pk);
         if (latest?.state !== "PENDING" || latest.confirmationNonce !== tokenNonce) return json(202, "check_inbox_if_eligible");
         try {
+          phase = "send";
           const result = await mail.send(email, { subject: "Confirm your Chronoverse Capital newsletter subscription",
             text: `Confirm only if you requested our weekly research newsletter: ${url}\nThis link expires in 24 hours. Ignore it if you did not request this.\n${env.POSTAL_ADDRESS}`,
             html: `<html lang="en"><body><p>Confirm your weekly research subscription using the link below. If you did not request this, ignore this message.</p><p><a href="${url}">Review and confirm subscription</a></p><footer><p>${escapeHtml(env.POSTAL_ADDRESS)}</p></footer></body></html>` }, { kind: "confirmation", id });
+          phase = "send_ack";
           if (!await store.deliveryResult(claim, "ACCEPTED", result, now())) throw new Error("confirmation_acknowledgement_uncertain");
           metric("Accepted");
         } catch (error) {
+          publicContext?.diagnostic?.(503, diagnosticFault(error), phase);
           const deferred = error instanceof SendCapacityUnavailable;
           await store.deliveryResult(claim, deferred ? "NOT_SENT" : "UNKNOWN", undefined, now()); metric(deferred ? "Throttled" : "Held");
           // A timeout may already have handed mail to SES. Keep the claim held,
@@ -74,19 +87,29 @@ export function createService(deps, env) {
         return json(202, "check_inbox_if_eligible");
       }
       if (path === "/confirm") {
+        const reject = reason => {
+          publicContext?.diagnostic?.(400, reason, phase);
+          return json(400, "invalid_link");
+        };
+        phase = "confirm_control";
         assertConfirmationAllowed(env, await store.get("CONTROL"));
+        phase = "confirm_token";
         const data = readCapability(secret.capabilityKey, body.token, "confirm", now());
+        phase = "confirm_pending";
         const renewal = await store.get(`RENEW#${data.id}`), original = await store.get(`SUB#${data.id}`);
         const record = renewal?.confirmationNonce === data.nonce ? renewal : original;
         if (!pendingEnrollment(record) || record.confirmationNonce !== data.nonce || original?.state === "SUPPRESSED" ||
-            original?.suppressedAt !== undefined || original?.suppressionReason !== undefined) return json(400, "invalid_link");
+            original?.suppressedAt !== undefined || original?.suppressionReason !== undefined) return reject("confirmation_ineligible");
+        phase = "confirm_suppression";
         if (await mail.accountSuppressed(record.email) || contactOptout(await mail.contact(record.email))) {
-          await suppress(data.id, record.email, "provider-suppression", `confirm:${data.id}`); return json(400, "invalid_link");
+          await suppress(data.id, record.email, "provider-suppression", `confirm:${data.id}`); return reject("confirmation_ineligible");
         }
-        if (!await store.confirm(body.token)) return json(400, "invalid_link");
+        phase = "confirm_transaction";
+        if (!await store.confirm(body.token)) return reject("confirmation_conflict");
         metric("Confirmed"); return json(200, "subscription_confirmed");
       }
       if (path === "/unsubscribe") {
+        phase = "unsubscribe";
         let id, email;
         if (typeof body.token === "string" && body.token.startsWith("v1.")) {
           if (!secret.legacyV1Key) return json(410, "legacy_link_unavailable");
@@ -106,6 +129,7 @@ export function createService(deps, env) {
       // No addresses, raw request bodies, capabilities, keys or SDK errors in logs.
       const code = ["invalid_input", "invalid_link", "sending_paused"].includes(error?.message) ? error.message : "temporarily_unavailable";
       metric(code === "sending_paused" ? "Paused" : "ApiFailure");
+      publicContext?.diagnostic?.(code.startsWith("invalid_") ? 400 : 503, diagnosticFault(error), phase);
       return json(code.startsWith("invalid_") ? 400 : 503, code);
     }
   }

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "referenceOnly": true,
+  "deploymentAuthorized": false,
+  "purpose": "Document the already executed API-only patch; not a new change set or deployable template",
+  "baseTemplate": "services/newsletter/template.json",
+  "add": {
+    "/Resources/HttpApi/Properties/Auth": {
+      "EnableIamAuthorizer": true
+    },
+    "/Resources/ApiFunction/Properties/Events/subscribe/Properties/Auth": {
+      "Authorizer": "AWS_IAM"
+    },
+    "/Resources/ApiFunction/Properties/Events/registerPage/Properties/Auth": {
+      "Authorizer": "AWS_IAM"
+    },
+    "/Resources/ApiFunction/Properties/Events/registerAction/Properties/Auth": {
+      "Authorizer": "AWS_IAM"
+    }
+  },
+  "apiCodeUri": {
+    "bucket": "Preserve exact existing artifact bucket from private execution evidence",
+    "key": "newsletter-confirmation-fixes/confirmation-post-fix-6ee620a8c933/638f813fa3682caf7ccdbac556e557b65928c036836ce5221337b65bdacca150/runtime.zip",
+    "version": "Preserve existing executed immutable S3 VersionId; not published or replaced here"
+  },
+  "allOtherSourceAndProcessedProperties": "Must remain identical to the reviewed existing stack; all 11 unqualified proxy integrations are preserved"
+}

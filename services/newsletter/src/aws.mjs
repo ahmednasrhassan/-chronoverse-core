@@ -23,6 +23,14 @@ export function emitNewsletterMetric(name, write = value => process.stdout.write
   }
   write(JSON.stringify(entry) + "\n");
 }
+export function emitNewsletterDiagnostic(entry, write = value => process.stdout.write(value)) {
+  const phases = new Set("request bridge query control body_decode origin body_parse context consent secrets internal identity subscriber_read rate_email rate_client provider_suppression contact_read pending_write claim_write send_recheck send send_ack confirm confirm_control confirm_token confirm_action confirm_pending confirm_suppression confirm_transaction unsubscribe".split(" "));
+  const reasons = new Set("not_found method_not_allowed bad_request unauthorized bridge_result page_ready origin_denied context_denied unsupported_media internal_failure accepted_or_ineligible permission_denied dependency_validation dependency_throttled provider_rejected gate_closed configuration dependency_failure outcome_uncertain confirmation_ineligible confirmation_conflict confirmation_recorded".split(" "));
+  const safe = { event: "newsletter_http", status: [200, 202, 400, 401, 403, 404, 405, 410, 415, 429, 500, 502, 503, 504].includes(entry.status) ? entry.status : 500,
+    phase: phases.has(entry.phase) ? entry.phase : "internal", reason: reasons.has(entry.reason) ? entry.reason : "internal_failure", encoded: entry.encoded === true };
+  if (/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(entry.requestId || "")) safe.requestId = entry.requestId;
+  write(JSON.stringify(safe) + "\n");
+}
 export function createAwsDependencies(env) {
   // Execution-role credentials only. Never install or copy website AWS keys.
   const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: env.AWS_REGION, maxAttempts: 3 }), { marshallOptions: { removeUndefinedValues: true } });
@@ -240,5 +248,6 @@ export function createAwsDependencies(env) {
     secrets,
     now: () => Date.now(), articles: createContentSource(env, store, ses.config.credentials), wait: () => new Promise(resolve => setTimeout(resolve, 1000)),
     metric: emitNewsletterMetric,
+    diagnostic: emitNewsletterDiagnostic,
   };
 }

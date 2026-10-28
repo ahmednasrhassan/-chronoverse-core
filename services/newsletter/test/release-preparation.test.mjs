@@ -6,7 +6,7 @@ import { readCapability, campaignEligible } from "../src/domain.mjs";
 import { fixture } from "./fixture.mjs";
 
 function python(code) {
-  const result = spawnSync(process.platform === "win32" ? "python" : "python3", ["-B", "-c", code], { encoding: "utf8", windowsHide: true });
+  const result = spawnSync(process.platform === "win32" ? "python" : "python3", ["-B", "-c", code], { encoding: "utf8", windowsHide: true, env: { ...process.env, NEWSLETTER_TEST_MAILBOX: "operator@example.test" } });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return result.stdout.trim();
 }
