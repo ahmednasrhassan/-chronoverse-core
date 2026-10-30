@@ -93,3 +93,7 @@ cleanup-*.log
 **/runtime.delta
 **/change-set-review.json
 **/weekly-change-set-review.json
+/dist/
+.vinext/
+.cloudflare/
+.dev.vars*
